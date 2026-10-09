@@ -5,7 +5,11 @@ type MediaLike = {
   url?: unknown;
   previewUrl?: unknown;
   alt?: unknown;
+  meta?: { storageKey?: unknown } | null;
 };
+
+/** A storage key as EmDash's upload pipeline makes them (`{ulid}{ext}`); nothing that can reroute. */
+const STORAGE_KEY = /^[A-Za-z0-9._-]+$/;
 
 /** Pull a sanitized-ready image URL + alt from an EmDash media / image field value. */
 export function mediaFieldsFrom(value: unknown): {
@@ -14,7 +18,12 @@ export function mediaFieldsFrom(value: unknown): {
 } {
   if (!value || typeof value !== "object") return {};
   const media = value as MediaLike;
-  const candidates = [media.src, media.url, media.previewUrl];
+  // W-313: EmDash stores a local image as its id and `meta.storageKey`, without a URL; its file
+  // route serves it at /_emdash/api/media/file/<storage key>.
+  const key = media.meta?.storageKey;
+  const local =
+    typeof key === "string" && STORAGE_KEY.test(key) ? `/_emdash/api/media/file/${key}` : undefined;
+  const candidates = [media.src, media.url, media.previewUrl, local];
   let featuredImageUrl: string | undefined;
   for (const candidate of candidates) {
     if (typeof candidate === "string" && candidate.trim()) {

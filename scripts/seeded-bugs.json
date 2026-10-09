@@ -26434,6 +26434,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
       "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-313/storage-key-ignored",
+      "requirement": "W-313",
+      "description": "A local image stored with only a storage key gets no URL.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/theme-posts.ts",
+          "search": "  const candidates = [media.src, media.url, media.previewUrl, local];",
+          "replace": "  const candidates = [media.src, media.url, media.previewUrl];"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/theme-posts.test.ts"],
+      "expect": "\\(fail\\).*W-313"
+    },
+    {
+      "id": "W-313/storage-key-unchecked",
+      "requirement": "W-313",
+      "description": "Any storage key is put into the file URL.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/theme-posts.ts",
+          "search": "STORAGE_KEY.test(key)",
+          "replace": "key.length > 0"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/theme-posts.test.ts"],
+      "expect": "\\(fail\\).*W-313"
     }
   ]
 }

@@ -83,3 +83,25 @@ describe("themePostFromEntry", () => {
     expect(mediaFieldsFrom({ src: "/a.jpg", url: "/b.jpg" }).featuredImageUrl).toBe("/a.jpg");
   });
 });
+
+describe("local images stored by EmDash (W-313)", () => {
+  test("an image field with only a storage key links to EmDash's file route", () => {
+    expect(
+      mediaFieldsFrom({
+        id: "01M",
+        provider: "local",
+        alt: "Werkplaats",
+        meta: { storageKey: "01K.png" },
+      }),
+    ).toEqual({
+      featuredImageUrl: "/_emdash/api/media/file/01K.png",
+      featuredImageAlt: "Werkplaats",
+    });
+  });
+
+  test("a storage key that could reroute the request is ignored", () => {
+    expect(
+      mediaFieldsFrom({ id: "01M", meta: { storageKey: "../x?y" } }).featuredImageUrl,
+    ).toBeUndefined();
+  });
+});
