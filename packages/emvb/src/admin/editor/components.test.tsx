@@ -3,7 +3,12 @@ import { act } from "react";
 import type { ComponentTemplate, LayoutNode } from "../../core/index.ts";
 import type { Fetcher } from "../api.ts";
 import { cleanup, mount } from "../../../test/dom/mount.ts";
-import { ComponentFieldsForm, ComponentsContext, loadComponent } from "./components.tsx";
+import {
+  ComponentFieldsForm,
+  ComponentsContext,
+  componentTitle,
+  loadComponent,
+} from "./components.tsx";
 import { newElement } from "./dnd/new-element.ts";
 import { AddPanel } from "./panels/AddPanel.tsx";
 
@@ -122,5 +127,25 @@ describe("filling in a component's fields (W-312)", () => {
       fields: [{ key: "title", label: "Titel", kind: "text" }],
     } as never);
     expect(await loadComponent(reply({ part_type: "section", layout }), "s1")).toBeNull();
+  });
+});
+
+describe("a component use's name (W-312)", () => {
+  test("is its component's title; other elements and unknown components have none", () => {
+    const use = {
+      id: "use00001",
+      type: "component",
+      props: { partId: "c1", values: {} },
+    } as unknown as LayoutNode;
+    expect(componentTitle(use, context.list)).toBe("Tekst en beeld");
+    expect(
+      componentTitle({ ...use, props: { partId: "gone" } } as unknown as LayoutNode, context.list),
+    ).toBeUndefined();
+    expect(
+      componentTitle(
+        { id: "head0001", type: "heading", props: { text: "x", level: 2 } } as LayoutNode,
+        context.list,
+      ),
+    ).toBeUndefined();
   });
 });

@@ -22,7 +22,7 @@ import { MediaPicker } from "./panels/settings/MediaPicker.tsx";
  * Add panel lists the site's components; selecting a use shows its fields as a form.
  */
 
-type ComponentSummary = { id: string; title: string };
+export type ComponentSummary = { id: string; title: string };
 type ComponentsState = { list: ComponentSummary[]; templates: Record<string, ComponentTemplate> };
 
 export const ComponentsContext = React.createContext<ComponentsState>({ list: [], templates: {} });
@@ -102,6 +102,16 @@ export function useComponents(layout: Layout | null, fetcher: Fetcher): Componen
     };
   }, [key, fetcher]);
   return React.useMemo(() => ({ list, templates }), [list, templates]);
+}
+
+/** A component use's name: its component's title, so Layers and the canvas say what it is. */
+export function componentTitle(
+  node: LayoutNode,
+  list: readonly ComponentSummary[],
+): string | undefined {
+  if (node.type !== "component") return undefined;
+  const partId = (node.props as { partId?: string }).partId;
+  return list.find((c) => c.id === partId)?.title;
 }
 
 type Values = Record<string, unknown>;

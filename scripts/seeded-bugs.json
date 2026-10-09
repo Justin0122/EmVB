@@ -26462,6 +26462,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/theme-posts.test.ts"],
       "expect": "\\(fail\\).*W-313"
+    },
+    {
+      "id": "W-312/use-name-missing",
+      "requirement": "W-312",
+      "description": "A component use is named Component instead of its component's title.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/components.tsx",
+          "search": "  return list.find((c) => c.id === partId)?.title;",
+          "replace": "  return undefined;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
+      "expect": "\\(fail\\).*W-312"
     }
   ]
 }

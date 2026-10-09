@@ -20,7 +20,7 @@ import {
   YoutubeLogoIcon,
 } from "@phosphor-icons/react";
 import * as React from "react";
-import { ComponentFieldsForm } from "../components.tsx";
+import { ComponentFieldsForm, ComponentsContext, componentTitle } from "../components.tsx";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { sharedPartH1 } from "./settings/heading-warning.ts";
 import { UNNAMED_BOX_LINK_NOTE, unnamedBoxLink } from "./settings/box-link-name.ts";
@@ -367,6 +367,7 @@ function KnownElementPanel({
   descriptor,
 }: Props & { descriptor: ElementDescriptor }) {
   const ui = STYLE_UI[node.type] ?? DEFAULT_UI;
+  const { list: components } = React.useContext(ComponentsContext);
   const [tab, setTab] = React.useState(descriptor.defaultTab);
   const [openSections, setSection] = useOpenSections(node.type, ui.defaultOpen, node.id);
   const { cls, editing, setEditing } = useStyleTarget(node, design);
@@ -480,7 +481,7 @@ function KnownElementPanel({
     >
       <div className="emvb-element-header">
         <Icon size={16} aria-hidden="true" />
-        <h2 className="emvb-panel-title">{descriptor.name}</h2>
+        <h2 className="emvb-panel-title">{componentTitle(node, components) ?? descriptor.name}</h2>
       </div>
       {crumbs.length > 0 && (
         <nav className="emvb-breadcrumb" aria-label="Element path">

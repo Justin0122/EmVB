@@ -6,6 +6,7 @@ import {
   TextHIcon,
 } from "@phosphor-icons/react";
 import * as React from "react";
+import { ComponentsContext, componentTitle } from "../components.tsx";
 import {
   firstChild,
   hasStateStyles,
@@ -329,7 +330,8 @@ const LayerRow = React.memo(function LayerRow({
   const onMenu = (open: boolean) => menuRow(node.id, open);
   const Icon = ICONS[node.type] ?? SquaresFourIcon;
   const preview = layerPreview(node);
-  const typeName = ELEMENT_NAMES[node.type] ?? node.type;
+  const { list: components } = React.useContext(ComponentsContext);
+  const typeName = componentTitle(node, components) ?? ELEMENT_NAMES[node.type] ?? node.type;
   // A label names the row in place of the type (W-157); the type stays in the tooltip.
   const name = node.label ?? typeName;
   // Names and previews truncate, so the tooltip carries them in full (DESIGN.md, W-168).

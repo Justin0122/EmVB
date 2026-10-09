@@ -40,7 +40,7 @@ import {
 } from "./useEditorData.ts";
 import { EDITOR_MIN_WIDTH_QUERY, useMediaQuery } from "./useMediaQuery.ts";
 import { useSectionTemplates } from "./section-templates.ts";
-import { ComponentsContext, useComponents } from "./components.tsx";
+import { ComponentsContext, componentTitle, useComponents } from "./components.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
 import { useEditorCommands } from "./useEditorCommands.ts";
 import { useSave } from "./useSave.ts";
@@ -292,7 +292,10 @@ function EditorApp({
     selectedId: selectedNode ? state.selectedId : null,
     labelFor: (id) => {
       const node = state.page.layout ? findNode(state.page.layout, id) : undefined;
-      return node ? (node.label ?? ELEMENT_NAMES[node.type] ?? node.type) : "Element";
+      if (!node) return "Element";
+      return (
+        node.label ?? componentTitle(node, components.list) ?? ELEMENT_NAMES[node.type] ?? node.type
+      );
     },
     canDelete,
     canMove,
