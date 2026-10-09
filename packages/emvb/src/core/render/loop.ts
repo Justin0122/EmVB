@@ -1,4 +1,4 @@
-import { ELEMENTS } from "../elements/index.ts";
+import { carouselFrame, ELEMENTS } from "../elements/index.ts";
 import type { LayoutNode, LoopNode } from "../schema/layout.ts";
 import {
   resolvePostsForLoop,
@@ -61,12 +61,26 @@ export function renderLoop(
   const itemDynamic = templateLayout
     ? { ...rest, idOrigin: `${rest.idOrigin ?? ""}/l:${itemPartId}` }
     : rest;
+  const slider = node.props.slidesInView !== undefined;
   for (const post of posts) {
     children.push({
       tag: "div",
-      attrs: { class: "emvb-loop-item", "data-emvb-loop-item": post.id },
+      attrs: {
+        class: slider ? "emvb-loop-item emvb-carousel-slide" : "emvb-loop-item",
+        "data-emvb-loop-item": post.id,
+      },
       children: ctx.children(templateNodes, { ...itemDynamic, post, inLoopItem: true }),
     });
+  }
+  if (slider) {
+    // W-315: the items as a carousel: the Carousel element's track and arrows (its CSS and
+    // runtime come along with `usesCarousel`).
+    ctx.usesCarousel();
+    return carouselFrame(
+      { ...attrs, class: `${attrs.class ?? ""} emvb-carousel`.trim() },
+      children,
+      {},
+    );
   }
   return ELEMENTS.loop.build(node as never, attrs, children);
 }

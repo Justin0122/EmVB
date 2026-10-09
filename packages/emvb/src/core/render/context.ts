@@ -18,4 +18,6 @@ export type RenderContext = {
    * stay with their own copy.
    */
   uniqueId: (base: string) => string;
+  /** W-315: something renders as a carousel (a Loop's slides): load its CSS and runtime. */
+  usesCarousel: () => void;
 };

@@ -76,3 +76,39 @@ describe("Carousel (W-314)", () => {
     expect(validateLayout(page(carousel({}))).ok).toBe(false);
   });
 });
+
+describe("a Loop shown as a carousel (W-315)", () => {
+  const posts = [
+    { id: "a", slug: "a", title: "Alpha", excerpt: "", content: "", permalink: "/a" },
+    { id: "b", slug: "b", title: "Beta", excerpt: "", content: "", permalink: "/b" },
+  ];
+  const loop = (props: Record<string, unknown>) =>
+    ({
+      id: "loop0001",
+      type: "loop",
+      props,
+      children: [{ id: "ptit0001", type: "post-title", props: { level: 3 } }],
+    }) as LayoutNode;
+
+  test("each item is a slide in a carousel track, with the carousel's CSS and script", () => {
+    const { html, css, needsCarouselRuntime } = renderPage(
+      page(loop({ slidesInView: 4, slidesInViewMobile: 1 })),
+      emptyDesign(),
+      { dynamic: { posts } },
+    );
+    expect(html).toContain('data-emvb-carousel=""');
+    expect(html.match(/class="emvb-loop-item emvb-carousel-slide"/g)?.length).toBe(2);
+    expect(css).toContain(".emvb-carousel-track{");
+    expect(css).toMatch(/\.emvb-e-loop0001\{[^}]*--emvb-per-view:4/);
+    expect(css).toMatch(/@media \(max-width: ?767px\)\{[^@]*\.emvb-e-loop0001\{--emvb-per-view:1/);
+    expect(needsCarouselRuntime).toBe(true);
+  });
+
+  test("without slides in view it stays a list", () => {
+    const { html, needsCarouselRuntime } = renderPage(page(loop({})), emptyDesign(), {
+      dynamic: { posts },
+    });
+    expect(html).not.toContain("emvb-carousel");
+    expect(needsCarouselRuntime).toBe(false);
+  });
+});

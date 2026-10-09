@@ -479,6 +479,10 @@ export const LoopNode = parentNode(
     limit: z.number().int().min(1).max(50).optional(),
     /** W-308: newest first (unset), oldest first, or by title. */
     order: z.enum(LOOP_ORDERS).optional(),
+    /** W-315: show the items as a carousel, this many in view (per device). Unset = a list. */
+    slidesInView: z.number().int().min(1).max(6).optional(),
+    slidesInViewTablet: z.number().int().min(1).max(6).optional(),
+    slidesInViewMobile: z.number().int().min(1).max(6).optional(),
   }),
 );
 
@@ -868,6 +872,9 @@ export type LoopNode = {
     collection?: string;
     limit?: number;
     order?: LoopOrder;
+    slidesInView?: number;
+    slidesInViewTablet?: number;
+    slidesInViewMobile?: number;
   };
   style?: StyleOf;
   states?: StatesOf;

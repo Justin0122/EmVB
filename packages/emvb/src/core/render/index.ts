@@ -195,6 +195,10 @@ export function renderPage(
       nodes
         .map((child) => visit(child, false, dynamic))
         .filter((child): child is VNode => child !== undefined),
+    usesCarousel: () => {
+      usedTypes.add("carousel");
+      rendered.carousel = true;
+    },
     uniqueId: (base) => {
       const count = (domIds.get(base) ?? 0) + 1;
       domIds.set(base, count);
@@ -244,6 +248,22 @@ export function renderPage(
       const props = (node as { props: { contentWidth?: unknown; fullWidth?: unknown } }).props;
       const width = props.fullWidth === true ? "none" : cssLength(props.contentWidth);
       if (width) declarations.push({ property: "--emvb-content-width", value: width });
+    }
+    if (
+      node.type === "loop" &&
+      (node as { props: Record<string, unknown> }).props["slidesInView"] !== undefined
+    ) {
+      // W-315: a Loop shown as a carousel takes the same slide variables.
+      const props = (node as { props: Record<string, unknown> }).props;
+      declarations.push(...carouselPerView(props["slidesInView"]), ...carouselGap(node.style));
+      tablet.declarations.unshift(
+        ...carouselPerView(props["slidesInViewTablet"]),
+        ...carouselGap(node.devices?.tablet),
+      );
+      mobile.declarations.unshift(
+        ...carouselPerView(props["slidesInViewMobile"]),
+        ...carouselGap(node.devices?.mobile),
+      );
     }
     if (node.type === "carousel") {
       // W-314: slides in view and the gap between them, per device, for the track and slides.

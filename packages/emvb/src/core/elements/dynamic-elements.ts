@@ -195,6 +195,15 @@ export const loop: ElementDefinition<LoopNode> = {
         message: "How many entries a collection Loop shows, 1 to 50. Leave it empty for 6.",
       },
       {
+        key: "slidesInView",
+        kind: "select",
+        label: "Show as carousel",
+        optional: true,
+        devices: { tablet: "slidesInViewTablet", mobile: "slidesInViewMobile" },
+        options: [1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: `${n} in view` })),
+        message: "Shows the items in a row that scrolls sideways, with arrows. Empty is a list.",
+      },
+      {
         key: "order",
         kind: "select",
         label: "Order",

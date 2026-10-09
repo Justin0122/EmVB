@@ -11821,8 +11821,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/loop.ts",
-          "search": "attrs: { class: \"emvb-loop-item\", \"data-emvb-loop-item\": post.id },",
-          "replace": "attrs: { \"data-emvb-loop-item\": post.id },"
+          "search": "class: slider ? \"emvb-loop-item emvb-carousel-slide\" : \"emvb-loop-item\",",
+          "replace": "class: slider ? \"emvb-carousel-slide\" : \"\","
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/tabs-loop.test.ts"],
@@ -26512,8 +26512,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/index.ts",
-          "search": "const showArrows = node.props.hideArrows !== true;",
-          "replace": "const showArrows = true;"
+          "search": "      ...(options.hideArrows === true",
+          "replace": "      ...(false"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
@@ -26554,8 +26554,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "      rendered.carousel = true;\n",
-          "replace": ""
+          "search": "        ...carouselGap(node.devices?.mobile),\n      );\n      rendered.carousel = true;\n",
+          "replace": "        ...carouselGap(node.devices?.mobile),\n      );\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
@@ -26602,6 +26602,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/carousel/runtime.test.ts"],
       "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-315/slider-ignored",
+      "requirement": "W-315",
+      "description": "A Loop with slides in view stays a list.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/loop.ts",
+          "search": "const slider = node.props.slidesInView !== undefined;",
+          "replace": "const slider = false;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-315"
+    },
+    {
+      "id": "W-315/carousel-css-missing",
+      "requirement": "W-315",
+      "description": "A Loop slider loads no carousel CSS or script.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/loop.ts",
+          "search": "    ctx.usesCarousel();\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-315"
     }
   ]
 }

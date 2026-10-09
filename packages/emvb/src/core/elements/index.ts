@@ -953,28 +953,41 @@ const carousel: ElementDefinition<CarouselNode> = {
       },
     ],
   },
-  build: (node, attrs, children) => {
-    const slides: VNode[] = children.map((child) => ({
-      tag: "div",
-      attrs: { class: "emvb-carousel-slide" },
-      children: [child],
-    }));
-    const showArrows = node.props.hideArrows !== true;
-    return {
-      tag: "div",
-      attrs: { ...attrs, "data-emvb-carousel": "" },
-      children: [
-        { tag: "div", attrs: { class: "emvb-carousel-track" }, children: slides },
-        ...(showArrows
-          ? [
-              carouselArrow("prev", node.props.prevLabel?.trim() || "Previous"),
-              carouselArrow("next", node.props.nextLabel?.trim() || "Next"),
-            ]
-          : []),
-      ],
-    };
-  },
+  build: (node, attrs, children) =>
+    carouselFrame(
+      attrs,
+      children.map((child) => ({
+        tag: "div",
+        attrs: { class: "emvb-carousel-slide" },
+        children: [child],
+      })),
+      node.props,
+    ),
 };
+
+/**
+ * W-314: a carousel's markup around ready-made slides: the snap-scrolling track and the two
+ * arrows. The Loop uses it too when it shows its items as a carousel (W-315).
+ */
+export function carouselFrame(
+  attrs: Record<string, string>,
+  slides: VNode[],
+  options: { hideArrows?: boolean; prevLabel?: string; nextLabel?: string },
+): VNode {
+  return {
+    tag: "div",
+    attrs: { ...attrs, "data-emvb-carousel": "" },
+    children: [
+      { tag: "div", attrs: { class: "emvb-carousel-track" }, children: slides },
+      ...(options.hideArrows === true
+        ? []
+        : [
+            carouselArrow("prev", options.prevLabel?.trim() || "Previous"),
+            carouselArrow("next", options.nextLabel?.trim() || "Next"),
+          ]),
+    ],
+  };
+}
 
 const flexbox: ElementDefinition<FlexboxNode> = {
   baseCss:
