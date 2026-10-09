@@ -128,3 +128,34 @@ describe("the Rich text element (W-309)", () => {
     expect(richTextIsEmpty("<p>x</p>")).toBe(false);
   });
 });
+
+describe("Rich text colour (W-311)", () => {
+  test("headings and paragraphs inside take the element's colour over the tag defaults", () => {
+    const page = {
+      schemaVersion: 12,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "rich0001",
+            type: "rich-text",
+            props: { html: "<h2>T</h2><p>P</p>" },
+            style: { color: "#ffffff" },
+          },
+        ],
+      },
+    } as Layout;
+    const design = {
+      ...emptyDesign(),
+      defaults: { h2: { color: "#101828" }, p: { color: "#002846" } },
+    };
+    const { css } = renderPage(page, design);
+    // The inherit rule (one class + a tag) outranks the defaults (a tag under :where()).
+    expect(css).toContain(
+      ".emvb-rich-text :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,strong,em,u,s,code,th,td,caption){color:inherit}",
+    );
+    expect(css).toContain(".emvb-e-rich0001{color:#ffffff}");
+  });
+});

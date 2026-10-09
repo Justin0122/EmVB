@@ -26210,6 +26210,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/canvas/vnode-react.test.tsx"],
       "expect": "\\(fail\\).*W-310"
+    },
+    {
+      "id": "W-311/rich-text-no-inherit",
+      "requirement": "W-311",
+      "description": "Text inside Rich text keeps the tag defaults' colour instead of the element's.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": ".emvb-rich-text :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,strong,em,u,s,code,th,td,caption){color:inherit}",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-311"
     }
   ]
 }
