@@ -1,16 +1,17 @@
 import { Empty } from "@cloudflare/kumo";
 import { CursorClickIcon } from "@phosphor-icons/react";
-import { PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../../constants.ts";
+import { COLLECTION_SLUG, PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../../constants.ts";
 import { RequireEditor } from "../access/RequireEditor.tsx";
 import { defaultFetcher, type Fetcher } from "../api.ts";
 import { Editor } from "../editor/Editor.tsx";
 import { PAGES_URL, THEME_URL } from "../editor/exit.ts";
 
-function parseSearch(search: string): { entry: string | null; collection: string } {
+/** W-307: any collection slug is accepted, so entries of visual collections open too. */
+export function parseSearch(search: string): { entry: string | null; collection: string } {
   const params = new URLSearchParams(search);
   const entry = params.get("entry")?.trim() || null;
-  const raw = params.get("collection")?.trim();
-  const collection = raw === THEME_PARTS_COLLECTION ? THEME_PARTS_COLLECTION : PAGES_COLLECTION;
+  const raw = params.get("collection")?.trim() ?? "";
+  const collection = COLLECTION_SLUG.test(raw) ? raw : PAGES_COLLECTION;
   return { entry, collection };
 }
 

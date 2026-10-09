@@ -1,7 +1,7 @@
 import * as React from "react";
 import type { createKumoToastManager } from "@cloudflare/kumo";
 import { DEVICE_PREVIEW_PX, type DesignSystem, type PopupDevice } from "../../core/index.ts";
-import { PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../../constants.ts";
+import { THEME_PARTS_COLLECTION } from "../../constants.ts";
 import { ApiError, type Fetcher } from "../api.ts";
 import { previewUrl, publishDesign, saveDesign } from "../content-api.ts";
 import { readCollection } from "../setup/run.ts";
@@ -86,7 +86,8 @@ export function useEditorCommands({
       toasts.add({ title: "Published" });
       return;
     }
-    const pattern = await readCollection(fetcher, PAGES_COLLECTION).then(
+    // W-307: an entry of another collection links to that collection's own URL pattern.
+    const pattern = await readCollection(fetcher, collection).then(
       (coll) => coll?.urlPattern,
       () => null,
     );
@@ -128,7 +129,7 @@ export function useEditorCommands({
     void openInNewTab(
       async () => {
         if (isDirty(latest.current) && !(await save())) return null;
-        return previewUrl(fetcher, latest.current.id);
+        return previewUrl(fetcher, latest.current.id, collection);
       },
       (error) =>
         toasts.add({

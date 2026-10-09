@@ -1,7 +1,7 @@
 import { LinkButton, Text } from "@cloudflare/kumo";
 import { ArrowSquareOutIcon } from "@phosphor-icons/react";
 import { summarizeLayout } from "../../core/index.ts";
-import { PAGES_COLLECTION, PLUGIN_ID } from "../../constants.ts";
+import { COLLECTION_SLUG, PAGES_COLLECTION, PLUGIN_ID } from "../../constants.ts";
 
 export type FieldWidgetProps = {
   value: unknown;
@@ -22,11 +22,26 @@ function parse(value: unknown): unknown {
   }
 }
 
-/** The entry id from `/_emdash/admin/content/emvb_pages/<id>`; field widgets don't receive it. */
-export function entryIdFromLocation(pathname: string): string | undefined {
-  const match = new RegExp(`/content/${PAGES_COLLECTION}/([^/?#]+)`).exec(pathname);
-  const id = match?.[1];
-  return id && id !== "new" ? decodeURIComponent(id) : undefined;
+/**
+ * W-307: the collection and entry id from `/_emdash/admin/content/<collection>/<id>`, so the
+ * widget also links entries of visual collections (an `emvb_layout` field) to the editor.
+ */
+export function entryFromLocation(
+  pathname: string,
+): { collection: string; id: string } | undefined {
+  const match = /\/content\/([^/?#]+)\/([^/?#]+)/.exec(pathname);
+  const collection = match?.[1] ?? "";
+  const id = match?.[2] ? decodeURIComponent(match[2]) : "";
+  if (!COLLECTION_SLUG.test(collection) || !id || id === "new") return undefined;
+  return { collection, id };
+}
+
+/** The editor URL for an entry: Visual pages keep the short form without a collection. */
+function editorHref(entry: { collection: string; id: string }): string {
+  const base = `/_emdash/admin/plugins/${PLUGIN_ID}/editor?entry=${encodeURIComponent(entry.id)}`;
+  return entry.collection === PAGES_COLLECTION
+    ? base
+    : `${base}&collection=${encodeURIComponent(entry.collection)}`;
 }
 
 /**
@@ -35,10 +50,9 @@ export function entryIdFromLocation(pathname: string): string | undefined {
  */
 export function LayoutField({ value, label, id }: FieldWidgetProps) {
   const summary = summarizeLayout(parse(value));
-  const entryId = entryIdFromLocation(window.location.pathname);
-  const href = entryId
-    ? `/_emdash/admin/plugins/${PLUGIN_ID}/editor?entry=${encodeURIComponent(entryId)}`
-    : `/_emdash/admin/plugins/${PLUGIN_ID}/pages`;
+  const entry = entryFromLocation(window.location.pathname);
+  const entryId = entry?.id;
+  const href = entry ? editorHref(entry) : `/_emdash/admin/plugins/${PLUGIN_ID}/pages`;
   const description = !summary
     ? "This page has no content yet."
     : `${summary.nodes} ${summary.nodes === 1 ? "element" : "elements"} · schema ${summary.schemaVersion ?? "unknown"}`;

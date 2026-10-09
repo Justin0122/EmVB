@@ -17,7 +17,13 @@ import {
   type ThemePartType,
   type TriggersDoc,
 } from "../../core/index.ts";
-import { PAGES_COLLECTION, PLUGIN_ID, THEME_PARTS_COLLECTION } from "../../constants.ts";
+import {
+  isEmvbCollection,
+  layoutFieldFor,
+  PAGES_COLLECTION,
+  PLUGIN_ID,
+  THEME_PARTS_COLLECTION,
+} from "../../constants.ts";
 import { ApiError, requestJson, type Fetcher } from "../api.ts";
 import { entryStatus } from "../entry-status.ts";
 
@@ -39,6 +45,8 @@ export type EditorEntry = {
   conditions?: ConditionsDoc;
   triggers?: TriggersDoc;
   float?: FloatSettings;
+  /** W-307: entries of other collections only; see `PageDraft.entryHasTitle`. */
+  entryHasTitle?: boolean;
 };
 
 export type LoadedDesign = {
@@ -99,7 +107,8 @@ export async function loadEntry(
     seoImage: text(body?.item?.seo?.image),
     status: entryStatus(body?.item),
     rev: body?.["_rev"] ?? null,
-    layout: readLayout(data["layout"]),
+    layout: readLayout(data[layoutFieldFor(collection)]),
+    ...(isEmvbCollection(collection) ? {} : { entryHasTitle: typeof data["title"] === "string" }),
   };
   if (collection !== THEME_PARTS_COLLECTION) return base;
   const conditionsRaw = data["conditions"];

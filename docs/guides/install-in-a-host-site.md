@@ -70,6 +70,9 @@ Blank-canvas EmVB pages use `standalone` on `EmVBPage` (see the demos).
 
 `@perkyzz/emvb/astro/forms` imports the forms plugin's client script, so import `EmVBFormsRuntime` only when `@emdash-cms/plugin-forms` is installed. Without it the build fails with `"initForms" is not exported`; drop that import and the `EmVBFormsRuntime` element.
 
+To edit other collections visually (news, products…) and render their entries, see
+[Visual collections](visual-collections.md).
+
 ## 4. First-run setup
 
 1. Start the site (`bunx --bun astro dev` or your host’s script).

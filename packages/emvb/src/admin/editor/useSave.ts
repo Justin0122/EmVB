@@ -143,7 +143,7 @@ export function useSave(
                 },
                 rev,
               )
-            : await savePage(fetcher, current.id, current.page, rev);
+            : await savePage(fetcher, current.id, current.page, rev, collection);
         dispatch({ type: "saved", rev: next, version: current.version });
         setStatus({ kind: "saved" });
         return next;
@@ -216,7 +216,7 @@ export function useSave(
       const result =
         collection === THEME_PARTS_COLLECTION
           ? await publishThemePart(fetcher, latest.current.id, rev)
-          : await publishPage(fetcher, latest.current.id, rev);
+          : await publishPage(fetcher, latest.current.id, rev, collection);
       dispatch({ type: "published", rev: result.rev });
       setStatus({ kind: "saved" });
       return true;

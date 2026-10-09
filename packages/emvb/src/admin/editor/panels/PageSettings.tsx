@@ -27,12 +27,15 @@ export function PageSettings({
   slugError,
   onChange,
   kind = "page",
+  entryEditHref,
   fetcher,
 }: {
   page: PageDraft;
   slugError: string | null;
   onChange: (patch: PagePatch) => void;
-  kind?: "page" | "theme-part";
+  kind?: "page" | "theme-part" | "entry";
+  /** W-307: an entry's page in EmDash's editor, for the fields EmVB doesn't edit. */
+  entryEditHref?: string;
   /** For the Social image picker (W-287); without it the field isn't offered. */
   fetcher?: Fetcher;
 }) {
@@ -70,6 +73,40 @@ export function PageSettings({
             settings={page.float ?? defaultFloatSettings()}
             onChange={(float) => onChange({ float })}
           />
+        )}
+      </div>
+    );
+  }
+
+  if (kind === "entry") {
+    // W-307: an entry of another collection. EmVB saves its layout, title and slug; its other
+    // fields (image, excerpt, SEO…) and its page layout belong to EmDash's editor.
+    return (
+      <div className="emvb-panel-body" data-emvb-panel="entry-settings">
+        <h2 className="emvb-panel-title">Entry settings</h2>
+        {page.entryHasTitle && (
+          <Input
+            label="Title"
+            className={FIELD}
+            value={page.title}
+            onChange={(event) => onChange({ title: event.target.value })}
+          />
+        )}
+        <Input
+          label="Slug"
+          className={`${FIELD} emvb-mono`}
+          value={page.slug}
+          error={slugError ?? undefined}
+          onChange={(event) => onChange({ slug: event.target.value })}
+        />
+        <p className="emvb-helper">
+          This editor saves the entry's layout, title and slug. Its other fields, such as the image,
+          summary and SEO, are in the normal editor.
+        </p>
+        {entryEditHref && (
+          <a href={entryEditHref} className="emvb-text-link" data-emvb-entry-fields="">
+            Edit the other fields
+          </a>
         )}
       </div>
     );

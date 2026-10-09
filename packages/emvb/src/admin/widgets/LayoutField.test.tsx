@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { act } from "react";
 import { s1Page } from "../../../test/fixtures/layouts.ts";
-import { entryIdFromLocation, LayoutField } from "./LayoutField.tsx";
+import { entryFromLocation, LayoutField } from "./LayoutField.tsx";
 import { cleanup, mount } from "../../../test/dom/mount.ts";
 
 const initialUrl = window.location.href;
@@ -53,8 +53,23 @@ describe("read-only layout widget (D-019)", () => {
     expect(host.querySelector("a")?.getAttribute("href")).toBe("/_emdash/admin/plugins/emvb/pages");
   });
 
-  test("entryIdFromLocation reads only emvb_pages entry URLs", () => {
-    expect(entryIdFromLocation("/_emdash/admin/content/emvb_pages/a%20b")).toBe("a b");
-    expect(entryIdFromLocation("/_emdash/admin/content/posts/123")).toBeUndefined();
+  test("entryFromLocation reads the collection and entry of any content URL (W-307)", () => {
+    expect(entryFromLocation("/_emdash/admin/content/emvb_pages/a%20b")).toEqual({
+      collection: "emvb_pages",
+      id: "a b",
+    });
+    expect(entryFromLocation("/_emdash/admin/content/news/123")).toEqual({
+      collection: "news",
+      id: "123",
+    });
+    expect(entryFromLocation("/_emdash/admin/content/news/new")).toBeUndefined();
+    expect(entryFromLocation("/_emdash/admin/content/Bad%20Slug/123")).toBeUndefined();
+  });
+
+  test("an entry of another collection links to the editor with its collection (W-307)", async () => {
+    await render(s1Page(), "/_emdash/admin/content/news/01NEWS");
+    expect(host.querySelector("a")?.getAttribute("href")).toBe(
+      "/_emdash/admin/plugins/emvb/editor?entry=01NEWS&collection=news",
+    );
   });
 });

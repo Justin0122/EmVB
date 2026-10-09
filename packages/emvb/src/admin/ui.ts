@@ -77,6 +77,14 @@ export const UI_CSS = `
 .emvb-row-slug { font-family: var(--font-mono); font-size: 12px; line-height: 16px; color: var(--text-color-kumo-subtle); }
 /* W-209: a long unbroken title or slug wraps instead of pushing Status and Last edited out of the card. */
 .emvb-row-title, .emvb-row-slug { overflow-wrap: anywhere; }
+.emvb-visual-collections { display: flex; flex-direction: column; gap: 24px; margin-top: 16px; }
+.emvb-visual-collections > section { display: flex; flex-direction: column; gap: 12px; }
+.emvb-section-title { margin: 0; font-size: 18px; line-height: 1.3; font-weight: 600; color: var(--text-color-kumo-default); }
+.emvb-muted { margin: 0; color: var(--text-color-kumo-subtle); }
+.emvb-text-link { color: var(--text-color-kumo-link, var(--text-color-kumo-brand)); text-decoration: underline; text-underline-offset: 2px; }
+.emvb-collection-offer { padding: 16px; }
+.emvb-collection-offer-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.emvb-collection-offer-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .emvb-tabular { font-variant-numeric: tabular-nums; color: var(--text-color-kumo-subtle); font-size: 13px; }
 
 /* Elevated EmVB-owned card chrome (lists, empty/setup shells) — not host sidebar/header */

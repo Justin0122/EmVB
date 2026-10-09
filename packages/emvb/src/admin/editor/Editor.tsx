@@ -11,7 +11,7 @@ import {
   type LayoutNode,
   type PopupDevice,
 } from "../../core/index.ts";
-import { PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../../constants.ts";
+import { isEmvbCollection, PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../../constants.ts";
 import type { Fetcher } from "../api.ts";
 import { loadFormsCapability } from "../forms-api.ts";
 import { CanvasFrame, type CanvasSelection, type CanvasZoom } from "./canvas/CanvasFrame.tsx";
@@ -104,6 +104,7 @@ const initialState = (entry: EditorEntry, design: LoadedDesign): EditorState => 
     conditions: entry.conditions,
     triggers: entry.triggers,
     float: entry.float,
+    ...(entry.entryHasTitle !== undefined ? { entryHasTitle: entry.entryHasTitle } : {}),
   },
   status: entry.status,
   rev: entry.rev,
@@ -424,7 +425,14 @@ function EditorApp({
                 rejection={saver.rejection}
                 slugError={saver.slugError}
                 onSlugEdit={saver.clearSlugError}
-                kind={collection === THEME_PARTS_COLLECTION ? "theme-part" : "page"}
+                kind={
+                  collection === THEME_PARTS_COLLECTION
+                    ? "theme-part"
+                    : isEmvbCollection(collection)
+                      ? "page"
+                      : "entry"
+                }
+                entryEditHref={`/_emdash/admin/content/${encodeURIComponent(collection)}/${encodeURIComponent(state.id)}`}
                 onStyleState={onStyleState}
                 device={device}
                 items={itemActions}

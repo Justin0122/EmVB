@@ -1,6 +1,6 @@
 import { decodeSlug, getEmDashEntry } from "emdash";
 import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
-import { PAGES_COLLECTION } from "../constants.ts";
+import { ENTRY_LAYOUT_FIELD, PAGES_COLLECTION } from "../constants.ts";
 import { formIdsInLayout, loadFormDefinitions } from "./forms-definitions.ts";
 import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
 import { sectionTemplatesFor } from "./resolve-theme.ts";
@@ -32,26 +32,54 @@ export async function resolveEmVBPage(
 ): Promise<ResolvedEmVBPage | null> {
   const slug = decodeSlug(astro.params[options.param ?? "slug"]);
   if (!slug) return null;
+  // No emvb_pages collection yet (EmVB not set up): not an EmVB page.
+  return renderEntry(astro, PAGES_COLLECTION, slug, "layout", true);
+}
+
+/**
+ * W-307: the visual layout of an entry in any EmDash collection that has an `emvb_layout`
+ * field ("Edit visually"), for host routes such as `/news/[slug]`. Null when there is no such
+ * entry, or when it has no layout yet, so the route can fall back to its own template.
+ */
+export async function resolveEmVBEntry(
+  astro: AstroLike,
+  collection: string,
+  options: { slug?: string; param?: string } = {},
+): Promise<ResolvedEmVBPage | null> {
+  const slug = options.slug ?? decodeSlug(astro.params[options.param ?? "slug"]);
+  if (!slug) return null;
+  return renderEntry(astro, collection, slug, ENTRY_LAYOUT_FIELD, false);
+}
+
+async function renderEntry(
+  astro: AstroLike,
+  collection: string,
+  slug: string,
+  layoutField: string,
+  emptyIsPage: boolean,
+): Promise<ResolvedEmVBPage | null> {
   let found: Awaited<ReturnType<typeof getEmDashEntry>>;
   try {
-    found = await getEmDashEntry(PAGES_COLLECTION, slug);
+    found = await getEmDashEntry(collection, slug);
   } catch {
-    // No emvb_pages collection yet (EmVB not set up): not an EmVB page.
     return null;
   }
   const entry = found.entry;
   if (!entry) return null;
   const data = entry.data as Record<string, unknown>;
+  const stored = data[layoutField];
+  const layout = readLayout(stored);
+  // An entry without a layout isn't visual yet; an empty Visual page still is one (R-030).
+  if (!layout && !emptyIsPage) return null;
   const handler = getPublicPluginApiRouteHandler(astro.locals as never);
   const design = await loadDesign(handler, astro.url);
-  const layout = readLayout(data["layout"]);
   const formDefinitions = layout
     ? await loadFormDefinitions(handler, astro.url, formIdsInLayout(layout))
     : undefined;
   const sectionTemplates = layout ? await sectionTemplatesFor(layout) : {};
   return {
     ...renderStored(
-      data["layout"],
+      stored,
       design,
       String(data["id"] ?? slug),
       formDefinitions,

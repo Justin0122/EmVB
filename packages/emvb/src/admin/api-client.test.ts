@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { ApiError, requestJson, type Fetcher } from "./api.ts";
-import { publishPage } from "./content-api.ts";
+import { previewUrl, publishPage, savePage, type PageDraft } from "./content-api.ts";
 import { listImages, uploadImage } from "./media-api.ts";
 import { createThemePart, publishThemePart } from "./theme-api.ts";
 
@@ -137,5 +137,79 @@ describe("createThemePart", () => {
         )?.[1],
     );
     expect(levels.join("")).toBe("2222221111");
+  });
+});
+
+describe("saving and publishing an entry of another collection (W-307)", () => {
+  const draft: PageDraft = {
+    title: "Opening",
+    slug: "opening",
+    canvasMode: "blank",
+    seoTitle: "SEO title",
+    seoDescription: "SEO description",
+    layout: {
+      schemaVersion: 12,
+      root: { id: "root0001", type: "container", props: {}, children: [] },
+    },
+    entryHasTitle: true,
+  };
+
+  test("a save sends only emvb_layout, the title and the slug, to that collection", async () => {
+    const calls: Call[] = [];
+    await savePage(
+      answering(json(200, { data: { _rev: "r2" } }), calls),
+      "01N",
+      draft,
+      "r1",
+      "news",
+    );
+    expect(calls).toEqual([
+      {
+        path: "/_emdash/api/content/news/01N",
+        method: "PUT",
+        body: {
+          data: { emvb_layout: draft.layout, title: "Opening" },
+          slug: "opening",
+          _rev: "r1",
+        },
+      },
+    ]);
+  });
+
+  test("an entry without a title field isn't sent one", async () => {
+    const calls: Call[] = [];
+    await savePage(
+      answering(json(200, { data: { _rev: "r2" } }), calls),
+      "01P",
+      { ...draft, entryHasTitle: false },
+      null,
+      "partners",
+    );
+    expect(calls[0]?.body).toEqual({ data: { emvb_layout: draft.layout }, slug: "opening" });
+  });
+
+  test("a Visual page save is unchanged", async () => {
+    const calls: Call[] = [];
+    await savePage(answering(json(200, { data: { _rev: "r2" } }), calls), "01V", draft, null);
+    expect(calls[0]?.path).toBe("/_emdash/api/content/emvb_pages/01V");
+    expect(calls[0]?.body).toMatchObject({
+      data: { title: "Opening", layout: draft.layout, canvas_mode: "blank" },
+      seo: { title: "SEO title" },
+    });
+  });
+
+  test("publish and preview go to the entry's collection", async () => {
+    const calls: Call[] = [];
+    await publishPage(
+      answering(json(200, { data: { _rev: "r2", item: {} } }), calls),
+      "01N",
+      null,
+      "news",
+    );
+    await previewUrl(answering(json(200, { data: { url: "/x" } }), calls), "01N", "news");
+    expect(calls.map((c) => c.path)).toEqual([
+      "/_emdash/api/content/news/01N/publish",
+      "/_emdash/api/content/news/01N/preview-url",
+    ]);
   });
 });

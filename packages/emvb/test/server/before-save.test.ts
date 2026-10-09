@@ -102,3 +102,37 @@ describe("elements in the wrong place are refused at save (W-225)", () => {
     expect(warnings).toEqual([["emvb: page save rejected", { pageId: "01PAGE", code: "nesting" }]]);
   });
 });
+
+describe("content:beforeSave in other collections (W-307)", () => {
+  test("a save without emvb_layout is left alone", async () => {
+    expect(await run("news", { title: "Hi", layout: "{not json" }).result).toBeUndefined();
+  });
+
+  test("a valid emvb_layout saves", async () => {
+    expect(await run("news", { title: "Hi", emvb_layout: s1Page() }).result).toBeUndefined();
+  });
+
+  test("an invalid emvb_layout is rejected with the entry wording", async () => {
+    const { result, warnings } = run("news", { emvb_layout: "{not json" });
+    expect(await failure(result)).toStartWith("The entry layout is invalid.");
+    expect(warnings).toEqual([
+      ["emvb: entry save rejected", { pageId: "01PAGE", code: "not-an-object" }],
+    ]);
+  });
+
+  test("an old emvb_layout is stored upgraded, keeping the other fields", async () => {
+    const { result } = run("news", {
+      title: "Hi",
+      emvb_layout: JSON.stringify({ ...s1Page(), schemaVersion: 1 }),
+    });
+    expect(await result).toEqual({ title: "Hi", emvb_layout: s1Page() });
+  });
+
+  test("a cleared emvb_layout (null) saves: the entry has no visual layout", async () => {
+    expect(await run("news", { emvb_layout: null }).result).toBeUndefined();
+  });
+
+  test("the EmVB editor role rule doesn't apply: EmDash decides who saves news", async () => {
+    expect(await run("news", { emvb_layout: s1Page() }, 20).result).toBeUndefined();
+  });
+});

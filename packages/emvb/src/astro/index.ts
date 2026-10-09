@@ -1,5 +1,5 @@
 export { default as EmVBPage } from "./EmVBPage.astro";
-export { resolveEmVBPage, type ResolvedEmVBPage } from "./resolve.ts";
+export { resolveEmVBEntry, resolveEmVBPage, type ResolvedEmVBPage } from "./resolve.ts";
 export {
   resolveThemeParts,
   type RenderedThemePart,

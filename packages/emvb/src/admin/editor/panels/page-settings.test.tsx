@@ -222,3 +222,35 @@ describe("switching between page and theme-part settings (W-092)", () => {
     expect(metaTitleShown()).toBe(true);
   });
 });
+
+describe("entry settings for an entry of another collection (W-307)", () => {
+  async function entrySettings(page: PageDraft) {
+    const sent: PagePatch[] = [];
+    const host = await mount(
+      <PageSettings
+        page={page}
+        slugError={null}
+        kind="entry"
+        entryEditHref="/_emdash/admin/content/news/01N"
+        onChange={(patch) => sent.push(patch)}
+      />,
+    );
+    const labels = [...host.querySelectorAll("label")].map((l) => l.textContent?.trim());
+    return { host, labels, sent };
+  }
+
+  test("shows title and slug, no page layout or SEO, and links to the other fields", async () => {
+    const { host, labels } = await entrySettings({ ...PAGE, entryHasTitle: true });
+    expect(host.querySelector("h2")?.textContent).toBe("Entry settings");
+    expect(labels).toEqual(["Title", "Slug"]);
+    expect(host.querySelector('[data-emvb-section="seo"]')).toBeNull();
+    expect(host.querySelector("[data-emvb-entry-fields]")?.getAttribute("href")).toBe(
+      "/_emdash/admin/content/news/01N",
+    );
+  });
+
+  test("an entry without a title field shows only the slug", async () => {
+    const { labels } = await entrySettings({ ...PAGE, entryHasTitle: false });
+    expect(labels).toEqual(["Slug"]);
+  });
+});

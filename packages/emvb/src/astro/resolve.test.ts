@@ -51,7 +51,7 @@ mock.module("emdash/plugin-utils", () => ({
       : realRouteHandler(locals),
 }));
 
-const { resolveEmVBPage } = await import("./resolve.ts");
+const { resolveEmVBEntry, resolveEmVBPage } = await import("./resolve.ts");
 
 afterAll(() => {
   active = false;
@@ -155,5 +155,33 @@ describe("resolveEmVBPage (W-091, R-030, R-052)", () => {
     } finally {
       error.mockRestore();
     }
+  });
+});
+
+describe("resolveEmVBEntry (W-307)", () => {
+  test("reads the entry from the named collection by the slug option or route parameter", async () => {
+    await resolveEmVBEntry(astro({ slug: "from-param" }), "news");
+    await resolveEmVBEntry(astro({ slug: "from-param" }), "news", { slug: "given" });
+    await resolveEmVBEntry(astro({ item: "machine" }), "machines", { param: "item" });
+    expect(lookups).toEqual(["news/from-param", "news/given", "machines/machine"]);
+  });
+
+  test("an entry renders from emvb_layout, not layout", async () => {
+    lookup = async () => page({ title: "Opening", layout: layout(), emvb_layout: layout(heading) });
+    const resolved = await resolveEmVBEntry(astro({ slug: "opening" }), "news");
+    expect(resolved?.html).toContain("Hello");
+    expect([resolved?.title, resolved?.canvasMode]).toEqual(["Opening", "site-layout"]);
+  });
+
+  test("an entry without a layout, or a missing one, isn't visual: null, nothing loaded", async () => {
+    lookup = async () => page({ title: "Plain", emvb_layout: null });
+    expect(await resolveEmVBEntry(astro({ slug: "plain" }), "news")).toBeNull();
+    lookup = async () => ({ entry: null });
+    expect(await resolveEmVBEntry(astro({ slug: "gone" }), "news")).toBeNull();
+    lookup = async () => {
+      throw new Error("no such collection");
+    };
+    expect(await resolveEmVBEntry(astro({ slug: "x" }), "nope")).toBeNull();
+    expect(handlerCalls).toEqual([]);
   });
 });

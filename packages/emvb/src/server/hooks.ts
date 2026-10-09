@@ -7,7 +7,13 @@ import {
   validateLayout,
   validateTriggers,
 } from "../core/index.ts";
-import { EDITOR_ROLE, PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../constants.ts";
+import {
+  EDITOR_ROLE,
+  ENTRY_LAYOUT_FIELD,
+  layoutFieldFor,
+  PAGES_COLLECTION,
+  THEME_PARTS_COLLECTION,
+} from "../constants.ts";
 
 function parseJsonField(raw: unknown): unknown {
   if (typeof raw !== "string") return raw;
@@ -52,23 +58,30 @@ const THEME_PART_FIELDS: [string, (raw: unknown) => FieldValidation][] = [
 /**
  * `content:beforeSave` for EmVB pages and theme parts (R-006, D-020, R-060/R-061): editors and
  * above only; validate layout (and conditions on theme parts). Logs carry ids and codes only.
+ * W-307: in any other collection, a save that carries `emvb_layout` gets that layout validated
+ * the same way; who may save those entries stays EmDash's decision.
  */
 export async function beforeSave(
   event: ContentHookEvent,
   ctx: PluginContext,
 ): Promise<Record<string, unknown> | void> {
-  if (!OWNED.has(event.collection)) return;
+  const owned = OWNED.has(event.collection);
+  if (!owned && event.content[ENTRY_LAYOUT_FIELD] === undefined) return;
   const pageId = event.id ?? null;
-  const kind = event.collection === THEME_PARTS_COLLECTION ? "theme part" : "page";
-  if (event.actor && event.actor.role < EDITOR_ROLE) {
+  const kind =
+    event.collection === THEME_PARTS_COLLECTION ? "theme part" : owned ? "page" : "entry";
+  const layoutField = layoutFieldFor(event.collection);
+  if (owned && event.actor && event.actor.role < EDITOR_ROLE) {
     ctx.log.warn(`emvb: ${kind} save rejected`, { pageId, code: "role" });
     throw new ContentSaveRejectedError(`Only editors and administrators can save EmVB ${kind}s.`);
   }
 
   let next: Record<string, unknown> | undefined;
 
-  if (event.content["layout"] !== undefined) {
-    const result = validateLayout(parseJsonField(event.content["layout"]));
+  // An entry's layout may be cleared to null, which means "no visual layout" (W-307).
+  const rawLayout = event.content[layoutField];
+  if (rawLayout !== undefined && !(rawLayout === null && !owned)) {
+    const result = validateLayout(parseJsonField(rawLayout));
     if (!result.ok) {
       ctx.log.warn(`emvb: ${kind} save rejected`, {
         pageId,
@@ -90,7 +103,7 @@ export async function beforeSave(
       );
     }
     if (result.upgradedFrom !== result.layout.schemaVersion) {
-      next = { ...(next ?? event.content), layout: result.layout };
+      next = { ...(next ?? event.content), [layoutField]: result.layout };
     }
   }
 

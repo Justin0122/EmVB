@@ -155,3 +155,28 @@ describe("loadEntry reads a theme part (W-091, R-061, R-063)", () => {
     );
   });
 });
+
+describe("loadEntry for an entry of another collection (W-307)", () => {
+  test("reads emvb_layout from that collection and notes whether it has a title", async () => {
+    const { fetcher, paths } = contentFetcher({
+      item: {
+        id: "01NEWS",
+        slug: "opening",
+        status: "draft",
+        data: { title: "Opening", layout: "x", emvb_layout: layout },
+      },
+    });
+    const entry = await loadEntry(fetcher, "01NEWS", "news");
+    expect(paths).toEqual(["/_emdash/api/content/news/01NEWS"]);
+    expect([entry.collection, entry.title, entry.entryHasTitle]).toEqual(["news", "Opening", true]);
+    expect(entry.layout).toEqual(layout);
+  });
+
+  test("an entry with no layout yet opens empty, and one without a title field says so", async () => {
+    const { fetcher } = contentFetcher({
+      item: { id: "01P", slug: "acme", data: { name: "Acme" } },
+    });
+    const entry = await loadEntry(fetcher, "01P", "partners");
+    expect([entry.layout, entry.entryHasTitle]).toEqual([null, false]);
+  });
+});

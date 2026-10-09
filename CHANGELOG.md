@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Visual collections:** any EmDash collection can be edited in EmVB. **Edit visually** on the Pages VisualBuilder page adds a Visual layout field (`emvb_layout`), so every entry has its own layout in the editor while its other fields stay in EmDash's editor. Saves are validated, and host routes render entries with the new `resolveEmVBEntry`. See [Visual collections](docs/guides/visual-collections.md) (W-307).
+
 ## 0.2.1 — 2026-10-08
 
 EmVB now supports EmDash CMS 1.2. This release is built and tested on EmDash 1.2.0 (unit tests, and the end-to-end suite on the Node and Cloudflare demos). The peer range stays `emdash` ^1.0.0, so sites on EmDash 1.0 and 1.1 can update too. Nothing in EmDash 1.2 broke EmVB. Checking against it turned up a few bugs that affected every 1.x version, and they're fixed here:

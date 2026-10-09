@@ -10,3 +10,13 @@ export const EDITOR_ROLE = 40;
 export const DESIGN_KEY = "system";
 /** Editor working copy. The public route keeps reading `DESIGN_KEY` (W-100). */
 export const DESIGN_DRAFT_KEY = "draft";
+/** W-307: the field "Edit visually" adds to an EmDash collection; it holds each entry's own layout. */
+export const ENTRY_LAYOUT_FIELD = "emvb_layout";
+/** True for EmVB's own collections, which store the layout in `layout`. */
+export const isEmvbCollection = (collection: string) =>
+  collection === PAGES_COLLECTION || collection === THEME_PARTS_COLLECTION;
+/** The field that holds an entry's layout: `layout` in EmVB's collections, else `emvb_layout`. */
+export const layoutFieldFor = (collection: string) =>
+  isEmvbCollection(collection) ? "layout" : ENTRY_LAYOUT_FIELD;
+/** A collection slug as EmDash allows it, so a URL can't point the editor anywhere else. */
+export const COLLECTION_SLUG = /^[a-z][a-z0-9_]{0,63}$/;

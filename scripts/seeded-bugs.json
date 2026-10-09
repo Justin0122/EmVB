@@ -403,8 +403,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/hooks.ts",
-          "search": "if (event.actor && event.actor.role < EDITOR_ROLE) {",
-          "replace": "if (event.actor && event.actor.role < 0) {"
+          "search": "if (owned && event.actor && event.actor.role < EDITOR_ROLE) {",
+          "replace": "if (owned && event.actor && event.actor.role < 0) {"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/test/server"],
@@ -417,8 +417,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/hooks.ts",
-          "search": "  if (event.content[\"layout\"] !== undefined) {\n    const result = validateLayout(parseJsonField(event.content[\"layout\"]));",
-          "replace": "  if (false as boolean) {\n    const result = validateLayout(parseJsonField(event.content[\"layout\"]));"
+          "search": "  if (rawLayout !== undefined && !(rawLayout === null && !owned)) {",
+          "replace": "  if (false as boolean) {"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/test/server"],
@@ -794,8 +794,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/content-api.ts",
-          "search": "        ...(rev ? { _rev: rev } : {}),\n      },\n    },\n  );\n  return body[\"_rev\"];",
-          "replace": "      },\n    },\n  );\n  return body[\"_rev\"];"
+          "search": "    seo: seoBody(draft),\n    ...(rev ? { _rev: rev } : {}),\n  };",
+          "replace": "    seo: seoBody(draft),\n  };"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin"],
@@ -808,8 +808,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/content-api.ts",
-          "search": "        ...(rev ? { _rev: rev } : {}),\n      },\n    },\n  );\n  return body[\"_rev\"];",
-          "replace": "      },\n    },\n  );\n  return body[\"_rev\"];"
+          "search": "    seo: seoBody(draft),\n    ...(rev ? { _rev: rev } : {}),\n  };",
+          "replace": "    seo: seoBody(draft),\n  };"
         }
       ],
       "command": ["bun", "run", "e2e", "e2e/editing.e2e.ts", "--project=node"],
@@ -1095,8 +1095,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/hooks.ts",
-          "search": "if (event.actor && event.actor.role < EDITOR_ROLE) {",
-          "replace": "if (event.actor && event.actor.role < 0) {"
+          "search": "if (owned && event.actor && event.actor.role < EDITOR_ROLE) {",
+          "replace": "if (owned && event.actor && event.actor.role < 0) {"
         }
       ],
       "command": ["bun", "run", "e2e", "e2e/access.e2e.ts", "--project=node", "-g", "author"],
@@ -10131,8 +10131,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/hooks.ts",
-          "search": "      next = { ...(next ?? event.content), layout: result.layout };",
-          "replace": "      next = { layout: result.layout };"
+          "search": "      next = { ...(next ?? event.content), [layoutField]: result.layout };",
+          "replace": "      next = { [layoutField]: result.layout };"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/before-save.test.ts"],
@@ -10145,8 +10145,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/hooks.ts",
-          "search": "  const kind = event.collection === THEME_PARTS_COLLECTION ? \"theme part\" : \"page\";",
-          "replace": "  const kind = \"page\";"
+          "search": "  const kind =\n    event.collection === THEME_PARTS_COLLECTION ? \"theme part\" : owned ? \"page\" : \"entry\";",
+          "replace": "  const kind = owned ? \"page\" : \"entry\";"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/before-save.test.ts"],
@@ -11457,8 +11457,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "astro.params[options.param ?? \"slug\"]",
-          "replace": "astro.params[\"slug\"]"
+          "search": "  const slug = decodeSlug(astro.params[options.param ?? \"slug\"]);\n  if (!slug) return null;\n  // No emvb_pages",
+          "replace": "  const slug = decodeSlug(astro.params[\"slug\"]);\n  if (!slug) return null;\n  // No emvb_pages"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
@@ -11471,8 +11471,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "  try {\n    found = await getEmDashEntry(PAGES_COLLECTION, slug);\n  } catch {\n    // No emvb_pages collection yet (EmVB not set up): not an EmVB page.\n    return null;\n  }",
-          "replace": "  found = await getEmDashEntry(PAGES_COLLECTION, slug);"
+          "search": "  try {\n    found = await getEmDashEntry(collection, slug);\n  } catch {\n    return null;\n  }",
+          "replace": "  found = await getEmDashEntry(collection, slug);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
@@ -25692,6 +25692,174 @@
         "./packages/emvb/src/admin/editor/panels/settings/style-sections.test.tsx"
       ],
       "expect": "\\(fail\\).*W-306"
+    },
+    {
+      "id": "W-307/any-collection-param",
+      "requirement": "W-307",
+      "description": "The editor URL accepts any collection value, so a bad one isn't replaced by Visual pages.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/constants.ts",
+          "search": "export const COLLECTION_SLUG = /^[a-z][a-z0-9_]{0,63}$/;",
+          "replace": "export const COLLECTION_SLUG = /^.*$/;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/pages/editor-search.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/entry-save-as-page",
+      "requirement": "W-307",
+      "description": "An entry of another collection saves like a Visual page: layout, canvas mode and SEO.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/content-api.ts",
+          "search": "  if (collection !== PAGES_COLLECTION) {\n    return {",
+          "replace": "  if (collection === \"never\") {\n    return {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/api-client.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/entry-save-always-title",
+      "requirement": "W-307",
+      "description": "An entry without a title field is sent a title anyway.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/content-api.ts",
+          "search": "        ...(draft.entryHasTitle ? { title: draft.title } : {}),",
+          "replace": "        title: draft.title,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/api-client.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/hook-skips-entries",
+      "requirement": "W-307",
+      "description": "The save hook ignores every collection but EmVB's own, so an invalid emvb_layout saves.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/hooks.ts",
+          "search": "  if (!owned && event.content[ENTRY_LAYOUT_FIELD] === undefined) return;",
+          "replace": "  if (!owned) return;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/../test/server/before-save.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/hook-refuses-cleared-layout",
+      "requirement": "W-307",
+      "description": "Clearing an entry's layout (null) is refused as an invalid layout.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/hooks.ts",
+          "search": "  if (rawLayout !== undefined && !(rawLayout === null && !owned)) {",
+          "replace": "  if (rawLayout !== undefined) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/../test/server/before-save.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/entry-reads-layout-field",
+      "requirement": "W-307",
+      "description": "Entries of other collections read and write `layout` instead of `emvb_layout`.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/constants.ts",
+          "search": "  isEmvbCollection(collection) ? \"layout\" : ENTRY_LAYOUT_FIELD;",
+          "replace": "  isEmvbCollection(collection) ? \"layout\" : \"layout\";"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/load-entry.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/entry-without-layout-renders",
+      "requirement": "W-307",
+      "description": "resolveEmVBEntry renders an entry that has no layout instead of returning null.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve.ts",
+          "search": "  if (!layout && !emptyIsPage) return null;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/widget-link-drops-collection",
+      "requirement": "W-307",
+      "description": "The layout widget links an entry of another collection to the editor without its collection.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/widgets/LayoutField.tsx",
+          "search": "    : `${base}&collection=${encodeURIComponent(entry.collection)}`;",
+          "replace": "    : base;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/widgets/LayoutField.test.tsx"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/any-layout-field-is-visual",
+      "requirement": "W-307",
+      "description": "A collection with a plain `layout` json field counts as visual.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/setup/visual-collections.ts",
+          "search": "  fields.some((field) => field.slug === ENTRY_LAYOUT_FIELD && field.widget === LAYOUT_WIDGET);",
+          "replace": "  fields.some((field) => field.slug === ENTRY_LAYOUT_FIELD || field.slug === \"layout\");"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/pages/visual-collections.test.tsx"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/hidden-collections-offered",
+      "requirement": "W-307",
+      "description": "Hidden collections are offered for Edit visually.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/setup/visual-collections.ts",
+          "search": "  !isEmvbCollection(collection.slug) && collection.hidden !== true;",
+          "replace": "  !isEmvbCollection(collection.slug);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/pages/visual-collections.test.tsx"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/entry-title-assumed",
+      "requirement": "W-307",
+      "description": "Every entry is assumed to have a title field.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/useEditorData.ts",
+          "search": "{ entryHasTitle: typeof data[\"title\"] === \"string\" }",
+          "replace": "{ entryHasTitle: true }"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/load-entry.test.ts"],
+      "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-307/entry-settings-as-page",
+      "requirement": "W-307",
+      "description": "An entry of another collection gets the Visual page settings (page layout, SEO).",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/PageSettings.tsx",
+          "search": "  if (kind === \"entry\") {",
+          "replace": "  if (kind === (\"never\" as string)) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/page-settings.test.tsx"],
+      "expect": "\\(fail\\).*W-307"
     }
   ]
 }

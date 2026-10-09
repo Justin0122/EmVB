@@ -6,11 +6,14 @@ import type {
   ThemePartType,
   TriggersDoc,
 } from "../core/index.ts";
-import { PAGES_COLLECTION, PLUGIN_ID } from "../constants.ts";
+import { ENTRY_LAYOUT_FIELD, PAGES_COLLECTION, PLUGIN_ID } from "../constants.ts";
 import { listAllItems, requestJson, type Fetcher } from "./api.ts";
 import { entryStatus } from "./entry-status.ts";
 
 const CONTENT = `/_emdash/api/content/${PAGES_COLLECTION}`;
+/** The content API path of `collection` (W-307: the editor also opens other collections' entries). */
+const collectionPath = (collection: string) =>
+  `/_emdash/api/content/${encodeURIComponent(collection)}`;
 
 type RawItem = {
   id: string;
@@ -86,6 +89,11 @@ export type PageDraft = {
   triggers?: TriggersDoc;
   /** Floats only — edge and whether a close button is offered. */
   float?: FloatSettings;
+  /**
+   * W-307: entries of other collections only. Whether the entry has a `title` field, so a save
+   * sends the title only when there is one to write.
+   */
+  entryHasTitle?: boolean;
 };
 
 /**
@@ -117,25 +125,42 @@ function seoBody(draft: PageDraft) {
   };
 }
 
+/**
+ * The save body. A Visual page sends its title, layout, canvas mode, slug and SEO. An entry of
+ * another collection (W-307) sends only its layout, plus its title and slug: EmDash keeps the
+ * fields a save leaves out, and the entry's other fields and SEO belong to EmDash's own editor.
+ */
+function saveBody(draft: PageDraft, rev: string | null, collection: string = PAGES_COLLECTION) {
+  if (collection !== PAGES_COLLECTION) {
+    return {
+      data: {
+        [ENTRY_LAYOUT_FIELD]: draft.layout,
+        ...(draft.entryHasTitle ? { title: draft.title } : {}),
+      },
+      ...(draft.slug ? { slug: draft.slug } : {}),
+      ...(rev ? { _rev: rev } : {}),
+    };
+  }
+  return {
+    data: { title: draft.title, layout: draft.layout, canvas_mode: draft.canvasMode },
+    slug: draft.slug,
+    seo: seoBody(draft),
+    ...(rev ? { _rev: rev } : {}),
+  };
+}
+
 /** Saves the draft with `_rev`, so a concurrent change fails with 409 instead of being overwritten. */
 export async function savePage(
   fetcher: Fetcher,
   id: string,
   draft: PageDraft,
   rev: string | null,
+  collection: string = PAGES_COLLECTION,
 ): Promise<string> {
   const body = await requestJson<{ _rev: string }>(
     fetcher,
-    `${CONTENT}/${encodeURIComponent(id)}`,
-    {
-      method: "PUT",
-      body: {
-        data: { title: draft.title, layout: draft.layout, canvas_mode: draft.canvasMode },
-        slug: draft.slug,
-        seo: seoBody(draft),
-        ...(rev ? { _rev: rev } : {}),
-      },
-    },
+    `${collectionPath(collection)}/${encodeURIComponent(id)}`,
+    { method: "PUT", body: saveBody(draft, rev, collection) },
   );
   return body["_rev"];
 }
@@ -172,13 +197,21 @@ export async function discardDraft(
   );
 }
 
-export const publishPage = (fetcher: Fetcher, id: string, rev: string | null) =>
-  publishEntry(fetcher, CONTENT, id, rev);
+export const publishPage = (
+  fetcher: Fetcher,
+  id: string,
+  rev: string | null,
+  collection: string = PAGES_COLLECTION,
+) => publishEntry(fetcher, collectionPath(collection), id, rev);
 
-export async function previewUrl(fetcher: Fetcher, id: string): Promise<string> {
+export async function previewUrl(
+  fetcher: Fetcher,
+  id: string,
+  collection: string = PAGES_COLLECTION,
+): Promise<string> {
   const body = await requestJson<{ url: string }>(
     fetcher,
-    `${CONTENT}/${encodeURIComponent(id)}/preview-url`,
+    `${collectionPath(collection)}/${encodeURIComponent(id)}/preview-url`,
     { method: "POST", body: {} },
   );
   return body.url;

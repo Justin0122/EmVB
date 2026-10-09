@@ -26,6 +26,7 @@ export function SettingsPanel({
   slugError,
   onSlugEdit,
   kind,
+  entryEditHref,
   onStyleState,
   device = "desktop",
   items,
@@ -45,7 +46,9 @@ export function SettingsPanel({
   rejection: string | null;
   slugError: string | null;
   onSlugEdit: () => void;
-  kind: "page" | "theme-part";
+  kind: "page" | "theme-part" | "entry";
+  /** W-307: where an entry of another collection edits its other fields. */
+  entryEditHref?: string;
   /** The Style tab's chosen state, for the canvas preview (W-089). */
   onStyleState?: (nodeId: string, state: StyleStateChoice) => void;
   /** Which device's styles the Style tab edits (W-096). */
@@ -101,6 +104,7 @@ export function SettingsPanel({
           page={state.page}
           slugError={slugError}
           kind={kind}
+          {...(entryEditHref ? { entryEditHref } : {})}
           fetcher={fetcher}
           onChange={(patch) => {
             if (patch.slug !== undefined) onSlugEdit();
