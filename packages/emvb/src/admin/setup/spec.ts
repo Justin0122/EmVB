@@ -104,4 +104,12 @@ export const THEME_PARTS_FIELD_SPECS: readonly FieldSpec[] = [
     validation: null,
     defaultValue: { schemaVersion: 1, edge: "top", dismiss: false },
   },
+  {
+    // W-312: a Component's fields, which every use fills in.
+    slug: "component_fields",
+    label: "Component fields",
+    type: "json",
+    validation: null,
+    defaultValue: { schemaVersion: 1, fields: [] },
+  },
 ];

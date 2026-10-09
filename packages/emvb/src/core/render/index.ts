@@ -1,3 +1,5 @@
+import { renderComponent } from "./component.ts";
+import type { ComponentNode } from "../schema/layout.ts";
 import { generateCss } from "../css/generate.ts";
 import { cssScopeToken, scopeAttribute, scopeCss, scopeWrapperCss } from "../css/scope.ts";
 import { ELEMENTS } from "../elements/index.ts";
@@ -201,6 +203,7 @@ export function renderPage(
     id: string | undefined,
     nodeId: string,
     ruleId: string | undefined,
+    insideComponent = false,
   ): Record<string, string> => {
     const classes = [...(isRoot ? ["emvb-root"] : []), `emvb-${node.type}`];
     for (const classId of node.classes ?? []) {
@@ -264,7 +267,8 @@ export function renderPage(
       });
     }
     const attrs: Record<string, string> = { class: classes.join(" "), ...customAttributes(node) };
-    if (mode === "editor" && id) attrs["data-emvb-id"] = id;
+    // W-312: elements inside a component aren't editable on their own; the component is.
+    if (mode === "editor" && id && !insideComponent) attrs["data-emvb-id"] = id;
     if (node.htmlId && HTML_ID.test(node.htmlId)) attrs.id = node.htmlId;
     // W-230: the site's text direction on the root, also a fallback when the host's <html> has none.
     if (isRoot && design.direction) attrs.dir = design.direction;
@@ -293,7 +297,14 @@ export function renderPage(
     if (isTabsNode(node)) rendered.tabs = true;
     if (type === "menu-item" && hasChildren(node)) rendered.menuDropdown = true;
     const ruleId = id === undefined ? undefined : ruleIdFor(id, dynamic?.idOrigin ?? "");
-    const attrs = nodeAttrs(node, isRoot, id, nodeId, ruleId);
+    const attrs = nodeAttrs(
+      node,
+      isRoot,
+      id,
+      nodeId,
+      ruleId,
+      (dynamic?.componentStack?.length ?? 0) > 0,
+    );
     const def = ELEMENTS[type as keyof typeof ELEMENTS];
     if (isFormNode(node)) return finish(node, renderForm(node, attrs, ctx, dynamic));
     if (isLoopNode(node)) return finish(node, renderLoop(node, attrs, ctx, dynamic));
@@ -301,6 +312,9 @@ export function renderPage(
       return finish(node, renderPagination(node as PaginationNode, attrs, dynamic, mode));
     }
     if (isSectionNode(node)) return finish(node, renderSection(node, attrs, ctx, dynamic));
+    if (node.type === "component") {
+      return finish(node, renderComponent(node as ComponentNode, attrs, ctx, dynamic));
+    }
     if (isDynamicPostNode(node)) {
       return finish(
         node,

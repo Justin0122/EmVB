@@ -212,6 +212,7 @@ export function themePartLocationApplies(
       return false;
     case "section":
     case "page_template":
+    case "component":
       // Reusable fragments; never selected as a page location.
       return false;
   }

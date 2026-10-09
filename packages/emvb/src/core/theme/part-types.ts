@@ -12,6 +12,7 @@ export const THEME_PART_TYPES = [
   "page_template",
   "popup",
   "float",
+  "component",
 ] as const;
 
 export type ThemePartType = (typeof THEME_PART_TYPES)[number];
@@ -32,7 +33,12 @@ export const CONTENT_THEME_PART_TYPES = [
 export type ContentThemePartType = (typeof CONTENT_THEME_PART_TYPES)[number];
 
 /** Reusable item templates (not selected by route). */
-export const ITEM_THEME_PART_TYPES = ["loop_item", "section", "page_template"] as const;
+export const ITEM_THEME_PART_TYPES = [
+  "loop_item",
+  "section",
+  "page_template",
+  "component",
+] as const;
 
 export type ItemThemePartType = (typeof ITEM_THEME_PART_TYPES)[number];
 
@@ -54,6 +60,7 @@ export const THEME_PART_TYPE_LABELS: Record<ThemePartType, string> = {
   page_template: "Page template",
   popup: "Popup",
   float: "Float",
+  component: "Component",
 };
 
 export function isThemePartType(value: unknown): value is ThemePartType {

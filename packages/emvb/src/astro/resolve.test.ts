@@ -209,3 +209,36 @@ describe("collection Loops on a page (W-308)", () => {
     listed = [];
   });
 });
+
+describe("components on a page (W-312)", () => {
+  test("a use renders its published component's design with its values", async () => {
+    listed = [
+      {
+        id: "comp1",
+        data: {
+          id: "comp1",
+          part_type: "component",
+          layout: layout({
+            id: "head0009",
+            type: "heading",
+            props: { text: "x", level: 2 },
+            bind: { text: "title" },
+          } as unknown as LayoutNode),
+          component_fields: {
+            schemaVersion: 1,
+            fields: [{ key: "title", label: "Titel", kind: "text" }],
+          },
+        },
+      },
+    ];
+    const use = {
+      id: "use00001",
+      type: "component",
+      props: { partId: "comp1", values: { title: "Wat wij doen" } },
+    } as unknown as LayoutNode;
+    lookup = async () => page({ title: "Home", layout: layout(use) });
+    const resolved = await resolveEmVBPage(astro({ slug: "home" }));
+    expect(resolved?.html).toContain("Wat wij doen</h2>");
+    listed = [];
+  });
+});

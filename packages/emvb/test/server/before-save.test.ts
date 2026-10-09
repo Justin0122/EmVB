@@ -136,3 +136,16 @@ describe("content:beforeSave in other collections (W-307)", () => {
     expect(await run("news", { emvb_layout: s1Page() }, 20).result).toBeUndefined();
   });
 });
+
+describe("content:beforeSave for component fields (W-312)", () => {
+  test("a valid field list saves; an invalid one is refused", async () => {
+    const ok = { schemaVersion: 1, fields: [{ key: "title", label: "Titel", kind: "text" }] };
+    expect(await failure(run(THEME_PARTS_COLLECTION, { component_fields: ok }).result)).toBe(
+      "saved",
+    );
+    const bad = { schemaVersion: 1, fields: [{ key: "Title", label: "Titel", kind: "text" }] };
+    expect(
+      await failure(run(THEME_PARTS_COLLECTION, { component_fields: bad }).result),
+    ).toStartWith("The theme part component_fields are invalid.");
+  });
+});

@@ -354,6 +354,19 @@ export {
   type PaginationItem,
 } from "./theme/pagination.ts";
 export {
+  applyComponent,
+  collectComponentPartIds,
+  COMPONENT_FIELD_KINDS,
+  COMPONENT_FIELDS_VERSION,
+  ComponentFieldsDoc,
+  emptyComponentFields,
+  fieldValue,
+  validateComponentFields,
+  type ComponentField,
+  type ComponentFieldKind,
+  type ComponentTemplate,
+} from "./theme/component.ts";
+export {
   collectLoopQueries,
   DEFAULT_LOOP_LIMIT,
   loopQueryKey,

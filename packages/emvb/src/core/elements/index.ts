@@ -19,6 +19,7 @@ import type {
   ListNode,
   SpacerNode,
   RichTextNode,
+  ComponentNode,
   TextNode,
   VideoNode,
 } from "../schema/layout.ts";
@@ -238,6 +239,24 @@ const richText: ElementDefinition<RichTextNode> = {
     ],
   },
   build: (node, attrs) => ({ tag: "div", attrs, children: parseRichText(node.props.html) }),
+};
+
+/**
+ * W-312: one use of a component. Its children come from the component's design (see
+ * `renderComponent`); the editor fills its values from the component's field list.
+ */
+const component: ElementDefinition<ComponentNode> = {
+  baseCss:
+    ".emvb-component{min-width:0}.emvb-component[data-emvb-component-missing]{min-height:48px;padding:12px;color:var(--text-color-kumo-subtle,#666);background:var(--color-kumo-tint,#eee)}",
+  defaults: () => ({ type: "component", props: { partId: "", values: {} } }),
+  descriptor: {
+    type: "component",
+    name: "Component",
+    group: "dynamic",
+    defaultTab: "content",
+    fields: [],
+  },
+  build: (_node, attrs, children) => ({ tag: "div", attrs, children }),
 };
 
 const label: ElementDefinition<LabelNode> = {
@@ -940,6 +959,7 @@ export const ELEMENTS = {
   divider,
   text,
   "rich-text": richText,
+  component,
   label,
   link,
   button,

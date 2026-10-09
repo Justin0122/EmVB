@@ -2287,8 +2287,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "    if (mode === \"editor\" && id) attrs[\"data-emvb-id\"] = id;",
-          "replace": "    if (id) attrs[\"data-emvb-id\"] = id;"
+          "search": "    if (mode === \"editor\" && id && !insideComponent) attrs[\"data-emvb-id\"] = id;",
+          "replace": "    if (id && !insideComponent) attrs[\"data-emvb-id\"] = id;"
         }
       ],
       "command": [
@@ -11435,8 +11435,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "if (mode === \"editor\" && id) attrs[\"data-emvb-id\"] = id;",
-          "replace": "if (id) attrs[\"data-emvb-id\"] = id;"
+          "search": "if (mode === \"editor\" && id && !insideComponent) attrs[\"data-emvb-id\"] = id;",
+          "replace": "if (id && !insideComponent) attrs[\"data-emvb-id\"] = id;"
         }
       ],
       "command": [
@@ -19287,8 +19287,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "  attributes: HtmlAttributes.optional(),\n  label: NodeLabel.optional(),\n});",
-          "replace": "  attributes: HtmlAttributes.optional(),\n});"
+          "search": "  attributes: HtmlAttributes.optional(),\n  label: NodeLabel.optional(),\n  bind: Bindings.optional(),\n});",
+          "replace": "  attributes: HtmlAttributes.optional(),\n  bind: Bindings.optional(),\n});"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/schema/node-label.test.ts"],
@@ -26224,6 +26224,146 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
       "expect": "\\(fail\\).*W-311"
+    },
+    {
+      "id": "W-312/text-not-bound",
+      "requirement": "W-312",
+      "description": "Bound text and rich text props keep the design's own value.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "  if (typeof value === \"string\" || typeof value === \"boolean\") props[target] = value;",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/show-ignored",
+      "requirement": "W-312",
+      "description": "Elements bound with show render even when their field is empty.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "  if (showKey && !isSet(lookup(showKey, scopes)?.value)) return null;",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/repeat-same-ids",
+      "requirement": "W-312",
+      "description": "Repeated list items reuse the design's element id.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "    id: suffix ? `${node.id}${suffix}`.slice(0, 24) : node.id,",
+          "replace": "    id: node.id,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/list-max-ignored",
+      "requirement": "W-312",
+      "description": "A list renders more items than its field allows.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "slice(0, field.max ?? 50)",
+          "replace": "slice(0, 50)"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/select-any-value",
+      "requirement": "W-312",
+      "description": "A select field passes any stored value through as a class.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "      return field.options.some((o) => o.value === value)\n        ? value\n        : (field.default ?? field.options[0]?.value);",
+          "replace": "      return value;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/classes-not-bound",
+      "requirement": "W-312",
+      "description": "A select bound to classes adds no class.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "        classes = [...(classes ?? []), found.value].slice(0, 20);",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/self-include",
+      "requirement": "W-312",
+      "description": "A component that uses itself expands until the depth limit.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/component.ts",
+          "search": "stack.includes(partId) || ",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/inner-elements-selectable",
+      "requirement": "W-312",
+      "description": "Elements inside a component get editor ids, so they select instead of the component.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "if (mode === \"editor\" && id && !insideComponent) attrs",
+          "replace": "if (mode === \"editor\" && id) attrs"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/fields-not-validated",
+      "requirement": "W-312",
+      "description": "A Component's field list saves unchecked.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/hooks.ts",
+          "search": "      return result.ok\n        ? { ok: true, value: result.doc }\n        : { ok: false, issues: [{ code: \"invalid_component_fields\", message: result.message }] };",
+          "replace": "      return { ok: true, value: raw ?? result };"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/test/server/before-save.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/page-drops-components",
+      "requirement": "W-312",
+      "description": "A page's component uses get no designs.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve.ts",
+          "search": "    ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*W-312"
     }
   ]
 }

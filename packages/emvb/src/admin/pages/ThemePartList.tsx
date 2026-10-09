@@ -34,6 +34,7 @@ const FILTERS: { value: Filter; label: string }[] = [
   { value: "archive", label: "Archive" },
   { value: "loop_item", label: "Loop Item" },
   { value: "section", label: "Sections" },
+  { value: "component", label: "Components" },
   { value: "page_template", label: "Page templates" },
   { value: "popup", label: "Popups" },
   { value: "float", label: "Floats" },

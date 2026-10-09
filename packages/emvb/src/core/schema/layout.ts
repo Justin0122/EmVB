@@ -56,6 +56,22 @@ const BoxLink = {
   newTab: z.boolean().optional(),
 };
 
+/** W-312: a component field key, as the component's field list names it. */
+export const COMPONENT_FIELD_KEY = /^[a-z][a-z0-9_]{0,39}$/;
+
+/**
+ * W-312: inside a component's design, which of the element's props take a field's value (a
+ * prop name → field key). `show`, `repeat` and `classes` are special: show the element only when
+ * the field has a value, repeat it for each item of a list field, add the chosen option as a
+ * style class.
+ */
+const Bindings = z
+  .record(
+    z.string().regex(/^[a-zA-Z][a-zA-Z0-9]{0,39}$/),
+    z.string().regex(COMPONENT_FIELD_KEY, "Use a field key such as body"),
+  )
+  .refine((value) => Object.keys(value).length <= 16, "At most 16 bindings");
+
 /** The fields every element has; `props` is the element's own strict props schema. */
 const nodeFields = <T extends string, P extends z.ZodType>(type: T, props: P) => ({
   id: NodeId,
@@ -69,6 +85,7 @@ const nodeFields = <T extends string, P extends z.ZodType>(type: T, props: P) =>
   htmlId: HtmlId.optional(),
   attributes: HtmlAttributes.optional(),
   label: NodeLabel.optional(),
+  bind: Bindings.optional(),
 });
 
 const leafNode = <T extends string, P extends z.ZodType>(type: T, props: P) =>
@@ -107,6 +124,18 @@ export const TextNode = leafNode(
   z.strictObject({
     text: z.string().max(MAX_TEXT_LENGTH),
     tag: z.enum(TEXT_TAGS).optional(),
+  }),
+);
+
+/**
+ * W-312: one use of a component (a published `component` theme part). It holds only the values
+ * of the component's fields; the design comes from the part, so changing it updates every use.
+ */
+export const ComponentNode = leafNode(
+  "component",
+  z.strictObject({
+    partId: z.string().max(128),
+    values: z.record(z.string().regex(COMPONENT_FIELD_KEY), z.unknown()).optional(),
   }),
 );
 
@@ -503,6 +532,7 @@ export const KNOWN_ELEMENT_TYPES = [
   "menu-item",
   "layout-section",
   "rich-text",
+  "component",
 ] as const;
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
@@ -544,6 +574,7 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   DividerNode,
   TextNode,
   RichTextNode,
+  ComponentNode,
   LabelNode,
   LinkNode,
   ButtonNode,
@@ -579,6 +610,7 @@ export type SpacerNode = z.infer<typeof SpacerNode>;
 export type DividerNode = z.infer<typeof DividerNode>;
 export type TextNode = z.infer<typeof TextNode>;
 export type RichTextNode = z.infer<typeof RichTextNode>;
+export type ComponentNode = z.infer<typeof ComponentNode>;
 export type LabelNode = z.infer<typeof LabelNode>;
 export type LinkNode = z.infer<typeof LinkNode>;
 export type ButtonNode = z.infer<typeof ButtonNode>;
@@ -607,6 +639,7 @@ type DevicesOf = z.infer<typeof DeviceStyles>;
 type HiddenOnOf = z.infer<typeof HiddenOn>;
 type ClassesOf = z.infer<typeof ClassIds>;
 type HtmlIdOf = z.infer<typeof HtmlId>;
+type BindingsOf = z.infer<typeof Bindings>;
 type HtmlAttributeOf = z.infer<typeof HtmlAttribute>;
 type IdOf = z.infer<typeof NodeId>;
 
@@ -621,6 +654,7 @@ export type UnknownNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children?: LayoutNode[];
@@ -636,6 +670,7 @@ export type ContainerNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -651,6 +686,7 @@ export type DivBlockNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -670,6 +706,7 @@ export type LayoutSectionNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -691,6 +728,7 @@ export type GridNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -706,6 +744,7 @@ export type FlexboxNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -726,6 +765,7 @@ export type SvgNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
 };
@@ -740,6 +780,7 @@ export type TabPanelNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -755,6 +796,7 @@ export type TabsNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -770,6 +812,7 @@ export type FormNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -791,6 +834,7 @@ export type LoopNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -806,6 +850,7 @@ export type SectionNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -821,6 +866,7 @@ export type AccordionNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -836,6 +882,7 @@ export type MenuNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -851,6 +898,7 @@ export type MenuItemNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -866,6 +914,7 @@ export type AccordionItemNode = {
   hiddenOn?: HiddenOnOf;
   classes?: ClassesOf;
   htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
   children: LayoutNode[];
@@ -888,6 +937,7 @@ export type LayoutNode =
   | DividerNode
   | TextNode
   | RichTextNode
+  | ComponentNode
   | LabelNode
   | LinkNode
   | ButtonNode

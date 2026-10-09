@@ -4,7 +4,7 @@ import { ENTRY_LAYOUT_FIELD, PAGES_COLLECTION } from "../constants.ts";
 import { loadCollectionLoops } from "./collection-loops.ts";
 import { formIdsInLayout, loadFormDefinitions } from "./forms-definitions.ts";
 import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
-import { sectionTemplatesFor } from "./resolve-theme.ts";
+import { componentLayouts, componentTemplatesFor, sectionTemplatesFor } from "./resolve-theme.ts";
 
 type EmDashEntry = NonNullable<Awaited<ReturnType<typeof getEmDashEntry>>["entry"]>;
 
@@ -78,10 +78,20 @@ async function renderEntry(
     ? await loadFormDefinitions(handler, astro.url, formIdsInLayout(layout))
     : undefined;
   const sectionTemplates = layout ? await sectionTemplatesFor(layout) : {};
-  // W-308: collection Loops on the page or in its synced sections.
-  const collectionLoops = await loadCollectionLoops([layout, ...Object.values(sectionTemplates)]);
+  // W-312: components on the page or in its synced sections.
+  const componentTemplates = await componentTemplatesFor([
+    layout,
+    ...Object.values(sectionTemplates),
+  ]);
+  // W-308: collection Loops on the page, in its synced sections or in its components.
+  const collectionLoops = await loadCollectionLoops([
+    layout,
+    ...Object.values(sectionTemplates),
+    ...componentLayouts(componentTemplates),
+  ]);
   const dynamic = {
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+    ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),
     ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
   };
   return {

@@ -118,6 +118,7 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
               "page_template",
               "popup",
               "float",
+              "component",
             ],
           },
         },
@@ -174,6 +175,20 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
           },
           "label": "Float",
           "slug": "float",
+          "type": "json",
+          "validation": null,
+        },
+        "collection": "emvb_theme_parts",
+        "kind": "create-field",
+      },
+      {
+        "body": {
+          "defaultValue": {
+            "fields": [],
+            "schemaVersion": 1,
+          },
+          "label": "Component fields",
+          "slug": "component_fields",
           "type": "json",
           "validation": null,
         },
@@ -429,6 +444,7 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
               "page_template",
               "popup",
               "float",
+              "component",
             ],
           },
         },
@@ -485,6 +501,20 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
           },
           "label": "Float",
           "slug": "float",
+          "type": "json",
+          "validation": null,
+        },
+        "collection": "emvb_theme_parts",
+        "kind": "create-field",
+      },
+      {
+        "body": {
+          "defaultValue": {
+            "fields": [],
+            "schemaVersion": 1,
+          },
+          "label": "Component fields",
+          "slug": "component_fields",
           "type": "json",
           "validation": null,
         },
@@ -647,6 +677,93 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
   "parts as spec": {
     "conflicts": [],
     "steps": [],
+  },
+  "parts component_fields default changed": {
+    "conflicts": [],
+    "steps": [],
+  },
+  "parts component_fields missing": {
+    "conflicts": [],
+    "steps": [
+      {
+        "body": {
+          "defaultValue": {
+            "fields": [],
+            "schemaVersion": 1,
+          },
+          "label": "Component fields",
+          "slug": "component_fields",
+          "type": "json",
+          "validation": null,
+        },
+        "collection": "emvb_theme_parts",
+        "kind": "create-field",
+      },
+    ],
+  },
+  "parts component_fields options changed": {
+    "conflicts": [],
+    "steps": [
+      {
+        "body": {
+          "defaultValue": {
+            "fields": [],
+            "schemaVersion": 1,
+          },
+          "label": "Component fields",
+          "validation": null,
+        },
+        "collection": "emvb_theme_parts",
+        "kind": "update-field",
+        "slug": "component_fields",
+      },
+    ],
+  },
+  "parts component_fields options reordered": {
+    "conflicts": [],
+    "steps": [],
+  },
+  "parts component_fields other type": {
+    "conflicts": [
+      "Field "component_fields" on emvb_theme_parts is string; EmVB needs json.",
+    ],
+    "steps": [],
+  },
+  "parts component_fields other widget": {
+    "conflicts": [],
+    "steps": [
+      {
+        "body": {
+          "defaultValue": {
+            "fields": [],
+            "schemaVersion": 1,
+          },
+          "label": "Component fields",
+          "validation": null,
+        },
+        "collection": "emvb_theme_parts",
+        "kind": "update-field",
+        "slug": "component_fields",
+      },
+    ],
+  },
+  "parts component_fields required flipped": {
+    "conflicts": [],
+    "steps": [
+      {
+        "body": {
+          "defaultValue": {
+            "fields": [],
+            "schemaVersion": 1,
+          },
+          "label": "Component fields",
+          "validation": null,
+        },
+        "collection": "emvb_theme_parts",
+        "kind": "update-field",
+        "slug": "component_fields",
+      },
+    ],
   },
   "parts conditions default changed": {
     "conflicts": [],
@@ -1032,6 +1149,7 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
               "page_template",
               "popup",
               "float",
+              "component",
             ],
           },
         },
@@ -1061,6 +1179,7 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
               "page_template",
               "popup",
               "float",
+              "component",
             ],
           },
         },
@@ -1101,6 +1220,7 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
               "page_template",
               "popup",
               "float",
+              "component",
             ],
           },
         },
@@ -1131,6 +1251,7 @@ exports[`planSetup over collection and field variants matches the snapshot (W-08
               "page_template",
               "popup",
               "float",
+              "component",
             ],
           },
         },

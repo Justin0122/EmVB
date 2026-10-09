@@ -6,6 +6,7 @@ import {
   nestingIssues,
   validateLayout,
   validateTriggers,
+  validateComponentFields,
 } from "../core/index.ts";
 import {
   EDITOR_ROLE,
@@ -51,6 +52,16 @@ const THEME_PART_FIELDS: [string, (raw: unknown) => FieldValidation][] = [
     (raw) => {
       const result = validateFloatSettings(raw);
       return result.ok ? { ok: true, value: result.settings } : result;
+    },
+  ],
+  [
+    // W-312: a Component's field list.
+    "component_fields",
+    (raw) => {
+      const result = validateComponentFields(raw);
+      return result.ok
+        ? { ok: true, value: result.doc }
+        : { ok: false, issues: [{ code: "invalid_component_fields", message: result.message }] };
     },
   ],
 ];

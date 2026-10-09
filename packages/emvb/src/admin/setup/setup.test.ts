@@ -139,6 +139,7 @@ describe("planSetup", () => {
       "conditions",
       "triggers",
       "float",
+      "component_fields",
     ]);
   });
 
@@ -172,6 +173,7 @@ describe("planSetup", () => {
           "page_template",
           "popup",
           "float",
+          "component",
         ],
       },
     });

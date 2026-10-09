@@ -163,6 +163,7 @@ describe("ThemePartList", () => {
       "Archive",
       "Loop Item",
       "Sections",
+      "Components",
       "Page templates",
       "Popups1",
       "Floats",

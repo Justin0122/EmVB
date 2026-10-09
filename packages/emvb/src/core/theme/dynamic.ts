@@ -1,4 +1,5 @@
 import type { ArchivePagination } from "./pagination.ts";
+import type { ComponentTemplate } from "./component.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
 import { isParentNode } from "../schema/layout.ts";
 import type { VNode } from "../render/vnode.ts";
@@ -45,6 +46,10 @@ export type ThemeDynamicData = {
    * before rendering (`collectLoopQueries` lists what the layouts ask for).
    */
   collectionLoops?: Record<string, ThemePostFields[]>;
+  /** W-312: published component designs and fields, keyed by theme-part entry id. */
+  componentTemplates?: Record<string, ComponentTemplate>;
+  /** W-312: components being rendered, so a component can't include itself. */
+  componentStack?: readonly string[];
 };
 
 /** Editor canvas placeholders when no live post is bound. */

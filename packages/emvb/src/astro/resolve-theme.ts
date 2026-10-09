@@ -29,6 +29,12 @@ import {
   archivePagePath,
   loopPerPage,
   type ArchivePagination,
+  collectComponentPartIds,
+  emptyComponentFields,
+  LAYOUT_SCHEMA_VERSION,
+  validateComponentFields,
+  type ComponentField,
+  type ComponentTemplate,
 } from "../core/index.ts";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
 import { loadCollectionLoops } from "./collection-loops.ts";
@@ -124,6 +130,8 @@ type StoredPart = {
   triggers: TriggersDoc;
   float: FloatSettings;
   updatedAt: string;
+  /** W-312: a Component's fields (other part types ignore them). */
+  componentFields: ComponentField[];
 };
 
 /** A stored JSON field, or `fallback` when the field was never set. */
@@ -152,8 +160,69 @@ function storedPartFrom(entry: { id: string; data: unknown }): StoredPart | unde
     triggers: triggers.ok ? triggers.triggers : defaultTriggers(),
     float: float.ok ? float.settings : defaultFloatSettings(),
     updatedAt: entryTimestamp(data["updatedAt"] ?? data["updated_at"]) ?? "",
+    componentFields: componentFieldsOf(partType, data["component_fields"]),
   };
 }
+
+/** A Component's stored fields; invalid ones render the design without values (W-312). */
+function componentFieldsOf(partType: ThemePartType, raw: unknown): ComponentField[] {
+  if (partType !== "component") return [];
+  let value = raw;
+  if (typeof raw === "string") {
+    try {
+      value = JSON.parse(raw) as unknown;
+    } catch {
+      return [];
+    }
+  }
+  const result = validateComponentFields(value ?? emptyComponentFields());
+  return result.ok ? result.doc.fields : [];
+}
+
+/**
+ * W-312: the published Components these layouts use, and the ones those use in turn, as their
+ * design (the part layout's children) and fields.
+ */
+function loadComponentTemplates(
+  layouts: readonly (Layout | null | undefined)[],
+  parts: StoredPart[],
+): Record<string, ComponentTemplate> {
+  const byId = new Map(parts.map((p) => [p.id, p]));
+  const templates: Record<string, ComponentTemplate> = {};
+  const queue = layouts.flatMap((layout) => (layout ? collectComponentPartIds([layout.root]) : []));
+  while (queue.length > 0 && Object.keys(templates).length < 64) {
+    const id = queue.shift() as string;
+    if (templates[id]) continue;
+    const part = byId.get(id);
+    if (!part || part.partType !== "component") continue;
+    const layout = readLayout(part.layout);
+    if (!layout) continue;
+    templates[id] = { nodes: layout.root.children, fields: part.componentFields };
+    queue.push(...collectComponentPartIds(layout.root.children));
+  }
+  return templates;
+}
+
+/** The designs of the components a layout and its synced sections use; empty without any. */
+export async function componentTemplatesFor(
+  layouts: readonly (Layout | null | undefined)[],
+): Promise<Record<string, ComponentTemplate>> {
+  const used = layouts.some(
+    (layout) => layout && collectComponentPartIds([layout.root]).length > 0,
+  );
+  if (!used) return {};
+  return loadComponentTemplates(layouts, await loadPublishedThemeParts());
+}
+
+/** A component design as a layout, so collection Loops inside it are found. */
+export const componentLayouts = (templates: Record<string, ComponentTemplate>): Layout[] =>
+  Object.values(templates).map(
+    (t) =>
+      ({
+        schemaVersion: LAYOUT_SCHEMA_VERSION,
+        root: { id: "component-root", type: "container", props: {}, children: t.nodes },
+      }) as Layout,
+  );
 
 const THEME_PARTS_PAGE = 50;
 /** Enough pages for any real site; stops a cursor that never ends. */
@@ -307,14 +376,20 @@ async function buildDynamicForContent(
 ): Promise<ThemeDynamicData | undefined> {
   const loopTemplates = await loadLoopTemplates(layout, parts);
   const sectionTemplates = loadSectionTemplates(layout, parts);
+  const componentTemplates = loadComponentTemplates(
+    [layout, ...Object.values(sectionTemplates), ...Object.values(loopTemplates)],
+    parts,
+  );
   const collectionLoops = await loadCollectionLoops([
     layout,
     ...Object.values(sectionTemplates),
     ...Object.values(loopTemplates),
+    ...componentLayouts(componentTemplates),
   ]);
   const referenced: ThemeDynamicData = {
     ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+    ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),
     ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
   };
   if (partType === "single_post") {
@@ -414,15 +489,22 @@ export async function resolveThemeParts(
     const layout = readLayout(stored.layout);
     const sectionTemplates = layout ? loadSectionTemplates(layout, parts) : {};
     const loopTemplates = layout ? await loadLoopTemplates(layout, parts) : {};
+    // W-312: components in a header, footer, popup or float, or in what they include.
+    const componentTemplates = loadComponentTemplates(
+      [layout, ...Object.values(sectionTemplates), ...Object.values(loopTemplates)],
+      parts,
+    );
     // W-308: collection Loops in a header, footer, popup or float, or in what they include.
     const collectionLoops = await loadCollectionLoops([
       layout,
       ...Object.values(sectionTemplates),
       ...Object.values(loopTemplates),
+      ...componentLayouts(componentTemplates),
     ]);
     const dynamic: ThemeDynamicData = {
       ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
       ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+      ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),
       ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
     };
     return Object.keys(dynamic).length > 0 ? dynamic : undefined;

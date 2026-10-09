@@ -725,6 +725,18 @@
           "args": {}
         }
       ]
+    },
+    "component": {
+      "schemaVersion": 1,
+      "rules": [
+        {
+          "id": "default-entire-site",
+          "op": "include",
+          "group": "general",
+          "name": "entire_site",
+          "args": {}
+        }
+      ]
     }
   },
   "winners": {
@@ -774,6 +786,10 @@
         "all": ["popup-b", "popup-c", "popup-a"]
       },
       "float": {
+        "winner": null,
+        "all": []
+      },
+      "component": {
         "winner": null,
         "all": []
       }
@@ -826,6 +842,10 @@
       "float": {
         "winner": null,
         "all": []
+      },
+      "component": {
+        "winner": null,
+        "all": []
       }
     },
     "notFound": {
@@ -874,6 +894,10 @@
         "all": ["popup-a"]
       },
       "float": {
+        "winner": null,
+        "all": []
+      },
+      "component": {
         "winner": null,
         "all": []
       }
@@ -926,6 +950,10 @@
       "float": {
         "winner": null,
         "all": []
+      },
+      "component": {
+        "winner": null,
+        "all": []
       }
     },
     "page": {
@@ -974,6 +1002,10 @@
         "all": ["popup-b", "popup-a"]
       },
       "float": {
+        "winner": null,
+        "all": []
+      },
+      "component": {
         "winner": null,
         "all": []
       }
@@ -1026,6 +1058,10 @@
       "float": {
         "winner": null,
         "all": []
+      },
+      "component": {
+        "winner": null,
+        "all": []
       }
     },
     "post": {
@@ -1074,6 +1110,10 @@
         "all": ["popup-b", "popup-a"]
       },
       "float": {
+        "winner": null,
+        "all": []
+      },
+      "component": {
         "winner": null,
         "all": []
       }
@@ -1126,6 +1166,10 @@
       "float": {
         "winner": null,
         "all": []
+      },
+      "component": {
+        "winner": null,
+        "all": []
       }
     },
     "postsArchive": {
@@ -1174,6 +1218,10 @@
         "all": ["popup-a"]
       },
       "float": {
+        "winner": null,
+        "all": []
+      },
+      "component": {
         "winner": null,
         "all": []
       }
@@ -1226,6 +1274,10 @@
       "float": {
         "winner": null,
         "all": []
+      },
+      "component": {
+        "winner": null,
+        "all": []
       }
     },
     "otherCategory": {
@@ -1274,6 +1326,10 @@
         "all": ["popup-a"]
       },
       "float": {
+        "winner": null,
+        "all": []
+      },
+      "component": {
         "winner": null,
         "all": []
       }
@@ -1326,6 +1382,10 @@
       "float": {
         "winner": null,
         "all": []
+      },
+      "component": {
+        "winner": null,
+        "all": []
       }
     },
     "other": {
@@ -1376,6 +1436,10 @@
       "float": {
         "winner": null,
         "all": []
+      },
+      "component": {
+        "winner": null,
+        "all": []
       }
     },
     "singularNoCollection": {
@@ -1424,6 +1488,10 @@
         "all": ["popup-b", "popup-a"]
       },
       "float": {
+        "winner": null,
+        "all": []
+      },
+      "component": {
         "winner": null,
         "all": []
       }
