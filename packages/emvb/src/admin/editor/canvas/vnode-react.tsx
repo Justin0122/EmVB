@@ -13,6 +13,9 @@ const REACT_ATTR: Record<string, string> = {
   minlength: "minLength",
   maxlength: "maxLength",
   novalidate: "noValidate",
+  // W-309: Rich text table cells.
+  colspan: "colSpan",
+  rowspan: "rowSpan",
   // The canvas never updates a radio from props, so a tab chosen there stays chosen (QA-5).
   checked: "defaultChecked",
 };

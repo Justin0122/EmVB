@@ -26014,6 +26014,160 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
       "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-309/script-kept",
+      "requirement": "W-309",
+      "description": "Script contents come through Rich text as text.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "  \"script\",\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/unsafe-href-kept",
+      "requirement": "W-309",
+      "description": "Rich text keeps javascript: and data: links.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "    const safe = href ? sanitizeHref(href) : undefined;",
+          "replace": "    const safe = href;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/new-tab-without-noopener",
+      "requirement": "W-309",
+      "description": "A new-tab link in Rich text has no rel=noopener.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "{ href: safe, target: \"_blank\", rel: \"noopener noreferrer\" }",
+          "replace": "{ href: safe, target: \"_blank\" }"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/cell-span-unchecked",
+      "requirement": "W-309",
+      "description": "Table cells keep colspan=1 and any span value.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "/^[1-9][0-9]{0,2}$/.test(value) && value !== \"1\"",
+          "replace": "true"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/depth-unbounded",
+      "requirement": "W-309",
+      "description": "Rich text nesting has no depth limit.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "    if (stack.length > MAX_DEPTH) continue; // Too deep: flatten into the parent.\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/nested-drop-ends-early",
+      "requirement": "W-309",
+      "description": "A dropped tag nested in itself ends the drop at the first close.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "      if (name === dropping.tag && !selfClosing) dropping.depth += closing ? -1 : 1;",
+          "replace": "      if (name === dropping.tag && closing) dropping.depth -= 1;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/comments-kept",
+      "requirement": "W-309",
+      "description": "Comments and doctypes in Rich text come through as text.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "      if (dropping || whole.startsWith(\"<!\") || whole.startsWith(\"<?\")) continue;",
+          "replace": "      if (dropping) continue;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/b-not-renamed",
+      "requirement": "W-309",
+      "description": "<b> is kept as b, which the serializer refuses.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "  b: \"strong\",",
+          "replace": "  b: \"b\","
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/br-not-void",
+      "requirement": "W-309",
+      "description": "The serializer writes <br></br>.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/vnode.ts",
+          "search": "const VOID = new Set([\"hr\", \"img\", \"input\", \"br\"]);",
+          "replace": "const VOID = new Set([\"hr\", \"img\", \"input\"]);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/canvas-span-names",
+      "requirement": "W-309",
+      "description": "The canvas passes colspan and rowspan to React unmapped.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/canvas/vnode-react.tsx",
+          "search": "  colspan: \"colSpan\",\n  rowspan: \"rowSpan\",\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/canvas/vnode-react.test.tsx"],
+      "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-309/element-shows-raw-html",
+      "requirement": "W-309",
+      "description": "The Rich text element shows its HTML as escaped text.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "children: parseRichText(node.props.html) }",
+          "replace": "children: [node.props.html] }"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-309"
     }
   ]
 }

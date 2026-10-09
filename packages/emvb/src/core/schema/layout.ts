@@ -1,3 +1,4 @@
+import { MAX_RICH_TEXT } from "../sanitize/rich-text.ts";
 import { z } from "zod";
 import { MAX_TEXT_LENGTH } from "../limits.ts";
 import { DeviceStyles, HiddenOn, Length, StyleProps, StyleStates } from "./style.ts";
@@ -106,6 +107,14 @@ export const TextNode = leafNode(
   z.strictObject({
     text: z.string().max(MAX_TEXT_LENGTH),
     tag: z.enum(TEXT_TAGS).optional(),
+  }),
+);
+
+/** W-309: formatted text (paragraphs, headings, bold, links, lists, tables) stored as HTML. */
+export const RichTextNode = leafNode(
+  "rich-text",
+  z.strictObject({
+    html: z.string().max(MAX_RICH_TEXT),
   }),
 );
 
@@ -493,6 +502,7 @@ export const KNOWN_ELEMENT_TYPES = [
   "menu",
   "menu-item",
   "layout-section",
+  "rich-text",
 ] as const;
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
@@ -533,6 +543,7 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   SpacerNode,
   DividerNode,
   TextNode,
+  RichTextNode,
   LabelNode,
   LinkNode,
   ButtonNode,
@@ -567,6 +578,7 @@ export type HeadingNode = z.infer<typeof HeadingNode>;
 export type SpacerNode = z.infer<typeof SpacerNode>;
 export type DividerNode = z.infer<typeof DividerNode>;
 export type TextNode = z.infer<typeof TextNode>;
+export type RichTextNode = z.infer<typeof RichTextNode>;
 export type LabelNode = z.infer<typeof LabelNode>;
 export type LinkNode = z.infer<typeof LinkNode>;
 export type ButtonNode = z.infer<typeof ButtonNode>;
@@ -875,6 +887,7 @@ export type LayoutNode =
   | SpacerNode
   | DividerNode
   | TextNode
+  | RichTextNode
   | LabelNode
   | LinkNode
   | ButtonNode

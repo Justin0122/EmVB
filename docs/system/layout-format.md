@@ -43,6 +43,7 @@ How EmVB stores a page and its site-wide design, as implemented through S4 (vari
 | `spacer` | `height` length | none | `<div aria-hidden="true">` with height in CSS |
 | `divider` | `{}` | none | `<hr>` |
 | `text` | `text`, optional `tag` (`p` \| `div`) | none | `<p>` or `<div>` |
+| `rich-text` (W-309) | `html` (≤ 100,000 characters) | none | `<div>` holding the HTML after `parseRichText`: only `p`, `h1`–`h6`, `strong`/`b`, `em`/`i`, `u`, `s`/`strike`/`del`, `sub`, `sup`, `code`, `a` (safe `href`, `target="_blank"` gets `rel="noopener noreferrer"`), `ul`, `ol`, `li`, `blockquote`, `br`, `hr` and tables (`colspan`/`rowspan` on cells) survive; every other attribute and comment is dropped, unknown tags keep their text, and scripts, styles and embeds go with their contents |
 | `label` | `text` | none | `<span>` |
 | `link` | `text`, `href`, optional `newTab` | none | `<a href>` (+ `target`/`rel` when `newTab`) |
 | `button` | `text`, optional `href` and `newTab` | none | `<a href>` when `href` is safe, else `<button type="button">` |

@@ -180,3 +180,34 @@ describe("revealing an element inside tabs (QA-5)", () => {
     expect(tabPanelIdForLabel(null)).toBeNull();
   });
 });
+
+describe("Rich text on the canvas (W-309)", () => {
+  test("tables keep their spans, and React gets no unknown attribute names", async () => {
+    const errors = spyOn(console, "error").mockImplementation(() => {});
+    const host = await mount(
+      <>
+        {vnodeToReact({
+          tag: "table",
+          attrs: {},
+          children: [
+            {
+              tag: "tbody",
+              attrs: {},
+              children: [
+                {
+                  tag: "tr",
+                  attrs: {},
+                  children: [{ tag: "td", attrs: { colspan: "2", rowspan: "3" }, children: ["a"] }],
+                },
+              ],
+            },
+          ],
+        })}
+      </>,
+    );
+    const cell = host.querySelector("td");
+    expect([cell?.getAttribute("colspan"), cell?.getAttribute("rowspan")]).toEqual(["2", "3"]);
+    expect(errors.mock.calls.flat().join(" ")).not.toContain("Invalid DOM property");
+    errors.mockRestore();
+  });
+});

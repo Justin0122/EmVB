@@ -65,6 +65,7 @@ export const STYLE_UI: Record<string, { sections: StyleSectionId[]; defaultOpen:
     },
     heading: { sections: TEXT_SECTIONS, defaultOpen: "typography" },
     text: { sections: TEXT_SECTIONS, defaultOpen: "typography" },
+    "rich-text": { sections: TEXT_SECTIONS, defaultOpen: "typography" },
     label: { sections: TEXT_SECTIONS, defaultOpen: "typography" },
     link: { sections: TEXT_SECTIONS, defaultOpen: "typography" },
     list: { sections: TEXT_SECTIONS, defaultOpen: "typography" },

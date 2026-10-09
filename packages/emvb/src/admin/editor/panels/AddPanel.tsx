@@ -1,6 +1,7 @@
 import { Input } from "@cloudflare/kumo";
 import {
   ArrowsLeftRightIcon,
+  ArticleIcon,
   LinkSimpleIcon,
   MinusIcon,
   RectangleIcon,
@@ -40,6 +41,7 @@ const ICONS: Record<string, typeof TextHIcon> = {
   divider: MinusIcon,
   heading: TextHIcon,
   text: TextAlignLeftIcon,
+  "rich-text": ArticleIcon,
   label: TextTIcon,
   link: LinkSimpleIcon,
   button: CursorClickIcon,

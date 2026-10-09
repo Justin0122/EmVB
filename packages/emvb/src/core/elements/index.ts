@@ -18,6 +18,7 @@ import type {
   LinkNode,
   ListNode,
   SpacerNode,
+  RichTextNode,
   TextNode,
   VideoNode,
 } from "../schema/layout.ts";
@@ -25,6 +26,7 @@ import { CONTAINER_TAGS, TEXT_TAGS } from "../schema/layout.ts";
 import type { ElementDescriptor } from "../schema/descriptors.ts";
 import { sanitizeHref } from "../sanitize/href.ts";
 import { sanitizeSvgMarkup } from "../sanitize/svg.ts";
+import { parseRichText } from "../sanitize/rich-text.ts";
 import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { getBundledIcon } from "../icons/catalog.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
@@ -208,6 +210,32 @@ const text: ElementDefinition<TextNode> = {
     const safe = (TEXT_TAGS as readonly string[]).includes(tag) ? tag : "p";
     return { tag: safe, attrs, children: [node.props.text] };
   },
+};
+
+/**
+ * W-309: formatted text from HTML. Only a fixed set of tags survives (see `parseRichText`); its
+ * spacing follows the site's tag defaults, and tables get borders and padding to stay readable.
+ */
+const richText: ElementDefinition<RichTextNode> = {
+  baseCss:
+    ".emvb-rich-text{min-width:0;overflow-wrap:break-word}:where(.emvb-rich-text)>:first-child{margin-top:0}:where(.emvb-rich-text)>:last-child{margin-bottom:0}:where(.emvb-rich-text) table{width:100%;border-collapse:collapse}:where(.emvb-rich-text) :is(th,td){padding:.5em .75em;border:1px solid color-mix(in srgb,currentColor 20%,transparent);text-align:start;vertical-align:top}:where(.emvb-rich-text) :is(ul,ol){padding-inline-start:1.5em}:where(.emvb-rich-text) blockquote{margin-inline:0;padding-inline-start:1em;border-inline-start:3px solid currentColor}",
+  defaults: () => ({ type: "rich-text", props: { html: "<p>Rich text</p>" } }),
+  descriptor: {
+    type: "rich-text",
+    name: "Rich text",
+    group: "content",
+    defaultTab: "content",
+    fields: [
+      {
+        key: "html",
+        kind: "textarea",
+        label: "Content (HTML)",
+        message:
+          "Paragraphs, headings, bold, italic, links, lists, quotes and tables. Other tags, styles and scripts are removed.",
+      },
+    ],
+  },
+  build: (node, attrs) => ({ tag: "div", attrs, children: parseRichText(node.props.html) }),
 };
 
 const label: ElementDefinition<LabelNode> = {
@@ -909,6 +937,7 @@ export const ELEMENTS = {
   spacer,
   divider,
   text,
+  "rich-text": richText,
   label,
   link,
   button,
