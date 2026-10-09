@@ -70,7 +70,7 @@ export type ComponentField = z.infer<typeof ComponentField>;
 type LeafField = z.infer<typeof LeafField>;
 
 export const COMPONENT_FIELDS_VERSION = 1;
-export const ComponentFieldsDoc = z
+const ComponentFieldsDoc = z
   .strictObject({
     schemaVersion: z.literal(COMPONENT_FIELDS_VERSION),
     fields: z.array(ComponentField).max(30),

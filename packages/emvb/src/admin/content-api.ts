@@ -1,4 +1,5 @@
 import type {
+  ComponentFieldsDoc,
   ConditionsDoc,
   DesignSystem,
   FloatSettings,
@@ -89,6 +90,8 @@ export type PageDraft = {
   triggers?: TriggersDoc;
   /** Floats only — edge and whether a close button is offered. */
   float?: FloatSettings;
+  /** W-316: Components only — the fields every use fills in. */
+  componentFields?: ComponentFieldsDoc;
   /**
    * W-307: entries of other collections only. Whether the entry has a `title` field, so a save
    * sends the title only when there is one to write.

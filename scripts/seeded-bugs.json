@@ -10703,8 +10703,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorData.ts",
-          "search": "if (typeof raw === \"string\") {",
-          "replace": "if (typeof raw === \"number\") {"
+          "search": "function readLayout(raw: unknown): Layout | null {\n  if (raw === null || raw === undefined || raw === \"\") return null;\n  let value: unknown = raw;\n  if (typeof raw === \"string\") {",
+          "replace": "function readLayout(raw: unknown): Layout | null {\n  if (raw === null || raw === undefined || raw === \"\") return null;\n  let value: unknown = raw;\n  if (typeof raw === \"number\") {"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/load-entry.test.ts"],
@@ -26630,6 +26630,76 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
       "expect": "\\(fail\\).*W-315"
+    },
+    {
+      "id": "W-316/fields-not-saved",
+      "requirement": "W-316",
+      "description": "A Component's fields aren't saved.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/theme-api.ts",
+          "search": "draft.partType === \"component\" && draft.componentFields",
+          "replace": "false"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/api-client.test.ts"],
+      "expect": "\\(fail\\).*W-316"
+    },
+    {
+      "id": "W-316/fields-not-loaded",
+      "requirement": "W-316",
+      "description": "A Component opens without its fields.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/useEditorData.ts",
+          "search": "parseThemePartType(data[\"part_type\"]) === \"component\"",
+          "replace": "false"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/load-entry.test.ts"],
+      "expect": "\\(fail\\).*W-316"
+    },
+    {
+      "id": "W-316/bindings-everywhere",
+      "requirement": "W-316",
+      "description": "Binding pickers show outside a Component's design.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/component-design.tsx",
+          "search": "  if (!fields) return null;",
+          "replace": "  if (!fields) return <section data-emvb-bindings=\"\" />;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/component-design.test.tsx"],
+      "expect": "\\(fail\\).*W-316"
+    },
+    {
+      "id": "W-316/nested-repeat",
+      "requirement": "W-316",
+      "description": "An element inside a repeated one can repeat again.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/component-design.tsx",
+          "search": "      {!list &&\n        picker(",
+          "replace": "      {true &&\n        picker("
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/component-design.test.tsx"],
+      "expect": "\\(fail\\).*W-316"
+    },
+    {
+      "id": "W-316/duplicate-keys",
+      "requirement": "W-316",
+      "description": "A new field can reuse an existing key.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/component-design.tsx",
+          "search": "for (let n = 2; taken.includes(key); n++)",
+          "replace": "for (let n = 2; false; n++)"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/component-design.test.tsx"],
+      "expect": "\\(fail\\).*W-316"
     }
   ]
 }

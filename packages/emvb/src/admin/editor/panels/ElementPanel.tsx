@@ -21,6 +21,7 @@ import {
 } from "@phosphor-icons/react";
 import * as React from "react";
 import { ComponentFieldsForm, ComponentsContext, componentTitle } from "../components.tsx";
+import { BindingEditor } from "../component-design.tsx";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { sharedPartH1 } from "./settings/heading-warning.ts";
 import { UNNAMED_BOX_LINK_NOTE, unnamedBoxLink } from "./settings/box-link-name.ts";
@@ -540,6 +541,7 @@ function KnownElementPanel({
               />
             ))
           )}
+          <BindingEditor node={node} layout={layout} onChange={onChange} />
           {ITEM_NOTES[node.type] && <p className="emvb-helper">{ITEM_NOTES[node.type]}</p>}
           {svgImagesLeftOut(node) > 0 && (
             <p className="emvb-helper" data-emvb-svg-images>

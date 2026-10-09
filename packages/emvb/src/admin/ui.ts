@@ -90,6 +90,9 @@ export const UI_CSS = `
 .emvb-component-item > summary { cursor: pointer; padding: 8px 10px; font-weight: 500; }
 .emvb-component-item-body { display: flex; flex-direction: column; gap: 10px; padding: 0 10px 10px; }
 .emvb-component-item-actions { display: flex; gap: 6px; }
+.emvb-component-design, .emvb-binding-editor { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.emvb-component-add { display: flex; align-items: flex-end; gap: 8px; }
+.emvb-component-option { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 6px; }
 .emvb-text-link { color: var(--text-color-kumo-link, var(--text-color-kumo-brand)); text-decoration: underline; text-underline-offset: 2px; }
 .emvb-collection-offer { padding: 16px; }
 .emvb-collection-offer-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }

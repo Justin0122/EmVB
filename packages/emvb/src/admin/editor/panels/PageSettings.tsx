@@ -13,6 +13,7 @@ import { canonicalProblem, type PageDraft } from "../../content-api.ts";
 import { BUTTON, FIELD } from "../../ui.ts";
 import type { PagePatch } from "../store.ts";
 import { ConditionsEditor } from "./ConditionsEditor.tsx";
+import { ComponentFieldsEditor } from "../component-design.tsx";
 import { MediaPicker } from "./settings/MediaPicker.tsx";
 import { TriggersEditor } from "./TriggersEditor.tsx";
 
@@ -58,10 +59,17 @@ export function PageSettings({
           disabled
           description="Chosen when the part was created."
         />
-        <ConditionsEditor
-          conditions={page.conditions}
-          onChange={(conditions) => onChange({ conditions })}
-        />
+        {page.partType === "component" ? (
+          <ComponentFieldsEditor
+            value={page.componentFields}
+            onChange={(componentFields) => onChange({ componentFields })}
+          />
+        ) : (
+          <ConditionsEditor
+            conditions={page.conditions}
+            onChange={(conditions) => onChange({ conditions })}
+          />
+        )}
         {page.partType === "popup" && (
           <TriggersEditor
             triggers={page.triggers}

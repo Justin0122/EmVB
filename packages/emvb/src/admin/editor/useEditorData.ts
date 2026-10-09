@@ -10,6 +10,9 @@ import {
   validateDesign,
   validateLayout,
   validateTriggers,
+  emptyComponentFields,
+  validateComponentFields,
+  type ComponentFieldsDoc,
   type ConditionsDoc,
   type DesignSystem,
   type FloatSettings,
@@ -45,6 +48,8 @@ export type EditorEntry = {
   conditions?: ConditionsDoc;
   triggers?: TriggersDoc;
   float?: FloatSettings;
+  /** W-316: Components only. */
+  componentFields?: ComponentFieldsDoc;
   /** W-307: entries of other collections only; see `PageDraft.entryHasTitle`. */
   entryHasTitle?: boolean;
 };
@@ -129,7 +134,24 @@ export async function loadEntry(
     conditions: validated.ok ? validated.conditions : defaultConditions(),
     triggers: triggersValidated.ok ? triggersValidated.triggers : defaultTriggers(),
     float: readFloat(data["float"]),
+    ...(parseThemePartType(data["part_type"]) === "component"
+      ? { componentFields: readComponentFields(data["component_fields"]) }
+      : {}),
   };
+}
+
+/** W-316: a Component's stored fields, or none when they can't be read. */
+function readComponentFields(raw: unknown): ComponentFieldsDoc {
+  let value = raw;
+  if (typeof raw === "string") {
+    try {
+      value = JSON.parse(raw) as unknown;
+    } catch {
+      return emptyComponentFields();
+    }
+  }
+  const result = validateComponentFields(value ?? emptyComponentFields());
+  return result.ok ? result.doc : emptyComponentFields();
 }
 
 function readFloat(raw: unknown): FloatSettings {

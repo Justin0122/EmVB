@@ -5,6 +5,7 @@ import { EmVBPage, resolveEmVBPage } from "@perkyzz/emvb/astro";
 import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms";
 import { EmVBMenuRuntime } from "@perkyzz/emvb/astro/menu";
 import { EmVBTabsRuntime } from "@perkyzz/emvb/astro/tabs";
+import { EmVBCarouselRuntime } from "@perkyzz/emvb/astro/carousel";
 import Base from "../layouts/Base.astro";
 import { resolveStarterSiteIdentity } from "../utils/site-identity";
 
@@ -40,6 +41,7 @@ const seo = getSeoMeta(entry, {
 		<EmVBPage page={emvb} standalone title={seo.title} description={seo.description} seo={seo}>
 			{emvb.needsFormsRuntime && <EmVBFormsRuntime />}
 			{emvb.needsTabsRuntime && <EmVBTabsRuntime />}
+			{emvb.needsCarouselRuntime && <EmVBCarouselRuntime />}
 			{emvb.needsMenuRuntime && <EmVBMenuRuntime />}
 		</EmVBPage>
 	) : (
@@ -55,6 +57,7 @@ const seo = getSeoMeta(entry, {
 				<EmVBPage page={emvb}>
 					{emvb.needsFormsRuntime && <EmVBFormsRuntime />}
 					{emvb.needsTabsRuntime && <EmVBTabsRuntime />}
+					{emvb.needsCarouselRuntime && <EmVBCarouselRuntime />}
 					{emvb.needsMenuRuntime && <EmVBMenuRuntime />}
 				</EmVBPage>
 			) : (

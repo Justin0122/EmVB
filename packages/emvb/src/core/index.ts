@@ -358,7 +358,7 @@ export {
   collectComponentPartIds,
   COMPONENT_FIELD_KINDS,
   COMPONENT_FIELDS_VERSION,
-  ComponentFieldsDoc,
+  type ComponentFieldsDoc,
   emptyComponentFields,
   fieldValue,
   validateComponentFields,

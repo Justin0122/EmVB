@@ -180,3 +180,29 @@ describe("loadEntry for an entry of another collection (W-307)", () => {
     expect([entry.layout, entry.entryHasTitle]).toEqual([null, false]);
   });
 });
+
+describe("loadEntry for a Component (W-316)", () => {
+  test("reads its fields, and an unreadable list as none", async () => {
+    const fields = { schemaVersion: 1, fields: [{ key: "title", label: "Titel", kind: "text" }] };
+    const ok = contentFetcher({
+      item: {
+        id: "01C",
+        data: { part_type: "component", layout, component_fields: JSON.stringify(fields) },
+      },
+    });
+    expect((await loadEntry(ok.fetcher, "01C", "emvb_theme_parts")).componentFields).toEqual(
+      fields as never,
+    );
+    const bad = contentFetcher({
+      item: { id: "01D", data: { part_type: "component", layout, component_fields: "{nope" } },
+    });
+    expect((await loadEntry(bad.fetcher, "01D", "emvb_theme_parts")).componentFields).toEqual({
+      schemaVersion: 1,
+      fields: [],
+    });
+    const header = contentFetcher({ item: { id: "01H", data: { part_type: "header", layout } } });
+    expect(
+      (await loadEntry(header.fetcher, "01H", "emvb_theme_parts")).componentFields,
+    ).toBeUndefined();
+  });
+});

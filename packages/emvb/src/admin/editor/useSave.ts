@@ -140,6 +140,9 @@ export function useSave(
                     dismiss: false,
                   },
                   layout: current.page.layout,
+                  ...(current.page.componentFields
+                    ? { componentFields: current.page.componentFields }
+                    : {}),
                 },
                 rev,
               )

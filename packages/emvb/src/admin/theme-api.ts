@@ -7,6 +7,7 @@ import {
   starterLayout,
   THEME_PART_TYPE_LABELS,
   validateLayout,
+  type ComponentFieldsDoc,
   type ConditionsDoc,
   type FloatSettings,
   type Layout,
@@ -46,6 +47,8 @@ export type ThemePartDraft = {
   triggers: TriggersDoc;
   float: FloatSettings;
   layout: Layout | null;
+  /** W-312: a Component's fields; saved only for components. */
+  componentFields?: ComponentFieldsDoc;
 };
 
 const titleOf = (item: RawItem) =>
@@ -200,6 +203,9 @@ export async function saveThemePart(
           conditions: draft.conditions,
           triggers: draft.triggers,
           float: draft.float,
+          ...(draft.partType === "component" && draft.componentFields
+            ? { component_fields: draft.componentFields }
+            : {}),
         },
         slug: draft.slug,
         ...(rev ? { _rev: rev } : {}),

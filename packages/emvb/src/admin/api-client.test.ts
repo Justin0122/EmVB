@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { ApiError, requestJson, type Fetcher } from "./api.ts";
 import { previewUrl, publishPage, savePage, type PageDraft } from "./content-api.ts";
 import { listImages, uploadImage } from "./media-api.ts";
-import { createThemePart, publishThemePart } from "./theme-api.ts";
+import { createThemePart, publishThemePart, saveThemePart } from "./theme-api.ts";
 
 type Call = { path: string; method: string; body: unknown };
 
@@ -211,5 +211,42 @@ describe("saving and publishing an entry of another collection (W-307)", () => {
       "/_emdash/api/content/news/01N/publish",
       "/_emdash/api/content/news/01N/preview-url",
     ]);
+  });
+});
+
+describe("saving a Component's fields (W-316)", () => {
+  const base = {
+    title: "Tekst",
+    slug: "tekst",
+    conditions: { schemaVersion: 1, rules: [] },
+    triggers: { schemaVersion: 1, open: [], advanced: {} },
+    float: { schemaVersion: 1, edge: "top", dismiss: false },
+    layout: null,
+    componentFields: {
+      schemaVersion: 1,
+      fields: [{ key: "body", label: "Tekst", kind: "rich-text" }],
+    },
+  } as const;
+
+  test("a component part saves its fields; other parts don't send them", async () => {
+    const calls: Call[] = [];
+    const reply = json(200, { data: { _rev: "r2" } });
+    await saveThemePart(
+      answering(reply, calls),
+      "01C",
+      { ...base, partType: "component" } as never,
+      null,
+    );
+    await saveThemePart(
+      answering(reply, calls),
+      "01H",
+      { ...base, partType: "header" } as never,
+      null,
+    );
+    const [component, header] = calls.map(
+      (c) => (c.body as { data: Record<string, unknown> }).data,
+    );
+    expect(component?.["component_fields"]).toEqual(base.componentFields);
+    expect(header && "component_fields" in header).toBe(false);
   });
 });
