@@ -122,3 +122,15 @@ describe("sanitizeSvgMarkup (W-073 / W-079)", () => {
     expect(isSafeSvgMarkup('<svg><rect fill="&#x3c;x&#x3e;"/></svg>')).toBe(false);
   });
 });
+
+describe("cut-out shapes keep their fill rule (W-310)", () => {
+  test("fill-rule and clip-rule survive sanitizing and serializing", () => {
+    const tree = sanitizeSvgMarkup(
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 0h24v24H0zM8 8h8v8H8z"/></svg>',
+    );
+    if (!tree) throw new Error("expected tree");
+    const out = serialize(tree);
+    expect(out).toContain('fill-rule="evenodd"');
+    expect(out).toContain('clip-rule="evenodd"');
+  });
+});

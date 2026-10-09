@@ -13,6 +13,9 @@ const REACT_ATTR: Record<string, string> = {
   minlength: "minLength",
   maxlength: "maxLength",
   novalidate: "noValidate",
+  // W-310: background video flags; React warns about the lowercase names and drops them.
+  autoplay: "autoPlay",
+  playsinline: "playsInline",
   // W-309: Rich text table cells.
   colspan: "colSpan",
   rowspan: "rowSpan",

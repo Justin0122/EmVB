@@ -211,3 +211,22 @@ describe("Rich text on the canvas (W-309)", () => {
     errors.mockRestore();
   });
 });
+
+describe("background video flags on the canvas (W-310)", () => {
+  test("autoplay and playsinline reach the video without React warnings", async () => {
+    const errors = spyOn(console, "error").mockImplementation(() => {});
+    const host = await mount(
+      <>
+        {vnodeToReact({
+          tag: "video",
+          attrs: { autoplay: "", playsinline: "", muted: "", loop: "" },
+          children: [],
+        })}
+      </>,
+    );
+    const video = host.querySelector("video") as HTMLVideoElement;
+    expect([video.autoplay, video.hasAttribute("playsinline")]).toEqual([true, true]);
+    expect(errors.mock.calls.flat().join(" ")).not.toContain("Invalid DOM property");
+    errors.mockRestore();
+  });
+});

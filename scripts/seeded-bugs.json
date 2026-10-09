@@ -26168,6 +26168,48 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
       "expect": "\\(fail\\).*W-309"
+    },
+    {
+      "id": "W-310/fill-rule-dropped",
+      "requirement": "W-310",
+      "description": "The SVG sanitizer drops fill-rule, so cut-out shapes fill in.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/svg.ts",
+          "search": "  \"fill-rule\",\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/svg.test.ts"],
+      "expect": "\\(fail\\).*W-310"
+    },
+    {
+      "id": "W-310/serializer-refuses-fill-rule",
+      "requirement": "W-310",
+      "description": "The serializer refuses fill-rule and clip-rule.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/vnode.ts",
+          "search": "|fill|fill-rule|clip-rule|stroke|",
+          "replace": "|fill|stroke|"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/svg.test.ts"],
+      "expect": "\\(fail\\).*W-310"
+    },
+    {
+      "id": "W-310/video-flags-unmapped",
+      "requirement": "W-310",
+      "description": "The canvas passes autoplay and playsinline to React unmapped.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/canvas/vnode-react.tsx",
+          "search": "  autoplay: \"autoPlay\",\n  playsinline: \"playsInline\",\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/canvas/vnode-react.test.tsx"],
+      "expect": "\\(fail\\).*W-310"
     }
   ]
 }

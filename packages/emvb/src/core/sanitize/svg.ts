@@ -40,6 +40,9 @@ const ATTR_ALLOW = new Set([
   "viewBox",
   "xmlns",
   "fill",
+  // W-310: cut-out shapes (an "i" in a circle) need these, or their holes fill in.
+  "fill-rule",
+  "clip-rule",
   "stroke",
   "stroke-width",
   "stroke-linecap",
