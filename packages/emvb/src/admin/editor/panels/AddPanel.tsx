@@ -1,6 +1,7 @@
 import { Input } from "@cloudflare/kumo";
 import {
   ArrowsLeftRightIcon,
+  PuzzlePieceIcon,
   ArticleIcon,
   LinkSimpleIcon,
   MinusIcon,
@@ -28,6 +29,7 @@ import {
 } from "@phosphor-icons/react";
 import * as React from "react";
 import { ELEMENT_DESCRIPTORS, type ElementType } from "../../../core/index.ts";
+import { ComponentsContext } from "../components.tsx";
 import { NEW_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { FIELD } from "../../ui.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
@@ -84,7 +86,8 @@ export function AddPanel({
   defaultQuery = "",
   formsAvailable = true,
 }: {
-  onAdd: (type: ElementType) => void;
+  /** An element type, or "component:<part id>" for a use of a component (W-312). */
+  onAdd: (type: ElementType | `component:${string}`) => void;
   /** Test-only initial search string. */
   defaultQuery?: string;
   /** Hide the Form group when the forms plugin is missing (W-036). */
@@ -92,9 +95,13 @@ export function AddPanel({
 }) {
   const [query, setQuery] = React.useState(defaultQuery);
   const q = query.trim().toLowerCase();
+  const { list: components } = React.useContext(ComponentsContext);
+  const matchedComponents = components.filter((c) => !q || c.title.toLowerCase().includes(q));
   const matched = ELEMENT_DESCRIPTORS.filter(
     (d) =>
       d.type !== "tab-panel" &&
+      // A component is added from its own tile below, already pointing at its design.
+      d.type !== "component" &&
       (formsAvailable || d.group !== "form") &&
       (!q || d.name.toLowerCase().includes(q)),
   );
@@ -107,7 +114,35 @@ export function AddPanel({
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search elements"
       />
-      {matched.length === 0 ? (
+      {matchedComponents.length > 0 && (
+        <div className="emvb-add-group" data-emvb-add-group="components">
+          <h3 className="emvb-add-group-title">Components</h3>
+          <div className="emvb-add-tiles" aria-label="Components">
+            {matchedComponents.map((c) => {
+              const type = `component:${c.id}` as const;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="emvb-element-tile"
+                  data-emvb-add-tile={type}
+                  draggable
+                  onDragStart={(event) => {
+                    event.dataTransfer.setData(NEW_ELEMENT_MIME, type);
+                    event.dataTransfer.effectAllowed = "copy";
+                    dragStash.new(type);
+                  }}
+                  onClick={() => onAdd(type)}
+                >
+                  <PuzzlePieceIcon size={20} aria-hidden="true" />
+                  <span>{c.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+      {matched.length === 0 && matchedComponents.length === 0 ? (
         <p className="emvb-helper">No elements match &quot;{query.trim()}&quot;.</p>
       ) : (
         GROUPS.map((group) => {

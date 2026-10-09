@@ -24,7 +24,7 @@ export function LeftPanel({
   layout: Layout | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
-  onAdd: (type: ElementType) => void;
+  onAdd: (type: ElementType | `component:${string}`) => void;
   onDuplicate: (id: string) => void;
   onMoveUp: (id: string) => void;
   onMoveDown: (id: string) => void;

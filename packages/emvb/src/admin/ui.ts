@@ -81,6 +81,15 @@ export const UI_CSS = `
 .emvb-visual-collections > section { display: flex; flex-direction: column; gap: 12px; }
 .emvb-section-title { margin: 0; font-size: 18px; line-height: 1.3; font-weight: 600; color: var(--text-color-kumo-default); }
 .emvb-muted { margin: 0; color: var(--text-color-kumo-subtle); }
+.emvb-component-fields { display: flex; flex-direction: column; gap: 12px; }
+.emvb-field-block { display: flex; flex-direction: column; gap: 6px; }
+.emvb-field-label { font-size: 14px; font-weight: 500; color: var(--text-color-kumo-default); }
+.emvb-textarea { min-height: 120px; padding: 8px 10px; border-radius: 8px; font: inherit; resize: vertical; background: var(--color-kumo-control); color: var(--text-color-kumo-default); border: 0; box-shadow: 0 0 0 1px var(--color-kumo-line); }
+.emvb-component-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; border: 0; }
+.emvb-component-item { border: 1px solid var(--color-kumo-line); border-radius: 8px; }
+.emvb-component-item > summary { cursor: pointer; padding: 8px 10px; font-weight: 500; }
+.emvb-component-item-body { display: flex; flex-direction: column; gap: 10px; padding: 0 10px 10px; }
+.emvb-component-item-actions { display: flex; gap: 6px; }
 .emvb-text-link { color: var(--text-color-kumo-link, var(--text-color-kumo-brand)); text-decoration: underline; text-underline-offset: 2px; }
 .emvb-collection-offer { padding: 16px; }
 .emvb-collection-offer-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }

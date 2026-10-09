@@ -20,6 +20,7 @@ import {
   YoutubeLogoIcon,
 } from "@phosphor-icons/react";
 import * as React from "react";
+import { ComponentFieldsForm } from "../components.tsx";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { sharedPartH1 } from "./settings/heading-warning.ts";
 import { UNNAMED_BOX_LINK_NOTE, unnamedBoxLink } from "./settings/box-link-name.ts";
@@ -514,6 +515,8 @@ function KnownElementPanel({
         <div className="emvb-panel-body" data-emvb-tab="content">
           {hasItemList(node.type) ? (
             <ItemList node={node} onChange={onChange} onSelect={onSelect} actions={items} />
+          ) : node.type === "component" ? (
+            <ComponentFieldsForm node={node} fetcher={fetcher} onChange={onChange} />
           ) : descriptor.fields.length === 0 ? (
             <p className="emvb-helper">
               {node.type === "container"

@@ -139,7 +139,7 @@ export function useNodeActions({
     },
   };
 
-  const addFromPanel = (type: ElementType) => {
+  const addFromPanel = (type: ElementType | `component:${string}`) => {
     const layout = latest.current.page.layout;
     if (!layout) {
       if (type === "container") dispatch({ type: "add-root-container" });
@@ -159,7 +159,9 @@ export function useNodeActions({
     }
     dispatch({ type: "apply-arranged", layout: result.layout, selected: result.selected });
     const nameOf = (id: string) => ELEMENT_NAMES[findNode(layout, id)?.type ?? "container"];
-    const label = ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name ?? type;
+    const label = type.startsWith("component:")
+      ? "Component"
+      : (ELEMENT_DESCRIPTORS.find((d) => d.type === type)?.name ?? type);
     if (result.fallback) {
       // Added next to the nearest ancestor that takes it, rather than refused (W-175).
       const after = nameOf(result.fallback.after) ?? "the selection";

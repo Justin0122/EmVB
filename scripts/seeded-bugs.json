@@ -2741,8 +2741,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
-          "search": "  const matched = ELEMENT_DESCRIPTORS.filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      (formsAvailable || d.group !== \"form\") &&\n      (!q || d.name.toLowerCase().includes(q)),\n  );",
-          "replace": "  const matched = ELEMENT_DESCRIPTORS.filter(\n    (d) =>\n      d.type !== \"tab-panel\" &&\n      d.type !== \"flexbox\" && // seeded: hide flexbox\n      (formsAvailable || d.group !== \"form\") &&\n      (!q || d.name.toLowerCase().includes(q)),\n  );"
+          "search": "      d.type !== \"component\" &&\n      (formsAvailable || d.group !== \"form\") &&",
+          "replace": "      d.type !== \"component\" &&\n      d.type !== \"flexbox\" && // seeded: hide flexbox\n      (formsAvailable || d.group !== \"form\") &&"
         }
       ],
       "command": [
@@ -17192,7 +17192,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/Editor.tsx",
-          "search": "            previewDevice: device,\n",
+          "search": "      previewDevice: device,\n",
           "replace": ""
         }
       ],
@@ -26363,6 +26363,76 @@
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/bare-component-offered",
+      "requirement": "W-312",
+      "description": "The Add panel offers a Component without a design.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/AddPanel.tsx",
+          "search": "      d.type !== \"component\" &&\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/component-tile-ignored",
+      "requirement": "W-312",
+      "description": "A component tile adds nothing.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/dnd/new-element.ts",
+          "search": "  if (type.startsWith(\"component:\")) {",
+          "replace": "  if (type.startsWith(\"never:\")) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/list-max-unchecked",
+      "requirement": "W-312",
+      "description": "Add item stays enabled past the list's max.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/components.tsx",
+          "search": "disabled={items.length >= max}",
+          "replace": "disabled={false}"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/field-edit-drops-others",
+      "requirement": "W-312",
+      "description": "Editing one field drops the other fields' values.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/components.tsx",
+          "search": "setValues({ ...values, [field.key]: value })",
+          "replace": "setValues({ [field.key]: value })"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
+      "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-312/any-part-is-component",
+      "requirement": "W-312",
+      "description": "Any theme part loads as a component.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/components.tsx",
+          "search": "    if (!data || data[\"part_type\"] !== \"component\") return null;",
+          "replace": "    if (!data) return null;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
       "expect": "\\(fail\\).*W-312"
     }
   ]

@@ -40,6 +40,7 @@ import {
 } from "./useEditorData.ts";
 import { EDITOR_MIN_WIDTH_QUERY, useMediaQuery } from "./useMediaQuery.ts";
 import { useSectionTemplates } from "./section-templates.ts";
+import { ComponentsContext, useComponents } from "./components.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
 import { useEditorCommands } from "./useEditorCommands.ts";
 import { useSave } from "./useSave.ts";
@@ -219,17 +220,21 @@ function EditorApp({
   }, [leaving, exit]);
 
   const sectionTemplates = useSectionTemplates(state.page.layout, fetcher);
-  const rendered = React.useMemo(
-    () =>
-      state.page.layout
-        ? renderPage(state.page.layout, state.design, {
-            mode: "editor",
-            dynamic: Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : undefined,
-            previewDevice: device,
-          })
-        : null,
-    [state.page.layout, state.design, sectionTemplates, device],
-  );
+  // W-312: the site's components, and the designs the canvas renders uses from.
+  const components = useComponents(state.page.layout, fetcher);
+  const componentTemplates = components.templates;
+  const rendered = React.useMemo(() => {
+    if (!state.page.layout) return null;
+    const dynamic = {
+      ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+      ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),
+    };
+    return renderPage(state.page.layout, state.design, {
+      mode: "editor",
+      dynamic: Object.keys(dynamic).length > 0 ? dynamic : undefined,
+      previewDevice: device,
+    });
+  }, [state.page.layout, state.design, sectionTemplates, componentTemplates, device]);
   const selectedNode =
     state.selectedId && state.page.layout ? findNode(state.page.layout, state.selectedId) : null;
 
@@ -304,175 +309,177 @@ function EditorApp({
       label={`EmVB editor: ${state.page.title || "Untitled page"}`}
       dirty={dirty && !leaving}
     >
-      <Toasty toastManager={toasts}>
-        {wideEnough ? (
-          <>
-            <TopBar
-              page={{ title: state.page.title, status: state.status }}
-              dirty={dirty}
-              status={saver.status}
-              busy={busy}
-              onExit={() => (dirty ? setLeaveOpen(true) : exit())}
-              onShortcuts={() => setShortcutsOpen(true)}
-              onSiteStyles={() => setSiteStylesOpen(true)}
-              onPreview={(size) => preview(size ?? device)}
-              onSave={() => void save()}
-              onPublish={() => void publish()}
-              stylesUnpublished={state.designUnpublished === true}
-              canRevert={canRevert}
-              onRevert={() => setRevertOpen(true)}
-            />
-            <div className="emvb-frame">
-              <aside className="emvb-panel emvb-panel-left" aria-label="Add and Layers">
-                <LeftPanel
-                  layout={state.page.layout}
-                  selectedId={state.selectedId}
-                  onSelect={(id) => dispatch({ type: "select", id })}
-                  onAdd={addFromPanel}
-                  formsAvailable={formsAvailable}
-                  onDuplicate={duplicate}
-                  onMoveUp={(id) => arrange(id, moveUp)}
-                  onMoveDown={(id) => arrange(id, moveDown)}
-                  onDelete={remove}
-                  clipboard={clipboard}
-                  onRename={(id, label) =>
-                    dispatch({
-                      type: "update-node",
-                      id,
-                      update: (node) => withLabel(node, label),
-                    })
-                  }
-                />
-                <div className="emvb-sr-only" aria-live="polite">
-                  {announcement}
-                </div>
-              </aside>
-              <main className="emvb-canvas">
-                <DeviceBar
-                  device={device}
-                  hidden={
-                    !!state.page.layout &&
-                    !!state.selectedId &&
-                    !!findNode(state.page.layout, state.selectedId)?.hiddenOn?.includes(device)
-                  }
-                  canHide={!!state.selectedId}
-                  onDevice={setDevice}
-                  zoom={zoom}
-                  scale={scale}
-                  onZoom={setZoom}
-                  onToggleHidden={() => {
-                    const id = state.selectedId;
-                    const node =
-                      state.page.layout && id ? findNode(state.page.layout, id) : undefined;
-                    if (!node) return;
-                    const hiddenOn = toggleHidden(node.hiddenOn, device);
-                    dispatch({
-                      type: "update-node",
-                      id: node.id,
-                      update: (current) => {
-                        const next = { ...current, hiddenOn };
-                        if (!hiddenOn) delete next.hiddenOn;
-                        return next;
-                      },
-                    });
-                  }}
-                />
-                {rendered ? (
-                  <CanvasFrame
-                    vnode={rendered.vnode}
-                    css={rendered.css}
+      <ComponentsContext.Provider value={components}>
+        <Toasty toastManager={toasts}>
+          {wideEnough ? (
+            <>
+              <TopBar
+                page={{ title: state.page.title, status: state.status }}
+                dirty={dirty}
+                status={saver.status}
+                busy={busy}
+                onExit={() => (dirty ? setLeaveOpen(true) : exit())}
+                onShortcuts={() => setShortcutsOpen(true)}
+                onSiteStyles={() => setSiteStylesOpen(true)}
+                onPreview={(size) => preview(size ?? device)}
+                onSave={() => void save()}
+                onPublish={() => void publish()}
+                stylesUnpublished={state.designUnpublished === true}
+                canRevert={canRevert}
+                onRevert={() => setRevertOpen(true)}
+              />
+              <div className="emvb-frame">
+                <aside className="emvb-panel emvb-panel-left" aria-label="Add and Layers">
+                  <LeftPanel
                     layout={state.page.layout}
-                    device={device}
-                    zoom={zoom}
-                    onScale={setScale}
-                    selection={selection}
-                    statePreview={statePreview}
-                    refusal={refusalShown ? refusal : null}
-                    onDropNew={(elementType, parentId, index) => {
-                      const node = newElement(elementType);
-                      if (!node) return;
-                      dispatch({ type: "add-node", node, parentId, index });
-                    }}
-                    onMove={(id, parentId, index) =>
-                      dispatch({ type: "move-node", id, parentId, index })
-                    }
-                    onCommitText={(id, text) =>
+                    selectedId={state.selectedId}
+                    onSelect={(id) => dispatch({ type: "select", id })}
+                    onAdd={addFromPanel}
+                    formsAvailable={formsAvailable}
+                    onDuplicate={duplicate}
+                    onMoveUp={(id) => arrange(id, moveUp)}
+                    onMoveDown={(id) => arrange(id, moveDown)}
+                    onDelete={remove}
+                    clipboard={clipboard}
+                    onRename={(id, label) =>
                       dispatch({
                         type: "update-node",
                         id,
-                        update: (node) => withPlainText(node, text),
+                        update: (node) => withLabel(node, label),
                       })
                     }
                   />
-                ) : (
-                  <EmptyCanvas latest={latest} dispatch={dispatch} />
-                )}
-              </main>
-              <SettingsPanel
-                state={state}
-                latest={latest}
-                dispatch={dispatch}
-                selectedNode={selectedNode}
-                siteStylesOpen={siteStylesOpen}
-                onCloseSiteStyles={() => setSiteStylesOpen(false)}
-                onDesignChange={changeDesign}
-                onPublishStyles={publishStyles}
-                onDesignItemDeleted={(deletion) => {
-                  deletions.current = [...deletions.current.slice(-19), deletion];
-                }}
-                fetcher={fetcher}
-                formsAvailable={formsAvailable}
-                rejection={saver.rejection}
-                slugError={saver.slugError}
-                onSlugEdit={saver.clearSlugError}
-                kind={
-                  collection === THEME_PARTS_COLLECTION
-                    ? "theme-part"
-                    : isEmvbCollection(collection)
-                      ? "page"
-                      : "entry"
-                }
-                entryEditHref={`/_emdash/admin/content/${encodeURIComponent(collection)}/${encodeURIComponent(state.id)}`}
-                onStyleState={onStyleState}
-                device={device}
-                items={itemActions}
-              />
-            </div>
-          </>
-        ) : (
-          <SmallScreenNotice />
-        )}
-        <DeleteSubtreeDialog
-          open={!!deleteAsk}
-          onOpenChange={(open) => !open && setDeleteAsk(null)}
-          label={deleteAsk?.label ?? "Element"}
-          count={deleteAsk?.count ?? 0}
-          onConfirm={() => deleteAsk && finishDelete(deleteAsk.id)}
-        />
-        <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-        <ConflictDialog
-          open={saver.conflict}
-          onOpenChange={(open) => !open && saver.closeConflict()}
-          onReload={() => void reload()}
-          onOverwrite={() => void saver.overwrite()}
-        />
-        <RevertDialog
-          open={revertOpen}
-          onOpenChange={setRevertOpen}
-          onRevert={() => void revert()}
-        />
-        <LeaveDialog
-          open={leaveOpen}
-          onOpenChange={setLeaveOpen}
-          onDiscard={() => setLeaving(true)}
-          onSaveAndLeave={() =>
-            void save().then((rev) => {
-              setLeaveOpen(false);
-              if (rev) setLeaving(true);
-            })
-          }
-        />
-      </Toasty>
+                  <div className="emvb-sr-only" aria-live="polite">
+                    {announcement}
+                  </div>
+                </aside>
+                <main className="emvb-canvas">
+                  <DeviceBar
+                    device={device}
+                    hidden={
+                      !!state.page.layout &&
+                      !!state.selectedId &&
+                      !!findNode(state.page.layout, state.selectedId)?.hiddenOn?.includes(device)
+                    }
+                    canHide={!!state.selectedId}
+                    onDevice={setDevice}
+                    zoom={zoom}
+                    scale={scale}
+                    onZoom={setZoom}
+                    onToggleHidden={() => {
+                      const id = state.selectedId;
+                      const node =
+                        state.page.layout && id ? findNode(state.page.layout, id) : undefined;
+                      if (!node) return;
+                      const hiddenOn = toggleHidden(node.hiddenOn, device);
+                      dispatch({
+                        type: "update-node",
+                        id: node.id,
+                        update: (current) => {
+                          const next = { ...current, hiddenOn };
+                          if (!hiddenOn) delete next.hiddenOn;
+                          return next;
+                        },
+                      });
+                    }}
+                  />
+                  {rendered ? (
+                    <CanvasFrame
+                      vnode={rendered.vnode}
+                      css={rendered.css}
+                      layout={state.page.layout}
+                      device={device}
+                      zoom={zoom}
+                      onScale={setScale}
+                      selection={selection}
+                      statePreview={statePreview}
+                      refusal={refusalShown ? refusal : null}
+                      onDropNew={(elementType, parentId, index) => {
+                        const node = newElement(elementType);
+                        if (!node) return;
+                        dispatch({ type: "add-node", node, parentId, index });
+                      }}
+                      onMove={(id, parentId, index) =>
+                        dispatch({ type: "move-node", id, parentId, index })
+                      }
+                      onCommitText={(id, text) =>
+                        dispatch({
+                          type: "update-node",
+                          id,
+                          update: (node) => withPlainText(node, text),
+                        })
+                      }
+                    />
+                  ) : (
+                    <EmptyCanvas latest={latest} dispatch={dispatch} />
+                  )}
+                </main>
+                <SettingsPanel
+                  state={state}
+                  latest={latest}
+                  dispatch={dispatch}
+                  selectedNode={selectedNode}
+                  siteStylesOpen={siteStylesOpen}
+                  onCloseSiteStyles={() => setSiteStylesOpen(false)}
+                  onDesignChange={changeDesign}
+                  onPublishStyles={publishStyles}
+                  onDesignItemDeleted={(deletion) => {
+                    deletions.current = [...deletions.current.slice(-19), deletion];
+                  }}
+                  fetcher={fetcher}
+                  formsAvailable={formsAvailable}
+                  rejection={saver.rejection}
+                  slugError={saver.slugError}
+                  onSlugEdit={saver.clearSlugError}
+                  kind={
+                    collection === THEME_PARTS_COLLECTION
+                      ? "theme-part"
+                      : isEmvbCollection(collection)
+                        ? "page"
+                        : "entry"
+                  }
+                  entryEditHref={`/_emdash/admin/content/${encodeURIComponent(collection)}/${encodeURIComponent(state.id)}`}
+                  onStyleState={onStyleState}
+                  device={device}
+                  items={itemActions}
+                />
+              </div>
+            </>
+          ) : (
+            <SmallScreenNotice />
+          )}
+          <DeleteSubtreeDialog
+            open={!!deleteAsk}
+            onOpenChange={(open) => !open && setDeleteAsk(null)}
+            label={deleteAsk?.label ?? "Element"}
+            count={deleteAsk?.count ?? 0}
+            onConfirm={() => deleteAsk && finishDelete(deleteAsk.id)}
+          />
+          <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+          <ConflictDialog
+            open={saver.conflict}
+            onOpenChange={(open) => !open && saver.closeConflict()}
+            onReload={() => void reload()}
+            onOverwrite={() => void saver.overwrite()}
+          />
+          <RevertDialog
+            open={revertOpen}
+            onOpenChange={setRevertOpen}
+            onRevert={() => void revert()}
+          />
+          <LeaveDialog
+            open={leaveOpen}
+            onOpenChange={setLeaveOpen}
+            onDiscard={() => setLeaving(true)}
+            onSaveAndLeave={() =>
+              void save().then((rev) => {
+                setLeaveOpen(false);
+                if (rev) setLeaving(true);
+              })
+            }
+          />
+        </Toasty>
+      </ComponentsContext.Provider>
     </EditorOverlay>
   );
 }

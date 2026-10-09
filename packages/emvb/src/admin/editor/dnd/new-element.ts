@@ -56,6 +56,16 @@ export function newTabPanel(n: number, random?: () => number): LayoutNode {
  * saved Accordions and Tabs with no items keep working as they are (W-130).
  */
 export function newElement(type: string, random?: () => number): LayoutNode | null {
+  // W-312: "component:<part id>" is a use of that component, with its fields still empty.
+  if (type.startsWith("component:")) {
+    const partId = type.slice("component:".length).trim();
+    if (!partId) return null;
+    return {
+      id: newNodeId(random),
+      type: "component",
+      props: { partId, values: {} },
+    } as LayoutNode;
+  }
   if (!(type in ELEMENTS)) return null;
   if (type === "tabs") {
     const tabs = defaultElement("tabs", newNodeId(random));
