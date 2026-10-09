@@ -31,6 +31,7 @@ import {
   type ArchivePagination,
 } from "../core/index.ts";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
+import { loadCollectionLoops } from "./collection-loops.ts";
 import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
 import { decodePathSegment, themeContextFrom } from "./theme-context.ts";
 import { entryTimestamp, themePostFromEntry } from "./theme-posts.ts";
@@ -306,9 +307,15 @@ async function buildDynamicForContent(
 ): Promise<ThemeDynamicData | undefined> {
   const loopTemplates = await loadLoopTemplates(layout, parts);
   const sectionTemplates = loadSectionTemplates(layout, parts);
+  const collectionLoops = await loadCollectionLoops([
+    layout,
+    ...Object.values(sectionTemplates),
+    ...Object.values(loopTemplates),
+  ]);
   const referenced: ThemeDynamicData = {
     ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+    ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
   };
   if (partType === "single_post") {
     const post = await loadSingularPost(ctx);
@@ -407,12 +414,18 @@ export async function resolveThemeParts(
     const layout = readLayout(stored.layout);
     const sectionTemplates = layout ? loadSectionTemplates(layout, parts) : {};
     const loopTemplates = layout ? await loadLoopTemplates(layout, parts) : {};
-    return Object.keys(sectionTemplates).length > 0 || Object.keys(loopTemplates).length > 0
-      ? {
-          ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
-          ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
-        }
-      : undefined;
+    // W-308: collection Loops in a header, footer, popup or float, or in what they include.
+    const collectionLoops = await loadCollectionLoops([
+      layout,
+      ...Object.values(sectionTemplates),
+      ...Object.values(loopTemplates),
+    ]);
+    const dynamic: ThemeDynamicData = {
+      ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
+      ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+      ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
+    };
+    return Object.keys(dynamic).length > 0 ? dynamic : undefined;
   };
 
   let pastLastPage = false;

@@ -42,6 +42,7 @@ export {
   isUnknownNode,
   FormNode,
   LoopNode,
+  LOOP_ORDERS,
   SectionNode,
   TextInputNode,
   TextareaNode,
@@ -352,6 +353,13 @@ export {
   type ArchivePagination,
   type PaginationItem,
 } from "./theme/pagination.ts";
+export {
+  collectLoopQueries,
+  DEFAULT_LOOP_LIMIT,
+  loopQueryKey,
+  loopQueryOf,
+  type LoopQuery,
+} from "./theme/loop-queries.ts";
 
 export { layoutHasMenuDropdown, layoutHasTabs } from "./tabs/presence.ts";
 export {

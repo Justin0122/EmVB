@@ -1,0 +1,59 @@
+import { getCollectionInfo, getEmDashCollection } from "emdash";
+import {
+  collectLoopQueries,
+  loopQueryKey,
+  type Layout,
+  type LoopQuery,
+  type ThemePostFields,
+} from "../core/index.ts";
+import { themePostFromEntry } from "./theme-posts.ts";
+
+const ORDER_BY: Record<LoopQuery["order"], Record<string, "asc" | "desc">> = {
+  newest: { published_at: "desc" },
+  oldest: { published_at: "asc" },
+  title: { title: "asc" },
+};
+
+/** An entry's public path from its collection's URL pattern, else `/<collection>/<slug>`. */
+export function entryPermalink(
+  collection: string,
+  urlPattern: string | null | undefined,
+  slug: string,
+) {
+  const path = urlPattern?.includes("{slug}")
+    ? urlPattern.replace("{slug}", encodeURIComponent(slug))
+    : `/${collection}/${encodeURIComponent(slug)}`;
+  return path.startsWith("/") ? path : `/${path}`;
+}
+
+async function loadQuery(query: LoopQuery): Promise<ThemePostFields[]> {
+  try {
+    const [info, result] = await Promise.all([
+      getCollectionInfo(query.collection).catch(() => null),
+      getEmDashCollection(query.collection, { orderBy: ORDER_BY[query.order], limit: query.limit }),
+    ]);
+    const urlPattern = (info as { urlPattern?: string | null } | null)?.urlPattern;
+    const items: ThemePostFields[] = [];
+    for (const entry of result.entries ?? []) {
+      const post = themePostFromEntry(entry as never);
+      if (post)
+        items.push({ ...post, permalink: entryPermalink(query.collection, urlPattern, post.slug) });
+    }
+    return items;
+  } catch {
+    // A collection that doesn't exist (any more) lists nothing instead of failing the page.
+    return [];
+  }
+}
+
+/**
+ * W-308: the entries every collection Loop in these layouts asks for, keyed by `loopQueryKey`.
+ * Loops with the same collection, limit and order share one load.
+ */
+export async function loadCollectionLoops(
+  layouts: readonly (Layout | null | undefined)[],
+): Promise<Record<string, ThemePostFields[]>> {
+  const queries = collectLoopQueries(layouts);
+  const loaded = await Promise.all(queries.map(loadQuery));
+  return Object.fromEntries(queries.map((query, i) => [loopQueryKey(query), loaded[i] ?? []]));
+}

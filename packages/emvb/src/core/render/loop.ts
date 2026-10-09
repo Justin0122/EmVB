@@ -1,6 +1,35 @@
 import { ELEMENTS } from "../elements/index.ts";
 import type { LayoutNode, LoopNode } from "../schema/layout.ts";
-import { resolvePostsForLoop, type ThemeDynamicData } from "../theme/dynamic.ts";
+import {
+  resolvePostsForLoop,
+  SAMPLE_POST,
+  type ThemeDynamicData,
+  type ThemePostFields,
+} from "../theme/dynamic.ts";
+import { loopQueryKey, loopQueryOf } from "../theme/loop-queries.ts";
+
+/** In the editor, a collection Loop shows this many sample items at most. */
+const EDITOR_SAMPLES = 3;
+
+/**
+ * The items a Loop repeats for: a collection Loop's loaded entries (W-308), else the archive's
+ * posts. The editor shows sample items, since it has no entries loaded.
+ */
+function loopItems(
+  node: LoopNode,
+  dynamic: ThemeDynamicData | undefined,
+  mode: "public" | "editor",
+): ThemePostFields[] {
+  const query = loopQueryOf(node);
+  if (!query) return resolvePostsForLoop(dynamic, mode);
+  const entries = dynamic?.collectionLoops?.[loopQueryKey(query)];
+  if (entries && entries.length > 0) return entries.slice(0, query.limit);
+  if (mode !== "editor") return [];
+  return Array.from({ length: Math.min(query.limit, EDITOR_SAMPLES) }, (_, i) => ({
+    ...SAMPLE_POST,
+    id: `sample-${i + 1}`,
+  }));
+}
 import type { RenderContext } from "./context.ts";
 import type { VNode } from "./vnode.ts";
 
@@ -11,7 +40,7 @@ export function renderLoop(
   ctx: RenderContext,
   dynamic: ThemeDynamicData | undefined,
 ): VNode | undefined {
-  const posts = resolvePostsForLoop(dynamic, ctx.mode);
+  const posts = loopItems(node, dynamic, ctx.mode);
   const itemPartId = node.props.itemPartId?.trim() ?? "";
   const templateLayout =
     itemPartId && dynamic?.loopTemplates ? dynamic.loopTemplates[itemPartId] : undefined;

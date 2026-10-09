@@ -178,6 +178,33 @@ export const loop: ElementDefinition<LoopNode> = {
         message:
           "1 to 50 posts on each archive page. Leave it empty for 20. Add a Pagination element to link the pages.",
       },
+      {
+        key: "collection",
+        kind: "text",
+        label: "Collection",
+        optional: true,
+        message:
+          "List the published entries of this collection, by its slug (for example news), on any page. Leave blank to list the archive's posts.",
+      },
+      {
+        key: "limit",
+        kind: "int",
+        max: 50,
+        label: "Entries",
+        optional: true,
+        message: "How many entries a collection Loop shows, 1 to 50. Leave it empty for 6.",
+      },
+      {
+        key: "order",
+        kind: "select",
+        label: "Order",
+        optional: true,
+        options: [
+          { value: "newest", label: "Newest first" },
+          { value: "oldest", label: "Oldest first" },
+          { value: "title", label: "By title" },
+        ],
+      },
     ],
   },
   build: (_node, attrs, children) => ({ tag: "div", attrs, children }),

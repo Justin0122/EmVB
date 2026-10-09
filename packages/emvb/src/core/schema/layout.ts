@@ -403,12 +403,28 @@ export const PostLinkNode = leafNode(
  * When `itemPartId` is set, the host supplies that Loop Item layout in loopTemplates;
  * otherwise children are the inline item template.
  */
+/** W-308: the order a collection Loop lists its entries in. */
+export const LOOP_ORDERS = ["newest", "oldest", "title"] as const;
+export type LoopOrder = (typeof LOOP_ORDERS)[number];
+
 export const LoopNode = parentNode(
   "loop",
   z.strictObject({
     itemPartId: z.string().max(128).optional(),
     /** Posts per archive page, 1–50 (W-221). Unset = 20. */
     perPage: z.number().int().min(1).max(50).optional(),
+    /**
+     * W-308: list this collection's published entries instead of the archive's posts, on any
+     * page. A collection slug as EmDash allows it.
+     */
+    collection: z
+      .string()
+      .regex(/^[a-z][a-z0-9_]{0,63}$/, "Use a collection slug such as news")
+      .optional(),
+    /** W-308: how many entries a collection Loop shows, 1–50. Unset = 6. */
+    limit: z.number().int().min(1).max(50).optional(),
+    /** W-308: newest first (unset), oldest first, or by title. */
+    order: z.enum(LOOP_ORDERS).optional(),
   }),
 );
 
@@ -750,7 +766,13 @@ export type FormNode = {
 export type LoopNode = {
   id: IdOf;
   type: "loop";
-  props: { itemPartId?: string; perPage?: number };
+  props: {
+    itemPartId?: string;
+    perPage?: number;
+    collection?: string;
+    limit?: number;
+    order?: LoopOrder;
+  };
   style?: StyleOf;
   states?: StatesOf;
   devices?: DevicesOf;

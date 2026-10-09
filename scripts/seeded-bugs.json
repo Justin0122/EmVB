@@ -25860,6 +25860,160 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/page-settings.test.tsx"],
       "expect": "\\(fail\\).*W-307"
+    },
+    {
+      "id": "W-308/collection-ignored",
+      "requirement": "W-308",
+      "description": "A Loop's collection is ignored, so it's always an archive Loop.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "  if (!collection) return null;",
+          "replace": "  if (collection !== \"\\u0000\") return null;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/default-limit-20",
+      "requirement": "W-308",
+      "description": "A collection Loop without a limit shows 20 entries instead of 6.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "export const DEFAULT_LOOP_LIMIT = 6;",
+          "replace": "export const DEFAULT_LOOP_LIMIT = 20;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/nested-loops-missed",
+      "requirement": "W-308",
+      "description": "Collection Loops inside containers aren't found, so their entries never load.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "    if (isParentNode(node))",
+          "replace": "    if (isParentNode(node) && node.type === \"root-only\")"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/limit-not-applied",
+      "requirement": "W-308",
+      "description": "A collection Loop shows every loaded entry, past its limit.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/loop.ts",
+          "search": "return entries.slice(0, query.limit);",
+          "replace": "return entries;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/uses-archive-posts",
+      "requirement": "W-308",
+      "description": "A collection Loop lists the archive's posts.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/loop.ts",
+          "search": "  if (!query) return resolvePostsForLoop(dynamic, mode);",
+          "replace": "  if (query) return resolvePostsForLoop(dynamic, mode);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/editor-samples-uncapped",
+      "requirement": "W-308",
+      "description": "The editor paints one sample per entry of the limit, up to 50.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/loop.ts",
+          "search": "Math.min(query.limit, EDITOR_SAMPLES)",
+          "replace": "query.limit"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/order-any-string",
+      "requirement": "W-308",
+      "description": "A Loop accepts any order string.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "    order: z.enum(LOOP_ORDERS).optional(),",
+          "replace": "    order: z.string().optional() as never,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/oldest-is-newest",
+      "requirement": "W-308",
+      "description": "Oldest first asks EmDash for newest first.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/collection-loops.ts",
+          "search": "  oldest: { published_at: \"asc\" },",
+          "replace": "  oldest: { published_at: \"desc\" },"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/collection-loops.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/permalink-ignores-pattern",
+      "requirement": "W-308",
+      "description": "Entry links ignore the collection's URL pattern.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/collection-loops.ts",
+          "search": "  const path = urlPattern?.includes(\"{slug}\")",
+          "replace": "  const path = (urlPattern?.includes(\"{never}\") ?? false)"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/collection-loops.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/missing-collection-throws",
+      "requirement": "W-308",
+      "description": "A Loop over a missing collection fails the page.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/collection-loops.ts",
+          "search": "    // A collection that doesn't exist (any more) lists nothing instead of failing the page.\n    return [];",
+          "replace": "    throw new Error(\"no collection\");"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/collection-loops.test.ts"],
+      "expect": "\\(fail\\).*W-308"
+    },
+    {
+      "id": "W-308/page-drops-entries",
+      "requirement": "W-308",
+      "description": "A page's collection Loops get no entries.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve.ts",
+          "search": "    ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*W-308"
     }
   ]
 }

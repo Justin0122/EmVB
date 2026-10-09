@@ -61,3 +61,21 @@ so it works with `EmVBPage` and the runtimes the same way.
 
 Pass `content: { collection, id, slug }` to the layout, as above, so Theme Builder conditions
 such as **Singular → collection** match the entry.
+
+## List entries on any page
+
+A Loop can list a collection's entries on any page, for example the latest news on the
+homepage. Select the Loop and set:
+
+- **Collection**: the collection's slug, such as `news`.
+- **Entries**: how many to show, 1 to 50 (6 when empty).
+- **Order**: newest first, oldest first, or by title.
+
+Design the item with the Post elements inside the Loop (or a Loop Item part): Post Title, Post
+Excerpt, Post Image (the entry's `featured_image`), Post Date and Post Link. Post Link goes to
+the entry's page, built from the collection's URL pattern. In the editor the Loop shows sample
+items; the site shows the published entries.
+
+This works for any collection, visual or not. `resolveEmVBPage`, `resolveEmVBEntry` and
+`resolveThemeParts` load the entries, so host routes need no changes.
+

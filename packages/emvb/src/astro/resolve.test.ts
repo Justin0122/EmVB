@@ -11,6 +11,9 @@ import { defaultElement, type Layout, type LayoutNode } from "../core/index.ts";
  * forever (resolve-theme.test.ts hung whenever it ran after this file).
  */
 const realGetEmDashEntry = realEmDash.getEmDashEntry;
+const realGetEmDashCollection = realEmDash.getEmDashCollection;
+const realGetCollectionInfo = realEmDash.getCollectionInfo;
+let listed: { id: string; data: Record<string, unknown> }[] = [];
 const realRouteHandler = realPluginUtils.getPublicPluginApiRouteHandler;
 let active = true;
 type Found = { entry: { id: string; data: Record<string, unknown> } | null; isPreview?: boolean };
@@ -26,6 +29,10 @@ mock.module("emdash", () => ({
     lookups.push(`${args[0]}/${String(args[1])}`);
     return lookup(args[0], String(args[1]));
   },
+  getEmDashCollection: (...args: Parameters<typeof realEmDash.getEmDashCollection>) =>
+    active ? Promise.resolve({ entries: listed }) : realGetEmDashCollection(...args),
+  getCollectionInfo: (...args: Parameters<typeof realEmDash.getCollectionInfo>) =>
+    active ? Promise.resolve({ urlPattern: "/nieuws/{slug}" }) : realGetCollectionInfo(...args),
 }));
 mock.module("emdash/plugin-utils", () => ({
   ...realPluginUtils,
@@ -183,5 +190,22 @@ describe("resolveEmVBEntry (W-307)", () => {
     };
     expect(await resolveEmVBEntry(astro({ slug: "x" }), "nope")).toBeNull();
     expect(handlerCalls).toEqual([]);
+  });
+});
+
+describe("collection Loops on a page (W-308)", () => {
+  test("a Loop listing a collection renders its entries, linked by the collection's URL pattern", async () => {
+    listed = [{ id: "n1", data: { id: "n1", slug: "opening", title: "Opening" } }];
+    const newsLoop = {
+      id: "loop0001",
+      type: "loop",
+      props: { collection: "news" },
+      children: [{ id: "plink001", type: "post-link", props: {} }],
+    } as unknown as LayoutNode;
+    lookup = async () => page({ title: "Home", layout: layout(newsLoop) });
+    const resolved = await resolveEmVBPage(astro({ slug: "home" }));
+    expect(resolved?.html).toContain('href="/nieuws/opening"');
+    expect(resolved?.html).toContain("Opening");
+    listed = [];
   });
 });

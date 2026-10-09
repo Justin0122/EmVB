@@ -1,6 +1,7 @@
 import { decodeSlug, getEmDashEntry } from "emdash";
 import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
 import { ENTRY_LAYOUT_FIELD, PAGES_COLLECTION } from "../constants.ts";
+import { loadCollectionLoops } from "./collection-loops.ts";
 import { formIdsInLayout, loadFormDefinitions } from "./forms-definitions.ts";
 import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
 import { sectionTemplatesFor } from "./resolve-theme.ts";
@@ -77,13 +78,19 @@ async function renderEntry(
     ? await loadFormDefinitions(handler, astro.url, formIdsInLayout(layout))
     : undefined;
   const sectionTemplates = layout ? await sectionTemplatesFor(layout) : {};
+  // W-308: collection Loops on the page or in its synced sections.
+  const collectionLoops = await loadCollectionLoops([layout, ...Object.values(sectionTemplates)]);
+  const dynamic = {
+    ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+    ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
+  };
   return {
     ...renderStored(
       stored,
       design,
       String(data["id"] ?? slug),
       formDefinitions,
-      Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : undefined,
+      Object.keys(dynamic).length > 0 ? dynamic : undefined,
     ),
     entry,
     title: typeof data["title"] === "string" ? data["title"] : "",

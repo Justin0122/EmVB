@@ -3,6 +3,7 @@
 ## Unreleased
 
 - **Visual collections:** any EmDash collection can be edited in EmVB. **Edit visually** on the Pages VisualBuilder page adds a Visual layout field (`emvb_layout`), so every entry has its own layout in the editor while its other fields stay in EmDash's editor. Saves are validated, and host routes render entries with the new `resolveEmVBEntry`. See [Visual collections](docs/guides/visual-collections.md) (W-307).
+- **Loop over any collection:** a Loop can list a collection's published entries on any page, for example the latest news on the homepage, with a number of entries and an order. The Post elements show each entry's title, excerpt, image, date and link (W-308). A layout that uses it needs this EmVB version.
 
 ## 0.2.1 — 2026-10-08
 
