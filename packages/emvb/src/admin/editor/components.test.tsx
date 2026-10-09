@@ -119,8 +119,8 @@ describe("filling in a component's fields (W-312)", () => {
       ),
     ).toEqual({
       nodes: [],
-      fields: fields.fields,
-    });
+      fields: [{ key: "title", label: "Titel", kind: "text" }],
+    } as never);
     expect(await loadComponent(reply({ part_type: "section", layout }), "s1")).toBeNull();
   });
 });
