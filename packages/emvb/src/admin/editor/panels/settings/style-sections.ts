@@ -59,6 +59,21 @@ export const STYLE_UI: Record<string, { sections: StyleSectionId[]; defaultOpen:
       defaultOpen: "layout",
     },
     spacer: { sections: ["layout", "advanced"], defaultOpen: "layout" },
+    // W-314: the gap between slides sits in Layout; the frame takes the usual box styles.
+    carousel: {
+      sections: [
+        "layout",
+        "spacing",
+        "size",
+        "position",
+        "typography",
+        "background",
+        "border",
+        "effects",
+        "advanced",
+      ],
+      defaultOpen: "layout",
+    },
     divider: {
       sections: ["spacing", "size", "position", "border", "effects", "advanced"],
       defaultOpen: "border",
@@ -269,6 +284,7 @@ const TYPE_SECTION_KEYS: Record<string, Partial<Record<StyleSectionId, StyleKey[
   // A block box too: its contents sit in the centred inner box (W-156).
   "layout-section": { layout: SPANS },
   grid: { layout: GRID_LAYOUT },
+  carousel: { layout: ["gap", ...SPANS] },
   ...Object.fromEntries(SPANS_ONLY.map((type) => [type, { layout: SPANS }])),
 };
 

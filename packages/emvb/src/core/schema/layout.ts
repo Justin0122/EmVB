@@ -291,6 +291,22 @@ export const GridNode = parentNode(
   }),
 );
 
+/**
+ * W-314: a row of slides that scrolls sideways; each child is one slide. Slides per view per
+ * device; the arrows need the optional carousel runtime, swiping and scrolling work without it.
+ */
+export const CarouselNode = parentNode(
+  "carousel",
+  z.strictObject({
+    perView: z.number().int().min(1).max(6),
+    perViewTablet: z.number().int().min(1).max(6).optional(),
+    perViewMobile: z.number().int().min(1).max(6).optional(),
+    hideArrows: z.boolean().optional(),
+    prevLabel: z.string().max(60).optional(),
+    nextLabel: z.string().max(60).optional(),
+  }),
+);
+
 /** Several disclosures. Items are `<details>`, so the public page needs no script (W-106). */
 export const AccordionNode = parentNode("accordion", z.strictObject({}));
 
@@ -533,6 +549,7 @@ export const KNOWN_ELEMENT_TYPES = [
   "layout-section",
   "rich-text",
   "component",
+  "carousel",
 ] as const;
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
@@ -566,6 +583,7 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   LayoutSectionNode,
   FlexboxNode,
   GridNode,
+  CarouselNode,
   SvgNode,
   TabsNodeSchema,
   TabPanelNode,
@@ -699,6 +717,29 @@ export type LayoutSectionNode = {
     tag?: (typeof CONTAINER_TAGS)[number];
     contentWidth?: z.infer<typeof Length>;
     fullWidth?: boolean;
+  };
+  style?: StyleOf;
+  states?: StatesOf;
+  devices?: DevicesOf;
+  hiddenOn?: HiddenOnOf;
+  classes?: ClassesOf;
+  htmlId?: HtmlIdOf;
+  bind?: BindingsOf;
+  attributes?: HtmlAttributeOf[];
+  label?: string;
+  children: LayoutNode[];
+};
+
+export type CarouselNode = {
+  id: IdOf;
+  type: "carousel";
+  props: {
+    perView: number;
+    perViewTablet?: number;
+    perViewMobile?: number;
+    hideArrows?: boolean;
+    prevLabel?: string;
+    nextLabel?: string;
   };
   style?: StyleOf;
   states?: StatesOf;
@@ -926,6 +967,7 @@ export type LayoutNode =
   | LayoutSectionNode
   | FlexboxNode
   | GridNode
+  | CarouselNode
   | SvgNode
   | TabsNode
   | TabPanelNode
@@ -1037,6 +1079,7 @@ export const isLayoutParentNode = (
   | LayoutSectionNode
   | FlexboxNode
   | GridNode
+  | CarouselNode
   | TabPanelNode
   | SectionNode
   | AccordionItemNode
@@ -1046,6 +1089,7 @@ export const isLayoutParentNode = (
   node.type === "layout-section" ||
   node.type === "flexbox" ||
   node.type === "grid" ||
+  node.type === "carousel" ||
   node.type === "tab-panel" ||
   node.type === "section" ||
   node.type === "accordion-item" ||
@@ -1060,6 +1104,7 @@ export const isParentNode = (
   | LayoutSectionNode
   | FlexboxNode
   | GridNode
+  | CarouselNode
   | FormNode
   | LoopNode
   | SectionNode
@@ -1074,6 +1119,7 @@ export const isParentNode = (
   node.type === "layout-section" ||
   node.type === "flexbox" ||
   node.type === "grid" ||
+  node.type === "carousel" ||
   node.type === "form" ||
   node.type === "loop" ||
   node.type === "section" ||

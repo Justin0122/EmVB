@@ -117,6 +117,7 @@ describe("resolveThemeParts (R-062)", () => {
       needsFloatsRuntime: false,
       needsTabsRuntime: false,
       needsMenuRuntime: false,
+      needsCarouselRuntime: false,
       notFound: false,
     });
   });

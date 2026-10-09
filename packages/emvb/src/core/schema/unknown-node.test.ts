@@ -16,7 +16,7 @@ const withUnknown = {
       { id: "head0001", type: "heading" as const, props: { text: "Hi", level: 1 } },
       {
         id: "car00001",
-        type: "carousel",
+        type: "marquee",
         props: { slides: 3 },
         children: [
           { id: "head0002", type: "heading" as const, props: { text: "Slide", level: 2 } },
@@ -31,7 +31,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     const ok = validateLayout(withUnknown);
     expect(ok.ok).toBe(true);
     if (!ok.ok) return;
-    expect(ok.layout.root.children.some((c) => c.type === "carousel")).toBe(true);
+    expect(ok.layout.root.children.some((c) => c.type === "marquee")).toBe(true);
 
     const badId = structuredClone(withUnknown);
     (badId.root.children[1] as { id: string }).id = "!!";
@@ -44,7 +44,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     for (let i = 0; i < 25; i++) {
       kids = {
         id: `u${String(i).padStart(7, "0")}`,
-        type: "carousel",
+        type: "marquee",
         props: {},
         children: [kids],
       };
@@ -70,12 +70,12 @@ describe("unknown nodes (W-022, R-033)", () => {
     if (!ok.ok) return;
     const pub = renderPage(ok.layout, emptyDesign(), { mode: "public" });
     expect(pub.html).toContain("Hi");
-    expect(pub.html).not.toContain("carousel");
+    expect(pub.html).not.toContain("marquee");
     expect(pub.html).not.toContain("Unknown element");
     expect(pub.warnings.some((w) => w.code === "unknown-type")).toBe(true);
 
     const editor = renderPage(ok.layout, emptyDesign(), { mode: "editor" });
-    expect(editor.html).toContain('Unknown element "carousel"');
+    expect(editor.html).toContain('Unknown element "marquee"');
     expect(editor.html).toContain('data-emvb-id="car00001"');
   });
 
@@ -89,7 +89,7 @@ describe("unknown nodes (W-022, R-033)", () => {
     expect(moved.layout.root.children.map((c) => c.id)).toEqual(["car00001", "head0001"]);
 
     const gone = removeNode(moved.layout, "car00001");
-    expect(gone.removed?.node.type).toBe("carousel");
+    expect(gone.removed?.node.type).toBe("marquee");
     expect(gone.layout.root.children.map((c) => c.id)).toEqual(["head0001"]);
   });
 

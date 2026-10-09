@@ -22467,8 +22467,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/render.ts",
-          "search": "    needsMenuRuntime,\n    ...(design.direction ? { dir: design.direction } : {}),\n  };",
-          "replace": "    needsMenuRuntime,\n  };"
+          "search": "    needsCarouselRuntime,\n    ...(design.direction ? { dir: design.direction } : {}),\n  };",
+          "replace": "    needsCarouselRuntime,\n  };"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/render.test.ts"],
@@ -26476,6 +26476,132 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/components.test.tsx"],
       "expect": "\\(fail\\).*W-312"
+    },
+    {
+      "id": "W-314/slides-unwrapped",
+      "requirement": "W-314",
+      "description": "Slides aren't wrapped, so they get no width or snap point.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "attrs: { class: \"emvb-carousel-slide\" },",
+          "replace": "attrs: { class: \"emvb-carousel-item\" },"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/arrows-visible-without-js",
+      "requirement": "W-314",
+      "description": "Arrows show before the runtime can make them work.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "    hidden: \"\",\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/hide-arrows-ignored",
+      "requirement": "W-314",
+      "description": "Hide arrows still renders them.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "const showArrows = node.props.hideArrows !== true;",
+          "replace": "const showArrows = true;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/per-view-dropped",
+      "requirement": "W-314",
+      "description": "Slides in view isn't set, so every carousel shows 3.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "    ? [{ property: \"--emvb-per-view\", value: String(value) }]",
+          "replace": "    ? []"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/tablet-per-view-dropped",
+      "requirement": "W-314",
+      "description": "The tablet slides in view is ignored.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "        ...carouselPerView(props[\"perViewTablet\"]),\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/runtime-flag-missing",
+      "requirement": "W-314",
+      "description": "A page with a carousel doesn't ask for its script.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "      rendered.carousel = true;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/not-a-parent",
+      "requirement": "W-314",
+      "description": "The carousel's slides aren't rendered.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "node.type === \"grid\" ||\n  node.type === \"carousel\" ||\n  node.type === \"form\" ||",
+          "replace": "node.type === \"grid\" ||\n  node.type === \"form\" ||"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/prev-always-enabled",
+      "requirement": "W-314",
+      "description": "Previous is enabled at the start.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/carousel/runtime.ts",
+          "search": "      prev.disabled = track.scrollLeft <= 1;",
+          "replace": "      prev.disabled = false;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/carousel/runtime.test.ts"],
+      "expect": "\\(fail\\).*W-314"
+    },
+    {
+      "id": "W-314/wired-twice",
+      "requirement": "W-314",
+      "description": "Running the script twice scrolls two slides per click.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/carousel/runtime.ts",
+          "search": "    if (carousel.dataset[\"emvbCarouselReady\"] === \"\") continue;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/carousel/runtime.test.ts"],
+      "expect": "\\(fail\\).*W-314"
     }
   ]
 }

@@ -44,7 +44,15 @@ const SRCDOC =
   '<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0}</style></head><body></body></html>';
 
 /** Element types that hold other elements and show the empty drop placeholder (W-128). */
-const DROP_BOXES = ["container", "div-block", "flexbox", "grid", "section", "form"]
+const DROP_BOXES = [
+  "container",
+  "div-block",
+  "flexbox",
+  "grid",
+  "carousel-track",
+  "section",
+  "form",
+]
   .map((type) => `.emvb-${type}:empty`)
   .join(",");
 /**

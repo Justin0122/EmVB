@@ -39,6 +39,7 @@ const ICONS: Record<string, typeof TextHIcon> = {
   "div-block": SquareIcon,
   "layout-section": RowsIcon,
   flexbox: SquaresFourIcon,
+  carousel: ArrowsLeftRightIcon,
   spacer: RectangleIcon,
   divider: MinusIcon,
   heading: TextHIcon,

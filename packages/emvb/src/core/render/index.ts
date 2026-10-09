@@ -61,6 +61,8 @@ export type RenderResult = {
   css: string;
   needsFormsRuntime: boolean;
   needsTabsRuntime: boolean;
+  /** A Carousel is on the page: hosts load `EmVBCarouselRuntime` for its arrows (W-314). */
+  needsCarouselRuntime: boolean;
   /** A Menu has a dropdown: hosts load `EmVBMenuRuntime` (W-197). */
   needsMenuRuntime: boolean;
   /** The site's text direction when set in Site styles, for the host's `<html dir>` (W-230). */
@@ -142,6 +144,18 @@ function renameIds(vnode: VNode, base: string, next: string): VNode {
   };
 }
 
+/** W-314: a carousel's slides in view, as its CSS variable. */
+const carouselPerView = (value: unknown): Declaration[] =>
+  typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 6
+    ? [{ property: "--emvb-per-view", value: String(value) }]
+    : [];
+
+/** W-314: a carousel's gap, as the variable its track and slide widths use. */
+const carouselGap = (style: Record<string, unknown> | undefined): Declaration[] => {
+  const gap = cssLength(style?.["gap"]);
+  return gap ? [{ property: "--emvb-carousel-gap", value: gap }] : [];
+};
+
 export function renderPage(
   layout: Layout,
   design: DesignSystem,
@@ -173,7 +187,7 @@ export function renderPage(
   const domIds = new Map<string, number>();
   // W-253: runtimes follow what renders, including synced section and loop item contents,
   // which the page's own layout doesn't hold.
-  const rendered = { form: false, tabs: false, menuDropdown: false };
+  const rendered = { form: false, tabs: false, menuDropdown: false, carousel: false };
   const ctx: RenderContext = {
     mode,
     definitions: opts.formDefinitions ?? new Map(),
@@ -230,6 +244,20 @@ export function renderPage(
       const props = (node as { props: { contentWidth?: unknown; fullWidth?: unknown } }).props;
       const width = props.fullWidth === true ? "none" : cssLength(props.contentWidth);
       if (width) declarations.push({ property: "--emvb-content-width", value: width });
+    }
+    if (node.type === "carousel") {
+      // W-314: slides in view and the gap between them, per device, for the track and slides.
+      const props = (node as { props: Record<string, unknown> }).props;
+      declarations.push(...carouselPerView(props["perView"]), ...carouselGap(node.style));
+      tablet.declarations.unshift(
+        ...carouselPerView(props["perViewTablet"]),
+        ...carouselGap(node.devices?.tablet),
+      );
+      mobile.declarations.unshift(
+        ...carouselPerView(props["perViewMobile"]),
+        ...carouselGap(node.devices?.mobile),
+      );
+      rendered.carousel = true;
     }
     if (node.type === "grid") {
       const props = (node as { props: Record<string, unknown> }).props;
@@ -379,6 +407,7 @@ export function renderPage(
     css: scope ? scopeWrapperCss() + scopeCss(css, scope) : css,
     needsFormsRuntime: rendered.form || layoutHasForm(layout),
     needsTabsRuntime: rendered.tabs || layoutHasTabs(layout),
+    needsCarouselRuntime: rendered.carousel,
     needsMenuRuntime: rendered.menuDropdown || layoutHasMenuDropdown(layout),
     ...(design.direction ? { dir: design.direction } : {}),
     warnings,

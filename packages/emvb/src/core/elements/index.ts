@@ -5,6 +5,7 @@ import type {
   LayoutSectionNode,
   FlexboxNode,
   GridNode,
+  CarouselNode,
   SvgNode,
   TabsNode,
   TabPanelNode,
@@ -894,6 +895,87 @@ const grid: ElementDefinition<GridNode> = {
   build: (_node, attrs, children) => ({ tag: "div", attrs, children }),
 };
 
+/** W-314: a carousel arrow, hidden until the carousel runtime shows it. */
+const carouselArrow = (dir: "prev" | "next", ariaLabel: string): VNode => ({
+  tag: "button",
+  attrs: {
+    type: "button",
+    class: `emvb-carousel-arrow emvb-carousel-${dir}`,
+    "aria-label": ariaLabel,
+    hidden: "",
+    "data-emvb-carousel-arrow": dir,
+  },
+  children: [],
+});
+
+/**
+ * W-314: the element is the frame; its track scrolls with snap points and holds one slide per
+ * child. Slides per view and the gap come from CSS variables the renderer sets per device.
+ * The arrows stay hidden until the carousel runtime shows them, so a page without it still scrolls.
+ */
+const carousel: ElementDefinition<CarouselNode> = {
+  baseCss:
+    ".emvb-carousel{position:relative;min-width:0;--emvb-per-view:3;--emvb-carousel-gap:16px}.emvb-carousel-track{display:flex;gap:var(--emvb-carousel-gap);overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}.emvb-carousel-track::-webkit-scrollbar{display:none}.emvb-carousel-slide{flex:0 0 calc((100% - (var(--emvb-per-view) - 1) * var(--emvb-carousel-gap)) / var(--emvb-per-view));min-width:0;scroll-snap-align:start}.emvb-carousel-arrow{position:absolute;top:50%;transform:translateY(-50%);z-index:1;display:flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;padding:0;border:0;border-radius:999px;background:transparent;color:inherit;cursor:pointer}.emvb-carousel-arrow[hidden]{display:none}.emvb-carousel-arrow:disabled{opacity:.35;cursor:default}.emvb-carousel-arrow::before{content:'';width:.9rem;height:.9rem;border-top:2px solid currentColor;border-right:2px solid currentColor}.emvb-carousel-prev{left:-3rem}.emvb-carousel-prev::before{transform:rotate(-135deg)}.emvb-carousel-next{right:-3rem}.emvb-carousel-next::before{transform:rotate(45deg)}@media (max-width:1024px){.emvb-carousel-prev{left:0}.emvb-carousel-next{right:0}}",
+  defaults: () => ({ type: "carousel", props: { perView: 3, perViewMobile: 1 }, children: [] }),
+  descriptor: {
+    type: "carousel",
+    name: "Carousel",
+    group: "layout",
+    defaultTab: "content",
+    fields: [
+      {
+        key: "perView",
+        kind: "select",
+        label: "Slides in view",
+        devices: { tablet: "perViewTablet", mobile: "perViewMobile" },
+        options: [1, 2, 3, 4, 5, 6].map((n) => ({ value: n, label: String(n) })),
+      },
+      {
+        key: "hideArrows",
+        kind: "boolean",
+        label: "Hide arrows",
+        optional: true,
+        message: "Swiping and scrolling still work.",
+      },
+      {
+        key: "prevLabel",
+        kind: "text",
+        label: "Previous button label",
+        optional: true,
+        message: "Read out by screen readers. Empty is Previous.",
+      },
+      {
+        key: "nextLabel",
+        kind: "text",
+        label: "Next button label",
+        optional: true,
+        message: "Empty is Next.",
+      },
+    ],
+  },
+  build: (node, attrs, children) => {
+    const slides: VNode[] = children.map((child) => ({
+      tag: "div",
+      attrs: { class: "emvb-carousel-slide" },
+      children: [child],
+    }));
+    const showArrows = node.props.hideArrows !== true;
+    return {
+      tag: "div",
+      attrs: { ...attrs, "data-emvb-carousel": "" },
+      children: [
+        { tag: "div", attrs: { class: "emvb-carousel-track" }, children: slides },
+        ...(showArrows
+          ? [
+              carouselArrow("prev", node.props.prevLabel?.trim() || "Previous"),
+              carouselArrow("next", node.props.nextLabel?.trim() || "Next"),
+            ]
+          : []),
+      ],
+    };
+  },
+};
+
 const flexbox: ElementDefinition<FlexboxNode> = {
   baseCss:
     ".emvb-flexbox{display:flex;flex-direction:row;flex-wrap:wrap;align-items:stretch;min-width:0;gap:16px}",
@@ -987,6 +1069,7 @@ export const ELEMENTS = {
   "div-block": divBlock,
   flexbox,
   grid,
+  carousel,
   svg: svgEl,
   tabs,
   "tab-panel": tabPanel,

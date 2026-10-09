@@ -43,6 +43,7 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       needsFormsRuntime: false,
       needsTabsRuntime: false,
       needsMenuRuntime: false,
+      needsCarouselRuntime: false,
     });
     expect(fromObject.css).toContain("#123456");
     expect(renderStored(JSON.stringify(s1Page()), DESIGN, "01PAGE")).toEqual(fromObject);
@@ -98,6 +99,7 @@ describe("rendering a stored layout (R-031, R-033)", () => {
       needsFormsRuntime: false,
       needsTabsRuntime: false,
       needsMenuRuntime: false,
+      needsCarouselRuntime: false,
     };
     const logged = spyOn(console, "error").mockImplementation(() => undefined);
     try {

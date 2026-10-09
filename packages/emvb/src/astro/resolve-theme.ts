@@ -92,6 +92,8 @@ export type ResolvedThemeParts = {
   needsFloatsRuntime: boolean;
   /** Hosts load `EmVBTabsRuntime` only when Tabs appear in a winning part (R-031 / W-078). */
   needsTabsRuntime: boolean;
+  /** W-314: a carousel is in a theme part. */
+  needsCarouselRuntime: boolean;
   /** Hosts load `EmVBMenuRuntime` only when a winning part has a Menu dropdown (W-197). */
   needsMenuRuntime: boolean;
   /**
@@ -433,6 +435,7 @@ export async function resolveThemeParts(
     needsPopupsRuntime: false,
     needsFloatsRuntime: false,
     needsTabsRuntime: false,
+    needsCarouselRuntime: false,
     needsMenuRuntime: false,
     notFound: false,
     ...(context.kind === "archive" && !context.isSearch
@@ -600,6 +603,7 @@ export async function resolveThemeParts(
     needsPopupsRuntime: popups.length > 0,
     needsFloatsRuntime: floats.length > 0,
     needsTabsRuntime: rendered.some((page) => page.needsTabsRuntime),
+    needsCarouselRuntime: rendered.some((page) => page.needsCarouselRuntime),
     needsMenuRuntime: rendered.some((page) => page.needsMenuRuntime),
     notFound: pastLastPage,
     ...(design.direction ? { dir: design.direction } : {}),

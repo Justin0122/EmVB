@@ -29,6 +29,7 @@ const REACT_ATTR: Record<string, string> = {
  */
 const BOOLEAN_ATTRS = new Set([
   "open",
+  "hidden",
   "controls",
   "allowfullscreen",
   "muted",

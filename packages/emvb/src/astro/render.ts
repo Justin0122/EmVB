@@ -17,6 +17,8 @@ export type RenderedPage = {
   needsFormsRuntime: boolean;
   needsTabsRuntime: boolean;
   needsMenuRuntime: boolean;
+  /** W-314: render `EmVBCarouselRuntime` so carousel arrows work. */
+  needsCarouselRuntime: boolean;
   /** The site's text direction when set, for the host's `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
 };
@@ -85,24 +87,23 @@ export function renderStored(
       needsFormsRuntime: false,
       needsTabsRuntime: false,
       needsMenuRuntime: false,
+      needsCarouselRuntime: false,
       ...(design.direction ? { dir: design.direction } : {}),
     };
   }
-  const { html, css, needsFormsRuntime, needsTabsRuntime, needsMenuRuntime } = renderPage(
-    layout,
-    design,
-    {
+  const { html, css, needsFormsRuntime, needsTabsRuntime, needsMenuRuntime, needsCarouselRuntime } =
+    renderPage(layout, design, {
       formDefinitions,
       dynamic,
       scope: pageId,
-    },
-  );
+    });
   return {
     html,
     css,
     needsFormsRuntime,
     needsTabsRuntime,
     needsMenuRuntime,
+    needsCarouselRuntime,
     ...(design.direction ? { dir: design.direction } : {}),
   };
 }

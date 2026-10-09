@@ -8,6 +8,7 @@ const BOXES = new Set([
   "container",
   "flexbox",
   "grid",
+  "carousel",
   "div-block",
   "layout-section",
   "form",

@@ -4,7 +4,7 @@ import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import type { VNode } from "./vnode.ts";
 
 const ATTR_NAME = /^(?:data|aria)-[a-z][a-z0-9-]{0,40}$/;
-const BOX = new Set(["container", "div-block", "flexbox", "grid"]);
+const BOX = new Set(["container", "div-block", "flexbox", "grid", "carousel"]);
 
 /**
  * Names the EmDash forms client reads (`[data-ec-form]`, `[data-page]`, `[data-error-for]`…). One of
