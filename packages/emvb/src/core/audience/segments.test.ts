@@ -35,7 +35,7 @@ describe("Visitors rules match host segments (W-329)", () => {
 
   test("schema 14: segments are checked, and a v13 page upgrades unchanged", () => {
     const page = (segments: unknown): unknown => ({
-      schemaVersion: 14,
+      schemaVersion: 15,
       root: {
         id: "root0001",
         type: "container",
@@ -51,7 +51,7 @@ describe("Visitors rules match host segments (W-329)", () => {
     const old = { ...v13, root: { ...v13.root, children: [plain] } };
     expect(upgradeLayout(old)).toEqual({
       ok: true,
-      doc: { ...old, schemaVersion: 14 },
+      doc: { ...old, schemaVersion: 15 },
       from: 13,
     });
   });

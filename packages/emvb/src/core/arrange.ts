@@ -310,6 +310,38 @@ export function duplicateNode(
   };
 }
 
+export const WRAP_TYPES = ["container", "div-block", "flexbox", "grid"] as const;
+export type WrapType = (typeof WRAP_TYPES)[number];
+
+/**
+ * Puts `id` inside a new box at the same place, in one step. The root cannot be wrapped.
+ * The new box is selected so it is obvious on the canvas.
+ */
+export function wrapNode(
+  layout: Layout,
+  id: string,
+  type: WrapType,
+  random: () => number = Math.random,
+): Arranged {
+  const found = locate(layout, id);
+  if (!found) return refuse(REASONS.missing);
+  if (!found.parent) return refuse(REASONS.rootFixed);
+  if (size(layout.root) + 1 > MAX_NODES) return refuse(REASONS.tooMany);
+  const { layout: without, removed } = removeNode(layout, id);
+  if (!removed) return refuse(REASONS.missing);
+  const wrapper: LayoutNode = {
+    id: newNodeId(random),
+    type,
+    props: type === "grid" ? { columns: 2 } : {},
+    children: [removed.node],
+  } as LayoutNode;
+  return {
+    ok: true,
+    layout: insertNode(without, found.parent.id, found.index, wrapper),
+    selected: wrapper.id,
+  };
+}
+
 /** Where click-to-add puts a new element: into a selected container, after a selected element, or at the end. */
 export function insertionPoint(layout: Layout, selectedId: string | null): Place {
   const found = selectedId ? locate(layout, selectedId) : undefined;

@@ -38,7 +38,7 @@ export default defineConfig({
 import { getEmDashEntry, decodeSlug } from "emdash";
 import { EmVBPage, resolveEmVBPage } from "@perkyzz/emvb/astro";
 // With @emdash-cms/plugin-forms installed and registered:
-import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms";
+import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client";
 
 const emvb = await resolveEmVBPage(Astro);
 if (!emvb && !(await getEmDashEntry("pages", decodeSlug(Astro.params.slug)))) {
@@ -49,7 +49,7 @@ if (!emvb && !(await getEmDashEntry("pages", decodeSlug(Astro.params.slug)))) {
 {emvb && <EmVBPage page={emvb}>{emvb.needsFormsRuntime && <EmVBFormsRuntime />}</EmVBPage>}
 ```
 
-Without the forms plugin, leave out the `EmVBFormsRuntime` import and element; that subpath imports the forms plugin's client script.
+Without the forms plugin, import `EmVBFormsRuntime` from `@perkyzz/emvb/astro/forms` (it renders nothing and does not import the plugin) or leave the element out. The `/client` subpath is the one that calls `initForms`.
 
 A fixed route has no slug parameter. Pass the page's slug: `await resolveEmVBPage(Astro, { slug: "home" })`. Visitor rules can use the same call's `visitor` option (`{ segments: ["member"] }`, and country, device or returning when the site knows better); `resolveThemeParts` takes it too. The [install guide](https://github.com/PerkyZZ999/EmVB/blob/main/docs/guides/install-in-a-host-site.md) shows both.
 

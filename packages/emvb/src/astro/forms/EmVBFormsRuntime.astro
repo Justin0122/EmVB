@@ -1,9 +1,8 @@
 ---
-// The forms plugin's client (D-015). Hosts render this only when a page `needsFormsRuntime`,
-// so pages without forms stay zero-JS (R-031). Form elements arrive in S5.
+/**
+ * Safe forms slot (W-332). This file does not import `@emdash-cms/plugin-forms`.
+ * A host without that plugin can import `@perkyzz/emvb/astro/forms` and the build still succeeds.
+ * Hosts that have the plugin import `@perkyzz/emvb/astro/forms/client` instead, which calls
+ * `initForms`. Rendering this component does nothing.
+ */
 ---
-
-<script>
-  import { initForms } from "@emdash-cms/plugin-forms/client";
-  initForms();
-</script>

@@ -58,6 +58,7 @@
       "name": "@perkyzz/emvb",
       "version": "0.3.0",
       "dependencies": {
+        "@perkyzz/emvb-icons": "0.1.0",
         "zod": "~4.5.4",
       },
       "devDependencies": {
@@ -84,6 +85,10 @@
       "optionalPeers": [
         "@emdash-cms/plugin-forms",
       ],
+    },
+    "packages/emvb-icons": {
+      "name": "@perkyzz/emvb-icons",
+      "version": "0.1.0",
     },
     "site": {
       "name": "@emvb/site",
@@ -608,6 +613,8 @@
     "@oxlint/binding-win32-x64-msvc": ["@oxlint/binding-win32-x64-msvc@1.86.0", "", { "os": "win32", "cpu": "x64" }, "sha512-az4dzifCRzES1crwu6pDFXzJTIanrdxXFL9TbiJWrx9LKcuacbR83aPvxDA1LKLNswi/RoqitC7Afcflhu3zBQ=="],
 
     "@perkyzz/emvb": ["@perkyzz/emvb@workspace:packages/emvb"],
+
+    "@perkyzz/emvb-icons": ["@perkyzz/emvb-icons@workspace:packages/emvb-icons"],
 
     "@phosphor-icons/react": ["@phosphor-icons/react@2.1.10", "", { "peerDependencies": { "react": ">= 16.8", "react-dom": ">= 16.8" } }, "sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA=="],
 

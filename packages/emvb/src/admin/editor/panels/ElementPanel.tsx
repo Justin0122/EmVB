@@ -69,7 +69,12 @@ import { BoxControl } from "./settings/BoxControl.tsx";
 import { boxGroupOf } from "./settings/box-sides.ts";
 import { IconShapeRow, IconSingleColorRow } from "./settings/IconControls.tsx";
 import { StyleRow } from "./settings/StyleRow.tsx";
-import { AttributesEditor, HtmlIdField } from "./settings/AdvancedFields.tsx";
+import {
+  AttributesEditor,
+  ContainerQueryFields,
+  DirectionField,
+  HtmlIdField,
+} from "./settings/AdvancedFields.tsx";
 import { ClassChipInput } from "./settings/ClassChipInput.tsx";
 import { StateDot, StateSwitcher, type StyleStateChoice } from "./settings/StateSwitcher.tsx";
 import {
@@ -647,6 +652,8 @@ function KnownElementPanel({
                 (node.htmlId ? 1 : 0) + (node.attributes?.length ?? 0),
                 <>
                   <HtmlIdField node={node} layout={layout} onChange={onChange} />
+                  <DirectionField node={node} onChange={onChange} />
+                  {"children" in node && <ContainerQueryFields node={node} onChange={onChange} />}
                   <AttributesEditor
                     attributes={node.attributes}
                     onChange={(attributes) => onChange({ ...node, attributes })}

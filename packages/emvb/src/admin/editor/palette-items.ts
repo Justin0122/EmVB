@@ -24,13 +24,34 @@ export type PaletteActions = {
 
 const MAX_LAYERS = 400;
 
+const TEXT_KEYS = [
+  "text",
+  "label",
+  "title",
+  "alt",
+  "name",
+  "summary",
+  "caption",
+  "placeholder",
+] as const;
+
+/** Visible copy on a node, including accordion and tab labels, for Find text (W-339). */
 function textOf(node: LayoutNode): string {
   const props = node.props as Record<string, unknown>;
-  for (const key of ["text", "label", "title", "alt", "name"]) {
+  const parts: string[] = [];
+  for (const key of TEXT_KEYS) {
     const value = props[key];
-    if (typeof value === "string" && value.trim()) return value.trim().slice(0, 40);
+    if (typeof value === "string" && value.trim()) parts.push(value.trim());
   }
-  return "";
+  const items = props["items"];
+  if (Array.isArray(items)) {
+    for (const item of items) {
+      if (item && typeof item === "object" && "text" in item && typeof item.text === "string") {
+        parts.push(item.text.trim());
+      }
+    }
+  }
+  return parts.join(" ").replace(/\s+/g, " ").slice(0, 240);
 }
 
 /** Every palette command for the editor's current state (W-314). */
@@ -77,10 +98,20 @@ export function paletteItems(ctx: PaletteActions): PaletteItem[] {
         id: `layer:${node.id}`,
         group: "Jump to",
         label: depth === 0 ? "Page (root)" : name,
-        ...(text ? { hint: `“${text}”` } : {}),
+        ...(text ? { hint: `“${text.slice(0, 40)}”` } : {}),
         keywords: `${node.type} ${text}`,
         run: () => ctx.select(node.id),
       });
+      if (text && depth > 0) {
+        items.push({
+          id: `find:${node.id}`,
+          group: "Find text",
+          label: text.length > 80 ? `${text.slice(0, 77)}…` : text,
+          hint: name,
+          keywords: text,
+          run: () => ctx.select(node.id),
+        });
+      }
       if ("children" in node && Array.isArray(node.children)) {
         for (const child of node.children as LayoutNode[]) walk(child, depth + 1);
       }

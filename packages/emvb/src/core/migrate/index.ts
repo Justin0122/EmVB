@@ -13,8 +13,9 @@ export type Migration = (doc: Record<string, unknown>) => Record<string, unknown
  * labels, and v11 → v12 (W-160) rewrites a gradient `{ angle, from, to }` into
  * `{ type: "linear", angle, stops }`, and v12 → v13 (W-307 onward) adds optional fields only
  * (bindings, and the rest of the W-307 feature batch), and v13 → v14 (W-329 onward) adds
- * optional fields only (audience segments, Loop options, `ch` and negative margins). Every other
- * value is unchanged.
+ * optional fields only (audience segments, Loop options, `ch` and negative margins), and
+ * v14 → v15 (W-341 onward) adds optional fields only (direction, image link and caption,
+ * button icons, table of contents, container queries). Every other value is unchanged.
  */
 const unchanged: Migration = (doc) => doc;
 
@@ -74,6 +75,7 @@ export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {
   11: gradients,
   12: unchanged,
   13: unchanged,
+  14: unchanged,
 };
 
 /** `DESIGN_MIGRATIONS[n]` upgrades a version-n design document to version n + 1. */
@@ -91,6 +93,7 @@ export const DESIGN_MIGRATIONS: Readonly<Record<number, Migration>> = {
   11: gradients,
   12: unchanged,
   13: unchanged,
+  14: unchanged,
 };
 
 export type UpgradeResult =

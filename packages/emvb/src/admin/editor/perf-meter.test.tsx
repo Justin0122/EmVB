@@ -7,7 +7,7 @@ import { PerfMeterDialog } from "./PerfMeter.tsx";
 afterEach(cleanup);
 
 const layout: Layout = {
-  schemaVersion: 14,
+  schemaVersion: 15,
   root: {
     id: "root0001",
     type: "container",

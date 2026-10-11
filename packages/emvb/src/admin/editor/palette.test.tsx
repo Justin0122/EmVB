@@ -10,7 +10,7 @@ import { paletteItems } from "./palette-items.ts";
 afterEach(cleanup);
 
 const layout: Layout = {
-  schemaVersion: 14,
+  schemaVersion: 15,
   root: {
     id: "root0001",
     type: "container",
@@ -69,6 +69,13 @@ describe("command palette (W-314)", () => {
     expect(new Set(filterPalette(items, ">").map((i) => i.group))).toEqual(new Set(["Actions"]));
     expect(filterPalette(items, ".card").map((i) => i.id)).toEqual(["class:card"]);
     expect(filterPalette(items, "zzzz")).toEqual([]);
+  });
+
+  test("a slash finds text on this page and skips the root (W-339)", () => {
+    const items = build([]);
+    expect(filterPalette(items, "/pricing").map((item) => item.id)).toEqual(["find:text0001"]);
+    expect(filterPalette(items, "/welcome").map((item) => item.id)).toEqual(["find:head0001"]);
+    expect(items.some((item) => item.id === "find:root0001")).toBe(false);
   });
 
   test("arrow keys and Enter run the chosen command, and the palette closes", async () => {

@@ -1,8 +1,19 @@
 import { Button, Dialog } from "@cloudflare/kumo";
-import { MagnifyingGlassIcon, UploadSimpleIcon, XIcon } from "@phosphor-icons/react";
+import {
+  MagnifyingGlassIcon,
+  PencilSimpleIcon,
+  TrashIcon,
+  UploadSimpleIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 import * as React from "react";
 import type { Fetcher } from "../../api.ts";
-import { listUploadedIcons, uploadIconFile } from "../../icon-uploads-api.ts";
+import {
+  deleteUploadedIcon,
+  listUploadedIcons,
+  renameUploadedIcon,
+  uploadIconFile,
+} from "../../icon-uploads-api.ts";
 import { BUTTON, SOLID_PRIMARY, UI_CSS } from "../../ui.ts";
 import {
   ALL_ICONS,
@@ -451,6 +462,56 @@ function IconLibrary({
     if (icon) setSelectedId(icon.id);
   };
 
+  const uploadId = selected?.id.startsWith("upload:")
+    ? selected.id.slice("upload:".length)
+    : undefined;
+  const renameUpload = () => {
+    if (!fetcher || !uploadId || !selected) return;
+    const name = window.prompt("Rename this upload", selected.label);
+    if (!name || !name.trim() || name.trim() === selected.label) return;
+    void renameUploadedIcon(fetcher, uploadId, name.trim())
+      .then((item) => {
+        const [icon] = uploadedIcons([item]);
+        if (!icon) return;
+        setUploads((current) => current?.map((entry) => (entry.id === icon.id ? icon : entry)));
+        setUploadNote({
+          error: false,
+          text: `Renamed to ${icon.label}. Pages that already use it are unchanged.`,
+        });
+      })
+      .catch((caught: unknown) => {
+        setUploadNote({
+          error: true,
+          text: caught instanceof Error ? caught.message : "Couldn't rename that upload.",
+        });
+      });
+  };
+  const deleteUpload = () => {
+    if (!fetcher || !uploadId || !selected) return;
+    if (
+      !window.confirm(
+        `Remove “${selected.label}” from My uploads? Icons already on a page stay as they are.`,
+      )
+    ) {
+      return;
+    }
+    void deleteUploadedIcon(fetcher, uploadId)
+      .then(() => {
+        setUploads((current) => current?.filter((entry) => entry.id !== selected.id));
+        setSelectedId(undefined);
+        setUploadNote({
+          error: false,
+          text: "Removed from My uploads. Icons already placed on a page still show.",
+        });
+      })
+      .catch((caught: unknown) => {
+        setUploadNote({
+          error: true,
+          text: caught instanceof Error ? caught.message : "Couldn't remove that upload.",
+        });
+      });
+  };
+
   const status = failed
     ? `${failed} didn't load.`
     : inUploads && uploadsFailed
@@ -656,6 +717,30 @@ function IconLibrary({
           )}
         </div>
         <div className="emvb-icon-library-actions">
+          {uploadId && fetcher && (
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                className={BUTTON}
+                icon={<PencilSimpleIcon aria-hidden="true" />}
+                data-emvb-icon-rename=""
+                onClick={renameUpload}
+              >
+                Rename
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className={BUTTON}
+                icon={<TrashIcon aria-hidden="true" />}
+                data-emvb-icon-delete=""
+                onClick={deleteUpload}
+              >
+                Delete
+              </Button>
+            </>
+          )}
           <Dialog.Close
             render={(props) => (
               <Button {...props} variant="secondary" className={BUTTON}>

@@ -12,6 +12,7 @@ import type {
   AccordionItemNode,
   DividerNode,
   HeadingNode,
+  TocNode,
   IconNode,
   ImageNode,
   LabelNode,
@@ -257,7 +258,7 @@ const link: ElementDefinition<LinkNode> = {
 const button: ElementDefinition<ButtonNode> = {
   baseCss:
     // The look sits in :where() so site tag defaults, classes and local styles all win (W-148).
-    ".emvb-button{display:inline-flex;align-items:center;justify-content:center;margin:0;font:inherit;text-decoration:none;cursor:pointer}:where(.emvb-button){color:inherit;background:transparent;border:1px solid currentColor;border-radius:6px;padding:0.625em 1.25em;line-height:1.2}",
+    ".emvb-button{display:inline-flex;align-items:center;justify-content:center;gap:0.5em;margin:0;font:inherit;text-decoration:none;cursor:pointer}:where(.emvb-button){color:inherit;background:transparent;border:1px solid currentColor;border-radius:6px;padding:0.625em 1.25em;line-height:1.2}.emvb-button-icon{display:inline-flex;flex:none}.emvb-button-icon svg{width:100%;height:100%;display:block}.emvb-button-icon--sm{width:1em;height:1em}.emvb-button-icon--md{width:1.25em;height:1.25em}.emvb-button-icon--lg{width:1.5em;height:1.5em}.emvb-figure{margin:0}.emvb-figcaption{margin-top:0.35em}.emvb-image-link{display:contents}",
   defaults: () => ({ type: "button", props: { text: "Button" } }),
   descriptor: {
     type: "button",
@@ -274,24 +275,85 @@ const button: ElementDefinition<ButtonNode> = {
         message: "Use a full URL such as https://example.com or a path such as /pricing.",
       },
       { key: "newTab", kind: "boolean", label: "Open in a new tab", optional: true },
+      { key: "iconId", kind: "icon", label: "Icon", optional: true },
+      {
+        key: "iconPosition",
+        kind: "select",
+        label: "Icon position",
+        optional: true,
+        options: [
+          { value: "before", label: "Before the label" },
+          { value: "after", label: "After the label" },
+        ],
+      },
+      {
+        key: "iconSize",
+        kind: "select",
+        label: "Icon size",
+        optional: true,
+        options: [
+          { value: "sm", label: "Small" },
+          { value: "md", label: "Medium" },
+          { value: "lg", label: "Large" },
+        ],
+      },
+      { key: "iconGap", kind: "int", label: "Gap (px)", optional: true },
     ],
   },
   build: (node, attrs) => {
     const href = node.props.href !== undefined ? sanitizeHref(node.props.href) : undefined;
+    const children = buttonChildren(node);
     if (href) {
       return {
         tag: "a",
         attrs: { ...attrs, href, ...newTabAttrs(node.props.newTab) },
-        children: [node.props.text],
+        children,
       };
     }
     return {
       tag: "button",
       attrs: { ...attrs, type: "button" },
-      children: [node.props.text],
+      children,
     };
   },
 };
+
+function buttonChildren(node: ButtonNode): (VNode | string)[] {
+  const buttonText = node.props.text;
+  const picked = node.props.iconSvg ? sanitizeSvgMarkup(node.props.iconSvg) : undefined;
+  const bundled = picked || !node.props.iconId ? undefined : getBundledIcon(node.props.iconId);
+  if (!picked && !bundled) return [buttonText];
+  const svg: VNode = {
+    tag: "svg",
+    attrs: picked
+      ? { ...picked.attrs, focusable: "false", "aria-hidden": "true" }
+      : {
+          xmlns: "http://www.w3.org/2000/svg",
+          viewBox: "0 0 24 24",
+          fill: "none",
+          stroke: "currentColor",
+          "stroke-width": "2",
+          "stroke-linecap": "round",
+          "stroke-linejoin": "round",
+          focusable: "false",
+          "aria-hidden": "true",
+        },
+    children: picked
+      ? picked.children
+      : (bundled?.children ?? []).map((child) => ({
+          tag: child.tag,
+          attrs: { ...child.attrs },
+          children: [],
+        })),
+  };
+  const size = node.props.iconSize ?? "md";
+  const icon: VNode = {
+    tag: "span",
+    attrs: { class: `emvb-button-icon emvb-button-icon--${size}`, "aria-hidden": "true" },
+    children: [svg],
+  };
+  return node.props.iconPosition === "after" ? [buttonText, icon] : [icon, buttonText];
+}
 
 const list: ElementDefinition<ListNode> = {
   baseCss: ".emvb-list{margin:0;padding-inline-start:1.25em}.emvb-list li{margin:0}",
@@ -348,6 +410,17 @@ const image: ElementDefinition<ImageNode> = {
       // The first big image people see (hero, LCP) shouldn't wait for lazy loading (W-226).
       { key: "priority", kind: "boolean", label: "Load right away", optional: true },
       {
+        key: "href",
+        kind: "href",
+        label: "Link URL",
+        optional: true,
+        message: "Use a full URL or a path such as /pricing. Size styles stay on the image.",
+      },
+      { key: "newTab", kind: "boolean", label: "Open link in a new tab", optional: true },
+      { key: "caption", kind: "text", label: "Caption", optional: true },
+      { key: "focalX", kind: "int", label: "Focal point X (%)", optional: true },
+      { key: "focalY", kind: "int", label: "Focal point Y (%)", optional: true },
+      {
         key: "width",
         kind: "int",
         label: "Width (px)",
@@ -384,9 +457,48 @@ const image: ElementDefinition<ImageNode> = {
     if (decorative) imgAttrs.role = "presentation";
     if (node.props.width !== undefined) imgAttrs.width = String(node.props.width);
     if (node.props.height !== undefined) imgAttrs.height = String(node.props.height);
-    return { tag: "img", attrs: imgAttrs, children: [] };
+    const sources = imageSources(node.props.src, node.props.sources);
+    if (sources) {
+      imgAttrs.srcset = sources;
+      imgAttrs.sizes = "100vw";
+    }
+    const img: VNode = { tag: "img", attrs: imgAttrs, children: [] };
+    const href = node.props.href ? sanitizeHref(node.props.href) : undefined;
+    const linked: VNode = href
+      ? {
+          tag: "a",
+          attrs: { href, class: "emvb-image-link", ...newTabAttrs(node.props.newTab) },
+          children: [img],
+        }
+      : img;
+    const caption = node.props.caption?.trim();
+    if (!caption) return linked;
+    return {
+      tag: "figure",
+      attrs: { class: "emvb-figure" },
+      children: [
+        linked,
+        { tag: "figcaption", attrs: { class: "emvb-figcaption" }, children: [caption] },
+      ],
+    };
   },
 };
+
+function imageSources(
+  src: string,
+  sources: { src: string; width: number }[] | undefined,
+): string | undefined {
+  if (!sources || sources.length === 0) return undefined;
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  for (const source of sources) {
+    const url = sanitizeMediaUrl(source.src);
+    if (!url || url === sanitizeMediaUrl(src) || seen.has(url)) continue;
+    seen.add(url);
+    parts.push(`${url} ${source.width}w`);
+  }
+  return parts.length > 0 ? parts.join(", ") : undefined;
+}
 
 /** Root stroke widths the Stroke width control can override (W-237); Lucide and Tabler use 2. */
 const ICON_STROKE_WIDTHS = ["1", "1.5", "2", "2.5", "3"] as const;
@@ -903,8 +1015,27 @@ const accordionItem: ElementDefinition<AccordionItemNode> = {
   },
 };
 
+const toc: ElementDefinition<TocNode> = {
+  baseCss:
+    ".emvb-toc{margin:0}.emvb-toc-title{margin:0 0 0.5em;font:inherit;font-weight:600}.emvb-toc ol{margin:0;padding-inline-start:1.25em}.emvb-toc a{color:inherit}",
+  defaults: () => ({ type: "toc", props: {} }),
+  descriptor: {
+    type: "toc",
+    name: "Table of contents",
+    group: "content",
+    defaultTab: "content",
+    fields: [{ key: "title", kind: "text", label: "Title", optional: true }],
+  },
+  build: (node, attrs) => ({
+    tag: "nav",
+    attrs: { ...attrs, "aria-label": node.props.title?.trim() || "Table of contents" },
+    children: [],
+  }),
+};
+
 export const ELEMENTS = {
   heading,
+  toc,
   container,
   "layout-section": layoutSection,
   spacer,

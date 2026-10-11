@@ -75,6 +75,26 @@ describe("icon upload routes (W-239)", () => {
     }
   });
 
+  test("an editor can rename and delete an upload; a missing one is 404", async () => {
+    const upload = await t.route("icons/upload", {
+      user: editor(),
+      body: { name: "mark.svg", svg: '<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>' },
+    });
+    const id = (upload.body["data"] as { item: Item }).item.id;
+    const renamed = await t.route("icons/rename", {
+      user: editor(),
+      body: { id, name: "Brand mark.svg" },
+    });
+    expect(renamed.status).toBe(200);
+    expect((renamed.body["data"] as { item: Item }).item.name).toBe("Brand mark");
+    const removed = await t.route("icons/delete", { user: editor(), body: { id } });
+    expect(removed.status).toBe(200);
+    const again = await t.route("icons/delete", { user: editor(), body: { id } });
+    expect(again.status).toBe(404);
+    const list = await t.route("icons", { user: editor() });
+    expect((list.body["data"] as { items: Item[] }).items).toEqual([]);
+  });
+
   test("a file name becomes a short label", () => {
     expect(uploadName("/home/me/Icons/rocket.SVG")).toBe("rocket");
     expect(uploadName(".svg")).toBe("Uploaded icon");

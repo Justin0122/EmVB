@@ -9,11 +9,12 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dirname, "..");
 const PKG = join(ROOT, "packages/emvb");
 
-const EXPORTS = [".", "./astro", "./astro/forms", "./admin", "./core"];
+const EXPORTS = [".", "./astro", "./astro/forms", "./astro/forms/client", "./admin", "./core"];
 const FILES = [
   "package/src/index.ts",
   "package/src/astro/index.ts",
   "package/src/astro/forms/index.ts",
+  "package/src/astro/forms/client.ts",
   "package/src/admin/index.tsx",
 ];
 

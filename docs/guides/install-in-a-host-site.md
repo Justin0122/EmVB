@@ -64,7 +64,7 @@ Copy the pattern from EmVB’s demos (`demos/node/src/pages/[slug].astro`): try 
 ---
 import { getEmDashEntry, getSeoMeta, decodeSlug, getSiteSettings } from "emdash";
 import { EmVBPage, resolveEmVBPage } from "@perkyzz/emvb/astro";
-import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms"; // only with @emdash-cms/plugin-forms
+import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client"; // only with @emdash-cms/plugin-forms
 // …site layout…
 
 const emvb = await resolveEmVBPage(Astro);
@@ -86,7 +86,7 @@ A fixed route has no slug parameter, so pass the page’s slug instead. To serve
 ```astro
 ---
 import { EmVBPage, resolveEmVBPage } from "@perkyzz/emvb/astro";
-import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms"; // only with @emdash-cms/plugin-forms
+import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client"; // only with @emdash-cms/plugin-forms
 // …site layout…
 
 const emvb = await resolveEmVBPage(Astro, { slug: "home" });
@@ -100,7 +100,7 @@ Until a page with the slug `home` is published (step 4), `/` returns 404; if the
 
 Blank-canvas EmVB pages use `standalone` on `EmVBPage` (see the demos).
 
-`@perkyzz/emvb/astro/forms` imports the forms plugin's client script, so import `EmVBFormsRuntime` only when `@emdash-cms/plugin-forms` is installed. Without it the build fails with `"initForms" is not exported`; drop that import and the `EmVBFormsRuntime` element.
+`@perkyzz/emvb/astro/forms` does not import the forms plugin, so a site can always import it and the build still succeeds; rendering it does nothing. When `@emdash-cms/plugin-forms` is installed, import `EmVBFormsRuntime` from `@perkyzz/emvb/astro/forms/client` instead. That subpath calls `initForms`.
 
 ### Tell EmVB what you know about the visitor
 

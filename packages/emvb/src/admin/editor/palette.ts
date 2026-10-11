@@ -10,7 +10,7 @@ export type PaletteItem = {
   run: () => void;
 };
 
-const PALETTE_GROUPS = ["Actions", "Insert", "Jump to", "Apply class"] as const;
+const PALETTE_GROUPS = ["Actions", "Insert", "Jump to", "Find text", "Apply class"] as const;
 export type PaletteGroup = (typeof PALETTE_GROUPS)[number];
 
 /** Prefixes that narrow the palette to one group, like `>` for actions in code editors. */
@@ -18,6 +18,7 @@ const PREFIXES: Record<string, PaletteGroup> = {
   ">": "Actions",
   "+": "Insert",
   "@": "Jump to",
+  "/": "Find text",
   ".": "Apply class",
 };
 
@@ -48,7 +49,7 @@ export function fuzzyScore(query: string, text: string): number | null {
 
 /**
  * The items for a query, best first, at most `limit` (W-314). An empty query lists every group
- * in order; a leading `>`, `+`, `@` or `.` narrows to Actions, Insert, Jump to or Apply class.
+ * in order; a leading `>`, `+`, `@`, `/` or `.` narrows to Actions, Insert, Jump to, Find text or Apply class.
  */
 export function filterPalette(items: PaletteItem[], raw: string, limit = 60): PaletteItem[] {
   const prefix = PREFIXES[raw.trimStart()[0] ?? ""];

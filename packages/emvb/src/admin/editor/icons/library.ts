@@ -105,10 +105,10 @@ export type LibraryIcon = {
 };
 
 const LOADERS: Record<IconSetId, () => Promise<{ default: unknown }>> = {
-  lucide: () => import("./sets/lucide.json"),
-  fontawesome: () => import("./sets/fontawesome.json"),
-  tabler: () => import("./sets/tabler.json"),
-  remix: () => import("./sets/remix.json"),
+  lucide: () => import("@perkyzz/emvb-icons/lucide.json"),
+  fontawesome: () => import("@perkyzz/emvb-icons/fontawesome.json"),
+  tabler: () => import("@perkyzz/emvb-icons/tabler.json"),
+  remix: () => import("@perkyzz/emvb-icons/remix.json"),
 };
 
 const attrText = (attrs: Record<string, string>) =>

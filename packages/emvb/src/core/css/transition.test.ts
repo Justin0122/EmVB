@@ -95,11 +95,10 @@ describe("transition (W-089)", () => {
     ).css;
     expect(css).toContain(".emvb-e-btn00001{transition:opacity 250ms ease-out}");
     expect(css).toContain(".emvb-k-card{transition:color 250ms ease-out,");
-    expect(
-      css.endsWith(
-        "@media (prefers-reduced-motion: reduce){.emvb-k-card,.emvb-e-btn00001{transition:none}}",
-      ),
-    ).toBe(true);
+    expect(css).toContain(
+      "@media (prefers-reduced-motion: reduce){.emvb-k-card,.emvb-e-btn00001{transition:none}}",
+    );
+    expect(css).toContain("@media print");
   });
 
   test("no transitions, no reduced-motion block", () => {

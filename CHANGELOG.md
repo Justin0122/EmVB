@@ -8,10 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking
 
+- **Layout and design schema 15.** Pages and site styles saved now can't be opened by an EmVB that only knows schema 14. Older pages and styles open and upgrade unchanged. Schema 15 adds optional fields only: per-element text direction, image link, caption, focal point and extra image sources, a button icon, a table of contents element, and container queries.
 - **Layout and design schema 14 (W-329).** Pages and site styles saved now can't be opened by EmVB 0.3.0 or earlier; update the plugin everywhere first. Older pages and styles open and upgrade unchanged.
+- **Forms runtime import.** `@perkyzz/emvb/astro/forms` no longer imports `@emdash-cms/plugin-forms`, so a host without that plugin can import it and the build still succeeds. Hosts that have the forms plugin import `@perkyzz/emvb/astro/forms/client` instead. That subpath calls `initForms`.
 
 ### Added
 
+- **Wrap the selection.** The command palette can wrap the selected element in a Flexbox, Grid or Div Block in one step. The page root stays put.
+- **Find text.** The command palette's `/` prefix lists the text on the page (headings, buttons, accordion titles, captions) and jumps to that element.
+- **Publish styles lists the change.** While site styles are unpublished, the site styles drawer names the variables, classes and settings Publish styles will add, change or remove.
+- **Image link, caption and focal point.** An image can link somewhere (size styles stay on the image), show a caption, set a focal point (`object-position`), and list extra image URLs for `srcset` when those URLs exist.
+- **Button icon.** A button can show an icon before or after its label, in a small, medium or large size.
+- **Rename and delete uploaded icons.** My uploads can rename or remove an SVG. Icons already placed on a page keep their own copy.
+- **Drag to reorder Accordion and Tabs items.** Dragging a row in the Content list reorders it in one step. Move up and move down stay.
+- **Table of contents.** A Table of contents element lists the page's headings as links. No script.
+- **Print stylesheet.** Printed pages hide the header, footer, floats and popups.
+- **Text direction on one element.** Advanced → Text direction sets `dir` on that element. Unset follows the site.
+- **Container queries.** A box can be a query container. A child can apply a copied style when that container is at least a chosen width, with `@container`, not the viewport.
+- **Icon sets are a separate package.** Lucide, Font Awesome Free, Tabler and Remix live in `@perkyzz/emvb-icons`. Remix stays on 4.8.0. Public pages still store only the SVG you insert.
 - **An EmVB page at a fixed path.** `resolveEmVBPage(Astro, { slug: "home" })` looks up that slug as-is and ignores the route parameter, so a host can serve an EmVB page at `/`. Without `slug`, the route parameter is used as before.
 - **Your site's stylesheets in the editor canvas (W-327).** `emvb({ canvasStyles: ["/styles/site.css", "https://fonts…"] })` makes the canvas load the host's stylesheets and fonts before EmVB's CSS, so pages look in the editor as on the site. Only `https:`/`http:` URLs and site paths are used, at most 10. The demo sites load their `public/site.css` this way.
 - **Visitor segments from your site (W-329).** Hosts pass what they know about the visitor, e.g. `resolveEmVBPage(Astro, { visitor: { segments: ["member", "pro"] } })` (and the same option on `resolveThemeParts`), and a Visitors rule can match those segments (Visitors → Segments). Host-provided country, device and new/returning replace the detected ones.
@@ -20,6 +34,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **The canvas uses the same style scope as the published page.** Editor CSS is prefixed the way public CSS is, and the canvas markup sits in the same scope wrapper.
+- **A site-styles save from another tab is replayed when it can be.** If the other tab changed different variables or classes, this tab's edit is saved on top. If both tabs changed the same one, the latest styles load and the edit is not overwritten.
 - **Post Content keeps the post's formatting (W-328).** Bold, italic, code, underline, strike-through, links (only hrefs that pass the link check), bulleted and numbered lists (nested), headings h1–h6, block quotes and line breaks now show on the page and in the editor. Images, embeds, custom blocks and raw HTML are still left out, and all text is escaped.
 
 ### Fixed

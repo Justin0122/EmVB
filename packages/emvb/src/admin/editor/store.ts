@@ -29,6 +29,8 @@ export type EditorState = {
   publishedRevision?: string | null;
   /** True after a style edit that has not been published. */
   designUnpublished?: boolean;
+  /** Published design, so Publish styles can list what will change (W-340). */
+  publishedDesign?: DesignSystem;
   selectedId: string | null;
   /** Bumped on every page edit. A save only clears `dirty` if nothing changed while it ran. */
   version: number;
@@ -65,6 +67,7 @@ export type EditorAction =
       revision: string | null;
       publishedRevision: string | null;
       unpublished: boolean;
+      published?: DesignSystem;
     }
   | { type: "reset"; state: EditorState };
 
@@ -225,7 +228,12 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         designUnpublished: true,
       };
     case "publish-design":
-      return { ...state, designUnpublished: false, publishedRevision: action.revision };
+      return {
+        ...state,
+        designUnpublished: false,
+        publishedRevision: action.revision,
+        publishedDesign: state.design,
+      };
     case "load-design":
       return {
         ...state,
@@ -233,6 +241,7 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
         designRevision: action.revision,
         publishedRevision: action.publishedRevision,
         designUnpublished: action.unpublished,
+        ...(action.published ? { publishedDesign: action.published } : {}),
       };
     case "reset":
       return action.state;

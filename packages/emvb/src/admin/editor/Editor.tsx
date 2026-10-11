@@ -128,6 +128,7 @@ const initialState = (entry: EditorEntry, design: LoadedDesign): EditorState => 
   designRevision: design.revision,
   publishedRevision: design.publishedRevision,
   designUnpublished: design.unpublished,
+  ...(design.published ? { publishedDesign: design.published } : {}),
   selectedId: null,
   version: 0,
   savedVersion: 0,
@@ -209,6 +210,7 @@ function EditorApp({
     remove,
     arrange,
     duplicate,
+    wrap,
     addFromPanel,
     addRecipe,
     items: itemActions,
@@ -252,6 +254,8 @@ function EditorApp({
       state.page.layout
         ? renderPage(state.page.layout, state.design, {
             mode: "editor",
+            // Same scope class as the public page, so canvas CSS matches published CSS (W-334).
+            scope: state.id,
             dynamic: {
               ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
               site: live.site,
@@ -565,6 +569,28 @@ function EditorApp({
                             } as LayoutNode),
                     }),
                   actions: [
+                    ...(selectedNode && selectedNode.id !== state.page.layout?.root.id
+                      ? [
+                          {
+                            id: "wrap-flexbox",
+                            label: "Wrap in Flexbox",
+                            keywords: "wrap box container",
+                            run: () => wrap(selectedNode.id, "flexbox"),
+                          },
+                          {
+                            id: "wrap-grid",
+                            label: "Wrap in Grid",
+                            keywords: "wrap box columns",
+                            run: () => wrap(selectedNode.id, "grid"),
+                          },
+                          {
+                            id: "wrap-div",
+                            label: "Wrap in Div Block",
+                            keywords: "wrap box",
+                            run: () => wrap(selectedNode.id, "div-block"),
+                          },
+                        ]
+                      : []),
                     { id: "save", label: "Save draft", hint: "Ctrl/Cmd+S", run: () => void save() },
                     { id: "publish", label: "Publish", run: () => void publish() },
                     {

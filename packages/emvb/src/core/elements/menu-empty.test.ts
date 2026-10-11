@@ -3,7 +3,7 @@ import { emptyDesign, renderPage, type Layout } from "../index.ts";
 
 const page = (menus: unknown[]) =>
   ({
-    schemaVersion: 14,
+    schemaVersion: 15,
     root: { id: "root0001", type: "container", props: {}, children: menus },
   }) as unknown as Layout;
 const item = {

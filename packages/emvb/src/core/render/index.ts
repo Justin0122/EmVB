@@ -1,7 +1,8 @@
 import { variantShows } from "../audience/variants.ts";
 import { audienceShows, audienceSummary } from "../audience/rules.ts";
 import { generateCss } from "../css/generate.ts";
-import { cssScopeToken, scopeAttribute, scopeCss, scopeWrapperCss } from "../css/scope.ts";
+import { printCss } from "../css/print.ts";
+import { cssScopeToken, scopeClassName, scopeCss, scopeWrapperCss } from "../css/scope.ts";
 import { ELEMENTS } from "../elements/index.ts";
 import { controlId } from "../elements/field-id.ts";
 import { layoutHasForm } from "../forms/binding.ts";
@@ -168,7 +169,10 @@ export function renderPage(
     tablet?: Declaration[];
     mobile?: Declaration[];
     hiddenOn?: LayoutNode["hiddenOn"];
+    query?: Declaration[];
+    queryMin?: number;
   }[] = [];
+  const layoutHasToc = treeHasType(layout.root, "toc");
   const knownVariables = new Set(design.variables.colors.map((c) => c.id));
   let backgroundVideo = false;
 
@@ -253,6 +257,25 @@ export function renderPage(
         declarations.push({ property: "--emvb-loop-columns", value: String(columns) });
       }
     }
+    if (node.container) declarations.push({ property: "container-type", value: "inline-size" });
+    if (node.type === "image") {
+      const focal = node.props as { focalX?: number; focalY?: number };
+      if (focal.focalX !== undefined || focal.focalY !== undefined) {
+        declarations.push({
+          property: "object-position",
+          value: `${focal.focalX ?? 50}% ${focal.focalY ?? 50}%`,
+        });
+        declarations.push({ property: "object-fit", value: "cover" });
+      }
+    }
+    if (node.type === "button") {
+      const gap = (node.props as { iconGap?: number }).iconGap;
+      if (typeof gap === "number") declarations.push({ property: "gap", value: `${gap}px` });
+    }
+    const queryStyle = node.query ? styleDeclarations(node.query.style) : undefined;
+    for (const key of queryStyle?.rejected ?? []) {
+      warnings.push({ nodeId, code: "rejected-style", detail: key });
+    }
     if (node.type === "grid") {
       const props = (node as { props: Record<string, unknown> }).props;
       declarations.push(...gridTracks(props["columns"]));
@@ -274,9 +297,13 @@ export function renderPage(
       tablet.declarations.length > 0 ||
       mobile.declarations.length > 0 ||
       (hiddenOn?.length ?? 0) > 0;
+    const queryDeclarations = queryStyle?.declarations ?? [];
     if (
       ruleId &&
-      (declarations.length > 0 || Object.keys(states.states).length > 0 || responsive)
+      (declarations.length > 0 ||
+        Object.keys(states.states).length > 0 ||
+        responsive ||
+        queryDeclarations.length > 0)
     ) {
       classes.push(`emvb-e-${ruleId}`);
       localRules.push({
@@ -286,13 +313,18 @@ export function renderPage(
         tablet: tablet.declarations,
         mobile: mobile.declarations,
         hiddenOn,
+        ...(queryDeclarations.length > 0 && node.query
+          ? { query: queryDeclarations, queryMin: node.query.min }
+          : {}),
       });
     }
     const attrs: Record<string, string> = { class: classes.join(" "), ...customAttributes(node) };
     if (mode === "editor" && id) attrs["data-emvb-id"] = id;
     if (node.htmlId && HTML_ID.test(node.htmlId)) attrs.id = node.htmlId;
+    else if (node.type === "heading" && id && layoutHasToc) attrs.id = `emvb-h-${id}`;
     // W-230: the site's text direction on the root, also a fallback when the host's <html> has none.
-    if (isRoot && design.direction) attrs.dir = design.direction;
+    if (node.dir) attrs.dir = node.dir;
+    else if (isRoot && design.direction) attrs.dir = design.direction;
     return attrs;
   };
 
@@ -346,6 +378,10 @@ export function renderPage(
       );
     }
     if (isTabsNode(node)) return finish(node, renderTabs(node, id, attrs, ctx, dynamic));
+    if (node.type === "toc") {
+      const built = def.build(node as never, attrs, []);
+      return finish(node, { ...built, children: tocChildren(layout, node, mode) });
+    }
     if (isParentNode(node)) {
       return finish(node, def.build(node as never, attrs, ctx.children(node.children, dynamic)));
     }
@@ -389,13 +425,12 @@ export function renderPage(
     };
   }
 
-  const vnode = visit(layout.root, true) ?? {
+  const page = visit(layout.root, true) ?? {
     tag: "div",
     attrs: { class: "emvb-root" },
     children: [],
   };
   const baseCss = new Map(Object.entries(ELEMENTS).map(([type, def]) => [type, def.baseCss]));
-  const html = serialize(vnode);
   const css = generateCss({
     design,
     usedTypes,
@@ -406,14 +441,72 @@ export function renderPage(
     ...(mode === "editor" && opts.previewDevice ? { previewDevice: opts.previewDevice } : {}),
   });
   const scope = opts.scope === undefined ? undefined : cssScopeToken(opts.scope);
+  const vnode = scope
+    ? { tag: "div", attrs: { class: scopeClassName(scope) }, children: [page] }
+    : page;
+  const html = serialize(vnode);
   return {
     vnode,
-    html: scope ? `<div ${scopeAttribute(scope)}>${html}</div>` : html,
-    css: scope ? scopeWrapperCss() + scopeCss(css, scope) : css,
+    html,
+    css: (scope ? scopeWrapperCss() + scopeCss(css, scope) : css) + printCss(),
     needsFormsRuntime: rendered.form || layoutHasForm(layout),
     needsTabsRuntime: rendered.tabs || layoutHasTabs(layout),
     needsMenuRuntime: rendered.menuDropdown || layoutHasMenuDropdown(layout),
     ...(design.direction ? { dir: design.direction } : {}),
     warnings,
   };
+}
+
+function treeHasType(node: LayoutNode, type: string): boolean {
+  if (node.type === type) return true;
+  if (!("children" in node) || !Array.isArray(node.children)) return false;
+  return node.children.some((child) => treeHasType(child, type));
+}
+
+function headingAnchors(root: LayoutNode): { id: string; text: string }[] {
+  const out: { id: string; text: string }[] = [];
+  const walk = (node: LayoutNode) => {
+    if (node.type === "heading") {
+      const text = String((node.props as { text?: unknown }).text ?? "").trim();
+      if (text) {
+        const id = node.htmlId && HTML_ID.test(node.htmlId) ? node.htmlId : `emvb-h-${node.id}`;
+        out.push({ id, text });
+      }
+    }
+    if ("children" in node && Array.isArray(node.children)) {
+      for (const child of node.children) walk(child);
+    }
+  };
+  walk(root);
+  return out;
+}
+
+function tocChildren(layout: Layout, node: LayoutNode, mode: RenderMode): (VNode | string)[] {
+  const title =
+    node.type === "toc"
+      ? String((node.props as { title?: unknown }).title ?? "").trim() || undefined
+      : undefined;
+  const items = headingAnchors(layout.root);
+  const children: (VNode | string)[] = [];
+  if (title) children.push({ tag: "p", attrs: { class: "emvb-toc-title" }, children: [title] });
+  if (items.length === 0) {
+    if (mode === "editor") {
+      children.push({
+        tag: "p",
+        attrs: {},
+        children: ["Headings on this page appear here."],
+      });
+    }
+    return children;
+  }
+  children.push({
+    tag: "ol",
+    attrs: {},
+    children: items.map((item) => ({
+      tag: "li",
+      attrs: {},
+      children: [{ tag: "a", attrs: { href: `#${item.id}` }, children: [item.text] }],
+    })),
+  });
+  return children;
 }

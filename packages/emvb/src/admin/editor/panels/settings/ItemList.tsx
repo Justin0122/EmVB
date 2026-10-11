@@ -47,6 +47,21 @@ export const hasItemList = (type: string) => type in KINDS;
 const childrenOf = (node: LayoutNode): LayoutNode[] =>
   "children" in node && Array.isArray(node.children) ? (node.children as LayoutNode[]) : [];
 
+/** One reorder of `kids`, moving `fromId` to `toIndex`. Same place or an unknown id changes nothing. */
+export function reorderItems(
+  kids: LayoutNode[],
+  fromId: string,
+  toIndex: number,
+): LayoutNode[] | undefined {
+  const from = kids.findIndex((item) => item.id === fromId);
+  if (from < 0 || from === toIndex) return undefined;
+  const next = kids.slice();
+  const [moved] = next.splice(from, 1);
+  if (!moved) return undefined;
+  next.splice(toIndex, 0, moved);
+  return next;
+}
+
 /** Fallback when no editor actions are wired (isolated panels): plain edits of the parent. */
 function localActions(node: LayoutNode, onChange: (node: LayoutNode) => void): ItemActions {
   const kids = childrenOf(node);
@@ -115,7 +130,25 @@ export function ItemList({
           {kids.map((child, index) => {
             const n = index + 1;
             return (
-              <li key={child.id} className="emvb-item-row" data-emvb-item={child.id}>
+              <li
+                key={child.id}
+                className="emvb-item-row"
+                data-emvb-item={child.id}
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData("text/plain", child.id);
+                  event.dataTransfer.effectAllowed = "move";
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const next = reorderItems(kids, event.dataTransfer.getData("text/plain"), index);
+                  if (next) onChange({ ...node, children: next } as LayoutNode);
+                }}
+              >
                 <DraftTextField
                   field={kind.field(n)}
                   node={child}

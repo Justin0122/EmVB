@@ -47,7 +47,8 @@ describe("site styles saved in another tab (W-212)", () => {
     await run?.(emptyDesign()).catch((error: unknown) => {
       message = error instanceof Error ? error.message : "";
     });
-    expect(message).toContain("The latest styles are loaded now");
+    // This tab had no local edit to replay, so the other tab's styles load without asking to redo.
+    expect(message).toBe("");
     const loaded = actions.find((a) => a.type === "load-design");
     expect(loaded?.type === "load-design" ? loaded.revision : null).toBe("r2");
     expect(loaded?.type === "load-design" ? loaded.design.classes?.[0]?.id : null).toBe("card");

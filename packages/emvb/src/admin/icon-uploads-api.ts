@@ -42,3 +42,21 @@ export async function uploadIconFile(
     { method: "POST", body: { name: file.name, svg } },
   );
 }
+
+/** Renames an upload in My uploads. Icons already on a page keep the SVG they stored. */
+export async function renameUploadedIcon(
+  fetcher: Fetcher,
+  id: string,
+  name: string,
+): Promise<UploadedIconItem> {
+  const data = await requestJson<{ item: UploadedIconItem }>(fetcher, `${BASE}/icons/rename`, {
+    method: "POST",
+    body: { id, name },
+  });
+  return data.item;
+}
+
+/** Removes an upload from My uploads. Placed icons are unchanged. */
+export async function deleteUploadedIcon(fetcher: Fetcher, id: string): Promise<void> {
+  await requestJson(fetcher, `${BASE}/icons/delete`, { method: "POST", body: { id } });
+}

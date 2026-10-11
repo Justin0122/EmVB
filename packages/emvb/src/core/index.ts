@@ -118,6 +118,8 @@ export {
   type DesignValidation,
 } from "./validate.ts";
 export { nestingIssues } from "./nesting.ts";
+export { mergeDesign, type DesignConflict } from "./design/merge.ts";
+export { designChanges, designChangeLabel, type DesignChange } from "./design/diff.ts";
 export {
   DESIGN_SCHEMA_VERSION,
   DEFAULT_STYLE_TAGS,
@@ -259,6 +261,9 @@ export {
   addSectionNear,
   canDrop,
   duplicateNode,
+  wrapNode,
+  WRAP_TYPES,
+  type WrapType,
   createVariantB,
   endAbTest,
   defaultTestName,

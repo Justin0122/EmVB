@@ -1,0 +1,1 @@
+Icon sets for the EmVB editor only. Remix Icon stays on 4.8.0 (Apache-2.0). Later Remix releases use a license that does not allow shipping them inside another icon library. Lucide, Tabler and Font Awesome Free keep the licenses recorded in the EmVB package's THIRD_PARTY_NOTICES.md.

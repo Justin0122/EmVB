@@ -15,7 +15,9 @@ import {
  */
 
 type IconStore = {
+  get(id: string): Promise<UploadedIcon | null>;
   put(id: string, data: UploadedIcon): Promise<void>;
+  delete(id: string): Promise<boolean>;
   query(options?: {
     orderBy?: Record<string, "asc" | "desc">;
     limit?: number;
@@ -75,5 +77,40 @@ export const iconUploadRoute: PluginRoute<z.infer<typeof UploadInput>> = {
     };
     await store(ctx).put(id, item);
     return { item: { id, ...item }, imagesLeftOut: prepared.imagesLeftOut };
+  },
+};
+
+const IdInput = z.object({
+  id: z.string().regex(/^[0-9a-f]{16}$/, "Unknown icon"),
+});
+
+const RenameInput = IdInput.extend({
+  name: z.string().min(1).max(255),
+});
+
+/** Editors and above. Renames an upload. Pages keep the SVG they already stored. */
+export const iconRenameRoute: PluginRoute<z.infer<typeof RenameInput>> = {
+  permission: "content:edit_any",
+  input: RenameInput,
+  handler: async (ctx) => {
+    const current = await store(ctx).get(ctx.input.id);
+    if (!current) throw new PluginRouteError("NOT_FOUND", "That upload is not in My uploads.", 404);
+    const name = uploadName(ctx.input.name);
+    await store(ctx).put(ctx.input.id, { ...current, name });
+    return { item: { id: ctx.input.id, ...current, name } };
+  },
+};
+
+/**
+ * Editors and above. Removes an upload from My uploads. Icons already placed on a page keep
+ * their own copy of the SVG, so those pages do not change.
+ */
+export const iconDeleteRoute: PluginRoute<z.infer<typeof IdInput>> = {
+  permission: "content:edit_any",
+  input: IdInput,
+  handler: async (ctx) => {
+    const removed = await store(ctx).delete(ctx.input.id);
+    if (!removed) throw new PluginRouteError("NOT_FOUND", "That upload is not in My uploads.", 404);
+    return { id: ctx.input.id };
   },
 };

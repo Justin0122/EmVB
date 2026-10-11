@@ -4,7 +4,7 @@ import { fieldNameError } from "./FieldBindControl.tsx";
 
 const saves = (field: string) =>
   validateLayout({
-    schemaVersion: 14,
+    schemaVersion: 15,
     root: {
       id: "root0001",
       type: "container",

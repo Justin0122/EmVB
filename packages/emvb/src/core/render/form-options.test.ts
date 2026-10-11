@@ -9,7 +9,7 @@ const field = (type: "select" | "radio", id: string, name: string): LayoutNode =
   ({ id, type, props: { field: name, label: name } }) as LayoutNode;
 
 const layout: Layout = {
-  schemaVersion: 14,
+  schemaVersion: 15,
   root: {
     id: "root0001",
     type: "container",
@@ -117,7 +117,7 @@ describe("form fields take the definition's type and limits (W-297)", () => {
     ],
   };
   const typedLayout: Layout = {
-    schemaVersion: 14,
+    schemaVersion: 15,
     root: {
       id: "root0001",
       type: "container",

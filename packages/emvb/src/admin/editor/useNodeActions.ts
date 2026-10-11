@@ -5,6 +5,8 @@ import {
   addNodeNear,
   addSectionNear,
   duplicateNode,
+  wrapNode,
+  type WrapType,
   ELEMENT_DESCRIPTORS,
   findNode,
   moveDown,
@@ -109,6 +111,8 @@ export function useNodeActions({
   };
 
   const duplicate = (id: string) => arrange(id, duplicateNode);
+  const wrap = (id: string, type: WrapType) =>
+    arrange(id, (layout, nodeId) => wrapNode(layout, nodeId, type));
 
   /** Accordion and Tabs item list (W-130): the parent stays selected so the list stays open. */
   const items: ItemActions = {
@@ -200,6 +204,7 @@ export function useNodeActions({
     remove,
     arrange,
     duplicate,
+    wrap,
     addFromPanel,
     addRecipe,
     items,

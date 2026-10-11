@@ -4,7 +4,7 @@ import { bindingDataFor } from "./request-data.ts";
 
 const page = (children: LayoutNode[]): Layout =>
   ({
-    schemaVersion: 14,
+    schemaVersion: 15,
     root: { id: "root0001", type: "container", props: {}, children },
   }) as Layout;
 

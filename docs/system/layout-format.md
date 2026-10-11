@@ -1,6 +1,6 @@
-# Layout format (schema 14)
+# Layout format (schema 15)
 
-How EmVB stores a page and its site-wide design, at schema 14 (visitor segments in W-329; Loop fields in W-330; `ch` lengths and negative margins in W-331). The source of truth is the code: `packages/emvb/src/core/schema/` (Zod schemas), `core/limits.ts`, `core/validate.ts` and `core/migrate/`. Update this file in the same change as any of them (ARCHITECTURE.md § Documentation).
+How EmVB stores a page and its site-wide design, at schema 15 (per-element direction, image link and caption, button icons, table of contents, container queries, and focal points in W-341 onward; visitor segments in W-329; Loop fields in W-330; `ch` lengths and negative margins in W-331). The source of truth is the code: `packages/emvb/src/core/schema/` (Zod schemas), `core/limits.ts`, `core/validate.ts` and `core/migrate/`. Update this file in the same change as any of them (ARCHITECTURE.md § Documentation).
 
 ## Where it lives
 
@@ -11,7 +11,7 @@ How EmVB stores a page and its site-wide design, at schema 14 (visitor segments 
 
 ```json
 {
-  "schemaVersion": 14,
+  "schemaVersion": 15,
   "root": {
     "id": "root0001",
     "type": "container",
@@ -29,7 +29,7 @@ How EmVB stores a page and its site-wide design, at schema 14 (visitor segments 
 }
 ```
 
-- `schemaVersion` is the literal `14` (D-031, D-032, D-034, D-036, D-038, D-039, D-041, D-042, D-044, W-141, D-045, W-160, W-307, W-329; older documents are upgraded on read by steps that change nothing, except v11 → v12, which rewrites a gradient's `from` and `to` into `stops`). `root` is always a container.
+- `schemaVersion` is the literal `15` (D-031, D-032, D-034, D-036, D-038, D-039, D-041, D-042, D-044, W-141, D-045, W-160, W-307, W-329, W-341; older documents are upgraded on read by steps that change nothing, except v11 → v12, which rewrites a gradient's `from` and `to` into `stops`). `root` is always a container.
 - Every node has `id` (4–24 of `A-Z a-z 0-9 _ -`, unique within the page), `type`, `props`, and optional `style`, `states` (W-089, see [State styles](#state-styles-w-089)), `classes` (up to 20 ids of 1–40 of `a-z 0-9 -`, rendered as `emvb-k-<id>`), `bind` (W-307), `variant` (an A/B arm, W-312) and `audience` (who sees it, W-313, W-329).
 - Objects are strict: unknown keys are rejected, not ignored.
 - **Unknown element types** (W-022 / R-033): a node whose `type` is not in the known set is kept on save (`id` rules still apply; `props` is an open record; optional `children` are validated recursively). Public pages omit it; the editor shows a selectable placeholder. Damaged known nodes (wrong props) still fail validation with path-specific issues.
@@ -164,7 +164,7 @@ Lengths are `{ "value": 0–10000, "unit": "px" | "rem" | "em" | "%" | "vw" | "v
 
 ```json
 {
-  "schemaVersion": 14,
+  "schemaVersion": 15,
   "variables": {
     "colors": [{ "id": "brand", "name": "Brand", "value": "#0055ff" }],
     "fonts": [{ "id": "body", "name": "Body", "value": "Noto Sans, sans-serif" }],

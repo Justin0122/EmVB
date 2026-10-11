@@ -15,7 +15,7 @@ const svgNode = (markup: string): LayoutNode =>
   ({ id: "svg00001", type: "svg", props: { markup, title: "Logo", size: 48 } }) as LayoutNode;
 const page = (children: LayoutNode[]): Layout =>
   ({
-    schemaVersion: 14,
+    schemaVersion: 15,
     root: { id: "root0001", type: "container", props: {}, children },
   }) as unknown as Layout;
 

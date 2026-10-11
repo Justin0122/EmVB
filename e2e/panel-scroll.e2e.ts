@@ -16,7 +16,7 @@ test("the settings panel keeps the scroll position of each tab across selections
     request,
     "Panel scroll",
     {
-      schemaVersion: 14,
+      schemaVersion: 15,
       root: {
         id: "root0001",
         type: "container",

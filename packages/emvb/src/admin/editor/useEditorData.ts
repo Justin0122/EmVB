@@ -43,6 +43,8 @@ export type EditorEntry = {
 
 export type LoadedDesign = {
   design: DesignSystem;
+  /** The published design, for the Publish styles diff (W-340). Absent on an older response. */
+  published?: DesignSystem;
   revision: string | null;
   publishedRevision: string | null;
   unpublished: boolean;
@@ -148,13 +150,17 @@ function readLayout(raw: unknown): Layout | null {
 export async function loadDesign(fetcher: Fetcher): Promise<LoadedDesign> {
   const body = await requestJson<{
     design?: unknown;
+    published?: unknown;
     revision?: string | null;
     publishedRevision?: string | null;
     unpublished?: boolean;
   }>(fetcher, `/_emdash/api/plugins/${PLUGIN_ID}/design/draft`);
   const result = validateDesign(body?.design);
+  const published = validateDesign(body?.published);
+  const design = result.ok ? result.design : emptyDesign();
   return {
-    design: result.ok ? result.design : emptyDesign(),
+    design,
+    ...(published.ok ? { published: published.design } : {}),
     revision: body?.revision ?? null,
     publishedRevision: body?.publishedRevision ?? null,
     unpublished: body?.unpublished === true,

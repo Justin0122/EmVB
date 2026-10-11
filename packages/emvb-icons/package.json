@@ -1,0 +1,14 @@
+{
+  "name": "@perkyzz/emvb-icons",
+  "version": "0.1.0",
+  "description": "Icon sets for the EmVB editor. Public pages store the chosen SVG and do not load these files.",
+  "license": "MIT",
+  "private": false,
+  "files": ["lucide.json", "fontawesome.json", "tabler.json", "remix.json", "NOTICE.md"],
+  "exports": {
+    "./lucide.json": "./lucide.json",
+    "./fontawesome.json": "./fontawesome.json",
+    "./tabler.json": "./tabler.json",
+    "./remix.json": "./remix.json"
+  }
+}

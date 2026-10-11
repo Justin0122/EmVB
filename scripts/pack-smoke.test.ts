@@ -10,6 +10,7 @@ describe("pack smoke (W-044, R-052)", () => {
     ".": "./src/index.ts",
     "./astro": { import: "./src/astro/index.ts" },
     "./astro/forms": { default: "./src/astro/forms/index.ts" },
+    "./astro/forms/client": "./src/astro/forms/client.ts",
     "./admin": "./src/admin/index.tsx",
     "./core": "./src/core/index.ts",
   };
@@ -17,6 +18,7 @@ describe("pack smoke (W-044, R-052)", () => {
     "package/src/index.ts",
     "package/src/astro/index.ts",
     "package/src/astro/forms/index.ts",
+    "package/src/astro/forms/client.ts",
     "package/src/admin/index.tsx",
   ].join("\n");
 

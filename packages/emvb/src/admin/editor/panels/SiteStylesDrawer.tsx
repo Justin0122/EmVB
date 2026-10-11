@@ -5,6 +5,8 @@ import * as React from "react";
 import {
   clearClassRefs,
   deleteVariable,
+  designChangeLabel,
+  designChanges,
   designFromJson,
   designToJson,
   findClassUsages,
@@ -36,6 +38,8 @@ type Props = {
   layout: Layout | null;
   onDesignChange: (design: DesignSystem) => Promise<void>;
   unpublished?: boolean;
+  /** Published design. With `unpublished`, the drawer lists what Publish styles will change. */
+  published?: DesignSystem;
   onPublishStyles?: () => Promise<void>;
   onLayoutChange: (layout: Layout) => void;
   /** W-252: called with what a delete removes, before the page loses its uses. */
@@ -71,6 +75,7 @@ export function SiteStylesDrawer({
   layout,
   onDesignChange,
   unpublished = false,
+  published,
   onPublishStyles,
   onLayoutChange,
   onDeleted,
@@ -160,6 +165,15 @@ export function SiteStylesDrawer({
         aria-label="Site styles actions"
         data-emvb-site-styles-actions=""
       >
+        {unpublished && published && (
+          <ul className="emvb-helper" data-emvb-style-diff="">
+            {designChanges(published, design).map((change) => (
+              <li key={`${change.kind}:${change.what}:${change.name}`}>
+                {designChangeLabel(change)}
+              </li>
+            ))}
+          </ul>
+        )}
         {unpublished && (
           <Button type="button" variant="primary" size="sm" onClick={() => void publish()}>
             Publish styles

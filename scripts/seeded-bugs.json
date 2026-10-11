@@ -1277,8 +1277,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/index.ts",
-          "search": "    const href = node.props.href !== undefined ? sanitizeHref(node.props.href) : undefined;\n    if (href) {\n      return {\n        tag: \"a\",",
-          "replace": "    const href = undefined;\n    if (href) {\n      return {\n        tag: \"a\","
+          "search": "    const href = node.props.href !== undefined ? sanitizeHref(node.props.href) : undefined;\n    const children = buttonChildren(node);\n    if (href) {\n      return {\n        tag: \"a\",",
+          "replace": "    const href = undefined;\n    const children = buttonChildren(node);\n    if (href) {\n      return {\n        tag: \"a\","
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements"],
@@ -7916,7 +7916,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  2: unchanged,\n};"
         }
       ],
@@ -7936,7 +7936,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const DESIGN_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n};",
+          "search": "export const DESIGN_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n};",
           "replace": "export const DESIGN_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  2: unchanged,\n};"
         }
       ],
@@ -7976,7 +7976,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "export const LAYOUT_SCHEMA_VERSION = 14;",
+          "search": "export const LAYOUT_SCHEMA_VERSION = 15;",
           "replace": "export const LAYOUT_SCHEMA_VERSION = 1;"
         }
       ],
@@ -8236,7 +8236,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n};"
         }
       ],
@@ -8256,7 +8256,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const DESIGN_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n};",
+          "search": "export const DESIGN_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n};",
           "replace": "export const DESIGN_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n};"
         }
       ],
@@ -8276,7 +8276,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "export const LAYOUT_SCHEMA_VERSION = 14;",
+          "search": "export const LAYOUT_SCHEMA_VERSION = 15;",
           "replace": "export const LAYOUT_SCHEMA_VERSION = 2;"
         }
       ],
@@ -8296,7 +8296,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/design.ts",
-          "search": "export const DESIGN_SCHEMA_VERSION = 14;",
+          "search": "export const DESIGN_SCHEMA_VERSION = 15;",
           "replace": "export const DESIGN_SCHEMA_VERSION = 2;"
         }
       ],
@@ -8576,8 +8576,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "      (declarations.length > 0 || Object.keys(states.states).length > 0 || responsive)\n    ) {",
-          "replace": "      declarations.length > 0\n    ) {"
+          "search": "      (declarations.length > 0 ||\n        Object.keys(states.states).length > 0 ||\n        responsive ||\n        queryDeclarations.length > 0)\n    ) {",
+          "replace": "      (declarations.length > 0 ||\n        responsive ||\n        queryDeclarations.length > 0)\n    ) {"
         }
       ],
       "command": [
@@ -11410,8 +11410,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/vnode.ts",
-          "search": "|src|alt|width|",
-          "replace": "|src|width|"
+          "search": "|src|srcset|sizes|alt|width|",
+          "replace": "|src|srcset|sizes|width|"
         }
       ],
       "command": [
@@ -14127,8 +14127,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/index.ts",
-          "search": "      attrs: { ...child.attrs },\n",
-          "replace": "      attrs: {},\n"
+          "search": "      : (bundled?.children ?? []).map((child) => ({\n          tag: child.tag,\n          attrs: { ...child.attrs },\n          children: [],\n        }));",
+          "replace": "      : (bundled?.children ?? []).map((child) => ({\n          tag: child.tag,\n          attrs: {},\n          children: [],\n        }));"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements/media-elements.test.ts"],
@@ -16884,8 +16884,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "html: scope ? `<div ${scopeAttribute(scope)}>${html}</div>` : html,",
-          "replace": "html,"
+          "search": "const vnode = scope\n    ? { tag: \"div\", attrs: { class: scopeClassName(scope) }, children: [page] }\n    : page;",
+          "replace": "const vnode = page;"
         }
       ],
       "command": [
@@ -17338,9 +17338,9 @@
       "description": "the scope wrapper puts a data-emvb attribute into published HTML",
       "edits": [
         {
-          "file": "packages/emvb/src/core/css/scope.ts",
-          "search": "  return `class=\"${WRAPPER_CLASS} ${scopeClass(token)}\"`;",
-          "replace": "  return `data-emvb-scope=\"${token}\" class=\"${WRAPPER_CLASS} ${scopeClass(token)}\"`;"
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "    ? { tag: \"div\", attrs: { class: scopeClassName(scope) }, children: [page] }",
+          "replace": "    ? { tag: \"div\", attrs: { class: scopeClassName(scope), \"data-emvb-scope\": scope }, children: [page] }"
         }
       ],
       "command": [
@@ -19306,8 +19306,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "  attributes: HtmlAttributes.optional(),\n  label: NodeLabel.optional(),\n  bind: Bindings.optional(),\n  variant: Variant.optional(),\n  audience: Audience.optional(),\n});",
-          "replace": "  attributes: HtmlAttributes.optional(),\n  bind: Bindings.optional(),\n  variant: Variant.optional(),\n  audience: Audience.optional(),\n});"
+          "search": "  attributes: HtmlAttributes.optional(),\n  label: NodeLabel.optional(),\n  bind: Bindings.optional(),\n  variant: Variant.optional(),\n  audience: Audience.optional(),\n  /** Text direction for this element only (W-341). Unset follows the site direction. */",
+          "replace": "  attributes: HtmlAttributes.optional(),\n  bind: Bindings.optional(),\n  variant: Variant.optional(),\n  audience: Audience.optional(),\n  /** Text direction for this element only (W-341). Unset follows the site direction. */"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/schema/node-label.test.ts"],
@@ -21600,8 +21600,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "drops page edits.\n        try {\n          const fresh = await loadDesign(fetcher);\n          dispatch({ type: \"load-design\", ...fresh });\n",
-          "replace": "drops page edits.\n        try {\n          const fresh = await loadDesign(fetcher);\n          void fresh;\n"
+          "search": "          if (merged.conflicts.length > 0) {\n            dispatch({ type: \"load-design\", ...fresh });\n",
+          "replace": "          if (merged.conflicts.length > 0) {\n            void fresh;\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/design-conflict.test.tsx"],
@@ -22318,8 +22318,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "    priority: z.boolean().optional(),\n  }),\n).refine((node) => node.props.decorative",
-          "replace": "  }),\n).refine((node) => node.props.decorative"
+          "search": "    priority: z.boolean().optional(),\n    /** Link around the image. Size styles stay on the img (W-342). */",
+          "replace": "    /** Link around the image. Size styles stay on the img (W-342). */"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/image-priority.test.ts"],
@@ -22444,8 +22444,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "    if (isRoot && design.direction) attrs.dir = design.direction;\n",
-          "replace": ""
+          "search": "    else if (isRoot && design.direction) attrs.dir = design.direction;\n",
+          "replace": "\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/direction.test.ts"],
@@ -27492,7 +27492,7 @@
       "edits": [
         {
           "file": "docs/system/layout-format.md",
-          "search": "\"schemaVersion\": 14,\n  \"root\": {",
+          "search": "\"schemaVersion\": 15,\n  \"root\": {",
           "replace": "\"schemaVersion\": 13,\n  \"root\": {"
         }
       ],
@@ -27504,6 +27504,300 @@
         "its examples and stated schema version match the code"
       ],
       "expect": "\\(fail\\).*its examples and stated schema version match the code"
+    },
+    {
+      "id": "W-332/forms-client-import-dropped",
+      "requirement": "W-332",
+      "description": "the forms client entry no longer imports initForms",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/forms/EmVBFormsClient.astro",
+          "search": "import { initForms } from \"@emdash-cms/plugin-forms/client\";",
+          "replace": "const initForms = () => undefined;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/forms/forms-client.test.ts"],
+      "expect": "\\(fail\\).*the default forms entry does not import the forms plugin"
+    },
+    {
+      "id": "W-335/print-css-dropped",
+      "requirement": "W-335",
+      "description": "print CSS no longer hides the header",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/css/print.ts",
+          "search": ".emvb-theme-header,.emvb-theme-footer,.emvb-float,.emvb-popup{display:none!important}",
+          "replace": ".emvb-theme-footer,.emvb-float,.emvb-popup{display:none!important}"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "print CSS hides"
+      ],
+      "expect": "\\(fail\\).*print CSS hides"
+    },
+    {
+      "id": "W-334/scope-wrapper-dropped",
+      "requirement": "W-334",
+      "description": "a scoped render no longer wraps the vnode the editor paints",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/css/scope.ts",
+          "search": "  return `${WRAPPER_CLASS} ${scopeClass(token)}`;",
+          "replace": "  return scopeClass(token);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "scoped render wraps"
+      ],
+      "expect": "\\(fail\\).*scoped render wraps"
+    },
+    {
+      "id": "W-333/replay-drops-ours",
+      "requirement": "W-333",
+      "description": "a style edit no longer replays onto the other tab's copy",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/design/merge.ts",
+          "search": "      if (ourItem) result.push(ourItem);",
+          "replace": "      if (theirItem) result.push(theirItem);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "replays onto another tab"
+      ],
+      "expect": "\\(fail\\).*replays onto another tab"
+    },
+    {
+      "id": "W-333/conflict-keeps-ours",
+      "requirement": "W-333",
+      "description": "a clash keeps this tab's class instead of the server copy",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/design/merge.ts",
+          "search": "    conflicts.push({ kind, name: ourItem?.name ?? theirItem?.name ?? id });\n    if (theirItem) result.push(theirItem);",
+          "replace": "    conflicts.push({ kind, name: ourItem?.name ?? theirItem?.name ?? id });\n    if (ourItem) result.push(ourItem);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "the server copy stays"
+      ],
+      "expect": "\\(fail\\).*the server copy stays"
+    },
+    {
+      "id": "W-340/diff-ignores-classes",
+      "requirement": "W-340",
+      "description": "Publish styles no longer names a new class",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/design/diff.ts",
+          "search": "  listChanges(published.classes, draft.classes, \"class\", changes);",
+          "replace": "  void published.classes;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "publish diff names"
+      ],
+      "expect": "\\(fail\\).*publish diff names"
+    },
+    {
+      "id": "W-338/wrap-always-refused",
+      "requirement": "W-338",
+      "description": "wrapping a selection is always refused",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "  if (size(layout.root) + 1 > MAX_NODES) return refuse(REASONS.tooMany);",
+          "replace": "  return refuse(REASONS.tooMany);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "wrap puts the element"
+      ],
+      "expect": "\\(fail\\).*wrap puts the element"
+    },
+    {
+      "id": "W-342/image-caption-dropped",
+      "requirement": "W-342",
+      "description": "an image caption is no longer a figure",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "      tag: \"figure\",",
+          "replace": "      tag: \"div\","
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "image link and caption"
+      ],
+      "expect": "\\(fail\\).*image link and caption"
+    },
+    {
+      "id": "W-343/button-icon-dropped",
+      "requirement": "W-343",
+      "description": "a button icon is left out of the label",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "  return node.props.iconPosition === \"after\" ? [buttonText, icon] : [icon, buttonText];",
+          "replace": "  return [buttonText];"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "icon before the label"
+      ],
+      "expect": "\\(fail\\).*icon before the label"
+    },
+    {
+      "id": "W-341/element-dir-dropped",
+      "requirement": "W-341",
+      "description": "an element's own text direction is not rendered",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "    if (node.dir) attrs.dir = node.dir;\n",
+          "replace": "\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "its own direction"
+      ],
+      "expect": "\\(fail\\).*its own direction"
+    },
+    {
+      "id": "W-345/toc-anchors-dropped",
+      "requirement": "W-345",
+      "description": "headings no longer get the ids a table of contents links to",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "    else if (node.type === \"heading\" && id && layoutHasToc) attrs.id = `emvb-h-${id}`;\n",
+          "replace": "\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "table of contents"
+      ],
+      "expect": "\\(fail\\).*table of contents"
+    },
+    {
+      "id": "W-346/container-type-dropped",
+      "requirement": "W-346",
+      "description": "a container box no longer emits container-type",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "    if (node.container) declarations.push({ property: \"container-type\", value: \"inline-size\" });\n",
+          "replace": "\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "container query"
+      ],
+      "expect": "\\(fail\\).*container query"
+    },
+    {
+      "id": "W-336/rename-ignored",
+      "requirement": "W-336",
+      "description": "renaming an uploaded icon stores the old name",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/icon-routes.ts",
+          "search": "    await store(ctx).put(ctx.input.id, { ...current, name });\n    return { item: { id: ctx.input.id, ...current, name } };",
+          "replace": "    await store(ctx).put(ctx.input.id, current);\n    return { item: { id: ctx.input.id, ...current } };"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/icon-uploads.test.ts",
+        "-t",
+        "rename and delete"
+      ],
+      "expect": "\\(fail\\).*rename and delete"
+    },
+    {
+      "id": "W-339/find-text-missing",
+      "requirement": "W-339",
+      "description": "Find text commands are not added for page text",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/palette-items.ts",
+          "search": "          id: `find:${node.id}`,",
+          "replace": "          id: `miss:${node.id}`,"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/palette.test.tsx",
+        "-t",
+        "a slash finds text"
+      ],
+      "expect": "\\(fail\\).*a slash finds text"
+    },
+    {
+      "id": "W-337/drag-reorder-dropped",
+      "requirement": "W-337",
+      "description": "dropping an item no longer reads which row was dragged",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/ItemList.tsx",
+          "search": "  next.splice(toIndex, 0, moved);\n  return next;",
+          "replace": "  next.splice(toIndex, 0, moved);\n  return undefined;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/item-list.test.tsx",
+        "-t",
+        "dragging one item"
+      ],
+      "expect": "\\(fail\\).*dragging one item"
     }
   ]
 }

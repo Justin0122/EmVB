@@ -32,6 +32,9 @@ export type CssInput = {
     tablet?: Declaration[];
     mobile?: Declaration[];
     hiddenOn?: readonly PopupDevice[];
+    /** Container-query overrides (W-346). */
+    query?: Declaration[];
+    queryMin?: number;
   }>;
   /** Editor canvas only: repeat each state rule for `[data-emvb-state="<state>"]` (W-089). */
   previewStates?: boolean;
@@ -239,6 +242,12 @@ export function generateCss({
     ...[...usedTypes].toSorted().map((type) => baseCss.get(type) ?? ""),
     ...classes,
     ...locals,
+    ...localRules
+      .filter((rule) => rule.query && rule.query.length > 0 && rule.queryMin)
+      .map(
+        (rule) =>
+          `@container (min-width:${rule.queryMin}px){${block(`.emvb-e-${rule.id}`, rule.query ?? [])}}`,
+      ),
     at(DEVICE_MEDIA.tablet, "tablet"),
     at(DEVICE_MEDIA.mobile, "mobile"),
     hide("desktop", DEVICE_MEDIA.hideDesktop),

@@ -4,7 +4,7 @@ import type { LayoutNode } from "../schema/layout.ts";
 import { collectCollectionLoops, loopPermalink, parseLoopFilter } from "./dynamic.ts";
 
 const page = (props: Record<string, unknown>) => ({
-  schemaVersion: 14,
+  schemaVersion: 15,
   root: {
     id: "root0001",
     type: "container",

@@ -1,4 +1,4 @@
-import { Button, Input } from "@cloudflare/kumo";
+import { Button, Input, Select } from "@cloudflare/kumo";
 import * as React from "react";
 import type { Layout, LayoutNode } from "../../../../core/index.ts";
 import { BUTTON, FIELD } from "../../../ui.ts";
@@ -44,6 +44,92 @@ export function HtmlIdField({
         onChange({ ...node, htmlId: next === "" ? undefined : next });
       }}
     />
+  );
+}
+
+/** Text direction for this element only (W-341). Unset follows the site. */
+export function DirectionField({
+  node,
+  onChange,
+}: {
+  node: LayoutNode;
+  onChange: (node: LayoutNode) => void;
+}) {
+  return (
+    <Select
+      label="Text direction"
+      className={FIELD}
+      data-emvb-dir=""
+      value={node.dir ?? "site"}
+      onValueChange={(value) => {
+        const dir = value === "ltr" || value === "rtl" || value === "auto" ? value : undefined;
+        onChange({ ...node, dir });
+      }}
+    >
+      <Select.Option value="site">Site default</Select.Option>
+      <Select.Option value="ltr">Left to right</Select.Option>
+      <Select.Option value="rtl">Right to left</Select.Option>
+      <Select.Option value="auto">Auto</Select.Option>
+    </Select>
+  );
+}
+
+/** Marks a box as a container-query container (W-346). */
+export function ContainerQueryFields({
+  node,
+  onChange,
+}: {
+  node: LayoutNode;
+  onChange: (node: LayoutNode) => void;
+}) {
+  const min = node.query?.min ?? "";
+  return (
+    <div className="emvb-field-group" data-emvb-container="">
+      <label className="emvb-check">
+        <input
+          type="checkbox"
+          checked={node.container === true}
+          onChange={(event) =>
+            onChange({ ...node, container: event.target.checked ? true : undefined })
+          }
+        />
+        Query container
+      </label>
+      <Input
+        label="Styles from container width (px)"
+        className={FIELD}
+        type="number"
+        min={1}
+        max={3840}
+        value={min === "" ? "" : String(min)}
+        onChange={(event) => {
+          const next = event.target.value.trim();
+          if (next === "") {
+            const { query: _query, ...rest } = node;
+            onChange(rest);
+            return;
+          }
+          const width = Number(next);
+          if (!Number.isInteger(width) || width < 1 || width > 3840) return;
+          onChange({ ...node, query: { min: width, style: node.query?.style ?? {} } });
+        }}
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        className={BUTTON}
+        onClick={() => {
+          const width = node.query?.min ?? 480;
+          onChange({ ...node, query: { min: width, style: node.style ?? {} } });
+        }}
+      >
+        Use current style at that width
+      </Button>
+      <p className="emvb-helper">
+        Query container makes this box the size children measure. The copied style is what applies
+        inside @container once the container is at least that wide, not the viewport.
+      </p>
+    </div>
   );
 }
 

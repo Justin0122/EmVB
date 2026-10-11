@@ -66,6 +66,7 @@ export function SettingsPanel({
           layout={state.page.layout}
           onDesignChange={onDesignChange}
           unpublished={state.designUnpublished === true}
+          published={state.publishedDesign}
           onPublishStyles={onPublishStyles}
           {...(onDesignItemDeleted ? { onDeleted: onDesignItemDeleted } : {})}
           onLayoutChange={(layout) =>

@@ -1,7 +1,7 @@
 /**
  * Builds the Icon library sets (W-234) from the icon packages pinned in the root devDependencies:
  * `bun scripts/build-icon-sets.ts`. Each icon goes through EmVB's own SVG sanitizer; what can't pass
- * is left out and counted. Output: one JSON file per set in packages/emvb/src/admin/editor/icons/sets,
+ * is left out and counted. Output: one JSON file per set in packages/emvb-icons,
  * loaded lazily by the editor only (public pages get the chosen icon as inline SVG).
  */
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -15,7 +15,7 @@ const pkg = (name: string) => join(root, "node_modules", name);
 const version = (name: string) =>
   (JSON.parse(readFileSync(join(pkg(name), "package.json"), "utf8")) as { version: string })
     .version;
-const OUT = join(root, "packages/emvb/src/admin/editor/icons/sets");
+const OUT = join(root, "packages/emvb-icons");
 
 /**
  * Each set's license file must still be the one EmVB ships under (THIRD_PARTY_NOTICES.md).

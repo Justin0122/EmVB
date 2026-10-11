@@ -6,7 +6,7 @@ import {
   designRoute,
   designSaveRoute,
 } from "./design-routes.ts";
-import { iconUploadRoute, iconsRoute } from "./icon-routes.ts";
+import { iconDeleteRoute, iconRenameRoute, iconUploadRoute, iconsRoute } from "./icon-routes.ts";
 import { beforeSave } from "./hooks.ts";
 import { canvasStyleUrls } from "../core/canvas-styles.ts";
 
@@ -42,6 +42,8 @@ export function createPlugin(options: { canvasStyles?: unknown } = {}) {
       "design/publish": designPublishRoute,
       icons: iconsRoute,
       "icons/upload": iconUploadRoute,
+      "icons/rename": iconRenameRoute,
+      "icons/delete": iconDeleteRoute,
     },
   });
 }

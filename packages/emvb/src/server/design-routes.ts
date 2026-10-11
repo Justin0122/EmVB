@@ -51,6 +51,7 @@ export const designDraftRoute: PluginRoute = {
     if (draft.status !== "ok") {
       return {
         design: published.design,
+        published: published.design,
         revision: null,
         publishedRevision: published.revision,
         unpublished: false,
@@ -58,6 +59,7 @@ export const designDraftRoute: PluginRoute = {
     }
     return {
       design: draft.design,
+      published: published.design,
       revision: draft.revision,
       publishedRevision: published.revision,
       unpublished: JSON.stringify(draft.design) !== JSON.stringify(published.design),

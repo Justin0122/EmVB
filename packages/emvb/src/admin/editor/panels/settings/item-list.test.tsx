@@ -13,7 +13,7 @@ import type { Fetcher } from "../../../api.ts";
 import { revealInAccordions } from "../../canvas/tab-reveal.ts";
 import { newElement } from "../../dnd/new-element.ts";
 import { ElementPanel } from "../ElementPanel.tsx";
-import type { ItemActions } from "./ItemList.tsx";
+import { reorderItems, type ItemActions } from "./ItemList.tsx";
 import { cleanup, mount, rerender } from "../../../../../test/dom/mount.ts";
 
 const stubFetcher: Fetcher = async () => new Response("{}", { status: 200 });
@@ -46,7 +46,7 @@ const accordion = (children: LayoutNode[]): LayoutNode =>
   ({ id: "acc00001", type: "accordion", props: {}, children }) as LayoutNode;
 
 const layoutWith = (node: LayoutNode): Layout => ({
-  schemaVersion: 14,
+  schemaVersion: 15,
   root: { id: "root0001", type: "container", props: {}, children: [node] },
 });
 
@@ -252,6 +252,20 @@ describe("Accordion and Tabs item editing (W-130)", () => {
     await cleanup();
     await panel(tabPanel("tab00001", "One"));
     expect(document.body.textContent).toContain("elements in its panel");
+  });
+
+  test("dragging one item onto another reorders them in one change (W-337)", async () => {
+    const calls = await panel(accordion([item("itm00001", "First"), item("itm00002", "Second")]));
+    const rows = [...document.querySelectorAll("[data-emvb-item]")];
+    expect(rows.map((row) => row.getAttribute("draggable"))).toEqual(["true", "true"]);
+    const kids = [item("itm00001", "First"), item("itm00002", "Second")];
+    expect(reorderItems(kids, "itm00001", 1)?.map((child) => child.id)).toEqual([
+      "itm00002",
+      "itm00001",
+    ]);
+    expect(reorderItems(kids, "itm00001", 0)).toBeUndefined();
+    expect(reorderItems(kids, "missing", 1)).toBeUndefined();
+    expect(calls.changed.length).toBe(0);
   });
 });
 

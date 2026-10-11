@@ -22,9 +22,9 @@ export function scopeWrapperCss(): string {
   return `:where(.${WRAPPER_CLASS}){display:contents}`;
 }
 
-/** The wrapper's class attribute for a scope token. */
-export function scopeAttribute(token: string): string {
-  return `class="${WRAPPER_CLASS} ${scopeClass(token)}"`;
+/** Classes on the scope wrapper. The editor's vnode and the public HTML both use them. */
+export function scopeClassName(token: string): string {
+  return `${WRAPPER_CLASS} ${scopeClass(token)}`;
 }
 
 function splitSelectors(prelude: string): string[] {

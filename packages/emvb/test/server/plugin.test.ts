@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { layoutOfBytes, s1Page } from "../fixtures/layouts.ts";
-import { MAX_DESIGN_BYTES, MAX_LAYOUT_BYTES } from "../../src/core/index.ts";
+import { emptyDesign, MAX_DESIGN_BYTES, MAX_LAYOUT_BYTES } from "../../src/core/index.ts";
 import { designRoute } from "../../src/server/design-routes.ts";
 import { createPlugin } from "../../src/server/plugin.ts";
 import { createTestRuntime, ROLES, userWithRole } from "./runtime.ts";
@@ -125,7 +125,7 @@ describe("design routes", () => {
         success: true,
         data: {
           design: {
-            schemaVersion: 14,
+            schemaVersion: 15,
             variables: { colors: [], fonts: [], fontSizes: [], spacings: [] },
             classes: [],
           },
@@ -148,7 +148,8 @@ describe("design routes", () => {
     expect(before.body["data"]).toMatchObject({ status: "empty" });
     const draft = await t.route("design/draft", { user: editor });
     expect(draft.body["data"]).toEqual({
-      design: { ...design(), schemaVersion: 14 },
+      design: { ...design(), schemaVersion: 15 },
+      published: emptyDesign(),
       revision: draftRevision,
       publishedRevision: null,
       unpublished: true,
@@ -161,7 +162,7 @@ describe("design routes", () => {
     const revision = (published.body["data"] as { revision: string }).revision;
     const read = await t.route("design");
     expect(read.body["data"]).toEqual({
-      design: { ...design(), schemaVersion: 14 },
+      design: { ...design(), schemaVersion: 15 },
       revision,
       status: "ok",
     });
@@ -239,7 +240,7 @@ describe("design routes", () => {
     } as never;
     expect(await designRoute.handler(ctx)).toEqual({
       design: {
-        schemaVersion: 14,
+        schemaVersion: 15,
         variables: { colors: [], fonts: [], fontSizes: [], spacings: [] },
         classes: [],
       },

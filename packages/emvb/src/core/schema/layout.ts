@@ -3,6 +3,8 @@ import { MAX_TEXT_LENGTH } from "../limits.ts";
 import { DeviceStyles, HiddenOn, Length, StyleProps, StyleStates } from "./style.ts";
 
 /**
+ * 15 since W-341: optional per-element `dir`, image link/caption/focal point/sources, button icons,
+ * a table-of-contents element, and container queries. Every other value is unchanged.
  * 14 since W-329: optional visitor `segments` in an element's audience (the host names them);
  * W-330 Loop permalink, image, excerpt and filter options; W-331 `ch` lengths and negative
  * margins. Every other value is unchanged.
@@ -12,7 +14,7 @@ import { DeviceStyles, HiddenOn, Length, StyleProps, StyleStates } from "./style
  * (`{ angle, from, to }`) become a linear gradient on read.
  * 11 since W-156 and W-157 (D-045): the layout Section element and an editor-only node label.
  */
-export const LAYOUT_SCHEMA_VERSION = 14;
+export const LAYOUT_SCHEMA_VERSION = 15;
 
 export const NodeId = z
   .string()
@@ -160,6 +162,20 @@ const nodeFields = <T extends string, P extends z.ZodType>(type: T, props: P) =>
   bind: Bindings.optional(),
   variant: Variant.optional(),
   audience: Audience.optional(),
+  /** Text direction for this element only (W-341). Unset follows the site direction. */
+  dir: z.enum(["ltr", "rtl", "auto"]).optional(),
+  /** This box is a container-query container (`container-type: inline-size`) (W-346). */
+  container: z.literal(true).optional(),
+  /**
+   * Style overrides when the nearest query container is at least `min` px wide (W-346).
+   * Emitted as `@container (min-width: Npx)`, not a viewport media query.
+   */
+  query: z
+    .strictObject({
+      min: z.number().int().min(1).max(3840),
+      style: StyleProps,
+    })
+    .optional(),
 });
 
 const leafNode = <T extends string, P extends z.ZodType>(type: T, props: P) =>
@@ -223,6 +239,12 @@ export const ButtonNode = leafNode(
     text: z.string().max(MAX_TEXT_LENGTH),
     href: z.string().max(2000).optional(),
     newTab: z.boolean().optional(),
+    /** Icon shown with the label (W-343). The SVG is stored on the button, like an Icon element. */
+    iconId: z.string().max(64).optional(),
+    iconSvg: z.string().max(32_768).optional(),
+    iconPosition: z.enum(["before", "after"]).optional(),
+    iconGap: z.number().int().min(0).max(64).optional(),
+    iconSize: z.enum(["sm", "md", "lg"]).optional(),
   }),
 );
 
@@ -290,6 +312,23 @@ export const ImageNode = leafNode(
     mediaId: z.string().min(1).max(128).optional(),
     /** Load right away (eager, high fetch priority) for the hero/LCP image (W-226). */
     priority: z.boolean().optional(),
+    /** Link around the image. Size styles stay on the img (W-342). */
+    href: z.string().max(2000).optional(),
+    newTab: z.boolean().optional(),
+    caption: z.string().max(500).optional(),
+    /** Focal point as object-position percentages (W-344). */
+    focalX: z.number().int().min(0).max(100).optional(),
+    focalY: z.number().int().min(0).max(100).optional(),
+    /** Extra widths for srcset. Omitted when there is no distinct URL (W-344). */
+    sources: z
+      .array(
+        z.strictObject({
+          src: z.string().max(2000),
+          width: z.number().int().min(1).max(8000),
+        }),
+      )
+      .max(6)
+      .optional(),
   }),
 ).refine((node) => node.props.decorative === true || node.props.alt.length > 0, {
   message: "Alt text is required unless the image is marked decorative.",
@@ -630,7 +669,16 @@ export const KNOWN_ELEMENT_TYPES = [
   "menu",
   "menu-item",
   "layout-section",
+  "toc",
 ] as const;
+
+/** Headings on this page, as a list of links. No script (W-345). */
+export const TocNode = leafNode(
+  "toc",
+  z.strictObject({
+    title: z.string().max(80).optional(),
+  }),
+);
 
 const knownTypeSet = new Set<string>(KNOWN_ELEMENT_TYPES);
 
@@ -670,6 +718,7 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   TabsNodeSchema,
   TabPanelNode,
   HeadingNode,
+  TocNode,
   SpacerNode,
   DividerNode,
   TextNode,
@@ -705,6 +754,7 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
 ]);
 
 export type HeadingNode = z.infer<typeof HeadingNode>;
+export type TocNode = z.infer<typeof TocNode>;
 export type SpacerNode = z.infer<typeof SpacerNode>;
 export type DividerNode = z.infer<typeof DividerNode>;
 export type TextNode = z.infer<typeof TextNode>;
@@ -744,6 +794,9 @@ export type NodeExtras = {
   bind?: Record<string, Binding>;
   variant?: Variant;
   audience?: Audience;
+  dir?: "ltr" | "rtl" | "auto";
+  container?: true;
+  query?: { min: number; style: StyleOf };
 };
 
 /** Manual recursive types so UnknownNode does not poison `z.infer` of the tree. */
@@ -1038,6 +1091,7 @@ export type LayoutNode =
   | LoopEmptyNode
   | SectionNode
   | HeadingNode
+  | TocNode
   | SpacerNode
   | DividerNode
   | TextNode

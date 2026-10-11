@@ -1,6 +1,11 @@
 import * as React from "react";
 import type { createKumoToastManager } from "@cloudflare/kumo";
-import { DEVICE_PREVIEW_PX, type DesignSystem, type PopupDevice } from "../../core/index.ts";
+import {
+  DEVICE_PREVIEW_PX,
+  mergeDesign,
+  type DesignSystem,
+  type PopupDevice,
+} from "../../core/index.ts";
 import { PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../../constants.ts";
 import { ApiError, type Fetcher } from "../api.ts";
 import { previewUrl, publishDesign, saveDesign } from "../content-api.ts";
@@ -166,21 +171,40 @@ export function useEditorCommands({
     } catch (error) {
       written.current = null;
       if (error instanceof ApiError && error.status === 409) {
-        // W-212: take the styles saved elsewhere (another editor tab, say), so the next change
-        // can save, instead of every change failing until a reload that drops page edits.
+        // W-333: replay this tab's edit onto the styles saved elsewhere when those keys
+        // were not also changed there. A real clash still loads the server copy (W-212).
         try {
           const fresh = await loadDesign(fetcher);
-          dispatch({ type: "load-design", ...fresh });
-        } catch {
+          const merged = mergeDesign(latest.current.design, next, fresh.design);
+          const names = merged.conflicts.map((conflict) => conflict.name).join(", ");
+          if (merged.conflicts.length > 0) {
+            dispatch({ type: "load-design", ...fresh });
+            throw new Error(
+              `Site styles were changed in another tab or window (${names}). The latest styles are loaded now: make your change again.`,
+              { cause: error },
+            );
+          }
+          const unchanged = JSON.stringify(merged.design) === JSON.stringify(fresh.design);
+          if (unchanged) {
+            dispatch({ type: "load-design", ...fresh });
+            return;
+          }
+          const revision = await saveDesign(fetcher, merged.design, fresh.revision);
+          written.current = { from: latest.current.designRevision, to: revision };
+          dispatch({ type: "set-design", design: merged.design, revision });
+          return;
+        } catch (retry) {
+          if (
+            retry instanceof Error &&
+            retry.message.includes("The latest styles are loaded now")
+          ) {
+            throw retry;
+          }
           throw new Error(
             "Site styles were changed somewhere else. Reload the editor and try again.",
-            { cause: error },
+            { cause: retry },
           );
         }
-        throw new Error(
-          "Site styles were changed in another tab or window. The latest styles are loaded now: make your change again.",
-          { cause: error },
-        );
       }
       throw new Error(
         error instanceof ApiError
