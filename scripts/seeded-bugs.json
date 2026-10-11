@@ -28444,6 +28444,20 @@
         "writer failure"
       ],
       "expect": "\\(fail\\).*writer failure"
+    },
+    {
+      "id": "W-372/layout-not-json",
+      "requirement": "W-372",
+      "description": "a playground layout that is not JSON throws instead of reading as unreadable",
+      "edits": [
+        {
+          "file": "site/src/playground/view.ts",
+          "search": "    try {\n      parsed = JSON.parse(raw);\n    } catch {\n      return null;\n    }",
+          "replace": "    parsed = JSON.parse(raw);"
+        }
+      ],
+      "command": ["bun", "test", "./test/playground/view.test.ts", "-t", "not JSON"],
+      "expect": "\\(fail\\).*not JSON"
     }
   ]
 }

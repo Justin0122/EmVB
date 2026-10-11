@@ -38,7 +38,15 @@ export type ViewResult =
 const layoutOf = (content: EntryContent | null): Layout | null => {
   const raw = content?.data["layout"];
   if (raw === null || raw === undefined) return null;
-  const result = validateLayout(typeof raw === "string" ? (JSON.parse(raw) as unknown) : raw);
+  let parsed: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  const result = validateLayout(parsed);
   return result.ok ? result.layout : null;
 };
 
