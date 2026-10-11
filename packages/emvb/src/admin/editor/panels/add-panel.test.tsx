@@ -74,7 +74,7 @@ describe("Add panel (W-018)", () => {
     expect(document.body.textContent).toContain('No elements match "xyz".');
     await unmount();
     await mount(<AddPanel onAdd={() => undefined} defaultQuery="head" />);
-    expect(document.querySelector('[data-emvb-add-tile="heading"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-add-tile="heading"]') !== null).toBe(true);
     expect(
       document.querySelector('[data-emvb-add-tile="container"]')?.outerHTML ?? null,
     ).toBeNull();
@@ -179,8 +179,8 @@ describe("Layers panel (W-018)", () => {
         onDelete={() => undefined}
       />,
     );
-    expect(document.querySelector('[data-emvb-layer="head0002"]')).toBeTruthy();
-    expect(document.querySelector('[data-emvb-layer="box00001"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-layer="head0002"]') !== null).toBe(true);
+    expect(document.querySelector('[data-emvb-layer="box00001"]') !== null).toBe(true);
   });
 
   test("Enter selects the first child and Shift+Enter selects the parent", () => {
@@ -201,13 +201,13 @@ describe("Layers panel (W-018)", () => {
         onDelete={() => undefined}
       />,
     );
-    expect(document.querySelector('[data-emvb-panel="add"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-panel="add"]') !== null).toBe(true);
     const layersTab = [...document.querySelectorAll('[role="tab"]')].find((el) =>
       (el.textContent ?? "").includes("Layers"),
     ) as HTMLElement;
     await act(async () => layersTab.click());
     expect(sessionStorage.getItem("emvb-left-tab")).toBe("layers");
-    expect(document.querySelector('[data-emvb-panel="layers"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-panel="layers"]') !== null).toBe(true);
   });
 });
 

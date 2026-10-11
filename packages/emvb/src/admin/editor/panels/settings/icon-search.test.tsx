@@ -45,7 +45,7 @@ describe("Icon field preview (W-236)", () => {
     expect(button?.getAttribute("aria-label")).toBe("Change icon (now Thing)");
     await act(async () => button?.click());
     await settle();
-    expect(document.querySelector('[data-emvb-dialog="icon-library"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-dialog="icon-library"]') !== null).toBe(true);
   });
 
   test("closing the library (Escape here) puts focus back on Choose", async () => {
@@ -66,6 +66,6 @@ describe("Icon field preview (W-236)", () => {
       await act(async () => new Promise((resolve) => setTimeout(resolve, 20)));
     }
     expect(document.querySelector('[data-emvb-dialog="icon-library"]')).toBeNull();
-    expect(document.activeElement).toBe(choose);
+    expect(document.activeElement === choose).toBe(true);
   });
 });

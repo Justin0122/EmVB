@@ -276,7 +276,7 @@ describe("icon library dialog (W-236)", () => {
     const input = dialog()?.querySelector<HTMLInputElement>("input");
     if (!input) throw new Error("no search");
     await key(input, "ArrowDown");
-    expect(document.activeElement).toBe(listbox);
+    expect(document.activeElement === listbox).toBe(true);
     const tiles = [...(dialog()?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])];
     const third = tiles[2];
     if (!third) throw new Error("no third tile");

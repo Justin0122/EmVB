@@ -99,12 +99,12 @@ describe("SiteStylesDrawer (W-032)", () => {
         onClose={() => undefined}
       />,
     );
-    expect(document.querySelector("[data-emvb-site-styles]")).toBeTruthy();
+    expect(document.querySelector("[data-emvb-site-styles]") !== null).toBe(true);
     expect(
       [...document.querySelectorAll('[role="tab"]')].some((el) => el.textContent === "Variables"),
     ).toBe(true);
-    expect(document.querySelector('[data-emvb-site-tab="variables"]')).toBeTruthy();
-    expect(document.querySelector('[data-emvb-var-kind="spacing"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-site-tab="variables"]') !== null).toBe(true);
+    expect(document.querySelector('[data-emvb-var-kind="spacing"]') !== null).toBe(true);
     expect(document.body.textContent).toContain(
       "Style changes stay unpublished until you publish styles.",
     );
@@ -112,9 +112,9 @@ describe("SiteStylesDrawer (W-032)", () => {
     const classesTab = [...document.querySelectorAll('[role="tab"]')].find(
       (t) => t.textContent === "Classes",
     ) as HTMLElement | undefined;
-    expect(classesTab).toBeTruthy();
+    expect(classesTab !== undefined).toBe(true);
     await act(async () => classesTab?.click());
-    expect(document.querySelector('[data-emvb-site-tab="classes"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-site-tab="classes"]') !== null).toBe(true);
     expect(document.querySelector('[data-emvb-class-def="card"]')?.textContent).toContain(
       "2 on page",
     );
@@ -208,7 +208,7 @@ describe("SiteStylesDrawer managers (W-071)", () => {
     expect(document.querySelector('[data-emvb-var-id="brand"]')?.textContent).toContain(
       "var(--emvb-c-brand)",
     );
-    expect(document.querySelector("[data-emvb-var-swatch]")).toBeTruthy();
+    expect(document.querySelector("[data-emvb-var-swatch]") !== null).toBe(true);
   });
 
   test("Classes Manager shows cascade help, token, and duplicate", async () => {

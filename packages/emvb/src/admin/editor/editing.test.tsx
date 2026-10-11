@@ -119,13 +119,13 @@ const field = (label: string) => {
 };
 
 async function click(element: Element | null | undefined) {
-  expect(element).toBeTruthy();
+  expect(Boolean(element)).toBe(true);
   await act(async () => (element as HTMLElement).click());
   await settle();
 }
 
 async function type(input: HTMLInputElement | null, value: string) {
-  expect(input).toBeTruthy();
+  expect(input !== null).toBe(true);
   await act(async () => {
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
     setter?.call(input, value);
@@ -163,7 +163,7 @@ describe("save draft (R-006)", () => {
     const { server, fetcher } = fakeServer();
     await render(fetcher);
     await type(field("Title"), "Pricing plans");
-    expect(button("Save draft (unsaved changes)")).toBeTruthy();
+    expect(Boolean(button("Save draft (unsaved changes)"))).toBe(true);
     await press("s", { ctrlKey: true });
     const [first] = puts(server.calls);
     expect(first?.body).toMatchObject({
@@ -173,7 +173,7 @@ describe("save draft (R-006)", () => {
       seo: { title: null, description: null },
     });
     expect(saveStatus()).toBe("Saved");
-    expect(button("Save draft")).toBeTruthy();
+    expect(Boolean(button("Save draft"))).toBe(true);
     await type(field("Title"), "Plans");
     await click(button("Save draft (unsaved changes)"));
     expect(puts(server.calls)[1]?.body?.["_rev"]).toBe("rev2");
@@ -301,7 +301,7 @@ describe("page settings (D-025)", () => {
     await render(fetcher);
     expect(field("Meta title")?.outerHTML ?? null).toBeNull();
     await click(editor()?.querySelector('[data-emvb-section="seo"]'));
-    expect(field("Meta title")).toBeTruthy();
+    expect(field("Meta title") !== null).toBe(true);
   });
 });
 
@@ -316,7 +316,7 @@ describe("delete and restore (D-025)", () => {
     expect(document.body.textContent).toContain("Element deleted");
     await click(button("Restore"));
     expect(layerRow("Heading")?.getAttribute("aria-current")).toBe("true");
-    expect(editor()?.querySelector('[data-emvb-panel="element"]')).toBeTruthy();
+    expect(editor()?.querySelector('[data-emvb-panel="element"]') !== null).toBe(true);
   });
 
   test("Delete in a text field edits the text, not the page", async () => {
@@ -328,7 +328,7 @@ describe("delete and restore (D-025)", () => {
     await act(async () => {
       input?.dispatchEvent(new KeyboardEvent("keydown", { key: "Delete", bubbles: true }));
     });
-    expect(layerRow("Heading")).toBeTruthy();
+    expect(Boolean(layerRow("Heading"))).toBe(true);
   });
 
   test("the root container can't be deleted", async () => {
@@ -337,7 +337,7 @@ describe("delete and restore (D-025)", () => {
     await openLayers();
     await click(layerRow("Container"));
     await press("Delete");
-    expect(layerRow("Container")).toBeTruthy();
+    expect(Boolean(layerRow("Container"))).toBe(true);
   });
 });
 
@@ -404,7 +404,7 @@ describe("Add panel and Layers (W-018)", () => {
       "Heading added inside Container",
     );
     await openLayers();
-    expect(document.querySelector('[data-emvb-layer="box00001"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-layer="box00001"]') !== null).toBe(true);
     // Nested heading should exist under the box after save
     await press("s", { ctrlKey: true });
     const saved = server.data["layout"] as {
@@ -443,7 +443,7 @@ describe("Add panel and Layers (W-018)", () => {
     expect(editor()?.textContent).toContain("Add a container to start");
     await click(button("Add a container to start"));
     await openLayers();
-    expect(layerRow("Container")).toBeTruthy();
+    expect(Boolean(layerRow("Container"))).toBe(true);
   });
 });
 
@@ -611,6 +611,6 @@ describe("keyboard and quick actions (W-020)", () => {
     await press("Delete");
     await settle();
     expect(document.body.textContent).toContain("Delete Container and the 1 element inside it?");
-    expect(document.querySelector('[data-emvb-dialog="delete-subtree"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-dialog="delete-subtree"]') !== null).toBe(true);
   });
 });

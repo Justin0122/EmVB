@@ -33,7 +33,7 @@ describe("FormBindControl (W-036)", () => {
     };
     await mount(<FormBindControl value="" fetcher={fetcher} onChange={() => undefined} />);
     await flush();
-    expect(document.querySelector('[data-emvb-form-bind="list"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-form-bind="list"]') !== null).toBe(true);
     expect(document.querySelector('[data-emvb-form-bind="manual"]')?.outerHTML ?? null).toBeNull();
   });
 
@@ -44,7 +44,7 @@ describe("FormBindControl (W-036)", () => {
       });
     await mount(<FormBindControl value="paste-me" fetcher={fetcher} onChange={() => undefined} />);
     await flush();
-    expect(document.querySelector('[data-emvb-form-bind="manual"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-form-bind="manual"]') !== null).toBe(true);
     expect((document.querySelector("input") as HTMLInputElement | null)?.value).toBe("paste-me");
   });
 });
@@ -68,7 +68,7 @@ describe("FieldBindControl (W-036)", () => {
       <FieldBindControl value="" formId="01FORM" fetcher={fetcher} onChange={() => undefined} />,
     );
     await flush();
-    expect(document.querySelector('[data-emvb-field-bind="list"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-field-bind="list"]') !== null).toBe(true);
     expect(document.querySelector('[data-emvb-field-bind="manual"]')?.outerHTML ?? null).toBeNull();
   });
 
@@ -83,7 +83,7 @@ describe("FieldBindControl (W-036)", () => {
       />,
     );
     await flush();
-    expect(document.querySelector('[data-emvb-field-bind="manual"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-field-bind="manual"]') !== null).toBe(true);
   });
 });
 
@@ -142,7 +142,7 @@ describe("AddPanel forms group (W-036)", () => {
   test("hides Form group when formsAvailable is false", async () => {
     await mount(<AddPanel onAdd={() => undefined} formsAvailable={false} />);
     expect(document.querySelector('[data-emvb-add-tile="form"]')?.outerHTML ?? null).toBeNull();
-    expect(document.querySelector('[data-emvb-add-tile="heading"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-add-tile="heading"]') !== null).toBe(true);
     const titles = [...document.querySelectorAll(".emvb-add-group-title")].map(
       (el) => el.textContent,
     );
@@ -151,7 +151,7 @@ describe("AddPanel forms group (W-036)", () => {
 
   test("shows Form tiles when formsAvailable is true", async () => {
     await mount(<AddPanel onAdd={() => undefined} formsAvailable={true} />);
-    expect(document.querySelector('[data-emvb-add-tile="form"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-add-tile="form"]') !== null).toBe(true);
     const titles = [...document.querySelectorAll(".emvb-add-group-title")].map(
       (el) => el.textContent,
     );
@@ -195,7 +195,7 @@ describe("ElementPanel forms missing (W-036)", () => {
         onSelect={() => undefined}
       />,
     );
-    expect(document.querySelector("[data-emvb-forms-missing]")).toBeTruthy();
+    expect(document.querySelector("[data-emvb-forms-missing]") !== null).toBe(true);
   });
 });
 

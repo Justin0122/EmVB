@@ -192,7 +192,7 @@ describe("Accordion and Tabs item editing (W-130)", () => {
     await act(async () => button("Add item").click());
     const title = inputLabelled("Item 2 title");
     expect(title.value).toBe("Question 2");
-    expect(document.activeElement).toBe(title);
+    expect(document.activeElement === title).toBe(true);
     expect([title.selectionStart, title.selectionEnd]).toEqual([0, "Question 2".length]);
   });
 

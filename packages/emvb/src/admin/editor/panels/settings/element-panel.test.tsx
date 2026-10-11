@@ -45,8 +45,8 @@ describe("ElementPanel (W-021)", () => {
         onSelect={() => undefined}
       />,
     );
-    expect(document.querySelector('[data-emvb-tab="content"]')).toBeTruthy();
-    expect(document.querySelector('[data-emvb-field="text"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-tab="content"]') !== null).toBe(true);
+    expect(document.querySelector('[data-emvb-field="text"]') !== null).toBe(true);
 
     await unmount();
     await mount(
@@ -61,8 +61,8 @@ describe("ElementPanel (W-021)", () => {
         onSelect={() => undefined}
       />,
     );
-    expect(document.querySelector('[data-emvb-tab="style"]')).toBeTruthy();
-    expect(document.querySelector('[data-emvb-section="layout"]')).toBeTruthy();
+    expect(document.querySelector('[data-emvb-tab="style"]') !== null).toBe(true);
+    expect(document.querySelector('[data-emvb-section="layout"]') !== null).toBe(true);
   });
 
   test("breadcrumb lists Page › Container › Heading", async () => {
@@ -115,7 +115,7 @@ describe("ElementPanel (W-021)", () => {
     const reset = document.querySelector(
       '[data-emvb-style="gap"] [aria-label="Reset Gap to default"]',
     ) as HTMLButtonElement | null;
-    expect(reset).toBeTruthy();
+    expect(reset !== null).toBe(true);
     await act(async () => reset?.click());
     expect(current.style?.gap).toBeUndefined();
     expect(current.style?.flexDirection).toBe("row");

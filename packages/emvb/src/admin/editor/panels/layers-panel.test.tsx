@@ -62,7 +62,7 @@ async function press(key: string, init: KeyboardEventInit = {}) {
 }
 
 async function clickEl(element: Element | null) {
-  expect(element).toBeTruthy();
+  expect(element !== null).toBe(true);
   await act(async () => (element as HTMLElement).click());
 }
 
@@ -116,9 +116,9 @@ describe("Layers panel (W-018)", () => {
       document.querySelector(`[data-emvb-layer="${id}"] .emvb-layer-select`) as HTMLElement;
     await act(async () => button("head0001").focus());
     await press("ArrowDown");
-    expect(document.activeElement).toBe(button("box00001"));
+    expect(document.activeElement === button("box00001")).toBe(true);
     await press("ArrowUp");
-    expect(document.activeElement).toBe(button("head0001"));
+    expect(document.activeElement === button("head0001")).toBe(true);
   });
 
   test("Enter on a selected row's ··· button is left to the button (W-258)", async () => {
@@ -142,9 +142,10 @@ describe("Layers panel (W-018)", () => {
     await clickEl(duplicate);
     await act(async () => new Promise((resolve) => setTimeout(resolve, 5)));
     expect(calls).toEqual(["duplicate:head0001"]);
-    expect(document.activeElement).toBe(
-      document.querySelector('[data-emvb-layer="head0001"] .emvb-layer-select'),
-    );
+    expect(
+      document.activeElement ===
+        document.querySelector('[data-emvb-layer="head0001"] .emvb-layer-select'),
+    ).toBe(true);
   });
 
   test("Escape in an open row menu closes it, refocuses ··· and doesn't reach the editor (W-259)", async () => {
@@ -167,7 +168,7 @@ describe("Layers panel (W-018)", () => {
     });
     window.removeEventListener("keydown", onWindow);
     expect(document.querySelector('[role="menu"]')).toBeNull();
-    expect(document.activeElement).toBe(menuButton);
+    expect(document.activeElement === menuButton).toBe(true);
     expect(reachedWindow).toBe(false);
   });
 
@@ -187,18 +188,18 @@ describe("Layers panel (W-018)", () => {
         (item) => !item.disabled,
       );
     expect(items().length).toBeGreaterThan(2);
-    expect(document.activeElement).toBe(items()[0] ?? null);
+    expect(document.activeElement === (items()[0] ?? null)).toBe(true);
     await key(document.activeElement as Element, "ArrowDown");
-    expect(document.activeElement).toBe(items()[1] ?? null);
+    expect(document.activeElement === (items()[1] ?? null)).toBe(true);
     await key(document.activeElement as Element, "ArrowUp");
     await key(document.activeElement as Element, "ArrowUp");
-    expect(document.activeElement).toBe(items().at(-1) ?? null);
+    expect(document.activeElement === (items().at(-1) ?? null)).toBe(true);
     await key(document.activeElement as Element, "Home");
-    expect(document.activeElement).toBe(items()[0] ?? null);
+    expect(document.activeElement === (items()[0] ?? null)).toBe(true);
     await key(document.activeElement as Element, "End");
-    expect(document.activeElement).toBe(items().at(-1) ?? null);
+    expect(document.activeElement === (items().at(-1) ?? null)).toBe(true);
     await key(document.activeElement as Element, "ArrowDown");
-    expect(document.activeElement).toBe(items()[0] ?? null);
+    expect(document.activeElement === (items()[0] ?? null)).toBe(true);
     expect(calls).toEqual([]);
   });
 
@@ -215,7 +216,7 @@ describe("Layers panel (W-018)", () => {
 
   test("the actions menu runs each action once and closes; the root has no menu", async () => {
     await mount(null);
-    expect(document.querySelector('[aria-label="Actions for Container"]')).toBeTruthy();
+    expect(document.querySelector('[aria-label="Actions for Container"]') !== null).toBe(true);
     expect(
       document.querySelectorAll('[data-emvb-layer="root0001"] .emvb-layer-menu-btn').length,
     ).toBe(0);
@@ -507,7 +508,7 @@ describe("renaming a layer (W-157)", () => {
     await act(async () => {
       select("head0001").dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
     });
-    expect(document.activeElement).toBe(field());
+    expect(document.activeElement === field()).toBe(true);
     expect(field()?.placeholder).toBe("Heading");
     await typeName("  Hero title  ", "Enter");
     expect(renames).toEqual([["head0001", "Hero title"]]);
@@ -549,12 +550,12 @@ describe("renaming a layer (W-157)", () => {
       select("head0001").dispatchEvent(new KeyboardEvent("keydown", { key: "F2", bubbles: true }));
     });
     await typeName("Named", "Enter");
-    expect(document.activeElement).toBe(select("head0001"));
+    expect(document.activeElement === select("head0001")).toBe(true);
     await act(async () => {
       select("head0001").dispatchEvent(new KeyboardEvent("keydown", { key: "F2", bubbles: true }));
     });
     await typeName("Ignored", "Escape");
-    expect(document.activeElement).toBe(select("head0001"));
+    expect(document.activeElement === select("head0001")).toBe(true);
   });
 
   test("leaving the name field by focusing elsewhere keeps focus there (W-256)", async () => {
@@ -566,6 +567,6 @@ describe("renaming a layer (W-157)", () => {
       select("head0002").focus();
     });
     expect(field()).toBeNull();
-    expect(document.activeElement).toBe(select("head0002"));
+    expect(document.activeElement === select("head0002")).toBe(true);
   });
 });
