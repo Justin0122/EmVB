@@ -28478,6 +28478,26 @@
         "one walk answers a node and its parent"
       ],
       "expect": "\\(fail\\).*one walk answers a node and its parent"
+    },
+    {
+      "id": "W-374/section-failure-drops-all",
+      "requirement": "W-374",
+      "description": "one section that fails to load drops the sections that already loaded",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/section-templates.ts",
+          "search": "        try {\n          return [id, await read(id)] as const;\n        } catch {\n          return [id, null] as const;\n        }",
+          "replace": "        return [id, await read(id)] as const;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/section-templates.test.ts",
+        "-t",
+        "failed sibling"
+      ],
+      "expect": "\\(fail\\).*failed sibling"
     }
   ]
 }
