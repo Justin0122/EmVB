@@ -47,6 +47,8 @@ test("a layout Section is added, takes a dropped element in its inner box, and k
 
   // Drag a Text tile into the empty inner box with real pointer events.
   const tile = overlay(page).locator('[data-emvb-add-tile="text"]');
+  // The Add list is longer than the panel. A press outside the viewport never starts the drag.
+  await tile.scrollIntoViewIfNeeded();
   const from = await tile.boundingBox();
   const to = await inner.boundingBox();
   if (!from || !to) throw new Error("no boxes");

@@ -215,7 +215,10 @@ async function dragTileTo(
   y: number,
   during?: () => Promise<void>,
 ) {
-  const box = await overlay(page).locator(`[data-emvb-add-tile="${tile}"]`).boundingBox();
+  const tileLoc = overlay(page).locator(`[data-emvb-add-tile="${tile}"]`);
+  // The Add list is longer than the panel. A press outside the viewport never starts the drag.
+  await tileLoc.scrollIntoViewIfNeeded();
+  const box = await tileLoc.boundingBox();
   if (!box) throw new Error(`${tile} tile has no box`);
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
