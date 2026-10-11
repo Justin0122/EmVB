@@ -20,7 +20,7 @@ import {
   type LayoutNode,
 } from "../../core/index.ts";
 import { newElement } from "./dnd/new-element.ts";
-import { ELEMENT_NAMES } from "./panels/ElementPanel.tsx";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
 import type { ItemActions } from "./panels/settings/ItemList.tsx";
 import type { EditorAction, EditorState } from "./store.ts";
 

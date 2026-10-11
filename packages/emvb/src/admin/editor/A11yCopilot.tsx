@@ -6,7 +6,7 @@ import {
   type A11yReport,
   type Layout,
 } from "../../core/index.ts";
-import { ELEMENT_NAMES } from "./panels/ElementPanel.tsx";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
 
 /** Score bands for the badge colour (W-317). */
 const scoreBand = (score: number) => (score >= 90 ? "good" : score >= 70 ? "fair" : "poor");

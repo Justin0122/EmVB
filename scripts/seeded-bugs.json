@@ -28291,6 +28291,20 @@
         "loads design once"
       ],
       "expect": "\\(fail\\).*loads design once"
+    },
+    {
+      "id": "W-361/element-icon-missing",
+      "requirement": "W-361",
+      "description": "a heading has no icon in the layers and add panels",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/element-chrome.ts",
+          "search": "  heading: TextHIcon,\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/element-chrome.test.ts"],
+      "expect": "\\(fail\\).*every element type has an icon"
     }
   ]
 }

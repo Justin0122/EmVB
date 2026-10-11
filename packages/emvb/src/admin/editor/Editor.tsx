@@ -32,7 +32,7 @@ import { EditorOverlay } from "./EditorOverlay.tsx";
 import { useCanvasStyles, useEditorHost } from "./host.ts";
 import { LiveDataProvider, siteOrigin, useLiveData } from "./live-data.tsx";
 import { newElement } from "./dnd/new-element.ts";
-import { ELEMENT_NAMES } from "./panels/ElementPanel.tsx";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
 import { LeftPanel } from "./panels/LeftPanel.tsx";
 import { SettingsPanel } from "./panels/SettingsPanel.tsx";
 import { ShortcutsDialog } from "./ShortcutsDialog.tsx";

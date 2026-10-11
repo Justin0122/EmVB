@@ -3,23 +3,12 @@ import type { Fetcher } from "../../api.ts";
 import {
   CaretDownIcon,
   CaretRightIcon,
-  CheckSquareIcon,
-  ClipboardTextIcon,
-  ImageIcon,
-  NotePencilIcon,
   PaintBrushIcon,
-  PaperPlaneTiltIcon,
   PencilSimpleIcon,
-  RadioButtonIcon,
-  RowsIcon,
-  SquaresFourIcon,
-  StarIcon,
-  TextHIcon,
-  TextboxIcon,
   WarningCircleIcon,
-  YoutubeLogoIcon,
 } from "@phosphor-icons/react";
 import * as React from "react";
+import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { sharedPartH1 } from "./settings/heading-warning.ts";
 import { UNNAMED_BOX_LINK_NOTE, unnamedBoxLink } from "./settings/box-link-name.ts";
@@ -88,10 +77,6 @@ import {
   type StyleSectionId,
 } from "./settings/style-sections.ts";
 
-export const ELEMENT_NAMES: Record<string, string> = Object.fromEntries(
-  ELEMENT_DESCRIPTORS.map((d) => [d.type, d.name]),
-);
-
 const enclosingFormId = (layout: Layout, nodeId: string): string | undefined => {
   let current = parentOf(layout, nodeId);
   while (current) {
@@ -100,27 +85,6 @@ const enclosingFormId = (layout: Layout, nodeId: string): string | undefined => 
     current = parentOf(layout, current);
   }
   return undefined;
-};
-
-const ICONS: Record<string, typeof TextHIcon> = {
-  heading: TextHIcon,
-  container: SquaresFourIcon,
-  "div-block": SquaresFourIcon,
-  "layout-section": RowsIcon,
-  flexbox: SquaresFourIcon,
-  image: ImageIcon,
-  icon: StarIcon,
-  svg: StarIcon,
-  tabs: SquaresFourIcon,
-  "tab-panel": SquaresFourIcon,
-  video: YoutubeLogoIcon,
-  form: ClipboardTextIcon,
-  "text-input": TextboxIcon,
-  textarea: NotePencilIcon,
-  select: TextboxIcon,
-  checkbox: CheckSquareIcon,
-  radio: RadioButtonIcon,
-  submit: PaperPlaneTiltIcon,
 };
 
 const withStyle = (node: LayoutNode, patch: Partial<StyleProps>): LayoutNode => {
@@ -477,7 +441,7 @@ function KnownElementPanel({
   const bodyRef = React.useRef<HTMLDivElement>(null);
   useTabScroll(bodyRef, tab, node.id);
 
-  const Icon = ICONS[node.type] ?? SquaresFourIcon;
+  const Icon = elementIcon(node.type);
   const crumbs = breadcrumb(layout, node.id);
   const section = (
     id: StyleSectionId,

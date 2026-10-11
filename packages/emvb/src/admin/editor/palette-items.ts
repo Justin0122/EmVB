@@ -6,7 +6,7 @@ import {
   type Layout,
   type LayoutNode,
 } from "../../core/index.ts";
-import { ELEMENT_NAMES } from "./panels/ElementPanel.tsx";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
 import type { PaletteItem } from "./palette.ts";
 
 export type PaletteActions = {

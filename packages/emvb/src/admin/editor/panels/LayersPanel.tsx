@@ -1,10 +1,4 @@
-import {
-  CaretDownIcon,
-  CaretRightIcon,
-  RowsIcon,
-  SquaresFourIcon,
-  TextHIcon,
-} from "@phosphor-icons/react";
+import { CaretDownIcon, CaretRightIcon } from "@phosphor-icons/react";
 import * as React from "react";
 import {
   firstChild,
@@ -21,21 +15,10 @@ import {
   type PageScript,
 } from "../../../core/index.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
-import { ELEMENT_NAMES } from "./ElementPanel.tsx";
+import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
 import { StateDot } from "./settings/StateSwitcher.tsx";
 import type { ClipboardActions } from "../useClipboardActions.ts";
-
-const ICONS: Record<string, typeof TextHIcon> = {
-  heading: TextHIcon,
-  container: SquaresFourIcon,
-  svg: SquaresFourIcon,
-  tabs: SquaresFourIcon,
-  "tab-panel": SquaresFourIcon,
-  "div-block": SquaresFourIcon,
-  "layout-section": RowsIcon,
-  flexbox: SquaresFourIcon,
-};
 
 const rows = (
   node: LayoutNode,
@@ -345,7 +328,7 @@ const LayerRow = React.memo(function LayerRow({
 }) {
   const onToggle = () => toggleRow(node.id);
   const onMenu = (open: boolean) => menuRow(node.id, open);
-  const Icon = ICONS[node.type] ?? SquaresFourIcon;
+  const Icon = elementIcon(node.type);
   const preview = layerPreview(node);
   const typeName = ELEMENT_NAMES[node.type] ?? node.type;
   // A label names the row in place of the type (W-157); the type stays in the tooltip.

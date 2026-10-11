@@ -19,7 +19,7 @@ import {
   type PasteMode,
 } from "../../core/index.ts";
 import { readClipboardText, useClipboardText, writeClipboardText } from "./clipboard-store.ts";
-import { ELEMENT_NAMES } from "./panels/ElementPanel.tsx";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
 import type { EditorAction, EditorState } from "./store.ts";
 
 const NOTICE_TIMEOUT_MS = 4000;

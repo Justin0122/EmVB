@@ -8,7 +8,7 @@ import {
   type Layout,
   type PerfKind,
 } from "../../core/index.ts";
-import { ELEMENT_NAMES } from "./panels/ElementPanel.tsx";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
 
 const KINDS: { kind: PerfKind; label: string }[] = [
   { kind: "html", label: "HTML" },

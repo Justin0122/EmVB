@@ -1,31 +1,6 @@
 import { Input } from "@cloudflare/kumo";
-import {
-  ArrowsLeftRightIcon,
-  LinkSimpleIcon,
-  MinusIcon,
-  RectangleIcon,
-  SquareIcon,
-  SquaresFourIcon,
-  TextAlignLeftIcon,
-  TextHIcon,
-  TextTIcon,
-  ListBulletsIcon,
-  CaretDownIcon,
-  CursorClickIcon,
-  ImageIcon,
-  GraphIcon,
-  BrowserIcon,
-  StarIcon,
-  YoutubeLogoIcon,
-  TextboxIcon,
-  CheckSquareIcon,
-  RadioButtonIcon,
-  PaperPlaneTiltIcon,
-  ClipboardTextIcon,
-  NotePencilIcon,
-  RowsIcon,
-} from "@phosphor-icons/react";
 import * as React from "react";
+import { elementIcon } from "../element-chrome.ts";
 import {
   ELEMENT_DESCRIPTORS,
   SECTION_RECIPES,
@@ -35,46 +10,6 @@ import {
 import { NEW_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { FIELD } from "../../ui.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
-
-const ICONS: Record<string, typeof TextHIcon> = {
-  container: SquareIcon,
-  "div-block": SquareIcon,
-  "layout-section": RowsIcon,
-  flexbox: SquaresFourIcon,
-  spacer: RectangleIcon,
-  divider: MinusIcon,
-  heading: TextHIcon,
-  text: TextAlignLeftIcon,
-  label: TextTIcon,
-  link: LinkSimpleIcon,
-  button: CursorClickIcon,
-  list: ListBulletsIcon,
-  image: ImageIcon,
-  icon: StarIcon,
-  svg: GraphIcon,
-  tabs: BrowserIcon,
-  accordion: ListBulletsIcon,
-  menu: CaretDownIcon,
-  "menu-item": CaretDownIcon,
-  video: YoutubeLogoIcon,
-  form: ClipboardTextIcon,
-  "text-input": TextboxIcon,
-  textarea: NotePencilIcon,
-  select: TextboxIcon,
-  checkbox: CheckSquareIcon,
-  radio: RadioButtonIcon,
-  submit: PaperPlaneTiltIcon,
-  "post-title": TextHIcon,
-  "post-excerpt": TextAlignLeftIcon,
-  "post-content": NotePencilIcon,
-  "post-image": ImageIcon,
-  "post-link": LinkSimpleIcon,
-  "post-date": TextTIcon,
-  "post-author": TextTIcon,
-  loop: ListBulletsIcon,
-  "loop-empty": SquareIcon,
-  pagination: ArrowsLeftRightIcon,
-};
 
 const GROUPS = [
   { id: "layout", label: "Layout" },
@@ -130,7 +65,7 @@ export function AddPanel({
               <h3 className="emvb-add-group-title">{group.label}</h3>
               <div className="emvb-add-tiles" aria-label={group.label}>
                 {tiles.map((tile) => {
-                  const Icon = ICONS[tile.type] ?? SquareIcon;
+                  const Icon = elementIcon(tile.type);
                   return (
                     <button
                       key={tile.type}

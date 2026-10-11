@@ -13,7 +13,7 @@ import {
   type SectionChange,
 } from "../../core/index.ts";
 import { ApiError, requestJson, type Fetcher } from "../api.ts";
-import { ELEMENT_NAMES } from "./panels/ElementPanel.tsx";
+import { ELEMENT_NAMES } from "./element-chrome.ts";
 
 type RevisionItem = {
   id: string;
