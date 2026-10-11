@@ -120,46 +120,37 @@ function underForm(layout: Layout, parentId: string): boolean {
 
 type Drop = { layout: Layout; node: LayoutNode; into: Located; isNew: boolean };
 
-/** Placement rules in the order their reasons take precedence (R-003, W-034, W-074). */
+/**
+ * Parent/child rules shared by drag-and-drop and the save-time nesting check (W-354).
+ * `inForm` is true when `parent` is a form or sits inside one. Depth, count and tab caps stay
+ * in `canDrop`.
+ */
+export function parentChildRefusal(
+  parent: LayoutNode,
+  child: LayoutNode,
+  inForm: boolean,
+): string | undefined {
+  if (child.type === "loop-empty" && parent.type !== "loop") return REASONS.emptyOutsideLoop;
+  if (child.type === "tab-panel" && parent.type !== "tabs") return REASONS.tabOutsideTabs;
+  if (parent.type === "tabs" && child.type !== "tab-panel") return REASONS.onlyTabPanels;
+  if (child.type === "accordion-item" && parent.type !== "accordion") {
+    return REASONS.itemOutsideAccordion;
+  }
+  if (parent.type === "accordion" && child.type !== "accordion-item") {
+    return REASONS.onlyAccordionItems;
+  }
+  if (child.type === "menu-item" && parent.type !== "menu" && parent.type !== "menu-item") {
+    return REASONS.itemOutsideMenu;
+  }
+  if (parent.type === "menu" && child.type !== "menu-item") return REASONS.onlyMenuItems;
+  if (isFormNode(child) && inForm) return REASONS.nestedForm;
+  if (isFormFieldType(child.type) && !inForm) return REASONS.fieldOutsideForm;
+  return undefined;
+}
+
+/** Caps and the form-into-a-leaf rule. Parent/child pairs are `parentChildRefusal`. */
 const DROP_RULES: [breaks: (drop: Drop) => boolean, reason: string][] = [
-  [
-    ({ node, into }) => node.type === "loop-empty" && into.node.type !== "loop",
-    REASONS.emptyOutsideLoop,
-  ],
-  [
-    ({ node, into }) => node.type === "tab-panel" && into.node.type !== "tabs",
-    REASONS.tabOutsideTabs,
-  ],
-  [
-    ({ node, into }) => into.node.type === "tabs" && node.type !== "tab-panel",
-    REASONS.onlyTabPanels,
-  ],
-  [
-    ({ node, into }) => node.type === "accordion-item" && into.node.type !== "accordion",
-    REASONS.itemOutsideAccordion,
-  ],
-  [
-    ({ node, into }) => into.node.type === "accordion" && node.type !== "accordion-item",
-    REASONS.onlyAccordionItems,
-  ],
-  [
-    ({ node, into }) =>
-      node.type === "menu-item" && into.node.type !== "menu" && into.node.type !== "menu-item",
-    REASONS.itemOutsideMenu,
-  ],
-  [
-    ({ node, into }) => into.node.type === "menu" && node.type !== "menu-item",
-    REASONS.onlyMenuItems,
-  ],
-  [
-    ({ node, into, layout }) => isFormNode(node) && underForm(layout, into.node.id),
-    REASONS.nestedForm,
-  ],
   [({ node, into }) => isFormNode(node) && !isLayoutParentNode(into.node), REASONS.formIntoField],
-  [
-    ({ node, into, layout }) => isFormFieldType(node.type) && !underForm(layout, into.node.id),
-    REASONS.fieldOutsideForm,
-  ],
   // A 13th panel would be stored but never shown (W-188); moving within the same Tabs is fine.
   [
     ({ node, into }) =>
@@ -196,6 +187,8 @@ export function canDrop(layout: Layout, source: DragSource, parentId: string): A
   const moving = dragged(layout, source, parentId);
   if (!moving.ok) return moving;
   if (!isParentNode(into.node)) return refuse(REASONS.notContainer);
+  const placed = parentChildRefusal(into.node, moving.node, underForm(layout, into.node.id));
+  if (placed) return refuse(placed);
   const drop: Drop = { layout, node: moving.node, into, isNew: source.kind === "new" };
   const broken = DROP_RULES.find(([breaks]) => breaks(drop));
   return broken ? refuse(broken[1]) : { ok: true };

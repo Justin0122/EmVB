@@ -2121,8 +2121,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "isFormNode(node) && underForm(layout, into.node.id),",
-          "replace": "false,"
+          "search": "isFormNode(child) && inForm",
+          "replace": "false"
         }
       ],
       "command": [
@@ -2141,8 +2141,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "isFormFieldType(node.type) && !underForm(layout, into.node.id),",
-          "replace": "false,"
+          "search": "isFormFieldType(child.type) && !inForm",
+          "replace": "false"
         }
       ],
       "command": [
@@ -2696,13 +2696,13 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "node.type === \"tab-panel\" && into.node.type !== \"tabs\",",
-          "replace": "false,"
+          "search": "child.type === \"tab-panel\" && parent.type !== \"tabs\"",
+          "replace": "false"
         },
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "into.node.type === \"tabs\" && node.type !== \"tab-panel\",",
-          "replace": "false,"
+          "search": "parent.type === \"tabs\" && child.type !== \"tab-panel\"",
+          "replace": "false"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/arrange-tabs.test.ts"],
@@ -19564,7 +19564,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "node.type === \"menu-item\" && into.node.type !== \"menu\" && into.node.type !== \"menu-item\"",
+          "search": "child.type === \"menu-item\" && parent.type !== \"menu\" && parent.type !== \"menu-item\"",
           "replace": "false"
         }
       ],
@@ -22238,7 +22238,7 @@
       "description": "A menu item outside a Menu passes the save check.",
       "edits": [
         {
-          "file": "packages/emvb/src/core/nesting.ts",
+          "file": "packages/emvb/src/core/arrange.ts",
           "search": "if (child.type === \"menu-item\" && parent.type !== \"menu\" && parent.type !== \"menu-item\") {",
           "replace": "if (false) {"
         }
@@ -22252,7 +22252,7 @@
       "description": "A form field outside a form passes the save check.",
       "edits": [
         {
-          "file": "packages/emvb/src/core/nesting.ts",
+          "file": "packages/emvb/src/core/arrange.ts",
           "search": "  if (isFormFieldType(child.type) && !inForm) return REASONS.fieldOutsideForm;\n",
           "replace": ""
         }
@@ -25831,8 +25831,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "node.type === \"loop-empty\" && into.node.type !== \"loop\"",
-          "replace": "node.type === \"loop-empty\" && into.node.type === \"form\""
+          "search": "child.type === \"loop-empty\" && parent.type !== \"loop\"",
+          "replace": "child.type === \"loop-empty\" && parent.type === \"form\""
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/collection-loop.test.ts"],
