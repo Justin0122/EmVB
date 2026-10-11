@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test";
 import { layoutOfBytes, s1Page } from "../fixtures/layouts.ts";
 import { emptyDesign, MAX_DESIGN_BYTES, MAX_LAYOUT_BYTES } from "../../src/core/index.ts";
-import { designRoute } from "../../src/server/design-routes.ts";
+import { designDraftRoute, designRoute, designSaveRoute } from "../../src/server/design-routes.ts";
+import { DESIGN_DRAFT_KEY, DESIGN_KEY } from "../../src/constants.ts";
 import { createPlugin } from "../../src/server/plugin.ts";
 import { createTestRuntime, ROLES, userWithRole } from "./runtime.ts";
 
@@ -248,6 +249,39 @@ describe("design routes", () => {
       status: "unreadable",
     });
     expect(errors).toEqual([["emvb: stored design is unreadable", { code: "invalid_format" }]]);
+  });
+
+  test("an unreadable style draft keeps its revision so a save can replace it (W-382)", async () => {
+    const slots = new Map<string, { value: unknown; revision: string } | null>([
+      [DESIGN_DRAFT_KEY, { value: { secret: "SECRET" }, revision: "r-bad" }],
+      [DESIGN_KEY, null],
+    ]);
+    const ctx = {
+      storage: {
+        design: {
+          getVersioned: async (id: string) => slots.get(id) ?? null,
+          compareAndSet: async (id: string, expected: string | null, data: unknown) => {
+            const current = slots.get(id) ?? null;
+            if ((current?.revision ?? null) !== expected) return { applied: false as const };
+            const next = { value: data, revision: "r-next" };
+            slots.set(id, next);
+            return { applied: true as const, revision: next.revision };
+          },
+        },
+      },
+      log: { error: () => undefined },
+    };
+    const draft = await designDraftRoute.handler(ctx as never);
+    expect(draft).toMatchObject({ revision: "r-bad", unpublished: false });
+    expect(JSON.stringify(draft)).not.toContain("SECRET");
+    const saved = await designSaveRoute.handler({
+      ...ctx,
+      input: { design: design(), revision: "r-bad" },
+    } as never);
+    expect(saved).toEqual({ revision: "r-next" });
+    slots.set(DESIGN_DRAFT_KEY, null);
+    const missing = await designDraftRoute.handler(ctx as never);
+    expect(missing).toMatchObject({ revision: null, unpublished: false });
   });
 
   test("an invalid design gets 422 with issue paths", async () => {

@@ -49,10 +49,11 @@ export const designDraftRoute: PluginRoute = {
     const published = await readDesign(ctx, DESIGN_KEY);
     const draft = await readDesign(ctx, DESIGN_DRAFT_KEY);
     if (draft.status !== "ok") {
+      const revision = draft.revision;
       return {
         design: published.design,
         published: published.design,
-        revision: null,
+        revision,
         publishedRevision: published.revision,
         unpublished: false,
       };

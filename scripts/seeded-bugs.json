@@ -28572,6 +28572,26 @@
         "Kumo roles"
       ],
       "expect": "\\(fail\\).*Kumo roles"
+    },
+    {
+      "id": "W-382/unreadable-draft-revision",
+      "requirement": "W-382",
+      "description": "an unreadable style draft reports no revision",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/design-routes.ts",
+          "search": "      const revision = draft.revision;",
+          "replace": "      const revision = null;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/plugin.test.ts",
+        "-t",
+        "unreadable style draft"
+      ],
+      "expect": "\\(fail\\).*unreadable style draft"
     }
   ]
 }

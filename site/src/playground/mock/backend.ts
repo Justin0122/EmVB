@@ -575,7 +575,7 @@ export function createBackend(options: BackendOptions = {}): PlaygroundBackend {
       if (!draft.ok) {
         return {
           design: published.design,
-          revision: null,
+          revision: draft.revision,
           publishedRevision: published.revision,
           unpublished: false,
         };
