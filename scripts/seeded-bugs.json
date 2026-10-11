@@ -1454,7 +1454,7 @@
       "description": "drop line uses the column axis inside a row container",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
+          "file": "packages/emvb/src/admin/editor/canvas/drop-line.ts",
           "search": "  const row = direction.startsWith(\"row\");",
           "replace": "  const row = false;"
         }
@@ -3212,7 +3212,7 @@
       "description": "the drop line in a row container is placed along the vertical axis",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
+          "file": "packages/emvb/src/admin/editor/canvas/drop-line.ts",
           "search": "const [start, size] = row ? ([\"left\", \"width\"] as const) : ([\"top\", \"height\"] as const);",
           "replace": "const [start, size] = [\"top\", \"height\"] as const;"
         }
@@ -4179,7 +4179,7 @@
       "description": "a tab panel chosen from a tab label or Layers stays hidden on the canvas",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
+          "file": "packages/emvb/src/admin/editor/canvas/use-canvas-session.ts",
           "search": "    revealInTabs(doc, selectedId);\n",
           "replace": ""
         }
@@ -16278,7 +16278,7 @@
       "description": "double-click does not open the canvas text editor",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
+          "file": "packages/emvb/src/admin/editor/canvas/use-canvas-session.ts",
           "search": "        setEditingId(id);",
           "replace": "        setEditingId(null);"
         }
@@ -18138,7 +18138,7 @@
       "description": "Selecting inside a closed accordion item leaves it closed on the canvas.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
+          "file": "packages/emvb/src/admin/editor/canvas/use-canvas-session.ts",
           "search": "revealInAccordions(doc, selectedId, (itemId) => {",
           "replace": "revealInAccordions(doc, null, (itemId) => {"
         }
@@ -19352,7 +19352,7 @@
       "description": "The Desktop canvas takes the stage width again instead of a 1280 px page.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
+          "file": "packages/emvb/src/admin/editor/canvas/canvas-scale.ts",
           "search": "device === \"desktop\" ? Math.max(base, Math.floor(stageWidth)) : base",
           "replace": "device === \"desktop\" ? Math.floor(stageWidth) || base : base"
         }
@@ -27138,7 +27138,7 @@
       "description": "Host stylesheets are appended after EmVB's CSS, so they override element styles.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
+          "file": "packages/emvb/src/admin/editor/canvas/use-canvas-session.ts",
           "search": "doc.head.prepend(...links);",
           "replace": "doc.head.append(...links);"
         }
