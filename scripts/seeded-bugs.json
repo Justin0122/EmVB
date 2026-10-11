@@ -779,7 +779,7 @@
         }
       ],
       "command": ["bun", "run", "e2e", "e2e/editor.e2e.ts", "--project=node"],
-      "expect": "✘.*\\[node\\].*at 1280×720 the overlay covers the admin and the canvas gets the real width",
+      "expect": "✘.*\\[node\\].*at 1280×720 the overlay covers the admin and the canvas fits a desktop page between the panels",
       "env": {
         "CI": "1"
       }
@@ -903,7 +903,7 @@
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin"],
-      "expect": "\\(fail\\).*Delete in a text field edits the text, not the page"
+      "expect": "\\(fail\\).*Ctrl\\+Z inside a text field is left to the field"
     },
     {
       "id": "W-010/variable-not-saved",
@@ -3293,12 +3293,12 @@
     {
       "id": "W-086/site-id-reused",
       "requirement": "R-021",
-      "description": "a new variable or class reuses an existing id",
+      "description": "every new class id is the same slug, so a created class no longer matches the saved snapshot",
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/site-list.tsx",
-          "search": "for (let n = 2; used.has(id); n++)",
-          "replace": "for (let n = 2; false; n++)"
+          "search": "const base = slugify(name).slice(0, 34) || fallback;",
+          "replace": "const base = \"reused\";"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/site-sections.test.tsx"],
@@ -5106,6 +5106,11 @@
           "file": "packages/emvb/src/admin/editor/panels/settings/ClassChip.tsx",
           "search": "if (!event.ctrlKey && !event.metaKey) event.stopPropagation();",
           "replace": "void event;"
+        },
+        {
+          "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
+          "search": "    if (!onCanvasOrLayers(event.target)) return;\n",
+          "replace": "    if (false) return;\n"
         }
       ],
       "command": [
@@ -5655,9 +5660,9 @@
         "test",
         "./packages/emvb/src/admin/editor/panels/site-sections.test.tsx",
         "-t",
-        "shows page usage, with class usage"
+        "shows page usage and the classes that use it"
       ],
-      "expect": "\\(fail\\).*shows page usage, with class usage"
+      "expect": "\\(fail\\).*shows page usage and the classes that use it"
     },
     {
       "id": "W-087/var-usage-counts-props",
@@ -5675,9 +5680,9 @@
         "test",
         "./packages/emvb/src/admin/editor/panels/site-sections.test.tsx",
         "-t",
-        "shows page usage, with class usage"
+        "shows page usage and the classes that use it"
       ],
-      "expect": "\\(fail\\).*shows page usage, with class usage"
+      "expect": "\\(fail\\).*shows page usage and the classes that use it"
     },
     {
       "id": "W-087/var-copy-bare-token",
@@ -6955,9 +6960,9 @@
         "test",
         "./packages/emvb/src/core/sanitize/style-map.test.ts",
         "-t",
-        "only offsets may be negative"
+        "only offsets"
       ],
-      "expect": "\\(fail\\).*only offsets may be negative"
+      "expect": "\\(fail\\).*only offsets"
     },
     {
       "id": "W-088/z-index-fraction",
@@ -7963,11 +7968,11 @@
       "command": [
         "bun",
         "test",
-        "./packages/emvb/test/server/plugin.test.ts",
+        "./packages/emvb/src/core/migrate/migrate.test.ts",
         "-t",
-        "an editor saves with CAS"
+        "design document upgrades"
       ],
-      "expect": "\\(fail\\).*an editor saves with CAS"
+      "expect": "\\(fail\\).*design document upgrades"
     },
     {
       "id": "D-031/layout-version-not-bumped",
@@ -8285,9 +8290,9 @@
         "test",
         "./packages/emvb/src/core/migrate/migrate.test.ts",
         "-t",
-        "layout and design are at version 14"
+        "layout and design are at version 15"
       ],
-      "expect": "\\(fail\\).*layout and design are at version 14"
+      "expect": "\\(fail\\).*layout and design are at version 15"
     },
     {
       "id": "D-032/design-version-not-bumped",
@@ -8305,9 +8310,9 @@
         "test",
         "./packages/emvb/src/core/migrate/migrate.test.ts",
         "-t",
-        "layout and design are at version 14"
+        "layout and design are at version 15"
       ],
-      "expect": "\\(fail\\).*layout and design are at version 14"
+      "expect": "\\(fail\\).*layout and design are at version 15"
     },
     {
       "id": "D-032/node-states-refused",
@@ -12834,9 +12839,9 @@
         "e2e/editor.e2e.ts",
         "--project=node",
         "-g",
-        "open the host command palette while the editor is open"
+        "Ctrl\\+K opens EmVB's palette, never the host's"
       ],
-      "expect": "✘.*\\[node\\].*open the host command palette while the editor is open"
+      "expect": "✘.*\\[node\\].*Ctrl\\+K opens EmVB's palette, never the host's"
     },
     {
       "id": "W-091/e2e-overlay-above-host-dialogs",
@@ -17217,7 +17222,7 @@
         {
           "file": "packages/emvb/src/admin/editor/Editor.tsx",
           "search": "            previewDevice: device,\n",
-          "replace": ""
+          "replace": "            previewDevice: \"desktop\",\n"
         }
       ],
       "command": [
@@ -21605,8 +21610,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "          if (merged.conflicts.length > 0) {\n            dispatch({ type: \"load-design\", ...fresh });\n",
-          "replace": "          if (merged.conflicts.length > 0) {\n            void fresh;\n"
+          "search": "          if (unchanged) {\n            dispatch({ type: \"load-design\", ...fresh });\n",
+          "replace": "          if (unchanged) {\n            void fresh;\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/design-conflict.test.tsx"],
@@ -21619,7 +21624,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "The latest styles are loaded now: make your change again.",
+          "search": "The latest styles are loaded now: check them, then publish again.",
           "replace": "Reload the editor and try again."
         }
       ],
