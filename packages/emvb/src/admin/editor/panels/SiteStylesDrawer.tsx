@@ -1,6 +1,6 @@
 import { Button, Select, Tabs } from "@cloudflare/kumo";
 import { deletionOf, type Deletion } from "../restore-deleted.ts";
-import { WarningCircleIcon, XIcon } from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import * as React from "react";
 import {
   clearClassRefs,
@@ -29,6 +29,7 @@ import { stopEditorShortcuts } from "./settings/ClassChip.tsx";
 import { StyleRow } from "./settings/StyleRow.tsx";
 import { FIELD } from "../../ui.ts";
 import { TokenScales } from "./TokenScales.tsx";
+import { InlineError } from "./inline-error.tsx";
 import { VariableSection } from "./VariableSection.tsx";
 
 const STYLE_NOTE = "Style changes stay unpublished until you publish styles.";
@@ -46,15 +47,6 @@ type Props = {
   onDeleted?: (deletion: Deletion) => void;
   onClose: () => void;
 };
-
-function InlineError({ children }: { children: string }) {
-  return (
-    <p className="emvb-inline-error" role="alert">
-      <WarningCircleIcon size={16} aria-hidden="true" />
-      {children}
-    </p>
-  );
-}
 
 function exportDesign(design: DesignSystem) {
   const blob = new Blob([designToJson(design)], { type: "application/json" });

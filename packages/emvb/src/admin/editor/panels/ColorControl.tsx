@@ -1,5 +1,5 @@
 import { Button, Input, Select } from "@cloudflare/kumo";
-import { PlusIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@phosphor-icons/react";
 import * as React from "react";
 import {
   cleanClassName,
@@ -20,6 +20,7 @@ import {
   parseRgb,
   toHex,
 } from "./color-space.ts";
+import { InlineError } from "./inline-error.tsx";
 import { pickerHex } from "./variable-values.ts";
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
@@ -31,15 +32,6 @@ const BAD_HEX = "Enter a hex color such as #1a2b3c.";
 
 const errorText = (error: unknown) =>
   error instanceof Error ? error.message : "Couldn't save site styles. Try again.";
-
-function InlineError({ children }: { children: string }) {
-  return (
-    <p className="emvb-inline-error" role="alert">
-      <WarningCircleIcon size={16} aria-hidden="true" />
-      {children}
-    </p>
-  );
-}
 
 function Swatch({ color }: { color: string }) {
   return <span className="emvb-swatch" style={{ background: color }} aria-hidden="true" />;

@@ -28385,6 +28385,20 @@
         "a page with no title reads Untitled page"
       ],
       "expect": "\\(fail\\).*a page with no title reads Untitled page"
+    },
+    {
+      "id": "W-369/inline-error-not-alert",
+      "requirement": "W-369",
+      "description": "an inline error is not announced as an alert",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/inline-error.tsx",
+          "search": "<p className=\"emvb-inline-error\" role=\"alert\">",
+          "replace": "<p className=\"emvb-inline-error\">"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/inline-error.test.tsx"],
+      "expect": "\\(fail\\).*an inline error is an alert"
     }
   ]
 }

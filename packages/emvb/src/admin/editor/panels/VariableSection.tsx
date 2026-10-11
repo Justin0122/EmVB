@@ -9,7 +9,6 @@ import {
   TextAaIcon,
   TextTIcon,
   TrashIcon,
-  WarningCircleIcon,
   type Icon,
 } from "@phosphor-icons/react";
 import * as React from "react";
@@ -27,6 +26,7 @@ import {
   type VariableKind,
 } from "../../../core/index.ts";
 import { FIELD } from "../../ui.ts";
+import { InlineError } from "./inline-error.tsx";
 import {
   CreateRow,
   matches,
@@ -78,15 +78,6 @@ const MAX_TYPE_PREVIEW = 24;
 const MAX_BAR = 64;
 
 type Item = { id: string; name: string; value: string | Length };
-
-function InlineError({ children }: { children: string }) {
-  return (
-    <p className="emvb-inline-error" role="alert">
-      <WarningCircleIcon size={16} aria-hidden="true" />
-      {children}
-    </p>
-  );
-}
 
 /** The kind's visual sample in the row: a swatch, "Ag" in the font, "Aa" at the size. */
 function Preview({ kind, value }: { kind: VariableKind; value: string | Length }) {
