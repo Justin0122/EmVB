@@ -247,6 +247,10 @@ describe("video element (W-026, R-013)", () => {
     expect(html).toContain('title="Demo"');
     expect(html).toContain('loading="lazy"');
     expect(html).toContain("<iframe");
+    expect(html).toContain(
+      'sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"',
+    );
+    expect(html.includes("allow-top-navigation")).toBe(false);
   });
 
   test("media-library files render as video controls without autoplay", () => {

@@ -16,16 +16,25 @@ export function sanitizeUrl(value: string, schemes: ReadonlySet<string>): string
   if (!hasScheme) {
     // Browsers resolve `//host` and `/\host` to another site; EmDash 1.0 refuses them for `url` fields too.
     if (/^\/[/\\]/.test(trimmed)) return undefined;
+    // A normal space can sit in a relative path. Any other whitespace, or a backslash, is how a
+    // second address hides in the same string.
+    if (/[^\S ]|\\/.test(trimmed)) return undefined;
     // Relative: /path, ./path, ../path, ?query, #hash, or bare path segment
     if (/^(?:[/?#.]|[A-Za-z0-9._~-])/.test(trimmed)) return trimmed;
     return undefined;
   }
 
+  // Parse the string we will return. Stripping whitespace first, then returning the original,
+  // accepted `https://site/a.png 1w, https://evil/x` because only the stripped copy was checked.
+  if (/[\s\\]/.test(trimmed)) return undefined;
+
   let parsed: URL;
   try {
-    parsed = new URL(trimmed.replace(/\s+/g, ""));
+    parsed = new URL(trimmed);
   } catch {
     return undefined;
   }
+  // `user:pass@host` would publish the password in the page.
+  if (parsed.username || parsed.password) return undefined;
   return schemes.has(parsed.protocol.toLowerCase()) ? trimmed : undefined;
 }

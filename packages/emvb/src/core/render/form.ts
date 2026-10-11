@@ -149,6 +149,31 @@ const isControl = (node: VNode) =>
   ["input", "select", "textarea"].includes(node.tag) && node.attrs.type !== "hidden";
 
 /**
+ * A `pattern` the browser can compile. Nested quantifiers (`(a+)+`) are left off: they can hang
+ * the visitor's tab while they type. A pattern that does not compile is left off too.
+ */
+function hasControlChar(value: string): boolean {
+  for (const char of value) {
+    const code = char.charCodeAt(0);
+    if (code < 32 || code === 127) return true;
+  }
+  return false;
+}
+
+function safeInputPattern(pattern: string): string | undefined {
+  const value = pattern.trim();
+  if (!value || value.length > 200 || hasControlChar(value)) return undefined;
+  if (/\([^)]*[+*][^)]*\)[+*{]/.test(value)) return undefined;
+  try {
+    const compiled = new RegExp(value);
+    compiled.test("");
+  } catch {
+    return undefined;
+  }
+  return value;
+}
+
+/**
  * W-297: what the forms plugin's own embed puts on a control: the input type (so phones show the
  * right keyboard), `required`, and the length, range and pattern limits, plus a visible mark on
  * the label. Without them the forms client found nothing to check before sending.
@@ -168,7 +193,8 @@ function withFieldMeta(vnode: VNode, node: LayoutNode, meta: PublicFormField): V
       if (rules.max !== undefined) limits.max = String(rules.max);
     }
     if (node.type === "text-input" && kind !== "number" && kind !== "date" && rules.pattern) {
-      limits.pattern = rules.pattern;
+      const pattern = safeInputPattern(rules.pattern);
+      if (pattern) limits.pattern = pattern;
     }
   }
   const mark: VNode = {

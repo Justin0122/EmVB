@@ -8576,8 +8576,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "      (declarations.length > 0 ||\n        Object.keys(states.states).length > 0 ||\n        responsive ||\n        queryDeclarations.length > 0)\n    ) {",
-          "replace": "      (declarations.length > 0 ||\n        responsive ||\n        queryDeclarations.length > 0)\n    ) {"
+          "search": "      (declarations.length > 0 ||\n        Object.keys(states.states).length > 0 ||\n        responsive ||\n        (queryDeclarations.length > 0 && queryMin !== undefined))\n    ) {",
+          "replace": "      (declarations.length > 0 ||\n        responsive ||\n        (queryDeclarations.length > 0 && queryMin !== undefined))\n    ) {"
         }
       ],
       "command": [
@@ -10638,8 +10638,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/sanitize/url.ts",
-          "search": "  try {\n    parsed = new URL(trimmed.replace(/\\s+/g, \"\"));\n  } catch {\n    return undefined;\n  }",
-          "replace": "  parsed = new URL(trimmed.replace(/\\s+/g, \"\"));"
+          "search": "  try {\n    parsed = new URL(trimmed);\n  } catch {\n    return undefined;\n  }",
+          "replace": "  parsed = new URL(trimmed);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/href.test.ts"],
@@ -27686,7 +27686,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "    if (node.dir) attrs.dir = node.dir;\n",
+          "search": "    if (node.dir === \"ltr\" || node.dir === \"rtl\" || node.dir === \"auto\") attrs.dir = node.dir;\n",
           "replace": "\n"
         }
       ],
@@ -27798,6 +27798,134 @@
         "dragging one item"
       ],
       "expect": "\\(fail\\).*dragging one item"
+    },
+    {
+      "id": "W-348/url-whitespace-kept",
+      "requirement": "W-348",
+      "description": "an absolute URL with spaces is accepted again",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/url.ts",
+          "search": "  if (/[\\s\\\\]/.test(trimmed)) return undefined;\n",
+          "replace": "\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/href.test.ts", "-t", "refuses"],
+      "expect": "\\(fail\\).*refuses"
+    },
+    {
+      "id": "W-348/url-credentials-kept",
+      "requirement": "W-348",
+      "description": "a URL with a username and password is accepted again",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/url.ts",
+          "search": "  if (parsed.username || parsed.password) return undefined;\n",
+          "replace": "\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/href.test.ts", "-t", "refuses"],
+      "expect": "\\(fail\\).*refuses"
+    },
+    {
+      "id": "W-348/srcset-comma-kept",
+      "requirement": "W-348",
+      "description": "a comma inside a srcset URL is emitted",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "    if (!url || /[\\s,]/.test(url) || url === sanitizeMediaUrl(src) || seen.has(url)) continue;\n",
+          "replace": "    if (!url || /\\s/.test(url) || url === sanitizeMediaUrl(src) || seen.has(url)) continue;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "cannot hide a second image"
+      ],
+      "expect": "\\(fail\\).*cannot hide a second image"
+    },
+    {
+      "id": "W-348/container-min-untyped",
+      "requirement": "W-348",
+      "description": "a container query width is written into CSS without a number check",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "  if (typeof value !== \"number\" || !Number.isInteger(value) || value < 1 || value > 3840) {\n    return undefined;\n  }\n  return value;",
+          "replace": "  return value as number;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/features-w332.test.ts",
+        "-t",
+        "not a whole number"
+      ],
+      "expect": "\\(fail\\).*not a whole number"
+    },
+    {
+      "id": "W-348/iframe-sandbox-dropped",
+      "requirement": "W-348",
+      "description": "a video embed iframe is no longer sandboxed",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "          sandbox:\n            \"allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox\",\n",
+          "replace": "\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/elements/elements.test.ts",
+        "-t",
+        "privacy-enhanced iframes"
+      ],
+      "expect": "\\(fail\\).*privacy-enhanced iframes"
+    },
+    {
+      "id": "W-348/stored-icon-unsanitized",
+      "requirement": "W-348",
+      "description": "a stored icon that fails the allowlist is listed anyway",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/icon-routes.ts",
+          "search": "  if (!tree) return undefined;\n",
+          "replace": "  if (!tree) return { id, name: data.name, svg: data.svg, uploadedAt: data.uploadedAt };\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/icon-uploads.test.ts",
+        "-t",
+        "fails the SVG allowlist"
+      ],
+      "expect": "\\(fail\\).*fails the SVG allowlist"
+    },
+    {
+      "id": "W-348/form-pattern-kept",
+      "requirement": "W-348",
+      "description": "a nested form pattern is copied onto the control",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/form.ts",
+          "search": "      const pattern = safeInputPattern(rules.pattern);\n      if (pattern) limits.pattern = pattern;\n",
+          "replace": "      limits.pattern = rules.pattern;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/form-options.test.ts",
+        "-t",
+        "hang the browser"
+      ],
+      "expect": "\\(fail\\).*hang the browser"
     }
   ]
 }

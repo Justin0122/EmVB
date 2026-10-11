@@ -2,6 +2,8 @@ import { PluginRouteError, type PluginRoute, type RouteContext } from "emdash";
 import { z } from "zod";
 import {
   prepareUploadedSvg,
+  sanitizeSvgMarkup,
+  serialize,
   UPLOAD_SVG_MAX_BYTES,
   type UploadedIcon,
   type UploadedIconItem,
@@ -29,25 +31,6 @@ const store = (ctx: RouteContext<unknown>) => ctx.storage["icons"] as unknown as
 /** The most recent uploads the picker lists. */
 const UPLOAD_LIST_LIMIT = 100;
 
-/** Editors and above: the uploaded icons, newest first. */
-export const iconsRoute: PluginRoute = {
-  permission: "content:edit_any",
-  handler: async (ctx) => {
-    const page = await store(ctx).query({
-      orderBy: { uploadedAt: "desc" },
-      limit: UPLOAD_LIST_LIMIT,
-    });
-    // Only the known fields, whatever else a stored row might carry.
-    const items: UploadedIconItem[] = page.items.map(({ id, data }) => ({
-      id,
-      name: data.name,
-      svg: data.svg,
-      uploadedAt: data.uploadedAt,
-    }));
-    return { items };
-  },
-};
-
 /** A file name without its folder or extension, as the icon's label. */
 export const uploadName = (name: string) =>
   name
@@ -55,6 +38,38 @@ export const uploadName = (name: string) =>
     .replace(/\.svg$/i, "")
     .trim()
     .slice(0, 80) || "Uploaded icon";
+
+/**
+ * One stored upload safe to send to the editor. Markup that no longer passes the SVG allowlist
+ * is left out, so a row written past the upload route cannot carry a script into the picker.
+ */
+export function publicUploadedIcon(id: string, data: UploadedIcon): UploadedIconItem | undefined {
+  if (typeof data.svg !== "string") return undefined;
+  const tree = sanitizeSvgMarkup(data.svg);
+  if (!tree) return undefined;
+  return {
+    id,
+    name: uploadName(typeof data.name === "string" ? data.name : ""),
+    svg: serialize(tree),
+    uploadedAt: typeof data.uploadedAt === "string" ? data.uploadedAt : "",
+  };
+}
+
+/** Editors and above: the uploaded icons, newest first. A row that fails the allowlist is omitted. */
+export const iconsRoute: PluginRoute = {
+  permission: "content:edit_any",
+  handler: async (ctx) => {
+    const page = await store(ctx).query({
+      orderBy: { uploadedAt: "desc" },
+      limit: UPLOAD_LIST_LIMIT,
+    });
+    const items = page.items.flatMap(({ id, data }) => {
+      const item = publicUploadedIcon(id, data);
+      return item ? [item] : [];
+    });
+    return { items };
+  },
+};
 
 const UploadInput = z.object({
   name: z.string().max(255),

@@ -74,6 +74,32 @@ export type RenderResult = {
 const ID = /^[A-Za-z0-9_-]{4,24}$/;
 const HTML_ID = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 
+/** A focal-point percentage, or the fallback when that axis is unset. Anything else is dropped. */
+function focalPercent(value: unknown, fallback: number): number | undefined {
+  if (value === undefined) return fallback;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 100) {
+    return undefined;
+  }
+  return value;
+}
+
+/** `object-position` only when both axes are whole percentages. A string here would break the sheet. */
+function objectPosition(x: unknown, y: unknown): string | undefined {
+  if (x === undefined && y === undefined) return undefined;
+  const px = focalPercent(x, 50);
+  const py = focalPercent(y, 50);
+  if (px === undefined || py === undefined) return undefined;
+  return `${px}% ${py}%`;
+}
+
+/** `@container (min-width)` only for a whole pixel width in the schema's range. */
+function containerQueryMin(value: unknown): number | undefined {
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 1 || value > 3840) {
+    return undefined;
+  }
+  return value;
+}
+
 // Canvas iframe has no allow-scripts (D-011): live YouTube/Vimeo players fail there.
 function videoPreview(node: LayoutNode, attrs: Record<string, string>): VNode | undefined {
   const target = resolveEmbedUrl((node.props as { url: string }).url);
@@ -259,18 +285,18 @@ export function renderPage(
     }
     if (node.container) declarations.push({ property: "container-type", value: "inline-size" });
     if (node.type === "image") {
-      const focal = node.props as { focalX?: number; focalY?: number };
-      if (focal.focalX !== undefined || focal.focalY !== undefined) {
-        declarations.push({
-          property: "object-position",
-          value: `${focal.focalX ?? 50}% ${focal.focalY ?? 50}%`,
-        });
+      const focal = node.props as { focalX?: unknown; focalY?: unknown };
+      const position = objectPosition(focal.focalX, focal.focalY);
+      if (position) {
+        declarations.push({ property: "object-position", value: position });
         declarations.push({ property: "object-fit", value: "cover" });
       }
     }
     if (node.type === "button") {
-      const gap = (node.props as { iconGap?: number }).iconGap;
-      if (typeof gap === "number") declarations.push({ property: "gap", value: `${gap}px` });
+      const gap = (node.props as { iconGap?: unknown }).iconGap;
+      if (typeof gap === "number" && Number.isInteger(gap) && gap >= 0 && gap <= 64) {
+        declarations.push({ property: "gap", value: `${gap}px` });
+      }
     }
     const queryStyle = node.query ? styleDeclarations(node.query.style) : undefined;
     for (const key of queryStyle?.rejected ?? []) {
@@ -298,12 +324,13 @@ export function renderPage(
       mobile.declarations.length > 0 ||
       (hiddenOn?.length ?? 0) > 0;
     const queryDeclarations = queryStyle?.declarations ?? [];
+    const queryMin = containerQueryMin(node.query?.min);
     if (
       ruleId &&
       (declarations.length > 0 ||
         Object.keys(states.states).length > 0 ||
         responsive ||
-        queryDeclarations.length > 0)
+        (queryDeclarations.length > 0 && queryMin !== undefined))
     ) {
       classes.push(`emvb-e-${ruleId}`);
       localRules.push({
@@ -313,8 +340,8 @@ export function renderPage(
         tablet: tablet.declarations,
         mobile: mobile.declarations,
         hiddenOn,
-        ...(queryDeclarations.length > 0 && node.query
-          ? { query: queryDeclarations, queryMin: node.query.min }
+        ...(queryDeclarations.length > 0 && queryMin !== undefined
+          ? { query: queryDeclarations, queryMin }
           : {}),
       });
     }
@@ -323,7 +350,7 @@ export function renderPage(
     if (node.htmlId && HTML_ID.test(node.htmlId)) attrs.id = node.htmlId;
     else if (node.type === "heading" && id && layoutHasToc) attrs.id = `emvb-h-${id}`;
     // W-230: the site's text direction on the root, also a fallback when the host's <html> has none.
-    if (node.dir) attrs.dir = node.dir;
+    if (node.dir === "ltr" || node.dir === "rtl" || node.dir === "auto") attrs.dir = node.dir;
     else if (isRoot && design.direction) attrs.dir = design.direction;
     return attrs;
   };

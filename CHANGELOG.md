@@ -32,6 +32,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Loop link pattern, image and excerpt fields, and filters (W-330).** A collection Loop can link each entry where you choose (`/team/{slug}`, `{id}` works too), show a different image or excerpt field (`photo`, `role`), and list only entries where `field=value` (pairs separated by `;`; a taxonomy name filters by term, the same field twice matches either value). The canvas preview applies field filters; taxonomy filters apply on the published page.
 - **`ch` lengths and negative margins (W-331).** Sizes and spacing take `ch` (the width of a "0"), handy for readable text such as a 65ch max width, and margins can be negative (down to -10000) to pull an element over its neighbour. Padding stays 0 or more.
 
+### Security
+
+- **A URL is the string that was checked (W-348).** An absolute link or media URL that contains spaces, other whitespace, or a backslash is refused. Before, those characters were removed only for the check and the original string was kept, so one image address could name a second host inside `srcset`. A URL with a username or password (`user:pass@host`) is refused, so that password is not published in the page. A relative path may still contain a normal space.
+- **`srcset` candidates cannot contain a comma or a space.** A comma inside one extra image URL is another image request, so that candidate is left out.
+- **Video embeds are sandboxed.** A YouTube or Vimeo iframe can run scripts on its own origin and open popups. It cannot navigate the page that embedded it.
+- **Uploaded icons are checked again when they are listed.** A stored SVG that no longer passes the allowlist is left out of My uploads.
+- **Style numbers stay numbers.** A focal point, a button icon gap, and a container-query width are written into CSS only when they are whole numbers in range. Text direction is only `ltr`, `rtl`, or `auto`.
+- **A form pattern that can hang the browser is left off.** A pattern that does not compile, or that nests quantifiers such as `(a+)+`, is not copied onto the control. Ordinary patterns such as `.+@example.com` still are.
+
 ### Changed
 
 - **The canvas uses the same style scope as the published page.** Editor CSS is prefixed the way public CSS is, and the canvas markup sits in the same scope wrapper.

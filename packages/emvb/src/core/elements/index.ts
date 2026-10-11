@@ -493,7 +493,9 @@ function imageSources(
   const seen = new Set<string>();
   for (const source of sources) {
     const url = sanitizeMediaUrl(source.src);
-    if (!url || url === sanitizeMediaUrl(src) || seen.has(url)) continue;
+    // A comma or space is another srcset candidate, so one field would request a second host.
+    if (!url || /[\s,]/.test(url) || url === sanitizeMediaUrl(src) || seen.has(url)) continue;
+    if (!Number.isInteger(source.width) || source.width < 1 || source.width > 8000) continue;
     seen.add(url);
     parts.push(`${url} ${source.width}w`);
   }
@@ -738,6 +740,9 @@ const video: ElementDefinition<VideoNode> = {
           loading: "lazy",
           referrerpolicy: "strict-origin-when-cross-origin",
           allow: "encrypted-media; picture-in-picture; fullscreen",
+          // The player can run on its own origin. It cannot navigate this page.
+          sandbox:
+            "allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox",
         },
         children: [],
       };

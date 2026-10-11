@@ -40,6 +40,11 @@ describe("sanitizeHref (R-032)", () => {
     "/a>b",
     "/a`b",
     "http://[",
+    "https://example.com/a.png 1w, https://evil.example/x.png",
+    "https://example.com/a\u00a0.png",
+    "https://example.com/a\\b",
+    "https://user:pass@example.com/a",
+    "https://user@example.com/a",
   ])("refuses %p", (input) => {
     expect(sanitizeHref(input)).toBeUndefined();
   });

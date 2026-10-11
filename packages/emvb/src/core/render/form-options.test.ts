@@ -189,4 +189,28 @@ describe("form fields take the definition's type and limits (W-297)", () => {
       '<input type="text" class="ec-form-input" id="emvb-field-text0009" name="nick">',
     );
   });
+
+  test("a form pattern that can hang the browser is left off the control", () => {
+    const bad: PublicFormDefinition = {
+      ...typed,
+      pages: [
+        {
+          fields: [
+            {
+              name: "email",
+              type: "email",
+              label: "Email",
+              required: false,
+              validation: { pattern: "(a+)+" },
+            },
+          ],
+        },
+      ],
+    };
+    const rendered = renderPage(typedLayout, emptyDesign(), {
+      formDefinitions: new Map([["contact", bad]]),
+    }).html;
+    expect(rendered.includes("pattern=")).toBe(false);
+    expect(rendered.includes("(a+)+")).toBe(false);
+  });
 });

@@ -18,6 +18,9 @@ describe("sanitizeMediaUrl (W-024, R-032)", () => {
     "vbscript:msg",
     "<img src=x>",
     "",
+    "https://cdn.example/a.png 1w, https://evil.example/x.png",
+    "https://user:pass@cdn.example/a.png",
+    "https://cdn.example/a\\b.png",
   ])("refuses %s", (input) => {
     expect(sanitizeMediaUrl(input)).toBeUndefined();
   });

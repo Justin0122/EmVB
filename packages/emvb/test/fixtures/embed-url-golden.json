@@ -3762,10 +3762,6 @@
     "https://[::1]/clip.mp4": {
       "kind": "video",
       "src": "https://[::1]/clip.mp4"
-    },
-    "https://user:pass@cdn.example/clip.mp4": {
-      "kind": "video",
-      "src": "https://user:pass@cdn.example/clip.mp4"
     }
   }
 }

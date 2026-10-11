@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { uploadName } from "../../src/server/icon-routes.ts";
+import { publicUploadedIcon, uploadName } from "../../src/server/icon-routes.ts";
 import { createTestRuntime, ROLES, userWithRole } from "./runtime.ts";
 
 // W-239: uploaded SVG icons live in EmVB's plugin storage, sanitized on the server.
@@ -93,6 +93,21 @@ describe("icon upload routes (W-239)", () => {
     expect(again.status).toBe(404);
     const list = await t.route("icons", { user: editor() });
     expect((list.body["data"] as { items: Item[] }).items).toEqual([]);
+  });
+
+  test("a stored upload that fails the SVG allowlist is left out of the list", () => {
+    const kept = publicUploadedIcon("0123456789abcdef", {
+      name: "Mark",
+      svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path d="M0 0"></path></svg>',
+      uploadedAt: "2026-10-10T00:00:00.000Z",
+    });
+    expect(kept?.svg.includes("<path")).toBe(true);
+    const dropped = publicUploadedIcon("0123456789abcdef", {
+      name: "Evil",
+      svg: '<svg viewBox="0 0 1 1" onload="alert(1)"><path d="M0 0"/></svg>',
+      uploadedAt: "2026-10-10T00:00:00.000Z",
+    });
+    expect(dropped).toBeUndefined();
   });
 
   test("a file name becomes a short label", () => {

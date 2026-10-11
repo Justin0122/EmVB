@@ -108,6 +108,30 @@ describe("print, scope, styles merge and page features", () => {
     expect(renderPage(layout, emptyDesign()).css).toContain("object-position:20% 80%");
   });
 
+  test("a srcset URL cannot hide a second image", () => {
+    const layout = page([
+      {
+        id: "img00001",
+        type: "image",
+        props: {
+          src: "https://example.com/a.jpg",
+          alt: "A",
+          sources: [
+            { src: "https://example.com/a.png?q=1,https://evil.example/x.png", width: 800 },
+            { src: "https://example.com/a.png 1w, https://evil.example/x.png", width: 400 },
+          ],
+          focalX: "20%;}body{background:url(https://evil.example/x)}" as unknown as number,
+        },
+      },
+    ]);
+    const html = renderPage(layout, emptyDesign()).html;
+    const css = renderPage(layout, emptyDesign()).css;
+    expect(html.includes("srcset=")).toBe(false);
+    expect(html.includes("evil.example")).toBe(false);
+    expect(css.includes("evil.example")).toBe(false);
+    expect(css.includes("object-position")).toBe(false);
+  });
+
   test("a button can show an icon before the label", () => {
     const layout = page([
       {
@@ -159,5 +183,33 @@ describe("print, scope, styles merge and page features", () => {
     expect(css).toContain("container-type:inline-size");
     expect(css).toContain("@container (min-width:400px)");
     expect(css).not.toContain("@media (min-width:400px)");
+  });
+
+  test("a container width that is not a whole number is not written into CSS", () => {
+    const layout = page([
+      {
+        id: "text0001",
+        type: "text",
+        props: { text: "Hi" },
+        query: { min: "1px);}body{color:red" as unknown as number, style: { color: "#112233" } },
+      },
+    ]);
+    const css = renderPage(layout, emptyDesign()).css;
+    expect(css.includes("@container")).toBe(false);
+    expect(css.includes("color:red")).toBe(false);
+  });
+
+  test("text direction only accepts ltr, rtl or auto", () => {
+    const layout = page([
+      {
+        id: "text0001",
+        type: "text",
+        props: { text: "Hi" },
+        dir: 'ltr" onload="alert(1)' as "ltr",
+      },
+    ]);
+    const html = renderPage(layout, emptyDesign()).html;
+    expect(html.includes("onload")).toBe(false);
+    expect(html.includes('dir="')).toBe(false);
   });
 });
