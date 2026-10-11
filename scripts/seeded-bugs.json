@@ -16216,7 +16216,7 @@
       "description": "Hide on mobile does not change the element",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/Editor.tsx",
+          "file": "packages/emvb/src/admin/editor/editor-chrome.tsx",
           "search": "const hiddenOn = toggleHidden(node.hiddenOn, device);",
           "replace": "const hiddenOn = node.hiddenOn;"
         }
@@ -28325,6 +28325,26 @@
         "hide on device stays off the command palette"
       ],
       "expect": "\\(fail\\).*hide on device stays off the command palette"
+    },
+    {
+      "id": "W-363/dialogs-start-open",
+      "requirement": "W-363",
+      "description": "the leave dialog is open when the editor loads",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/editor-chrome.tsx",
+          "search": "  leave: false,\n",
+          "replace": "  leave: true,\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/editor-chrome.test.tsx",
+        "-t",
+        "dialogs start closed"
+      ],
+      "expect": "\\(fail\\).*dialogs start closed"
     }
   ]
 }

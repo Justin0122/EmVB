@@ -12,9 +12,7 @@ import {
   moveDown,
   moveUp,
   renderPage,
-  toggleHidden,
   withPlainText,
-  type Layout,
   type LayoutNode,
   type PopupDevice,
 } from "../../core/index.ts";
@@ -26,8 +24,12 @@ import { DeviceBar } from "./canvas/DeviceBar.tsx";
 import type { StatePreview } from "./canvas/state-preview.ts";
 import type { StyleStateChoice } from "./panels/settings/StateSwitcher.tsx";
 import { EmptyCanvas } from "./canvas/EmptyCanvas.tsx";
-import { ConflictDialog, DeleteSubtreeDialog, LeaveDialog, RevertDialog } from "./dialogs.tsx";
-import { discardDraft } from "../content-api.ts";
+import {
+  EditorDialogs,
+  hideSelectedOnDevice,
+  initialState,
+  useChromeFlags,
+} from "./editor-chrome.tsx";
 import { EditorOverlay } from "./EditorOverlay.tsx";
 import { useCanvasStyles, useEditorHost } from "./host.ts";
 import { LiveDataProvider, siteOrigin, useLiveData } from "./live-data.tsx";
@@ -36,12 +38,10 @@ import { editorCommands } from "./editor-commands.ts";
 import { ELEMENT_NAMES } from "./element-chrome.ts";
 import { LeftPanel } from "./panels/LeftPanel.tsx";
 import { SettingsPanel } from "./panels/SettingsPanel.tsx";
-import { ShortcutsDialog } from "./ShortcutsDialog.tsx";
 import { SmallScreenNotice } from "./SmallScreenNotice.tsx";
-import { emptyHistory, historyReducer, isDirty, type EditorState } from "./store.ts";
+import { emptyHistory, historyReducer, isDirty } from "./store.ts";
 import { TopBar } from "./TopBar.tsx";
 import {
-  loadEntry,
   useEditorData,
   type EditorData,
   type EditorEntry,
@@ -50,12 +50,7 @@ import {
 import { EDITOR_MIN_WIDTH_QUERY, useMediaQuery } from "./useMediaQuery.ts";
 import { useSectionTemplates } from "./section-templates.ts";
 import { useCollectionPreviews } from "./collection-previews.ts";
-import { PerfMeterDialog } from "./PerfMeter.tsx";
-import { ShareLinkDialog } from "./ShareLink.tsx";
-import { CommandPalette } from "./CommandPalette.tsx";
-import { TimelineDialog } from "./Timeline.tsx";
-import { A11yDialog, A11yScoreButton } from "./A11yCopilot.tsx";
-import { paletteItems } from "./palette-items.ts";
+import { A11yScoreButton } from "./A11yCopilot.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
 import { useEditorCommands } from "./useEditorCommands.ts";
 import { useSave } from "./useSave.ts";
@@ -106,36 +101,6 @@ export function Editor({
 /** How long a refused paste stays outlined on the canvas (W-093). */
 const REFUSAL_MS = 4000;
 
-const initialState = (entry: EditorEntry, design: LoadedDesign): EditorState => ({
-  id: entry.id,
-  page: {
-    title: entry.title,
-    slug: entry.slug,
-    canvasMode: entry.canvasMode,
-    seoTitle: entry.seoTitle,
-    seoDescription: entry.seoDescription,
-    seoCanonical: entry.seoCanonical,
-    seoNoIndex: entry.seoNoIndex,
-    seoImage: entry.seoImage,
-    layout: entry.layout,
-    partType: entry.partType,
-    conditions: entry.conditions,
-    triggers: entry.triggers,
-    float: entry.float,
-  },
-  status: entry.status,
-  rev: entry.rev,
-  design: design.design,
-  designRevision: design.revision,
-  publishedRevision: design.publishedRevision,
-  designUnpublished: design.unpublished,
-  ...(design.published ? { publishedDesign: design.published } : {}),
-  selectedId: null,
-  version: 0,
-  savedVersion: 0,
-  lastDeleted: null,
-});
-
 function EditorApp({
   fetcher,
   entry,
@@ -159,7 +124,7 @@ function EditorApp({
   const { exit } = host;
   const saver = useSave(fetcher, state, dispatch, collection);
   const toasts = React.useMemo(() => createKumoToastManager(), []);
-  const [siteStylesOpen, setSiteStylesOpen] = React.useState(false);
+  const chrome = useChromeFlags();
   const [device, setDevice] = React.useState<PopupDevice>("desktop");
   const [zoom, setZoom] = React.useState<CanvasZoom>("fit");
   const [scale, setScale] = React.useState(1);
@@ -167,16 +132,7 @@ function EditorApp({
   const onStyleState = React.useCallback((id: string, choice: StyleStateChoice) => {
     setStatePreview(choice === "normal" ? null : { id, state: choice });
   }, []);
-  const [shortcutsOpen, setShortcutsOpen] = React.useState(false);
-  const [perfOpen, setPerfOpen] = React.useState(false);
-  const [shareOpen, setShareOpen] = React.useState(false);
-  const [paletteOpen, setPaletteOpen] = React.useState(false);
-  const [timelineOpen, setTimelineOpen] = React.useState(false);
-  const [a11yOpen, setA11yOpen] = React.useState(false);
   const [announcement, setAnnouncement] = React.useState("");
-  const [leaveOpen, setLeaveOpen] = React.useState(false);
-  const [leaving, setLeaving] = React.useState(false);
-  const [revertOpen, setRevertOpen] = React.useState(false);
   const latest = React.useRef(state);
   latest.current = state;
   const { busy, save, publish, preview, changeDesign, publishStyles } = useEditorCommands({
@@ -242,8 +198,8 @@ function EditorApp({
   }, [fetcher]);
 
   React.useEffect(() => {
-    if (leaving) exit();
-  }, [leaving, exit]);
+    if (chrome.leaving) exit();
+  }, [chrome.leaving, exit]);
 
   const sectionTemplates = useSectionTemplates(state.page.layout, fetcher);
   // W-307: bound fields show live values on the canvas (site settings, preview URL parameters).
@@ -285,16 +241,6 @@ function EditorApp({
       state.page.layout ? auditPage(state.page.layout, state.design) : { score: 100, issues: [] },
     [state.page.layout, state.design],
   );
-  const applyEdit = (layout: Layout, note: string) => {
-    dispatch({
-      type: "apply-arranged",
-      layout,
-      selected: latest.current.selectedId ?? layout.root.id,
-    });
-    setAnnouncement(note);
-    toasts.add({ title: note, description: "Undo takes it back." });
-  };
-
   const shortcutHandlers: ShortcutHandlers = {
     save,
     remove,
@@ -303,48 +249,14 @@ function EditorApp({
     copy: clipboard.copy,
     paste: clipboard.paste,
     pasteStyle: clipboard.pasteStyle,
-    palette: () => setPaletteOpen(true),
+    palette: () => chrome.open("palette"),
   };
   const handlers = React.useRef(shortcutHandlers);
   handlers.current = shortcutHandlers;
   const onKeyDown = useEditorShortcuts({ latest, dispatch, handlers });
 
-  const reload = async () => {
-    saver.closeConflict();
-    try {
-      const fresh = await loadEntry(fetcher, state.id, collection);
-      dispatch({
-        type: "reset",
-        state: initialState(fresh, {
-          design: state.design,
-          revision: state.designRevision,
-          publishedRevision: state.publishedRevision ?? null,
-          unpublished: state.designUnpublished === true,
-        }),
-      });
-      saver.markIdle();
-    } catch {
-      window.location.reload();
-    }
-  };
-
   // W-193: a saved draft is dropped on the server; unsaved edits on a published entry only locally.
   const canRevert = state.status === "changed" || (state.status === "published" && dirty);
-  const revert = async () => {
-    setRevertOpen(false);
-    try {
-      if (latest.current.status === "changed") {
-        await discardDraft(fetcher, collection, latest.current.id, latest.current.rev);
-      }
-      await reload();
-      toasts.add({ title: "Reverted to the published version" });
-    } catch (error) {
-      toasts.add({
-        title: "Couldn't revert",
-        description: error instanceof Error ? error.message : String(error),
-      });
-    }
-  };
 
   const selection: CanvasSelection = {
     selectedId: selectedNode ? state.selectedId : null,
@@ -374,28 +286,14 @@ function EditorApp({
     undo: () => dispatch({ type: "undo" }),
     redo: () => dispatch({ type: "redo" }),
     deselect: () => dispatch({ type: "select", id: null }),
-    openSiteStyles: () => setSiteStylesOpen(true),
-    openA11y: () => setA11yOpen(true),
-    openTimeline: () => setTimelineOpen(true),
-    openShare: () => setShareOpen(true),
-    openWeight: () => setPerfOpen(true),
+    openSiteStyles: () => chrome.open("siteStyles"),
+    openA11y: () => chrome.open("a11y"),
+    openTimeline: () => chrome.open("timeline"),
+    openShare: () => chrome.open("share"),
+    openWeight: () => chrome.open("perf"),
     setDevice,
-    openShortcuts: () => setShortcutsOpen(true),
-    toggleHidden: () => {
-      const id = state.selectedId;
-      const node = state.page.layout && id ? findNode(state.page.layout, id) : undefined;
-      if (!node) return;
-      const hiddenOn = toggleHidden(node.hiddenOn, device);
-      dispatch({
-        type: "update-node",
-        id: node.id,
-        update: (current) => {
-          const next = { ...current, hiddenOn };
-          if (!hiddenOn) delete next.hiddenOn;
-          return next;
-        },
-      });
-    },
+    openShortcuts: () => chrome.open("shortcuts"),
+    toggleHidden: () => hideSelectedOnDevice(state, device, dispatch),
   };
   const paletteActions = editorCommands({
     surface: "palette",
@@ -422,8 +320,8 @@ function EditorApp({
   return (
     <EditorOverlay
       label={`EmVB editor: ${state.page.title || "Untitled page"}`}
-      dirty={dirty && !leaving}
-      onPalette={() => setPaletteOpen(true)}
+      dirty={dirty && !chrome.leaving}
+      onPalette={() => chrome.open("palette")}
     >
       <Toasty toastManager={toasts}>
         {wideEnough ? (
@@ -433,18 +331,18 @@ function EditorApp({
               dirty={dirty}
               status={saver.status}
               busy={busy}
-              onExit={() => (dirty ? setLeaveOpen(true) : exit())}
-              onShortcuts={() => setShortcutsOpen(true)}
-              onSiteStyles={() => setSiteStylesOpen(true)}
+              onExit={() => (dirty ? chrome.open("leave") : exit())}
+              onShortcuts={() => chrome.open("shortcuts")}
+              onSiteStyles={() => chrome.open("siteStyles")}
               onPreview={(size) => preview(size ?? device)}
               onSave={() => void save()}
               onPublish={() => void publish()}
               stylesUnpublished={state.designUnpublished === true}
               canRevert={canRevert}
-              onRevert={() => setRevertOpen(true)}
+              onRevert={() => chrome.open("revert")}
               tools={
                 <>
-                  <A11yScoreButton report={a11y} onOpen={() => setA11yOpen(true)} />
+                  <A11yScoreButton report={a11y} onOpen={() => chrome.open("a11y")} />
                   <Button
                     variant="ghost"
                     shape="square"
@@ -453,7 +351,7 @@ function EditorApp({
                     title="Page weight"
                     data-emvb-perf-open=""
                     icon={<GaugeIcon aria-hidden="true" />}
-                    onClick={() => setPerfOpen(true)}
+                    onClick={() => chrome.open("perf")}
                   />
                   <Button
                     variant="ghost"
@@ -463,7 +361,7 @@ function EditorApp({
                     title="Version timeline"
                     data-emvb-timeline-open=""
                     icon={<ClockCounterClockwiseIcon aria-hidden="true" />}
-                    onClick={() => setTimelineOpen(true)}
+                    onClick={() => chrome.open("timeline")}
                   />
                   <Button
                     variant="ghost"
@@ -473,7 +371,7 @@ function EditorApp({
                     title="Share as a playground link"
                     data-emvb-share-open=""
                     icon={<ShareNetworkIcon aria-hidden="true" />}
-                    onClick={() => setShareOpen(true)}
+                    onClick={() => chrome.open("share")}
                   />
                 </>
               }
@@ -557,8 +455,8 @@ function EditorApp({
                 latest={latest}
                 dispatch={dispatch}
                 selectedNode={selectedNode}
-                siteStylesOpen={siteStylesOpen}
-                onCloseSiteStyles={() => setSiteStylesOpen(false)}
+                siteStylesOpen={chrome.flags.siteStyles}
+                onCloseSiteStyles={() => chrome.close("siteStyles")}
                 onDesignChange={changeDesign}
                 onPublishStyles={publishStyles}
                 onDesignItemDeleted={(deletion) => {
@@ -579,113 +477,28 @@ function EditorApp({
         ) : (
           <SmallScreenNotice />
         )}
-        <DeleteSubtreeDialog
-          open={!!deleteAsk}
-          onOpenChange={(open) => !open && setDeleteAsk(null)}
-          label={deleteAsk?.label ?? "Element"}
-          count={deleteAsk?.count ?? 0}
-          onConfirm={() => deleteAsk && finishDelete(deleteAsk.id)}
-        />
-        <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-        <CommandPalette
-          open={paletteOpen}
-          onOpenChange={setPaletteOpen}
-          items={
-            paletteOpen
-              ? paletteItems({
-                  layout: state.page.layout,
-                  design: state.design,
-                  selected: selectedNode ?? null,
-                  formsAvailable,
-                  insert: addFromPanel,
-                  insertRecipe: addRecipe,
-                  select: (id) => dispatch({ type: "select", id }),
-                  applyClass: (nodeId, classId) =>
-                    dispatch({
-                      type: "update-node",
-                      id: nodeId,
-                      update: (node) =>
-                        (node.classes?.length ?? 0) >= 20 || node.classes?.includes(classId)
-                          ? node
-                          : ({
-                              ...node,
-                              classes: [...(node.classes ?? []), classId],
-                            } as LayoutNode),
-                    }),
-                  actions: paletteActions.map((command) => ({
-                    id: command.id,
-                    label: command.label,
-                    hint: command.hint,
-                    keywords: command.keywords,
-                    run: () => command.run(),
-                  })),
-                })
-              : []
-          }
-        />
-        <A11yDialog
-          open={a11yOpen}
-          onOpenChange={setA11yOpen}
-          report={a11y}
-          layout={state.page.layout}
-          onSelect={(id) => dispatch({ type: "select", id })}
-          onApply={applyEdit}
-        />
-        <TimelineDialog
-          open={timelineOpen}
-          onOpenChange={setTimelineOpen}
+        <EditorDialogs
+          chrome={chrome}
           fetcher={fetcher}
           collection={collection}
-          entryId={state.id}
-          current={state.page.layout}
-          design={state.design}
+          state={state}
+          latest={latest}
+          dispatch={dispatch}
+          saver={saver}
+          toasts={toasts}
+          save={save}
+          a11y={a11y}
           canvasStyles={canvasStyles}
-          onApply={(layout, note) => {
-            dispatch({
-              type: "apply-arranged",
-              layout,
-              selected: latest.current.selectedId ?? layout.root.id,
-            });
-            setAnnouncement(note);
-            toasts.add({ title: note, description: "Undo takes it back. Save to keep it." });
-          }}
-        />
-        <ShareLinkDialog
-          open={shareOpen}
-          onOpenChange={setShareOpen}
-          layout={state.page.layout}
-          design={state.design}
-          title={state.page.title || "Shared page"}
-          {...(host.playgroundUrl ? { base: host.playgroundUrl } : {})}
-        />
-        <PerfMeterDialog
-          open={perfOpen}
-          onOpenChange={setPerfOpen}
-          layout={state.page.layout}
-          design={state.design}
-          onSelect={(id) => dispatch({ type: "select", id })}
-        />
-        <ConflictDialog
-          open={saver.conflict}
-          onOpenChange={(open) => !open && saver.closeConflict()}
-          onReload={() => void reload()}
-          onOverwrite={() => void saver.overwrite()}
-        />
-        <RevertDialog
-          open={revertOpen}
-          onOpenChange={setRevertOpen}
-          onRevert={() => void revert()}
-        />
-        <LeaveDialog
-          open={leaveOpen}
-          onOpenChange={setLeaveOpen}
-          onDiscard={() => setLeaving(true)}
-          onSaveAndLeave={() =>
-            void save().then((rev) => {
-              setLeaveOpen(false);
-              if (rev) setLeaving(true);
-            })
-          }
+          selectedNode={selectedNode ?? null}
+          formsAvailable={formsAvailable}
+          paletteActions={paletteActions}
+          addFromPanel={addFromPanel}
+          addRecipe={addRecipe}
+          deleteAsk={deleteAsk}
+          setDeleteAsk={setDeleteAsk}
+          finishDelete={finishDelete}
+          playgroundUrl={host.playgroundUrl}
+          setAnnouncement={setAnnouncement}
         />
       </Toasty>
     </EditorOverlay>
