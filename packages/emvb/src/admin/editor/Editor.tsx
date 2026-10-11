@@ -32,6 +32,7 @@ import { EditorOverlay } from "./EditorOverlay.tsx";
 import { useCanvasStyles, useEditorHost } from "./host.ts";
 import { LiveDataProvider, siteOrigin, useLiveData } from "./live-data.tsx";
 import { newElement } from "./dnd/new-element.ts";
+import { editorCommands } from "./editor-commands.ts";
 import { ELEMENT_NAMES } from "./element-chrome.ts";
 import { LeftPanel } from "./panels/LeftPanel.tsx";
 import { SettingsPanel } from "./panels/SettingsPanel.tsx";
@@ -361,6 +362,63 @@ function EditorApp({
     clipboard,
   };
 
+  const canArrangeSelection =
+    !!selectedNode && !!state.page.layout && selectedNode.id !== state.page.layout.root.id;
+  const commandRunners = {
+    duplicate,
+    remove,
+    wrap,
+    save: () => void save(),
+    publish: () => void publish(),
+    preview: () => preview(device),
+    undo: () => dispatch({ type: "undo" }),
+    redo: () => dispatch({ type: "redo" }),
+    deselect: () => dispatch({ type: "select", id: null }),
+    openSiteStyles: () => setSiteStylesOpen(true),
+    openA11y: () => setA11yOpen(true),
+    openTimeline: () => setTimelineOpen(true),
+    openShare: () => setShareOpen(true),
+    openWeight: () => setPerfOpen(true),
+    setDevice,
+    openShortcuts: () => setShortcutsOpen(true),
+    toggleHidden: () => {
+      const id = state.selectedId;
+      const node = state.page.layout && id ? findNode(state.page.layout, id) : undefined;
+      if (!node) return;
+      const hiddenOn = toggleHidden(node.hiddenOn, device);
+      dispatch({
+        type: "update-node",
+        id: node.id,
+        update: (current) => {
+          const next = { ...current, hiddenOn };
+          if (!hiddenOn) delete next.hiddenOn;
+          return next;
+        },
+      });
+    },
+  };
+  const paletteActions = editorCommands({
+    surface: "palette",
+    targetId: selectedNode ? selectedNode.id : null,
+    isRoot: !canArrangeSelection,
+    isParent: false,
+    device,
+    canDuplicate: canArrangeSelection,
+    canDelete: canArrangeSelection,
+    a11yHint: `${a11y.score}/100`,
+    runners: commandRunners,
+  });
+  const hideOnDevice = editorCommands({
+    surface: "device",
+    targetId: state.selectedId,
+    isRoot: false,
+    isParent: false,
+    device,
+    canDuplicate: false,
+    canDelete: false,
+    runners: commandRunners,
+  })[0];
+
   return (
     <EditorOverlay
       label={`EmVB editor: ${state.page.title || "Untitled page"}`}
@@ -454,27 +512,13 @@ function EditorApp({
                     !!state.selectedId &&
                     !!findNode(state.page.layout, state.selectedId)?.hiddenOn?.includes(device)
                   }
-                  canHide={!!state.selectedId}
+                  canHide={!!hideOnDevice && !hideOnDevice.disabled}
+                  hideLabel={hideOnDevice?.label ?? `Hide on ${device}`}
                   onDevice={setDevice}
                   zoom={zoom}
                   scale={scale}
                   onZoom={setZoom}
-                  onToggleHidden={() => {
-                    const id = state.selectedId;
-                    const node =
-                      state.page.layout && id ? findNode(state.page.layout, id) : undefined;
-                    if (!node) return;
-                    const hiddenOn = toggleHidden(node.hiddenOn, device);
-                    dispatch({
-                      type: "update-node",
-                      id: node.id,
-                      update: (current) => {
-                        const next = { ...current, hiddenOn };
-                        if (!hiddenOn) delete next.hiddenOn;
-                        return next;
-                      },
-                    });
-                  }}
+                  onToggleHidden={() => hideOnDevice?.run()}
                 />
                 {rendered ? (
                   <CanvasFrame
@@ -568,125 +612,13 @@ function EditorApp({
                               classes: [...(node.classes ?? []), classId],
                             } as LayoutNode),
                     }),
-                  actions: [
-                    ...(selectedNode && selectedNode.id !== state.page.layout?.root.id
-                      ? [
-                          {
-                            id: "wrap-flexbox",
-                            label: "Wrap in Flexbox",
-                            keywords: "wrap box container",
-                            run: () => wrap(selectedNode.id, "flexbox"),
-                          },
-                          {
-                            id: "wrap-grid",
-                            label: "Wrap in Grid",
-                            keywords: "wrap box columns",
-                            run: () => wrap(selectedNode.id, "grid"),
-                          },
-                          {
-                            id: "wrap-div",
-                            label: "Wrap in Div Block",
-                            keywords: "wrap box",
-                            run: () => wrap(selectedNode.id, "div-block"),
-                          },
-                        ]
-                      : []),
-                    { id: "save", label: "Save draft", hint: "Ctrl/Cmd+S", run: () => void save() },
-                    { id: "publish", label: "Publish", run: () => void publish() },
-                    {
-                      id: "preview",
-                      label: "Preview",
-                      keywords: "open view",
-                      run: () => preview(device),
-                    },
-                    {
-                      id: "undo",
-                      label: "Undo",
-                      hint: "Ctrl/Cmd+Z",
-                      run: () => dispatch({ type: "undo" }),
-                    },
-                    {
-                      id: "redo",
-                      label: "Redo",
-                      hint: "Ctrl/Cmd+Shift+Z",
-                      run: () => dispatch({ type: "redo" }),
-                    },
-                    ...(selectedNode &&
-                    state.page.layout &&
-                    selectedNode.id !== state.page.layout.root.id
-                      ? [
-                          {
-                            id: "duplicate",
-                            label: "Duplicate selected element",
-                            hint: "Ctrl/Cmd+D",
-                            run: () => duplicate(selectedNode.id),
-                          },
-                          {
-                            id: "delete",
-                            label: "Delete selected element",
-                            hint: "Delete",
-                            run: () => remove(selectedNode.id),
-                          },
-                        ]
-                      : []),
-                    {
-                      id: "deselect",
-                      label: "Clear selection",
-                      hint: "Esc",
-                      run: () => dispatch({ type: "select", id: null }),
-                    },
-                    {
-                      id: "site-styles",
-                      label: "Open Site styles",
-                      keywords: "design variables classes colors fonts",
-                      run: () => setSiteStylesOpen(true),
-                    },
-                    {
-                      id: "a11y",
-                      label: "Check accessibility",
-                      hint: `${a11y.score}/100`,
-                      keywords: "a11y contrast alt headings audit",
-                      run: () => setA11yOpen(true),
-                    },
-                    {
-                      id: "timeline",
-                      label: "Version timeline",
-                      keywords: "history revisions restore diff",
-                      run: () => setTimelineOpen(true),
-                    },
-                    {
-                      id: "share",
-                      label: "Share as a playground link",
-                      keywords: "copy link url playground share send",
-                      run: () => setShareOpen(true),
-                    },
-                    {
-                      id: "weight",
-                      label: "Show page weight",
-                      keywords: "performance budget size speed",
-                      run: () => setPerfOpen(true),
-                    },
-                    {
-                      id: "device-desktop",
-                      label: "View on desktop",
-                      run: () => setDevice("desktop"),
-                    },
-                    {
-                      id: "device-tablet",
-                      label: "View on tablet",
-                      run: () => setDevice("tablet"),
-                    },
-                    {
-                      id: "device-mobile",
-                      label: "View on mobile",
-                      run: () => setDevice("mobile"),
-                    },
-                    {
-                      id: "shortcuts",
-                      label: "Keyboard shortcuts",
-                      run: () => setShortcutsOpen(true),
-                    },
-                  ],
+                  actions: paletteActions.map((command) => ({
+                    id: command.id,
+                    label: command.label,
+                    hint: command.hint,
+                    keywords: command.keywords,
+                    run: () => command.run(),
+                  })),
                 })
               : []
           }

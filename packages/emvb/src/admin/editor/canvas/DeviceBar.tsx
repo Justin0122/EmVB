@@ -31,6 +31,7 @@ export function DeviceBar({
   device,
   hidden,
   canHide,
+  hideLabel,
   onDevice,
   onToggleHidden,
   zoom = "fit",
@@ -41,6 +42,8 @@ export function DeviceBar({
   /** Whether the selected element is hidden on `device`. */
   hidden: boolean;
   canHide: boolean;
+  /** From the hide-on-device command, so the checkbox wording has one source. */
+  hideLabel: string;
   onDevice: (device: PopupDevice) => void;
   onToggleHidden: () => void;
   /** Fit or 100% (W-158), with the current on-screen scale for the readout. */
@@ -71,7 +74,7 @@ export function DeviceBar({
       </div>
       <label className="emvb-device-hide">
         <input type="checkbox" checked={hidden} disabled={!canHide} onChange={onToggleHidden} />
-        Hide on {LABELS[device].toLowerCase()}
+        {hideLabel}
       </label>
       {onZoom && (
         <Button

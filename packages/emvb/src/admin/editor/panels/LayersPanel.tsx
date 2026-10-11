@@ -16,6 +16,7 @@ import {
 } from "../../../core/index.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
+import { editorCommands } from "../editor-commands.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
 import { StateDot } from "./settings/StateSwitcher.tsx";
 import type { ClipboardActions } from "../useClipboardActions.ts";
@@ -75,47 +76,33 @@ function menuItems(
   clip: ClipboardActions | undefined,
   rename: () => void,
 ): MenuItem[] {
-  const naming: MenuItem[] = actions.onRename ? [{ label: "Rename", run: rename }] : [];
-  const parent = isParentNode(node);
-  const clipboard: MenuItem[] = clip
-    ? [
-        { label: "Copy", run: clip.copy },
-        ...(isRoot
-          ? []
-          : [
-              {
-                label: "Paste",
-                run: (id: string) => clip.paste(id),
-                disabled: !!clip.pasteBlocked,
-              },
-            ]),
-        ...(parent
-          ? [
-              {
-                label: "Paste inside",
-                run: (id: string) => clip.paste(id, "inside"),
-                disabled: !!clip.pasteBlocked,
-              },
-            ]
-          : []),
-      ]
-    : [];
-  const style: MenuItem[] = clip
-    ? [
-        { label: "Copy style", run: clip.copyStyle },
-        { label: "Paste style", run: clip.pasteStyle, disabled: !!clip.pasteStyleBlocked },
-      ]
-    : [];
-  if (isRoot) return [...naming, ...clipboard, ...style];
-  return [
-    ...naming,
-    ...clipboard,
-    { label: "Duplicate", run: actions.onDuplicate },
-    ...style,
-    { label: "Move up", run: actions.onMoveUp },
-    { label: "Move down", run: actions.onMoveDown },
-    { label: "Delete", run: actions.onDelete, className: "emvb-danger-text" },
-  ];
+  return editorCommands({
+    surface: "layers",
+    targetId: node.id,
+    isRoot,
+    isParent: isParentNode(node),
+    device: "desktop",
+    canDuplicate: !isRoot,
+    canDelete: !isRoot,
+    runners: {
+      rename: actions.onRename ? rename : undefined,
+      duplicate: actions.onDuplicate,
+      remove: actions.onDelete,
+      moveUp: actions.onMoveUp,
+      moveDown: actions.onMoveDown,
+      copy: clip?.copy,
+      paste: clip?.paste,
+      copyStyle: clip?.copyStyle,
+      pasteStyle: clip?.pasteStyle,
+      pasteBlocked: clip?.pasteBlocked,
+      pasteStyleBlocked: clip?.pasteStyleBlocked,
+    },
+  }).map((command) => ({
+    label: command.label,
+    run: () => command.run(),
+    disabled: command.disabled,
+    className: command.danger ? "emvb-danger-text" : undefined,
+  }));
 }
 
 /** What a key does in the tree: select another row, toggle the selected one, or nothing. */

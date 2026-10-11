@@ -1495,8 +1495,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
-          "search": "    if (isTextField(event.target) || inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"z\") {\n      event.preventDefault();\n      dispatch(event.shiftKey ? { type: \"redo\" } : { type: \"undo\" });\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"y\") {\n      event.preventDefault();\n      dispatch({ type: \"redo\" });\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === \"d\" && selected) {",
-          "replace": "    if (inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"z\") {\n      event.preventDefault();\n      dispatch(event.shiftKey ? { type: \"redo\" } : { type: \"undo\" });\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"y\") {\n      event.preventDefault();\n      dispatch({ type: \"redo\" });\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === \"d\" && selected) {"
+          "search": "    if (isTextField(event.target) || inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"z\") {\n      event.preventDefault();\n      runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"y\") {\n      event.preventDefault();\n      runCommand(runners(), \"redo\", null);\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === \"d\" && selected) {",
+          "replace": "    if (inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"z\") {\n      event.preventDefault();\n      runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"y\") {\n      event.preventDefault();\n      runCommand(runners(), \"redo\", null);\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === \"d\" && selected) {"
         }
       ],
       "command": [
@@ -2999,8 +2999,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
-          "search": "{ label: \"Move down\", run: actions.onMoveDown },",
-          "replace": "{ label: \"Move down\", run: actions.onMoveUp },"
+          "search": "      moveDown: actions.onMoveDown,",
+          "replace": "      moveDown: actions.onMoveUp,"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/layers-panel.test.tsx"],
@@ -15489,8 +15489,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
-          "search": "      if (event.shiftKey) handlers.current.pasteStyle(selected);",
-          "replace": "      if (event.shiftKey && !selected) handlers.current.pasteStyle(selected);"
+          "search": "      runCommand(runners(), event.shiftKey ? \"paste-style\" : \"paste\", selected);",
+          "replace": "      runCommand(runners(), event.shiftKey && !selected ? \"paste-style\" : \"paste\", selected);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/clipboard.test.tsx"],
@@ -15600,9 +15600,9 @@
       "description": "Paste inside is offered on elements that can't hold any",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
-          "search": "        ...(parent\n",
-          "replace": "        ...(true\n"
+          "file": "packages/emvb/src/admin/editor/editor-commands.ts",
+          "search": "  if (id === \"paste-inside\") return clip && input.isParent;\n",
+          "replace": "  if (id === \"paste-inside\") return clip && true;\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/layers-panel.test.tsx"],
@@ -15642,9 +15642,9 @@
       "description": "Layers Paste inside pastes after",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
-          "search": "                run: (id: string) => clip.paste(id, \"inside\"),",
-          "replace": "                run: (id: string) => clip.paste(id),"
+          "file": "packages/emvb/src/admin/editor/editor-commands.ts",
+          "search": "      runners.paste?.(targetId, \"inside\");",
+          "replace": "      runners.paste?.(targetId);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/layers-panel.test.tsx"],
@@ -15670,9 +15670,9 @@
       "description": "the canvas Paste stays on with nothing copied",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/SelectionOverlay.tsx",
-          "search": "          disabled={!!clipboard.pasteBlocked}\n",
-          "replace": ""
+          "file": "packages/emvb/src/admin/editor/editor-commands.ts",
+          "search": "  if (id === \"paste\" || id === \"paste-inside\") return !!input.runners.pasteBlocked;\n",
+          "replace": "  if (id === \"paste\" || id === \"paste-inside\") return false;\n"
         }
       ],
       "command": [
@@ -15688,9 +15688,9 @@
       "description": "the canvas Copy style copies the element",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/canvas/SelectionOverlay.tsx",
-          "search": "onClick={() => clipboard.copyStyle(selectedId)}",
-          "replace": "onClick={() => clipboard.copy(selectedId)}"
+          "file": "packages/emvb/src/admin/editor/editor-commands.ts",
+          "search": "      if (targetId) runners.copyStyle?.(targetId);",
+          "replace": "      if (targetId) runners.copy?.(targetId);"
         }
       ],
       "command": [
@@ -15728,9 +15728,9 @@
       "description": "Layers Paste style copies the style instead",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
-          "search": "        { label: \"Paste style\", run: clip.pasteStyle, disabled: !!clip.pasteStyleBlocked },",
-          "replace": "        { label: \"Paste style\", run: clip.copyStyle, disabled: !!clip.pasteStyleBlocked },"
+          "file": "packages/emvb/src/admin/editor/editor-commands.ts",
+          "search": "      runners.pasteStyle?.(targetId);",
+          "replace": "      runners.copyStyle?.(targetId);"
         }
       ],
       "command": [
@@ -16055,8 +16055,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
-          "search": "dispatch(event.shiftKey ? { type: \"redo\" } : { type: \"undo\" });",
-          "replace": "dispatch({ type: \"select\", id: latest.current.selectedId });"
+          "search": "runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);",
+          "replace": "runCommand(runners(), event.shiftKey ? \"redo\" : \"save\", null);"
         }
       ],
       "command": [
@@ -16075,8 +16075,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
-          "search": "dispatch({ type: \"redo\" });",
-          "replace": "dispatch({ type: \"undo\" });"
+          "search": "      runCommand(runners(), \"redo\", null);",
+          "replace": "      runCommand(runners(), \"undo\", null);"
         }
       ],
       "command": [
@@ -16115,8 +16115,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
-          "search": "dispatch(event.shiftKey ? { type: \"redo\" } : { type: \"undo\" });",
-          "replace": "dispatch({ type: \"select\", id: latest.current.selectedId });"
+          "search": "runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);",
+          "replace": "runCommand(runners(), event.shiftKey ? \"redo\" : \"save\", null);"
         }
       ],
       "command": [
@@ -28305,6 +28305,26 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/element-chrome.test.ts"],
       "expect": "\\(fail\\).*every element type has an icon"
+    },
+    {
+      "id": "W-362/hide-on-palette",
+      "requirement": "W-362",
+      "description": "Hide on device shows up in the command palette",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/editor-commands.ts",
+          "search": "  { id: \"hide-on-device\", labels: {}, surfaces: [\"device\"] },\n",
+          "replace": "  { id: \"hide-on-device\", labels: {}, surfaces: [\"device\", \"palette\"] },\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/editor-commands.test.ts",
+        "-t",
+        "hide on device stays off the command palette"
+      ],
+      "expect": "\\(fail\\).*hide on device stays off the command palette"
     }
   ]
 }

@@ -9,6 +9,7 @@ import {
   TrashIcon,
 } from "@phosphor-icons/react";
 import type { CanvasSelection } from "./CanvasFrame.tsx";
+import { editorCommands, type EditorCommand } from "../editor-commands.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
 
@@ -85,6 +86,8 @@ export function SelectionOverlay({
   editing?: boolean;
 }) {
   const show = selected || dropLine || invalid || dropTarget;
+  const commands = selectedId ? overlayCommands(selection, selectedId) : [];
+  const clip = selection.clipboard;
   return (
     <div className="emvb-overlay" aria-hidden={show ? undefined : true}>
       {dropTarget && (
@@ -153,31 +156,34 @@ export function SelectionOverlay({
               </button>
             )}
             <span>{selection.labelFor(selectedId)}</span>
-            {selection.canDuplicate(selectedId) && (
-              <button
-                type="button"
-                className="emvb-overlay-action"
-                aria-label="Duplicate element"
-                title="Duplicate element"
-                onClick={() => selection.onDuplicate(selectedId)}
-              >
-                <CopyIcon size={16} aria-hidden="true" />
-              </button>
-            )}
-            {selection.clipboard && (
-              <ClipboardMenu clipboard={selection.clipboard} selectedId={selectedId} />
-            )}
-            {selection.canDelete(selectedId) && (
-              <button
-                type="button"
-                className="emvb-overlay-action"
-                aria-label="Delete element"
-                title="Delete element"
-                onClick={() => selection.onDelete(selectedId)}
-              >
-                <TrashIcon size={16} aria-hidden="true" />
-              </button>
-            )}
+            {commands.map((command) => {
+              if (command.id === "duplicate" || command.id === "delete") {
+                const Icon = command.id === "duplicate" ? CopyIcon : TrashIcon;
+                return (
+                  <button
+                    key={command.id}
+                    type="button"
+                    className="emvb-overlay-action"
+                    aria-label={command.label}
+                    title={command.label}
+                    onClick={() => command.run()}
+                  >
+                    <Icon size={16} aria-hidden="true" />
+                  </button>
+                );
+              }
+              if (command.id === "copy" && clip && selectedId) {
+                return (
+                  <ClipboardMenu
+                    key="clipboard"
+                    clipboard={clip}
+                    commands={commands}
+                    selectedId={selectedId}
+                  />
+                );
+              }
+              return null;
+            })}
           </div>
         </>
       )}
@@ -185,15 +191,54 @@ export function SelectionOverlay({
   );
 }
 
+const CLIP_ICONS = {
+  copy: CopySimpleIcon,
+  paste: ClipboardTextIcon,
+  "copy-style": PaintBrushIcon,
+  "paste-style": PaintBrushIcon,
+} as const;
+
+const CLIP_MENU_IDS = new Set(["copy", "paste", "copy-style", "paste-style"]);
+
+function overlayCommands(selection: CanvasSelection, selectedId: string): EditorCommand[] {
+  const clip = selection.clipboard;
+  return editorCommands({
+    surface: "overlay",
+    targetId: selectedId,
+    isRoot: false,
+    isParent: false,
+    device: "desktop",
+    canDuplicate: selection.canDuplicate(selectedId),
+    canDelete: selection.canDelete(selectedId),
+    runners: {
+      duplicate: selection.onDuplicate,
+      remove: selection.onDelete,
+      ...(clip
+        ? {
+            copy: clip.copy,
+            paste: clip.paste,
+            copyStyle: clip.copyStyle,
+            pasteStyle: clip.pasteStyle,
+            pasteBlocked: clip.pasteBlocked,
+            pasteStyleBlocked: clip.pasteStyleBlocked,
+          }
+        : {}),
+    },
+  });
+}
+
 /** Copy and paste on the selected element (W-093); paste items say why when they're unavailable. */
 function ClipboardMenu({
   clipboard,
+  commands,
   selectedId,
 }: {
   clipboard: NonNullable<CanvasSelection["clipboard"]>;
+  commands: readonly EditorCommand[];
   selectedId: string;
 }) {
   const hint = clipboard.pasteStyleBlocked ?? clipboard.pasteBlocked;
+  const items = commands.filter((command) => CLIP_MENU_IDS.has(command.id));
   return (
     <DropdownMenu>
       <DropdownMenu.Trigger>
@@ -207,27 +252,22 @@ function ClipboardMenu({
         </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content data-emvb-clipboard-menu={selectedId}>
-        <DropdownMenu.Item icon={CopySimpleIcon} onClick={() => clipboard.copy(selectedId)}>
-          Copy
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          icon={ClipboardTextIcon}
-          disabled={!!clipboard.pasteBlocked}
-          onClick={() => clipboard.paste(selectedId)}
-        >
-          Paste
-        </DropdownMenu.Item>
-        <DropdownMenu.Separator />
-        <DropdownMenu.Item icon={PaintBrushIcon} onClick={() => clipboard.copyStyle(selectedId)}>
-          Copy style
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          icon={PaintBrushIcon}
-          disabled={!!clipboard.pasteStyleBlocked}
-          onClick={() => clipboard.pasteStyle(selectedId)}
-        >
-          Paste style
-        </DropdownMenu.Item>
+        {items.flatMap((command) => {
+          const icon = CLIP_ICONS[command.id as keyof typeof CLIP_ICONS];
+          const item = (
+            <DropdownMenu.Item
+              key={command.id}
+              icon={icon}
+              disabled={!!command.disabled}
+              onClick={() => command.run()}
+            >
+              {command.label}
+            </DropdownMenu.Item>
+          );
+          return command.id === "copy-style"
+            ? [<DropdownMenu.Separator key="style" />, item]
+            : [item];
+        })}
         {hint && (
           <p className="emvb-menu-hint" data-emvb-paste-hint="">
             {hint}

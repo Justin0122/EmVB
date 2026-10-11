@@ -11,8 +11,9 @@ import {
   parentOf,
   previousInOrder,
 } from "../../core/index.ts";
+import { runCommand, type CommandRunners } from "./editor-commands.ts";
 import type { EditorState, HistoryAction } from "./store.ts";
-import { inDialog, isPaletteShortcut } from "./shortcuts.ts";
+import { isPaletteShortcut } from "./shortcuts.ts";
 
 const isTextField = (target: EventTarget | null) => {
   const element = target as HTMLElement | null;
@@ -23,6 +24,9 @@ const isTextField = (target: EventTarget | null) => {
     element.getAttribute("role") === "combobox"
   );
 };
+
+const inDialog = (target: EventTarget | null) =>
+  !!(target as HTMLElement | null)?.closest?.('[role="dialog"], [role="alertdialog"]');
 
 /**
  * Element shortcuts (traverse, arrange, delete, duplicate, copy, paste, Escape) act only from the
@@ -96,10 +100,9 @@ export type ShortcutHandlers = {
 
 /**
  * Window-level editor shortcuts (W-020): save, undo and redo (W-095), duplicate, copy and paste
- * (W-093), delete, escape, arrange and traverse. Inside text fields only Save and the palette work,
- * and inside dialogs only Save, so typing, native undo, copy and paste keep working there. Element
- * shortcuts also need focus on the canvas, Layers, or nothing (W-132); Save, undo and redo work
- * from the panels too.
+ * (W-093), delete, escape, arrange and traverse. Inside text fields and dialogs only Save works, so
+ * typing, native undo, copy and paste keep working there. Element shortcuts also need focus on
+ * the canvas, Layers, or nothing (W-132); Save, undo and redo work from the panels too.
  */
 export function useEditorShortcuts({
   latest,
@@ -111,6 +114,16 @@ export function useEditorShortcuts({
   handlers: React.RefObject<ShortcutHandlers>;
 }): (event: KeyboardEvent) => void {
   const onKeyDown = React.useCallback((event: KeyboardEvent) => {
+    const runners = (): CommandRunners => ({
+      save: () => handlers.current.save(),
+      remove: handlers.current.remove,
+      duplicate: handlers.current.duplicate,
+      copy: handlers.current.copy,
+      paste: handlers.current.paste,
+      pasteStyle: handlers.current.pasteStyle,
+      undo: () => dispatch({ type: "undo" }),
+      redo: () => dispatch({ type: "redo" }),
+    });
     if (isPaletteShortcut(event)) {
       event.preventDefault();
       handlers.current.palette?.();
@@ -118,18 +131,18 @@ export function useEditorShortcuts({
     }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
       event.preventDefault();
-      void handlers.current.save();
+      runCommand(runners(), "save", null);
       return;
     }
     if (isTextField(event.target) || inDialog(event.target)) return;
     if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z") {
       event.preventDefault();
-      dispatch(event.shiftKey ? { type: "redo" } : { type: "undo" });
+      runCommand(runners(), event.shiftKey ? "redo" : "undo", null);
       return;
     }
     if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "y") {
       event.preventDefault();
-      dispatch({ type: "redo" });
+      runCommand(runners(), "redo", null);
       return;
     }
     if (!onCanvasOrLayers(event.target)) return;
@@ -137,20 +150,19 @@ export function useEditorShortcuts({
     const selected = latest.current.selectedId;
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d" && selected) {
       event.preventDefault();
-      handlers.current.duplicate(selected);
+      runCommand(runners(), "duplicate", selected);
       return;
     }
     const clipKey =
       (event.ctrlKey || event.metaKey) && !event.altKey ? event.key.toLowerCase() : "";
     if (clipKey === "c" && !event.shiftKey && selected && !hasTextSelection(event.target)) {
       event.preventDefault();
-      handlers.current.copy(selected);
+      runCommand(runners(), "copy", selected);
       return;
     }
     if (clipKey === "v" && layout) {
       event.preventDefault();
-      if (event.shiftKey) handlers.current.pasteStyle(selected);
-      else handlers.current.paste(selected);
+      runCommand(runners(), event.shiftKey ? "paste-style" : "paste", selected);
       return;
     }
     if (event.key === "Escape" && selected) {
@@ -159,7 +171,7 @@ export function useEditorShortcuts({
     }
     if ((event.key === "Delete" || event.key === "Backspace") && selected) {
       event.preventDefault();
-      handlers.current.remove(selected);
+      runCommand(runners(), "delete", selected);
       return;
     }
     if (!layout || !selected) return;
