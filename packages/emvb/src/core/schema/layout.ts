@@ -133,8 +133,8 @@ export const Audience = z.strictObject({
     .max(64)
     .optional(),
   /**
-   * Visitor segments the host passes (W-329), e.g. `member`, `pro`: the rule matches a visitor
-   * in any of them. Lowercase letters, digits, `-` and `_`.
+   * Visitor segments the host passes (W-329), e.g. `member`, `plan:pro`: the rule matches a
+   * visitor in any of them. A letter or digit, then letters, digits, `:`, `_` or `-`, up to 64.
    */
   segments: z.array(z.string().regex(AUDIENCE_SEGMENT, SEGMENT_HINT)).min(1).max(20).optional(),
   hide: z.boolean().optional(),
@@ -718,6 +718,8 @@ const UnknownNodeSchema = z.strictObject({
   bind: Bindings.optional(),
   variant: Variant.optional(),
   audience: Audience.optional(),
+  devices: DeviceStyles.optional(),
+  hiddenOn: HiddenOn.optional(),
   get children(): z.ZodType<LayoutNode[] | undefined> {
     return z.array(LayoutNode).optional();
   },

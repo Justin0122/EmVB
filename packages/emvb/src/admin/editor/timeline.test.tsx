@@ -106,4 +106,42 @@ describe("version timeline dialog (W-315)", () => {
     await settle();
     expect(document.querySelector("[role=alert]")?.textContent).toBe(NO_REVISIONS);
   });
+
+  test("snapshots load the host stylesheets before EmVB's CSS", async () => {
+    const fetcher = async () =>
+      new Response(
+        JSON.stringify({
+          data: {
+            items: [
+              {
+                id: "r1",
+                createdAt: "2026-10-05T10:00:00Z",
+                data: { layout: layoutWith("First") },
+              },
+            ],
+          },
+        }),
+        { headers: { "content-type": "application/json" } },
+      );
+    await mount(
+      <TimelineDialog
+        open
+        onOpenChange={() => undefined}
+        fetcher={fetcher}
+        collection="emvb_pages"
+        entryId="01PAGE"
+        current={layoutWith("Now")}
+        design={emptyDesign()}
+        onApply={() => undefined}
+        canvasStyles={["/site.css", "javascript:x", "/fonts.css"]}
+      />,
+    );
+    await settle();
+    const srcdoc = document.querySelector("iframe")?.getAttribute("srcdoc") ?? "";
+    const first = srcdoc.indexOf('<link rel="stylesheet" href="/site.css"');
+    const second = srcdoc.indexOf('<link rel="stylesheet" href="/fonts.css"');
+    const style = srcdoc.indexOf("<style>");
+    expect(first >= 0 && second > first && style > second).toBe(true);
+    expect(srcdoc.includes("javascript:")).toBe(false);
+  });
 });

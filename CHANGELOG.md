@@ -53,12 +53,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Changed
 
 - **CI runs the same checks as `bun run check` (W-350).** After format, GitHub CI runs fallow, the runtime check, and the seed check, then the unit and Astro tests.
+- **The install guide names every runtime (W-351).** A host mounts the tabs and menu scripts on a page, and the popup and float scripts for theme parts, only when that page or theme says it needs them. Segment names may include `:` and are up to 64 characters; a name that doesn't fit is dropped.
 - **The canvas uses the same style scope as the published page.** Editor CSS is prefixed the way public CSS is, and the canvas markup sits in the same scope wrapper.
 - **A site-styles save from another tab is replayed when it can be.** If the other tab changed different variables or classes, this tab's edit is saved on top. If both tabs changed the same one, the latest styles load and the edit is not overwritten.
 - **Post Content keeps the post's formatting (W-328).** Bold, italic, code, underline, strike-through, links (only hrefs that pass the link check), bulleted and numbered lists (nested), headings h1–h6, block quotes and line breaks now show on the page and in the editor. Images, embeds, custom blocks and raw HTML are still left out, and all text is escaped.
 
 ### Fixed
 
+- **An unknown element can still be saved after a device hide or a pasted style (W-351).** Hiding it on a device, or pasting a style that sets device overrides, no longer makes the whole page fail to save.
+- **Version history looks like the canvas (W-351).** The before/after snapshots load the host's stylesheets before EmVB's CSS, in the same order as the canvas. A stylesheet that isn't an `http(s)` URL or a site path is left out.
 - The emvb.dev changelog page leaves out a release with no entries yet, such as an empty Unreleased (W-324).
 - **Site styles saves no longer conflict with themselves (W-325).** Quick successive edits to variables or classes save one at a time, each on the revision the previous save made, so a second edit is never refused as "changed in another tab". Publish styles waits for pending saves.
 - **Paused forms say so (W-326).** A form paused in the forms plugin shows "This form isn't accepting responses right now." on the page instead of empty fields and a Submit button that can't send, and the form picker marks it "(paused)".

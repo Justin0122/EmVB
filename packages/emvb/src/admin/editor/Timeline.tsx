@@ -1,8 +1,10 @@
 import { Button, Dialog } from "@cloudflare/kumo";
 import * as React from "react";
 import {
+  canvasStyleUrls,
   changedIds,
   diffSections,
+  escapeAttr,
   renderPage,
   restoreSection,
   validateLayout,
@@ -105,19 +107,25 @@ function Snapshot({
   design,
   ids,
   title,
+  canvasStyles = [],
 }: {
   layout: Layout;
   design: DesignSystem;
   ids: Partial<Record<"added" | "removed" | "changed", string[]>>;
   title: string;
+  /** Host stylesheets, before EmVB's CSS, the same order as the canvas (W-351). */
+  canvasStyles?: readonly string[];
 }) {
   const doc = React.useMemo(() => {
     const { html, css } = renderPage(layout, design, { mode: "editor" });
     const outline = (Object.entries(ids) as [keyof typeof DIFF_CSS, string[]][])
       .flatMap(([kind, list]) => list.map((id) => `[data-emvb-id="${id}"]{${DIFF_CSS[kind]}}`))
       .join("");
-    return `<!doctype html><html><head><style>html{zoom:.35}body{margin:0}${css}${outline}</style></head><body>${html}</body></html>`;
-  }, [layout, design, ids]);
+    const links = canvasStyleUrls([...canvasStyles])
+      .map((href) => `<link rel="stylesheet" href="${escapeAttr(href)}" data-emvb-canvas-style="">`)
+      .join("");
+    return `<!doctype html><html><head>${links}<style>html{zoom:.35}body{margin:0}${css}${outline}</style></head><body>${html}</body></html>`;
+  }, [layout, design, ids, canvasStyles]);
   return <iframe className="emvb-timeline-frame" title={title} sandbox="" srcDoc={doc} />;
 }
 
@@ -135,6 +143,7 @@ export function TimelineDialog({
   current,
   design,
   onApply,
+  canvasStyles = [],
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -144,6 +153,8 @@ export function TimelineDialog({
   current: Layout | null;
   design: DesignSystem;
   onApply: (layout: Layout, note: string) => void;
+  /** Host stylesheets the canvas already loads (W-351). */
+  canvasStyles?: readonly string[];
 }) {
   const revisions = useRevisions(fetcher, collection, entryId, open);
   const [pickedId, setPickedId] = React.useState<string | null>(null);
@@ -199,6 +210,7 @@ export function TimelineDialog({
                         design={design}
                         ids={{ removed: ids.removed, changed: ids.changed }}
                         title="Saved version"
+                        canvasStyles={canvasStyles}
                       />
                     </figure>
                     <figure>
@@ -208,6 +220,7 @@ export function TimelineDialog({
                         design={design}
                         ids={{ added: ids.added, changed: ids.changed }}
                         title="Current page"
+                        canvasStyles={canvasStyles}
                       />
                     </figure>
                   </div>

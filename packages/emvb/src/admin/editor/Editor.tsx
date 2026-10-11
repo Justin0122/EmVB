@@ -707,6 +707,7 @@ function EditorApp({
           entryId={state.id}
           current={state.page.layout}
           design={state.design}
+          canvasStyles={canvasStyles}
           onApply={(layout, note) => {
             dispatch({
               type: "apply-arranged",
