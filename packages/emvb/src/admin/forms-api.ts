@@ -35,6 +35,8 @@ async function formsPluginAnswers(fetcher: Fetcher): Promise<boolean> {
     await requestJson(fetcher, DEFINITION, { method: "POST", body: { id: "__emvb_probe__" } });
     return true;
   } catch (error) {
+    // A 200 with no body still means the route answered. An empty list is handled above.
+    if (error instanceof ApiError && error.code === "MISSING_DATA") return true;
     return probeFoundPlugin(error);
   }
 }

@@ -44,7 +44,10 @@ export async function requestJson<T>(
   });
   const payload = await readEnvelope<T>(response);
   if (!response.ok) throw envelopeError(response, payload);
-  return payload.data as T;
+  if (payload.data === undefined) {
+    throw new ApiError(response.status, "MISSING_DATA", "The response had no data.");
+  }
+  return payload.data;
 }
 
 const LIST_PAGE = 50;
@@ -62,12 +65,19 @@ export async function listAllItems<T>(fetcher: Fetcher, collectionPath: string):
     const query = `?limit=${LIST_PAGE}&orderBy=updatedAt&order=desc${
       cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""
     }`;
-    // oxlint-disable-next-line no-await-in-loop -- each page needs the previous page's cursor
-    const body = await requestJson<{ items?: T[]; nextCursor?: string }>(
-      fetcher,
-      `${collectionPath}${query}`,
-    );
-    items.push(...(body?.items ?? []));
+    let body: { items?: T[]; nextCursor?: string };
+    try {
+      // oxlint-disable-next-line no-await-in-loop -- each page needs the previous page's cursor
+      body = await requestJson<{ items?: T[]; nextCursor?: string }>(
+        fetcher,
+        `${collectionPath}${query}`,
+      );
+    } catch (error) {
+      // A 200 with no body ends the list. It is not a failed load.
+      if (error instanceof ApiError && error.code === "MISSING_DATA") break;
+      throw error;
+    }
+    items.push(...(body.items ?? []));
     cursor = body?.nextCursor || undefined;
     if (!cursor) break;
   }

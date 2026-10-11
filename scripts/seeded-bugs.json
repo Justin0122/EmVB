@@ -28498,6 +28498,26 @@
         "failed sibling"
       ],
       "expect": "\\(fail\\).*failed sibling"
+    },
+    {
+      "id": "W-375/missing-data-ok",
+      "requirement": "W-375",
+      "description": "a 200 response with no data is treated as a successful empty result",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/api.ts",
+          "search": "  if (payload.data === undefined) {\n    throw new ApiError(response.status, \"MISSING_DATA\", \"The response had no data.\");\n  }\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/api-client.test.ts",
+        "-t",
+        "no data is an error"
+      ],
+      "expect": "\\(fail\\).*no data is an error"
     }
   ]
 }

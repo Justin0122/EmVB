@@ -65,6 +65,14 @@ describe("API error envelope", () => {
     });
   }
 
+  test("a 200 with no data is an error (W-375)", async () => {
+    expect(await failure(requestJson(answering(json(200, {})), "/x"))).toEqual({
+      status: 200,
+      code: "MISSING_DATA",
+      message: "The response had no data.",
+    });
+  });
+
   test("requestJson returns data; listImages keeps ready items; upload needs an item", async () => {
     expect(
       await requestJson<{ a: number }>(answering(json(200, { data: { a: 1 } })), "/x"),

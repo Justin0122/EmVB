@@ -1,10 +1,16 @@
 import * as React from "react";
 import { EDITOR_ROLE } from "../../constants.ts";
-import { requestJson, type Fetcher } from "../api.ts";
+import { ApiError, requestJson, type Fetcher } from "../api.ts";
 
 export async function readRole(fetcher: Fetcher): Promise<number> {
-  const me = await requestJson<{ role?: unknown } | undefined>(fetcher, "/_emdash/api/auth/me");
-  return typeof me?.role === "number" ? me.role : 0;
+  try {
+    const me = await requestJson<{ role?: unknown }>(fetcher, "/_emdash/api/auth/me");
+    return typeof me.role === "number" ? me.role : 0;
+  } catch (error) {
+    // A 200 with no body is "no role", the same as a role that is not a number.
+    if (error instanceof ApiError && error.code === "MISSING_DATA") return 0;
+    throw error;
+  }
 }
 
 /** D-020: EmVB is for editors and administrators. The server enforces the same line. */
