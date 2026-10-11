@@ -1,61 +1,47 @@
-import { afterAll, beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
-import * as realEmDash from "emdash";
-import * as realPluginUtils from "emdash/plugin-utils";
+import { beforeEach, describe, expect, spyOn, test } from "bun:test";
+import { decodeSlug } from "emdash";
 import { defaultElement, type Layout, type LayoutNode } from "../core/index.ts";
+import type { ContentPort } from "./content-port.ts";
+import { resolveEmVBPageWith } from "./resolve.ts";
 
-/**
- * W-091: `resolveEmVBPage` had no unit test (only e2e:prod). bun's `mock.module` is global to the
- * process, so the fakes only answer while this file runs and fall back to EmDash afterwards.
- * The fallbacks are taken before mocking: the mock replaces the namespace's exports in place, so
- * `realPluginUtils.getPublicPluginApiRouteHandler` called later is the fake itself and recurses
- * forever (resolve-theme.test.ts hung whenever it ran after this file).
- */
-const realGetEmDashEntry = realEmDash.getEmDashEntry;
-const realRouteHandler = realPluginUtils.getPublicPluginApiRouteHandler;
-let active = true;
 type Found = { entry: { id: string; data: Record<string, unknown> } | null; isPreview?: boolean };
 let lookup: (collection: string, slug: string) => Promise<Found> = async () => ({ entry: null });
 const lookups: string[] = [];
 type Call = { plugin: string; method: string; path: string; body: string };
 const handlerCalls: Call[] = [];
 
-mock.module("emdash", () => ({
-  ...realEmDash,
-  getEmDashEntry: (...args: Parameters<typeof realEmDash.getEmDashEntry>) => {
-    if (!active) return realGetEmDashEntry(...args);
-    lookups.push(`${args[0]}/${String(args[1])}`);
-    return lookup(args[0], String(args[1]));
+const content = {
+  decodeSlug,
+  getEntry: async (collection: string, key: string) => {
+    lookups.push(`${collection}/${key}`);
+    return lookup(collection, key);
   },
-}));
-mock.module("emdash/plugin-utils", () => ({
-  ...realPluginUtils,
-  getPublicPluginApiRouteHandler: (locals: never) =>
-    active
-      ? async (plugin: string, method: string, path: string, request: Request) => {
-          handlerCalls.push({ plugin, method, path, body: await request.text() });
-          if (path === "/design") {
-            return {
-              data: {
-                design: {
-                  schemaVersion: 15,
-                  variables: { colors: [{ id: "brand", name: "Brand", value: "#112233" }] },
-                },
-              },
-            };
-          }
-          return {
-            success: true,
-            data: { name: "Contact", slug: "contact", settings: {}, pages: [] },
-          };
-        }
-      : realRouteHandler(locals),
-}));
+  getCollection: async () => ({ entries: [] }),
+  getTerm: async () => null,
+  getSiteSettings: async () => ({}),
+  pluginHandler: () => async (plugin: string, method: string, path: string, request: Request) => {
+    handlerCalls.push({ plugin, method, path, body: await request.text() });
+    if (path === "/design") {
+      return {
+        data: {
+          design: {
+            schemaVersion: 15,
+            variables: { colors: [{ id: "brand", name: "Brand", value: "#112233" }] },
+          },
+        },
+      };
+    }
+    return {
+      success: true,
+      data: { name: "Contact", slug: "contact", settings: {}, pages: [] },
+    };
+  },
+} as unknown as ContentPort;
 
-const { resolveEmVBPage } = await import("./resolve.ts");
-
-afterAll(() => {
-  active = false;
-});
+const resolveEmVBPage = (
+  astro: Parameters<typeof resolveEmVBPageWith>[1],
+  options?: Parameters<typeof resolveEmVBPageWith>[2],
+) => resolveEmVBPageWith(content, astro, options);
 
 const heading: LayoutNode = { id: "head0001", type: "heading", props: { text: "Hello", level: 1 } };
 const layout = (...children: LayoutNode[]): Layout => ({

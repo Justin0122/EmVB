@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, mock, test } from "bun:test";
-import * as realEmDash from "emdash";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
+import type { ContentPort } from "./content-port.ts";
 import {
   defaultConditionsFor,
   defaultTriggers,
@@ -8,6 +8,7 @@ import {
   type LayoutNode,
   type ThemePartType,
 } from "../core/index.ts";
+import { resolveThemePartsWith } from "./resolve-theme.ts";
 import { themeContextFrom } from "./theme-context.ts";
 
 type Entry = { id: string; data: Record<string, unknown> };
@@ -23,10 +24,9 @@ const themeFilters: unknown[] = [];
 /** When set, the theme-parts page at this cursor fails: "error" answers with an error, "throw" throws. */
 let failAt: { cursor: number; how: "error" | "throw" } | undefined;
 
-mock.module("emdash", () => ({
-  ...realEmDash,
-  // Pages like EmDash: `limit` entries from `cursor`, and a `nextCursor` while more remain.
-  getEmDashCollection: async (
+const content = {
+  decodeSlug: (value: string | undefined) => value,
+  getCollection: async (
     collection: string,
     filter?: { limit?: number; cursor?: string; offset?: number },
   ) => {
@@ -53,12 +53,20 @@ mock.module("emdash", () => ({
     if (slug === "broken") throw new Error("taxonomy table missing");
     return taxonomy === "category" && slug === "news" ? { slug, label: "News" } : null;
   },
-  getEmDashEntry: async (_collection: string, key: string) => ({
+  getEntry: async (_collection: string, key: string) => ({
     entry: postEntries.find((e) => e.id === key || e.data["slug"] === key) ?? null,
   }),
-}));
+  getSiteSettings: async () => ({}),
+  pluginHandler: () => async () => {
+    throw new Error("no design in this test");
+  },
+} as unknown as ContentPort;
 
-const { resolveThemeParts } = await import("./resolve-theme.ts");
+const resolveThemeParts = (
+  astro: Parameters<typeof resolveThemePartsWith>[1],
+  ctx?: Parameters<typeof resolveThemePartsWith>[2],
+  options?: Parameters<typeof resolveThemePartsWith>[3],
+) => resolveThemePartsWith(content, astro, ctx, options);
 
 const layout = (...children: LayoutNode[]) => ({
   schemaVersion: 1,

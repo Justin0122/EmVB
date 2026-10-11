@@ -11490,8 +11490,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "  try {\n    found = await getEmDashEntry(PAGES_COLLECTION, slug);\n  } catch {\n    // No emvb_pages collection yet (EmVB not set up): not an EmVB page.\n    return null;\n  }",
-          "replace": "  found = await getEmDashEntry(PAGES_COLLECTION, slug);"
+          "search": "  try {\n    found = await content.getEntry(PAGES_COLLECTION, slug);\n  } catch {\n    // No emvb_pages collection yet (EmVB not set up): not an EmVB page.\n    return null;\n  }",
+          "replace": "  found = await content.getEntry(PAGES_COLLECTION, slug);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
@@ -16341,7 +16341,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve-theme.ts",
-          "search": "  return templatesFrom(layout, await loadPublishedThemeParts());\n",
+          "search": "  return templatesFrom(layout, await loadPublishedThemeParts(content));\n",
           "replace": "  return { sectionTemplates: {}, loopTemplates: {} };\n"
         }
       ],
@@ -24053,7 +24053,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve-theme.ts",
-          "search": "      ? await termLabel(ctx.taxonomy.type, ctx.taxonomy.slug)\n",
+          "search": "      ? await termLabel(ctx.taxonomy.type, ctx.taxonomy.slug, content)\n",
           "replace": "      ? ctx.taxonomy.slug\n"
         }
       ],
@@ -27265,8 +27265,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "      options.visitor ? { visitor: options.visitor } : {},\n    )",
-          "replace": "      {},\n    )"
+          "search": "      options.visitor ? { visitor: options.visitor } : {},\n      content,\n    )",
+          "replace": "      {},\n      content,\n    )"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
@@ -27477,8 +27477,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "options.slug ?? decodeSlug(",
-          "replace": "decodeSlug("
+          "search": "options.slug ?? content.decodeSlug(",
+          "replace": "content.decodeSlug("
         }
       ],
       "command": [

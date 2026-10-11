@@ -1,4 +1,4 @@
-import { getEmDashCollection, getSiteSettings } from "emdash";
+import { emdashContent, type ContentPort } from "./content-port.ts";
 import {
   collectCollectionLoops,
   layoutUsesSource,
@@ -29,9 +29,9 @@ const ORDER_BY: Record<CollectionLoop["order"], Record<string, "asc" | "desc">> 
 };
 
 /** Published entries for one collection Loop (W-308); a failing query lists nothing. */
-async function loopEntries(loop: CollectionLoop): Promise<ThemePostFields[]> {
+async function loopEntries(loop: CollectionLoop, content: ContentPort): Promise<ThemePostFields[]> {
   try {
-    const result = await getEmDashCollection(loop.collection, {
+    const result = await content.getCollection(loop.collection, {
       status: "published",
       limit: loop.limit,
       orderBy: ORDER_BY[loop.order],
@@ -74,6 +74,7 @@ export async function bindingDataFor(
   astro?: VisitorAstro,
   templates: readonly Layout[] = [],
   options: { visitor?: HostVisitor } = {},
+  content: ContentPort = emdashContent,
 ): Promise<RequestData> {
   if (!page) return {};
   const layout = withTemplates(page, templates);
@@ -86,7 +87,7 @@ export async function bindingDataFor(
   if (visitor) data.visitor = visitor;
   const loops = collectCollectionLoops(layout);
   if (loops.length > 0) {
-    const lists = await Promise.all(loops.map(loopEntries));
+    const lists = await Promise.all(loops.map((loop) => loopEntries(loop, content)));
     data.collections = Object.fromEntries(loops.map((loop, i) => [loop.nodeId, lists[i] ?? []]));
   }
   if (layoutUsesSource(layout.root, "param")) {
@@ -96,7 +97,7 @@ export async function bindingDataFor(
   }
   if (layoutUsesSource(layout.root, "site")) {
     try {
-      data.site = siteBindingValues(await getSiteSettings());
+      data.site = siteBindingValues(await content.getSiteSettings());
     } catch {
       data.site = {};
     }

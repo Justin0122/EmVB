@@ -1,13 +1,12 @@
-import { decodeSlug, getEmDashEntry } from "emdash";
-import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
 import { PAGES_COLLECTION } from "../constants.ts";
+import { emdashContent, type ContentPort } from "./content-port.ts";
 import { formIdsInLayouts, loadFormDefinitions } from "./forms-definitions.ts";
 import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
 import { bindingDataFor } from "./request-data.ts";
 import type { HostVisitor, VisitorAstro } from "./visitor.ts";
 import { referencedTemplatesFor } from "./resolve-theme.ts";
 
-type EmDashEntry = NonNullable<Awaited<ReturnType<typeof getEmDashEntry>>["entry"]>;
+type EmDashEntry = NonNullable<Awaited<ReturnType<ContentPort["getEntry"]>>["entry"]>;
 
 export type ResolvedEmVBPage = RenderedPage & {
   /** The EmDash entry, for `getSeoMeta` and the host's layout. */
@@ -40,11 +39,24 @@ export async function resolveEmVBPage(
     visitor?: HostVisitor;
   } = {},
 ): Promise<ResolvedEmVBPage | null> {
-  const slug = options.slug ?? decodeSlug(astro.params[options.param ?? "slug"]);
+  return resolveEmVBPageWith(emdashContent, astro, options);
+}
+
+/** Same as `resolveEmVBPage`, with a content port so tests can pass a fake (W-359). */
+export async function resolveEmVBPageWith(
+  content: ContentPort,
+  astro: AstroLike,
+  options: {
+    param?: string;
+    slug?: string;
+    visitor?: HostVisitor;
+  } = {},
+): Promise<ResolvedEmVBPage | null> {
+  const slug = options.slug ?? content.decodeSlug(astro.params[options.param ?? "slug"]);
   if (!slug) return null;
-  let found: Awaited<ReturnType<typeof getEmDashEntry>>;
+  let found: Awaited<ReturnType<ContentPort["getEntry"]>>;
   try {
-    found = await getEmDashEntry(PAGES_COLLECTION, slug);
+    found = await content.getEntry(PAGES_COLLECTION, slug);
   } catch {
     // No emvb_pages collection yet (EmVB not set up): not an EmVB page.
     return null;
@@ -52,11 +64,11 @@ export async function resolveEmVBPage(
   const entry = found.entry;
   if (!entry) return null;
   const data = entry.data as Record<string, unknown>;
-  const handler = getPublicPluginApiRouteHandler(astro.locals as never);
+  const handler = content.pluginHandler(astro.locals as never);
   const design = await loadDesign(handler, astro.url);
   const layout = readLayout(data["layout"]);
   const referenced = layout
-    ? await referencedTemplatesFor(layout)
+    ? await referencedTemplatesFor(layout, content)
     : { sectionTemplates: {}, loopTemplates: {} };
   const { sectionTemplates, loopTemplates } = referenced;
   const formDefinitions = layout
@@ -79,6 +91,7 @@ export async function resolveEmVBPage(
       astro,
       Object.values(sectionTemplates),
       options.visitor ? { visitor: options.visitor } : {},
+      content,
     )),
   };
   return {

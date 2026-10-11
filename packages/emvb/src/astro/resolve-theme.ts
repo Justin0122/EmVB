@@ -1,5 +1,4 @@
-import { getEmDashCollection, getEmDashEntry, getTerm } from "emdash";
-import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
+import { emdashContent, type ContentPort } from "./content-port.ts";
 import { formIdsInLayouts, loadFormDefinitions } from "./forms-definitions.ts";
 import {
   collectLoopItemPartIds,
@@ -165,16 +164,16 @@ const THEME_PARTS_PAGE = 50;
 const THEME_PARTS_MAX_PAGES = 20;
 
 /** Every published theme part, page by page; a failed page ends the read with what came before. */
-async function loadPublishedThemeParts(): Promise<StoredPart[]> {
-  const entries: Awaited<ReturnType<typeof getEmDashCollection>>["entries"] = [];
+async function loadPublishedThemeParts(content: ContentPort): Promise<StoredPart[]> {
+  const entries: Awaited<ReturnType<ContentPort["getCollection"]>>["entries"] = [];
   let cursor: string | undefined;
   for (let page = 0; page < THEME_PARTS_MAX_PAGES; page += 1) {
-    let result: Awaited<ReturnType<typeof getEmDashCollection>>;
+    let result: Awaited<ReturnType<ContentPort["getCollection"]>>;
     try {
       // No orderBy: D1/SQLite columns are snake_case and camelCase orderBy fails the query.
       // Winners and popup order come from updatedAt in core/theme/conditions.ts.
       // oxlint-disable-next-line no-await-in-loop -- each page needs the previous page's cursor
-      result = await getEmDashCollection(THEME_PARTS_COLLECTION, {
+      result = await content.getCollection(THEME_PARTS_COLLECTION, {
         status: "published",
         limit: THEME_PARTS_PAGE,
         ...(cursor ? { cursor } : {}),
@@ -244,17 +243,23 @@ async function templatesFrom(
 }
 
 /** Published section and loop-item layouts a page references. */
-export async function referencedTemplatesFor(layout: Layout): Promise<{
+export async function referencedTemplatesFor(
+  layout: Layout,
+  content: ContentPort = emdashContent,
+): Promise<{
   sectionTemplates: Record<string, Layout>;
   loopTemplates: Record<string, Layout>;
 }> {
   if (collectSectionPartIds(layout).length === 0 && collectLoopItemPartIds(layout).length === 0) {
     return { sectionTemplates: {}, loopTemplates: {} };
   }
-  return templatesFrom(layout, await loadPublishedThemeParts());
+  return templatesFrom(layout, await loadPublishedThemeParts(content));
 }
 
-async function loadSingularPost(ctx: ThemeRequestContext): Promise<ThemePostFields | undefined> {
+async function loadSingularPost(
+  ctx: ThemeRequestContext,
+  content: ContentPort,
+): Promise<ThemePostFields | undefined> {
   if (ctx.kind !== "singular" || ctx.collection !== "posts") return undefined;
   const key = ctx.entryId || undefined;
   // Prefer slug from path `/posts/{slug}` when entry id is missing.
@@ -262,7 +267,7 @@ async function loadSingularPost(ctx: ThemeRequestContext): Promise<ThemePostFiel
   const lookup = key || (pathSlug ? decodePathSegment(pathSlug) : undefined);
   if (!lookup) return undefined;
   try {
-    const { entry } = await getEmDashEntry("posts", lookup);
+    const { entry } = await content.getEntry("posts", lookup);
     if (!entry) return undefined;
     return themePostFromEntry(entry) ?? undefined;
   } catch {
@@ -271,9 +276,9 @@ async function loadSingularPost(ctx: ThemeRequestContext): Promise<ThemePostFiel
 }
 
 /** A taxonomy term's label for archive titles; the slug when the term can't be read (W-263). */
-async function termLabel(taxonomy: string, slug: string): Promise<string> {
+async function termLabel(taxonomy: string, slug: string, content: ContentPort): Promise<string> {
   try {
-    const term = await getTerm(taxonomy, slug);
+    const term = await content.getTerm(taxonomy, slug);
     return term?.label?.trim() || slug;
   } catch {
     return slug;
@@ -283,6 +288,7 @@ async function termLabel(taxonomy: string, slug: string): Promise<string> {
 async function loadArchivePosts(
   ctx: ThemeRequestContext,
   perPage: number,
+  content: ContentPort,
 ): Promise<{
   posts: ThemePostFields[];
   archiveTitle?: string;
@@ -307,7 +313,7 @@ async function loadArchivePosts(
     } else if (ctx.taxonomy?.type === "tag") {
       filter.where = { tag: ctx.taxonomy.slug };
     }
-    const result = await getEmDashCollection("posts", filter);
+    const result = await content.getCollection("posts", filter);
     if (result.error || !result.entries) return { posts: [] };
     const hasMore = (result as { hasMore?: boolean }).hasMore === true;
     const posts = result.entries
@@ -315,7 +321,7 @@ async function loadArchivePosts(
       .filter((p): p is ThemePostFields => p !== null);
     // W-263: a category or tag archive is titled by its term's label ("News"), not its slug.
     const archiveTitle = ctx.taxonomy?.slug
-      ? await termLabel(ctx.taxonomy.type, ctx.taxonomy.slug)
+      ? await termLabel(ctx.taxonomy.type, ctx.taxonomy.slug, content)
       : ctx.collection === "posts"
         ? "Posts"
         : undefined;
@@ -330,6 +336,7 @@ async function buildDynamicForContent(
   ctx: ThemeRequestContext,
   layout: Layout,
   parts: StoredPart[],
+  content: ContentPort,
 ): Promise<ThemeDynamicData | undefined> {
   const { sectionTemplates, loopTemplates } = await templatesFrom(layout, parts);
   const referenced: ThemeDynamicData = {
@@ -337,12 +344,16 @@ async function buildDynamicForContent(
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
   };
   if (partType === "single_post") {
-    const post = await loadSingularPost(ctx);
+    const post = await loadSingularPost(ctx, content);
     if (!post && Object.keys(referenced).length === 0) return undefined;
     return { ...referenced, post };
   }
   if (partType === "archive") {
-    const { posts, archiveTitle, pagination } = await loadArchivePosts(ctx, loopPerPage(layout));
+    const { posts, archiveTitle, pagination } = await loadArchivePosts(
+      ctx,
+      loopPerPage(layout),
+      content,
+    );
     return { ...referenced, posts, archiveTitle, ...(pagination ? { pagination } : {}) };
   }
   if (Object.keys(referenced).length > 0) return referenced;
@@ -358,6 +369,16 @@ export async function resolveThemeParts(
   astro: AstroLike,
   ctx?: ThemeRequestContext,
   /** What the host knows about the visitor: segments and facts Visitors rules use (W-329). */
+  options: { visitor?: HostVisitor } = {},
+): Promise<ResolvedThemeParts> {
+  return resolveThemePartsWith(emdashContent, astro, ctx, options);
+}
+
+/** Same as `resolveThemeParts`, with a content port so tests can pass a fake (W-359). */
+export async function resolveThemePartsWith(
+  port: ContentPort,
+  astro: AstroLike,
+  ctx?: ThemeRequestContext,
   options: { visitor?: HostVisitor } = {},
 ): Promise<ResolvedThemeParts> {
   const context =
@@ -387,7 +408,7 @@ export async function resolveThemeParts(
       : {}),
   };
 
-  const parts = await loadPublishedThemeParts();
+  const parts = await loadPublishedThemeParts(port);
   if (parts.length === 0) return empty;
 
   const candidates: ThemePartCandidate[] = parts.map((part) => ({
@@ -414,7 +435,7 @@ export async function resolveThemeParts(
     return empty;
   }
 
-  const handler = getPublicPluginApiRouteHandler(astro.locals as never);
+  const handler = port.pluginHandler(astro.locals as never);
   const design = await loadDesign(handler, astro.url);
 
   const byId = new Map(parts.map((part) => [part.id, part]));
@@ -431,6 +452,7 @@ export async function resolveThemeParts(
         ...Object.values(referenced?.loopTemplates ?? {}),
       ],
       options.visitor ? { visitor: options.visitor } : {},
+      port,
     );
   const renderOne = async (
     stored: StoredPart,
@@ -486,7 +508,7 @@ export async function resolveThemeParts(
       layout && winner === contentWinner
         ? {
             ...referenced,
-            ...(await buildDynamicForContent(stored.partType, context, layout, parts)),
+            ...(await buildDynamicForContent(stored.partType, context, layout, parts, port)),
           }
         : referenced;
     // A page past the last one has no posts; the host answers 404 (W-221).

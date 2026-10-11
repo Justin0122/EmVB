@@ -1,16 +1,16 @@
-import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
-import * as realEmDash from "emdash";
+import { describe, expect, test } from "bun:test";
 import type { Layout, LayoutNode } from "../core/index.ts";
+import type { ContentPort } from "./content-port.ts";
+import { bindingDataFor } from "./request-data.ts";
+import { themePostFromEntry } from "./theme-posts.ts";
 
-let active = false;
 const calls: { collection: string; filter: unknown }[] = [];
-const realGet = realEmDash.getEmDashCollection;
-mock.module("emdash", () => ({
-  ...realEmDash,
-  getEmDashCollection: (...args: Parameters<typeof realEmDash.getEmDashCollection>) => {
-    if (!active) return realGet(...args);
-    calls.push({ collection: String(args[0]), filter: args[1] });
-    return Promise.resolve({
+const content = {
+  decodeSlug: (value: string | undefined) => value,
+  getEntry: async () => ({ entry: null }),
+  getCollection: async (collection: string, filter: unknown) => {
+    calls.push({ collection, filter });
+    return {
       entries: [
         {
           id: "01TEAM",
@@ -25,19 +25,12 @@ mock.module("emdash", () => ({
           },
         },
       ],
-    });
+    };
   },
-}));
-
-const { bindingDataFor } = await import("./request-data.ts");
-const { themePostFromEntry } = await import("./theme-posts.ts");
-
-beforeAll(() => {
-  active = true;
-});
-afterAll(() => {
-  active = false;
-});
+  getTerm: async () => null,
+  getSiteSettings: async () => ({}),
+  pluginHandler: () => async () => ({}),
+} as unknown as ContentPort;
 
 const loop = (props: Record<string, unknown>): Layout =>
   ({
@@ -63,6 +56,10 @@ describe("Loop options (W-330)", () => {
         filter: "category=news; category=featured; team=design",
       }),
       new URL("https://site.test/"),
+      undefined,
+      [],
+      {},
+      content,
     );
     expect(calls).toHaveLength(1);
     expect(calls[0]?.filter).toMatchObject({
@@ -78,7 +75,14 @@ describe("Loop options (W-330)", () => {
 
   test("without options a Loop reads as before: no where, /collection/slug, featured image", async () => {
     calls.length = 0;
-    const data = await bindingDataFor(loop({}), new URL("https://site.test/"));
+    const data = await bindingDataFor(
+      loop({}),
+      new URL("https://site.test/"),
+      undefined,
+      [],
+      {},
+      content,
+    );
     expect(calls[0]?.filter).not.toHaveProperty("where");
     const [entry] = data.collections?.["loop0001"] ?? [];
     expect(entry?.permalink).toBe("/team/ana lee");
