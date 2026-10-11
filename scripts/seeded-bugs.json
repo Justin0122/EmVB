@@ -1961,8 +1961,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/variables.ts",
-          "search": "function walkNodes(node: LayoutNode, visit: (node: LayoutNode) => void): void {\n  visit(node);\n  for (const child of nodeChildren(node)) walkNodes(child, visit);\n}",
-          "replace": "function walkNodes(node: LayoutNode, visit: (node: LayoutNode) => void): void {\n  visit(node);\n  // seeded: miss nested nodes\n}"
+          "search": "  forEachNode(layout.root, (node) => {\n    collectAllUsages(node, id, kind, (prop) => {\n      usages.push({ nodeId: node.id, prop });\n    });\n  });",
+          "replace": "  collectAllUsages(layout.root, id, kind, (prop) => {\n    usages.push({ nodeId: layout.root.id, prop });\n  });"
         }
       ],
       "command": [
@@ -10316,8 +10316,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/forms-definitions.ts",
-          "search": "  for (const child of nodeChildren(node)) walk(child, visit);",
-          "replace": "  void nodeChildren;"
+          "search": "  forEachNode(layout.root, (node) => {\n    if (isFormNode(node) && node.props.formId) ids.add(node.props.formId);\n  });",
+          "replace": "  const node = layout.root;\n  if (isFormNode(node) && node.props.formId) ids.add(node.props.formId);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/forms-definitions.test.ts"],
@@ -28191,6 +28191,26 @@
         "hidden on a device or given device styles"
       ],
       "expect": "\\(fail\\).*hidden on a device or given device styles"
+    },
+    {
+      "id": "W-353/unknown-children-skipped",
+      "requirement": "R-033",
+      "description": "the shared walk skips children of an unknown node",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/tree-ops.ts",
+          "search": "  visit(node);\n  for (const child of children(node)) forEachNode(child, visit, children);\n",
+          "replace": "  visit(node);\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/tree-ops.test.ts",
+        "-t",
+        "visits children of an unknown node"
+      ],
+      "expect": "\\(fail\\).*visits children of an unknown node"
     },
     {
       "id": "W-352/unknown-node-dir-query-stripped",

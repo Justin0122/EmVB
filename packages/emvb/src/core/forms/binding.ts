@@ -1,5 +1,5 @@
 import { isFormNode, type Layout, type LayoutNode } from "../schema/layout.ts";
-import { nodeChildren } from "../tree-ops.ts";
+import { forEachNode, someNode } from "../tree-ops.ts";
 import { fieldsOf, type FormDefinitions } from "./definition.ts";
 
 export type MissingRequiredField = {
@@ -8,14 +8,9 @@ export type MissingRequiredField = {
   field: string;
 };
 
-function walk(node: LayoutNode, visit: (node: LayoutNode) => void): void {
-  visit(node);
-  for (const child of nodeChildren(node)) walk(child, visit);
-}
-
 function boundFields(form: LayoutNode): Set<string> {
   const names = new Set<string>();
-  walk(form, (node) => {
+  forEachNode(form, (node) => {
     if (
       node.type === "text-input" ||
       node.type === "textarea" ||
@@ -38,7 +33,7 @@ export function findMissingRequiredFields(
   definitions: FormDefinitions,
 ): MissingRequiredField[] {
   const missing: MissingRequiredField[] = [];
-  walk(layout.root, (node) => {
+  forEachNode(layout.root, (node) => {
     if (!isFormNode(node) || !node.props.formId) return;
     const definition = definitions.get(node.props.formId);
     if (!definition) return;
@@ -53,9 +48,5 @@ export function findMissingRequiredFields(
 }
 
 export function layoutHasForm(layout: Layout): boolean {
-  let found = false;
-  walk(layout.root, (node) => {
-    if (isFormNode(node) && node.props.formId.trim()) found = true;
-  });
-  return found;
+  return someNode(layout.root, (node) => isFormNode(node) && node.props.formId.trim() !== "");
 }

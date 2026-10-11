@@ -6,9 +6,11 @@ import { cssScopeToken, scopeClassName, scopeCss, scopeWrapperCss } from "../css
 import { ELEMENTS } from "../elements/index.ts";
 import { controlId } from "../elements/field-id.ts";
 import { layoutHasForm } from "../forms/binding.ts";
+import { forEachNode, someNode } from "../tree-ops.ts";
 import { layoutHasMenuDropdown, layoutHasTabs } from "../tabs/presence.ts";
 import type { DesignSystem } from "../schema/design.ts";
 import {
+  FORM_FIELD_TYPES,
   isFormNode,
   isLoopNode,
   isParentNode,
@@ -162,7 +164,7 @@ function originHash(origin: string): string {
 }
 
 /** Form fields whose control carries an `emvb-field-<id>` HTML id (W-187). */
-const FIELD_TYPES = new Set(["text-input", "textarea", "select", "checkbox", "radio"]);
+const FIELD_TYPES = new Set<string>(FORM_FIELD_TYPES.filter((type) => type !== "submit"));
 
 const ID_ATTRS = ["id", "for", "aria-controls", "aria-labelledby", "aria-describedby"] as const;
 
@@ -513,26 +515,18 @@ export function renderPage(
 }
 
 function treeHasType(node: LayoutNode, type: string): boolean {
-  if (node.type === type) return true;
-  if (!("children" in node) || !Array.isArray(node.children)) return false;
-  return node.children.some((child) => treeHasType(child, type));
+  return someNode(node, (current) => current.type === type);
 }
 
 function headingAnchors(root: LayoutNode): { id: string; text: string }[] {
   const out: { id: string; text: string }[] = [];
-  const walk = (node: LayoutNode) => {
-    if (node.type === "heading") {
-      const text = String((node.props as { text?: unknown }).text ?? "").trim();
-      if (text) {
-        const id = node.htmlId && HTML_ID.test(node.htmlId) ? node.htmlId : `emvb-h-${node.id}`;
-        out.push({ id, text });
-      }
-    }
-    if ("children" in node && Array.isArray(node.children)) {
-      for (const child of node.children) walk(child);
-    }
-  };
-  walk(root);
+  forEachNode(root, (node) => {
+    if (node.type !== "heading") return;
+    const text = String((node.props as { text?: unknown }).text ?? "").trim();
+    if (!text) return;
+    const id = node.htmlId && HTML_ID.test(node.htmlId) ? node.htmlId : `emvb-h-${node.id}`;
+    out.push({ id, text });
+  });
   return out;
 }
 

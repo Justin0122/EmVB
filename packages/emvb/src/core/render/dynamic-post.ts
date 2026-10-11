@@ -1,3 +1,4 @@
+import { HEADING_TAGS } from "../elements/index.ts";
 import type { LayoutNode, POST_DATE_FORMATS } from "../schema/layout.ts";
 import { sanitizeHref } from "../sanitize/href.ts";
 import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
@@ -30,8 +31,6 @@ type PostField = {
   /** The field's markup, or nothing when the post's value is empty or unsafe. */
   render: (node: LayoutNode, attrs: Attrs, post: ThemePostFields) => VNode | undefined;
 };
-
-const HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
 
 type PostDateFormat = (typeof POST_DATE_FORMATS)[number];
 

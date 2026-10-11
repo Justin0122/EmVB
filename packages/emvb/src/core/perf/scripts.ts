@@ -1,4 +1,5 @@
 import { isParentNode, type Layout, type LayoutNode } from "../schema/layout.ts";
+import { forEachNode, knownChildren } from "../tree-ops.ts";
 
 /** The small scripts an EmVB page can load; everything else is plain HTML and CSS (W-311). */
 export type PageScript = "forms" | "tabs" | "menu";
@@ -48,11 +49,13 @@ export const typeMayAddScript = (type: string): boolean =>
 /** Every script the layout loads, with the elements that cause it (W-311). */
 export function layoutScripts(layout: Layout): Map<PageScript, string[]> {
   const found = new Map<PageScript, string[]>();
-  const walk = (node: LayoutNode): void => {
-    const script = nodeScript(node);
-    if (script) found.set(script, [...(found.get(script) ?? []), node.id]);
-    if (isParentNode(node)) for (const child of node.children) walk(child);
-  };
-  walk(layout.root);
+  forEachNode(
+    layout.root,
+    (node) => {
+      const script = nodeScript(node);
+      if (script) found.set(script, [...(found.get(script) ?? []), node.id]);
+    },
+    knownChildren,
+  );
   return found;
 }

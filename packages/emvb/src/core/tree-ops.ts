@@ -14,6 +14,29 @@ export const nodeChildren = (node: LayoutNode): LayoutNode[] => {
   return [];
 };
 
+/** Children of a known parent only. Unknown nodes are not descended into (W-353). */
+export const knownChildren = (node: LayoutNode): readonly LayoutNode[] =>
+  isParentNode(node) ? node.children : [];
+
+/** Visit `node` and every node under it. Pass `knownChildren` to skip unknown nodes. */
+export function forEachNode(
+  node: LayoutNode,
+  visit: (node: LayoutNode) => void,
+  children: (node: LayoutNode) => readonly LayoutNode[] = nodeChildren,
+): void {
+  visit(node);
+  for (const child of children(node)) forEachNode(child, visit, children);
+}
+
+/** True when `test` matches `node` or anything under it. Same descent choice as `forEachNode`. */
+export function someNode(
+  node: LayoutNode,
+  test: (node: LayoutNode) => boolean,
+  children: (node: LayoutNode) => readonly LayoutNode[] = nodeChildren,
+): boolean {
+  return test(node) || children(node).some((child) => someNode(child, test, children));
+}
+
 /** Where a removed node was, so it can be put back exactly (the Restore toast, D-025). */
 export type Removed = { node: LayoutNode; parentId: string; index: number };
 

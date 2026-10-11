@@ -3,22 +3,16 @@ import {
   isFormNode,
   type FormDefinitions,
   type Layout,
-  type LayoutNode,
   type PublicFormDefinition,
   type PublicFormField,
 } from "../core/index.ts";
-import { nodeChildren } from "../core/tree-ops.ts";
+import { forEachNode } from "../core/tree-ops.ts";
 
 const FORMS_PLUGIN = "emdash-forms";
 
-function walk(node: LayoutNode, visit: (node: LayoutNode) => void): void {
-  visit(node);
-  for (const child of nodeChildren(node)) walk(child, visit);
-}
-
 export function formIdsInLayout(layout: Layout): string[] {
   const ids = new Set<string>();
-  walk(layout.root, (node) => {
+  forEachNode(layout.root, (node) => {
     if (isFormNode(node) && node.props.formId) ids.add(node.props.formId);
   });
   return [...ids];

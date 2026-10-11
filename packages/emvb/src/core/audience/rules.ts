@@ -1,4 +1,5 @@
-import { isParentNode, type Audience, type Layout, type LayoutNode } from "../schema/layout.ts";
+import { type Audience, type Layout, type LayoutNode } from "../schema/layout.ts";
+import { knownChildren, someNode } from "../tree-ops.ts";
 
 /** What the host knows about this visitor (W-313). Anything unknown is left out. */
 export type VisitorInfo = {
@@ -86,11 +87,10 @@ export function layoutUsesVisitorRule(layout: Layout): boolean {
 }
 
 const hasAudience = (node: LayoutNode): boolean =>
-  Boolean(node.audience) || (isParentNode(node) && node.children.some(hasAudience));
+  someNode(node, (current) => Boolean(current.audience), knownChildren);
 
 const hasVisitorRule = (node: LayoutNode): boolean =>
-  node.audience?.visitor !== undefined ||
-  (isParentNode(node) && node.children.some(hasVisitorRule));
+  someNode(node, (current) => current.audience?.visitor !== undefined, knownChildren);
 
 /** A device from a User-Agent and the Sec-CH-UA-Mobile hint (W-313). */
 export function deviceFromUserAgent(

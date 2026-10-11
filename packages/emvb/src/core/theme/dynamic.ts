@@ -1,7 +1,8 @@
 import type { VisitorInfo } from "../audience/rules.ts";
 import type { ArchivePagination } from "./pagination.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
-import { isParentNode, LOOP_FILTER, LOOP_PERMALINK } from "../schema/layout.ts";
+import { LOOP_FILTER, LOOP_PERMALINK } from "../schema/layout.ts";
+import { forEachNode, knownChildren } from "../tree-ops.ts";
 
 const FIELD_SLUG = /^[a-z][a-z0-9_]{0,63}$/;
 import type { VNode } from "../render/vnode.ts";
@@ -219,19 +220,18 @@ export function portableTextToVNodes(value: unknown): VNode[] {
 /** Collect `loop.itemPartId` values so hosts can load Loop Item templates. */
 export function collectLoopItemPartIds(layout: Layout): string[] {
   const ids = new Set<string>();
-  const walk = (node: LayoutNode): void => {
-    if (node.type === "loop") {
+  forEachNode(
+    layout.root,
+    (node) => {
+      if (node.type !== "loop") return;
       const id =
         typeof (node.props as { itemPartId?: unknown }).itemPartId === "string"
           ? (node.props as { itemPartId: string }).itemPartId.trim()
           : "";
       if (id) ids.add(id);
-    }
-    if (isParentNode(node)) {
-      for (const child of node.children) walk(child);
-    }
-  };
-  walk(layout.root);
+    },
+    knownChildren,
+  );
   return [...ids];
 }
 
@@ -315,11 +315,8 @@ export function collectCollectionLoops(layout: Layout): CollectionLoop[] {
         loops.push(loop);
       }
     }
-    if (isParentNode(node)) {
-      for (const child of node.children) walk(child);
-    }
   };
-  walk(layout.root);
+  forEachNode(layout.root, walk, knownChildren);
   return loops;
 }
 
@@ -334,11 +331,8 @@ export function collectSectionPartIds(layout: Layout): string[] {
           : "";
       if (id) ids.add(id);
     }
-    if (isParentNode(node)) {
-      for (const child of node.children) walk(child);
-    }
   };
-  walk(layout.root);
+  forEachNode(layout.root, walk, knownChildren);
   return [...ids];
 }
 

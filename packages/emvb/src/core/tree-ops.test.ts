@@ -2,11 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { s1Page } from "../../test/fixtures/layouts.ts";
 import {
   findNode,
+  forEachNode,
   insertNode,
+  knownChildren,
   newNodeId,
   nodeIdAtPath,
   removeNode,
   slugify,
+  someNode,
   starterLayout,
   updateNode,
 } from "./tree-ops.ts";
@@ -86,5 +89,21 @@ describe("new pages", () => {
     ["a".repeat(100), "a".repeat(80)],
   ])("slugify(%p) = %p", (input, slug) => {
     expect(slugify(input)).toBe(slug);
+  });
+});
+
+describe("shared tree walk (W-353)", () => {
+  test("forEachNode visits children of an unknown node; knownChildren does not", () => {
+    const unknown = {
+      id: "car00001",
+      type: "carousel",
+      props: {},
+      children: [{ id: "head0009", type: "heading" as const, props: { text: "Slide", level: 2 } }],
+    };
+    const seen: string[] = [];
+    forEachNode(unknown, (node) => seen.push(node.id));
+    expect(seen).toEqual(["car00001", "head0009"]);
+    expect(someNode(unknown, (node) => node.id === "head0009", knownChildren)).toBe(false);
+    expect(someNode(unknown, (node) => node.id === "head0009")).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 import type { DesignSystem } from "../schema/design.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
 import type { StyleProps } from "../schema/style.ts";
-import { nodeChildren, slugify, updateNode } from "../tree-ops.ts";
+import { forEachNode, slugify, updateNode } from "../tree-ops.ts";
 
 /** Reorder an applied class-id list. Out-of-range moves are no-ops. Pure (W-031). */
 export function moveClassId(ids: readonly string[], index: number, delta: -1 | 1): string[] {
@@ -27,15 +27,10 @@ export function removeClassId(ids: readonly string[], id: string): string[] {
   return ids.filter((entry) => entry !== id);
 }
 
-function walk(node: LayoutNode, visit: (node: LayoutNode) => void): void {
-  visit(node);
-  for (const child of nodeChildren(node)) walk(child, visit);
-}
-
 /** Nodes that list `classId` in `node.classes` (W-032 delete dialog). */
 export function findClassUsages(layout: Layout, classId: string): { nodeId: string }[] {
   const usages: { nodeId: string }[] = [];
-  walk(layout.root, (node) => {
+  forEachNode(layout.root, (node) => {
     if (node.classes?.includes(classId)) usages.push({ nodeId: node.id });
   });
   return usages;

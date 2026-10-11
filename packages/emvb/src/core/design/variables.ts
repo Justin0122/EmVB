@@ -1,9 +1,9 @@
 import type { DesignSystem } from "../schema/design.ts";
-import type { Layout, LayoutNode } from "../schema/layout.ts";
+import type { Layout } from "../schema/layout.ts";
 import { cleanClassName } from "./classes.ts";
 import { STYLE_STATES } from "../schema/state-names.ts";
 import type { DeviceStyles, StyleProps, StyleStates } from "../schema/style.ts";
-import { nodeChildren, slugify, updateNode } from "../tree-ops.ts";
+import { forEachNode, slugify, updateNode } from "../tree-ops.ts";
 
 export type VariableKind = "color" | "font" | "fontSize" | "spacing";
 
@@ -72,11 +72,6 @@ function collectAllUsages(
   }
 }
 
-function walkNodes(node: LayoutNode, visit: (node: LayoutNode) => void): void {
-  visit(node);
-  for (const child of nodeChildren(node)) walkNodes(child, visit);
-}
-
 /** Find every style property on `layout` that references variable `id` (optionally of `kind`). */
 export function findVariableUsages(
   layout: Layout,
@@ -84,7 +79,7 @@ export function findVariableUsages(
   kind?: VariableKind,
 ): VariableUsage[] {
   const usages: VariableUsage[] = [];
-  walkNodes(layout.root, (node) => {
+  forEachNode(layout.root, (node) => {
     collectAllUsages(node, id, kind, (prop) => {
       usages.push({ nodeId: node.id, prop });
     });

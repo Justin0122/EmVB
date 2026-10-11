@@ -1,4 +1,5 @@
 import type { Binding, BindSource, LayoutNode } from "../schema/layout.ts";
+import { someNode } from "../tree-ops.ts";
 import { sanitizeHref } from "../sanitize/href.ts";
 import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import type { ThemePostFields } from "../theme/dynamic.ts";
@@ -248,10 +249,7 @@ export function siteBindingValues(settings: unknown): Record<string, string> {
 
 /** Whether any node in the tree reads a source (hosts fetch site settings only when needed). */
 export function layoutUsesSource(root: LayoutNode, source: BindSource): boolean {
-  const walk = (node: LayoutNode): boolean => {
-    if (node.bind && Object.values(node.bind).some((b) => b.source === source)) return true;
-    const children: unknown = (node as { children?: unknown }).children;
-    return Array.isArray(children) && (children as LayoutNode[]).some(walk);
-  };
-  return walk(root);
+  return someNode(root, (node) =>
+    Boolean(node.bind && Object.values(node.bind).some((b) => b.source === source)),
+  );
 }

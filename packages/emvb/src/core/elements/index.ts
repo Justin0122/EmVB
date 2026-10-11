@@ -48,7 +48,7 @@ import {
   postAuthor,
 } from "./dynamic-elements.ts";
 
-const HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
+export const HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
 
 const newTabAttrs = (newTab: boolean | undefined): Record<string, string> =>
   newTab ? { target: "_blank", rel: "noopener noreferrer" } : {};
