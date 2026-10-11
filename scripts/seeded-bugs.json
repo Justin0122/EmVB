@@ -4663,9 +4663,9 @@
       "description": "editing a class writes the element's local styles instead",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/panels/ElementPanel.tsx",
-          "search": "    if (!cls) {\n      onChange(",
-          "replace": "    if (cls || !cls) {\n      onChange("
+          "file": "packages/emvb/src/admin/editor/panels/style-target.ts",
+          "search": "  if (!classId) {\n    return {\n      kind: \"node\",\n      node:\n",
+          "replace": "  if (!classId || classId) {\n    return {\n      kind: \"node\",\n      node:\n"
         }
       ],
       "command": [
@@ -9015,7 +9015,7 @@
       "description": "editing in Hover changes the Normal style",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/panels/ElementPanel.tsx",
+          "file": "packages/emvb/src/admin/editor/panels/style-target.ts",
           "search": "        state === \"normal\"\n          ? withStyle(node, patch)\n          : withStates(node, patchStates(node.states, state, patch)),",
           "replace": "        withStyle(node, patch),"
         }
@@ -9160,8 +9160,8 @@
       "description": "editing a class in Hover changes the class Normal style",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/panels/ElementPanel.tsx",
-          "search": "        : patchClassState(design, cls.id, state, patch);",
+          "file": "packages/emvb/src/admin/editor/panels/style-target.ts",
+          "search": "      : patchClassState(design, cls.id, state, patch);",
           "replace": "        : patchClassStyle(design, cls.id, patch);"
         }
       ],
@@ -28345,6 +28345,26 @@
         "dialogs start closed"
       ],
       "expect": "\\(fail\\).*dialogs start closed"
+    },
+    {
+      "id": "W-364/tablet-patch-hits-desktop",
+      "requirement": "W-364",
+      "description": "a tablet colour edit writes the desktop style",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/style-target.ts",
+          "search": "  if (device !== \"desktop\") return { owner, slot: \"device\", device };\n",
+          "replace": "  if (device !== \"desktop\") return { owner, slot: \"style\" };\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/style-target.test.ts",
+        "-t",
+        "a tablet patch stays on the tablet slot"
+      ],
+      "expect": "\\(fail\\).*a tablet patch stays on the tablet slot"
     }
   ]
 }

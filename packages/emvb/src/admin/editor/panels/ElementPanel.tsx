@@ -32,12 +32,6 @@ import {
   type Arranged,
   inheritedStyle,
   type LayoutNode,
-  patchClassDevices,
-  patchClassState,
-  patchClassStyle,
-  patchDeviceStyle,
-  patchStates,
-  type DeviceStyles,
   type PopupDevice,
   type ResponsiveDevice,
   classStylesInListOrder,
@@ -49,6 +43,7 @@ import {
   type StyleProps,
   type StyleStates,
 } from "../../../core/index.ts";
+import { applyStylePatch } from "./style-target.ts";
 import { FieldControl } from "./settings/FieldControl.tsx";
 import { BindingsEditor } from "./settings/BindingsEditor.tsx";
 import { VariantEditor } from "./settings/VariantEditor.tsx";
@@ -85,25 +80,6 @@ const enclosingFormId = (layout: Layout, nodeId: string): string | undefined => 
     current = parentOf(layout, current);
   }
   return undefined;
-};
-
-const withStyle = (node: LayoutNode, patch: Partial<StyleProps>): LayoutNode => {
-  const style: Record<string, unknown> = { ...node.style, ...patch };
-  for (const key of Object.keys(style)) if (style[key] === undefined) delete style[key];
-  return {
-    ...node,
-    style: Object.keys(style).length > 0 ? (style as StyleProps) : undefined,
-  };
-};
-
-const withDevices = (node: LayoutNode, devices: DeviceStyles | undefined): LayoutNode => {
-  const { devices: _old, ...rest } = node;
-  return (devices ? { ...rest, devices } : rest) as LayoutNode;
-};
-
-const withStates = (node: LayoutNode, states: StyleStates | undefined): LayoutNode => {
-  const { states: _old, ...rest } = node;
-  return (states ? { ...rest, states } : rest) as LayoutNode;
 };
 
 const sectionKey = (type: string) => `emvb-style-sections:${type}`;
@@ -402,34 +378,20 @@ function KnownElementPanel({
     node.props.singleColor !== true &&
     iconHasOwnColors(iconSvg);
   const patchStyle = (patch: Partial<StyleProps>) => {
-    if (responsive) {
-      if (!cls) {
-        onChange(withDevices(node, patchDeviceStyle(node.devices, responsive, patch)));
-        return;
-      }
-      setDesignError(null);
-      onDesignChange(patchClassDevices(design, cls.id, responsive, patch)).catch((error: unknown) =>
-        setDesignError(
-          error instanceof Error ? error.message : "Couldn't save the class. Try again.",
-        ),
-      );
-      return;
-    }
-    const state = styleState;
-    if (!cls) {
-      onChange(
-        state === "normal"
-          ? withStyle(node, patch)
-          : withStates(node, patchStates(node.states, state, patch)),
-      );
+    const written = applyStylePatch({
+      node,
+      design,
+      classId: cls ? cls.id : null,
+      device,
+      state: styleState,
+      patch,
+    });
+    if (written.kind === "node") {
+      onChange(written.node);
       return;
     }
     setDesignError(null);
-    const next =
-      state === "normal"
-        ? patchClassStyle(design, cls.id, patch)
-        : patchClassState(design, cls.id, state, patch);
-    onDesignChange(next).catch((error: unknown) =>
+    onDesignChange(written.design).catch((error: unknown) =>
       setDesignError(
         error instanceof Error ? error.message : "Couldn't save the class. Try again.",
       ),
