@@ -401,7 +401,10 @@ test("hover, focus and active states from local styles and a class work on the p
     };
     const html = await publishedHtml(request, "States check", layout, slug);
     expect(html).toContain(".emvb-e-btn00001:hover{");
-    expect(html).toContain(".emvb-e-btn00001:focus-visible{");
+    expect(html).toContain(".emvb-e-btn00001:focus-visible,");
+    expect(html).toContain(
+      ".emvb-e-btn00001:has(> :is(.emvb-heading-link,.emvb-icon-link):focus-visible){border-color:#f59e0b}",
+    );
     expect(html).toContain(".emvb-e-btn00001:active{");
     expect(html).toContain(`.emvb-k-${classId}:hover{`);
     expect(html).toContain("@media (prefers-reduced-motion: reduce)");
