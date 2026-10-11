@@ -116,27 +116,37 @@ const attrText = (attrs: Record<string, string>) =>
     .map(([name, value]) => ` ${name}="${value}"`)
     .join("");
 
-/** The icons of one set file, ready for the grid. */
-function iconsOf(file: IconSetFile): LibraryIcon[] {
+/**
+ * The icons of one set file, ready for the grid. Tiles go through the same SVG allowlist as
+ * uploads: a viewBox or body that breaks out of the markup is left out, not shown.
+ */
+export function iconsOf(file: IconSetFile): LibraryIcon[] {
   const styles = file.styles.map((style) => ({ style, root: attrText(style.attrs) }));
-  return file.icons.map((entry: IconEntry) => {
+  return file.icons.flatMap((entry: IconEntry) => {
     const [name, styleIndex, label, body, tags] = entry;
     const picked = styles[styleIndex] ?? styles[0];
     if (!picked) throw new Error(`EmVB: icon set ${file.id} has no styles`);
     const { style, root } = picked;
     const viewBox = entry[5] ?? style.viewBox;
-    return {
-      id: `${style.prefix}:${name}`,
-      set: file.id as IconSetId,
-      setLabel: file.label,
-      style: style.id,
-      styleLabel: style.label,
-      name,
-      label,
-      haystack: fold(`${label} ${name.replaceAll("-", " ")} ${tags} ${file.label} ${style.label}`),
-      named: fold(`${label} | ${name.replaceAll("-", " ")}`),
-      markup: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${root}>${body}</svg>`,
-    };
+    const raw = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}"${root}>${body}</svg>`;
+    const safe = sanitizeSvgMarkup(raw);
+    if (!safe) return [];
+    return [
+      {
+        id: `${style.prefix}:${name}`,
+        set: file.id as IconSetId,
+        setLabel: file.label,
+        style: style.id,
+        styleLabel: style.label,
+        name,
+        label,
+        haystack: fold(
+          `${label} ${name.replaceAll("-", " ")} ${tags} ${file.label} ${style.label}`,
+        ),
+        named: fold(`${label} | ${name.replaceAll("-", " ")}`),
+        markup: serialize(safe),
+      },
+    ];
   });
 }
 

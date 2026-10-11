@@ -28404,6 +28404,26 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/inline-error.test.tsx"],
       "expect": "\\(fail\\).*an inline error is an alert"
+    },
+    {
+      "id": "W-370/icon-tile-keeps-onload",
+      "requirement": "W-370",
+      "description": "a bundled icon tile keeps a viewBox that breaks out into an onload handler",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/icons/library.ts",
+          "search": "    const safe = sanitizeSvgMarkup(raw);\n    if (!safe) return [];",
+          "replace": "    const safe = sanitizeSvgMarkup(raw) ?? { tag: \"svg\", attrs: {}, children: [raw] };"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/icons/library.test.ts",
+        "-t",
+        "hostile viewBox"
+      ],
+      "expect": "\\(fail\\).*hostile viewBox"
     }
   ]
 }

@@ -6,6 +6,7 @@ import {
   ICON_CATEGORIES,
   ICON_SETS,
   filterIcons,
+  iconsOf,
   loadIconSet,
   locateIcon,
   setsFor,
@@ -153,5 +154,27 @@ describe("Icon library sets (W-235)", () => {
     expect(locateIcon("other:thing")).toBeUndefined();
     const lucide = new Set(ids(all));
     for (const id of BUNDLED_ICON_IDS) expect(lucide.has(`lucide:${id}`)).toBe(true);
+  });
+
+  test("a hostile viewBox is left out of the tile (W-370)", () => {
+    const icons = iconsOf({
+      id: "lucide",
+      label: "Lucide",
+      version: "0",
+      license: "ISC",
+      styles: [
+        {
+          id: "lucide",
+          label: "Lucide",
+          prefix: "lucide",
+          viewBox: "0 0 24 24",
+          attrs: { fill: "none", stroke: "currentColor" },
+        },
+      ],
+      icons: [["bad", 0, "Bad", `<path d="M0 0"/>`, "", `0 0 24 24" onload="alert(1)`]],
+    });
+    const markup = icons.map((icon) => icon.markup).join("");
+    expect(markup.includes("onload")).toBe(false);
+    expect(icons.length).toBe(0);
   });
 });
