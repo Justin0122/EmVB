@@ -19,3 +19,7 @@ export const SHORTCUTS: readonly { action: string; keys: string }[] = [
 /** Ctrl/Cmd+K opens the host command palette, which would stack over the editor (S0-6). */
 export const isPaletteShortcut = (event: KeyboardEvent) =>
   (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "k";
+
+/** Focus is inside an open dialog, where only Save fires. */
+export const inDialog = (target: EventTarget | null) =>
+  !!(target as HTMLElement | null)?.closest?.('[role="dialog"], [role="alertdialog"]');

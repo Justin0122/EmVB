@@ -1,8 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { EDITOR_CSS } from "./editor-css.ts";
-import { isPaletteShortcut } from "./shortcuts.ts";
-import { inDialog } from "./useEditorShortcuts.ts";
+import { inDialog, isPaletteShortcut } from "./shortcuts.ts";
 
 /**
  * The full-screen editor layer (D-011, S0-6). It is portaled to `document.body` with
