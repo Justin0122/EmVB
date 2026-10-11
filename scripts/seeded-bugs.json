@@ -28458,6 +28458,26 @@
       ],
       "command": ["bun", "test", "./test/playground/view.test.ts", "-t", "not JSON"],
       "expect": "\\(fail\\).*not JSON"
+    },
+    {
+      "id": "W-373/index-drops-parent",
+      "requirement": "W-373",
+      "description": "the layout index forgets which element contains another",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/tree-ops.ts",
+          "search": "      if (parentId) parents.set(node.id, parentId);",
+          "replace": "      if (false) parents.set(node.id, parentId);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/tree-ops.test.ts",
+        "-t",
+        "one walk answers a node and its parent"
+      ],
+      "expect": "\\(fail\\).*one walk answers a node and its parent"
     }
   ]
 }

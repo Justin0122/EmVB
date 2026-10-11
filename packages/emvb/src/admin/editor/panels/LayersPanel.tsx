@@ -14,6 +14,7 @@ import {
   SCRIPT_LABELS,
   type PageScript,
 } from "../../../core/index.ts";
+import { indexLayout } from "../../../core/tree-ops.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
 import { editorCommands } from "../editor-commands.ts";
@@ -212,10 +213,11 @@ export function LayersPanel({
     if (!layout || !selectedId) return;
     setCollapsed((current) => {
       const next = new Set(current);
+      const parents = indexLayout(layout).parentOf;
       let id: string | undefined = selectedId;
       while (id) {
         next.delete(id);
-        id = parentOf(layout, id);
+        id = parents.get(id);
       }
       return next;
     });

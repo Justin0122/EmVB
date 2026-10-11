@@ -37,6 +37,40 @@ export function someNode(
   return test(node) || children(node).some((child) => someNode(child, test, children));
 }
 
+export type LayoutIndex = {
+  byId: Map<string, LayoutNode>;
+  /** Parent id for a node under a container or form. A child of an unknown node has none. */
+  parentOf: Map<string, string>;
+};
+
+const indexes = new WeakMap<Layout, LayoutIndex>();
+
+/**
+ * One walk for later id and parent lookups. The same layout object keeps the result, so a render
+ * that asks many times walks once. A page stays within 2000 elements and 24 levels.
+ */
+export function indexLayout(layout: Layout): LayoutIndex {
+  const cached = indexes.get(layout);
+  if (cached) return cached;
+  const byId = new Map<string, LayoutNode>();
+  const parents = new Map<string, string>();
+  const seen = new Set<LayoutNode>();
+  const walk = (node: LayoutNode, parentId: string | undefined) => {
+    if (seen.has(node)) return;
+    seen.add(node);
+    if (!byId.has(node.id)) {
+      byId.set(node.id, node);
+      if (parentId) parents.set(node.id, parentId);
+    }
+    const nextParent = isParentNode(node) ? node.id : undefined;
+    for (const child of nodeChildren(node)) walk(child, nextParent);
+  };
+  walk(layout.root, undefined);
+  const index: LayoutIndex = { byId, parentOf: parents };
+  indexes.set(layout, index);
+  return index;
+}
+
 /** Where a removed node was, so it can be put back exactly (the Restore toast, D-025). */
 export type Removed = { node: LayoutNode; parentId: string; index: number };
 

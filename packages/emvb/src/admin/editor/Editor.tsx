@@ -8,7 +8,6 @@ import {
 import * as React from "react";
 import {
   auditPage,
-  findNode,
   moveDown,
   moveUp,
   renderPage,
@@ -17,6 +16,7 @@ import {
   type PopupDevice,
 } from "../../core/index.ts";
 import { PAGES_COLLECTION, THEME_PARTS_COLLECTION } from "../../constants.ts";
+import { indexLayout } from "../../core/tree-ops.ts";
 import type { Fetcher } from "../api.ts";
 import { loadFormsCapability } from "../forms-api.ts";
 import { CanvasFrame, type CanvasSelection, type CanvasZoom } from "./canvas/CanvasFrame.tsx";
@@ -233,8 +233,12 @@ function EditorApp({
       collections,
     ],
   );
+  const layoutIndex = React.useMemo(
+    () => (state.page.layout ? indexLayout(state.page.layout) : undefined),
+    [state.page.layout],
+  );
   const selectedNode =
-    state.selectedId && state.page.layout ? findNode(state.page.layout, state.selectedId) : null;
+    state.selectedId && layoutIndex ? (layoutIndex.byId.get(state.selectedId) ?? null) : null;
   // W-317: the live accessibility score.
   const a11y = React.useMemo(
     () =>
@@ -261,7 +265,7 @@ function EditorApp({
   const selection: CanvasSelection = {
     selectedId: selectedNode ? state.selectedId : null,
     labelFor: (id) => {
-      const node = state.page.layout ? findNode(state.page.layout, id) : undefined;
+      const node = layoutIndex?.byId.get(id);
       return node ? (node.label ?? ELEMENT_NAMES[node.type] ?? node.type) : "Element";
     },
     canDelete,
@@ -405,11 +409,7 @@ function EditorApp({
               <main className="emvb-canvas">
                 <DeviceBar
                   device={device}
-                  hidden={
-                    !!state.page.layout &&
-                    !!state.selectedId &&
-                    !!findNode(state.page.layout, state.selectedId)?.hiddenOn?.includes(device)
-                  }
+                  hidden={!!selectedNode?.hiddenOn?.includes(device)}
                   canHide={!!hideOnDevice && !hideOnDevice.disabled}
                   hideLabel={hideOnDevice?.label ?? `Hide on ${device}`}
                   onDevice={setDevice}

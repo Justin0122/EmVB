@@ -3,6 +3,7 @@ import { s1Page } from "../../test/fixtures/layouts.ts";
 import {
   findNode,
   forEachNode,
+  indexLayout,
   insertNode,
   knownChildren,
   newNodeId,
@@ -89,6 +90,28 @@ describe("new pages", () => {
     ["a".repeat(100), "a".repeat(80)],
   ])("slugify(%p) = %p", (input, slug) => {
     expect(slugify(input)).toBe(slug);
+  });
+});
+
+describe("layout index (W-373)", () => {
+  test("one walk answers a node and its parent", () => {
+    const page = twoHeadings();
+    const index = indexLayout(page);
+    expect(index.byId.get("head0002")?.type).toBe("heading");
+    expect(index.parentOf.get("head0002")).toBe("root0001");
+    expect(index.parentOf.get("root0001")).toBeUndefined();
+    expect(indexLayout(page)).toBe(index);
+    const withUnknownPage = twoHeadings();
+    withUnknownPage.root.children.push({
+      id: "car00001",
+      type: "carousel",
+      props: {},
+      children: [{ id: "head0009", type: "heading", props: { text: "Slide", level: 2 } }],
+    } as (typeof page.root.children)[number]);
+    const withUnknown = indexLayout(withUnknownPage);
+    expect(withUnknown.parentOf.get("car00001")).toBe("root0001");
+    expect(withUnknown.parentOf.get("head0009")).toBeUndefined();
+    expect(withUnknown.byId.get("head0009")?.id).toBe("head0009");
   });
 });
 

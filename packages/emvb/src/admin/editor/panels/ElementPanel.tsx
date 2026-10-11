@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import * as React from "react";
 import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
+import { indexLayout } from "../../../core/tree-ops.ts";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { sharedPartH1 } from "./settings/heading-warning.ts";
 import { UNNAMED_BOX_LINK_NOTE, unnamedBoxLink } from "./settings/box-link-name.ts";
@@ -20,12 +21,10 @@ import { duplicateFieldName } from "./settings/form-names.ts";
 import { hasItemList, ItemList, type ItemActions } from "./settings/ItemList.tsx";
 import {
   ELEMENT_DESCRIPTORS,
-  findNode,
   hasLocalStyles,
   localStylesToClass,
   localToClassRefusal,
   isFormNode,
-  parentOf,
   type DesignSystem,
   type ElementDescriptor,
   type Layout,
@@ -73,11 +72,12 @@ import {
 } from "./settings/style-sections.ts";
 
 const enclosingFormId = (layout: Layout, nodeId: string): string | undefined => {
-  let current = parentOf(layout, nodeId);
+  const index = indexLayout(layout);
+  let current = index.parentOf.get(nodeId);
   while (current) {
-    const node = findNode(layout, current);
+    const node = index.byId.get(current);
     if (node && isFormNode(node)) return node.props.formId || undefined;
-    current = parentOf(layout, current);
+    current = index.parentOf.get(current);
   }
   return undefined;
 };
@@ -362,13 +362,20 @@ function KnownElementPanel({
   const position = positionInEffect(node, design, cls);
   const iconSvg =
     node.type === "icon" && typeof node.props.iconSvg === "string" ? node.props.iconSvg : undefined;
-  const strokeAdjustable = node.type === "icon" && !cls ? iconHasAdjustableStroke(iconSvg) : true;
+  const strokeAdjustable = React.useMemo(
+    () => (node.type === "icon" && !cls ? iconHasAdjustableStroke(iconSvg) : true),
+    [node.type, cls, iconSvg],
+  );
+  const ownColors = React.useMemo(
+    () => node.type === "icon" && iconHasOwnColors(iconSvg),
+    [node.type, iconSvg],
+  );
   const singleColorOffered =
     node.type === "icon" &&
     !cls &&
     !responsive &&
     styleState === "normal" &&
-    (node.props.singleColor === true || iconHasOwnColors(iconSvg));
+    (node.props.singleColor === true || ownColors);
   // W-296: elsewhere (Hover, Focus, a device) Colour does nothing on such an SVG until Force single
   // colour is on, and that switch only lives in Normal on Desktop, so say so there.
   const colorIgnoredHere =
@@ -376,7 +383,7 @@ function KnownElementPanel({
     !cls &&
     !singleColorOffered &&
     node.props.singleColor !== true &&
-    iconHasOwnColors(iconSvg);
+    ownColors;
   const patchStyle = (patch: Partial<StyleProps>) => {
     const written = applyStylePatch({
       node,
@@ -722,16 +729,17 @@ function breadcrumb(
   id: string,
 ): Array<{ id: string | null; label: string }> {
   if (!layout) return [];
+  const index = indexLayout(layout);
   const chain: Array<{ id: string; label: string }> = [];
   let current: string | undefined = id;
   while (current) {
-    const node = findNode(layout, current);
+    const node = index.byId.get(current);
     if (!node) break;
     chain.unshift({
       id: node.id,
       label: ELEMENT_NAMES[node.type] ?? node.type,
     });
-    current = parentOf(layout, current);
+    current = index.parentOf.get(current);
   }
   return [{ id: null, label: "Page" }, ...chain];
 }

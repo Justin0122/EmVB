@@ -1,10 +1,5 @@
-import {
-  findNode,
-  isFormNode,
-  parentOf,
-  type Layout,
-  type LayoutNode,
-} from "../../../../core/index.ts";
+import { isFormNode, type Layout, type LayoutNode } from "../../../../core/index.ts";
+import { indexLayout } from "../../../../core/tree-ops.ts";
 
 const fieldOf = (node: LayoutNode): string => {
   const value = (node.props as Record<string, unknown> | undefined)?.field;
@@ -16,12 +11,13 @@ const fieldOf = (node: LayoutNode): string => {
  * one value would overwrite the other. Controls outside any form are not checked.
  */
 export function duplicateFieldName(layout: Layout, nodeId: string): boolean {
-  const self = findNode(layout, nodeId);
+  const index = indexLayout(layout);
+  const self = index.byId.get(nodeId);
   const name = self ? fieldOf(self) : "";
   if (!name) return false;
-  let current = parentOf(layout, nodeId);
+  let current = index.parentOf.get(nodeId);
   while (current) {
-    const form = findNode(layout, current);
+    const form = index.byId.get(current);
     if (form && isFormNode(form)) {
       let count = 0;
       const walk = (node: LayoutNode) => {
@@ -32,7 +28,7 @@ export function duplicateFieldName(layout: Layout, nodeId: string): boolean {
       walk(form);
       return count > 1;
     }
-    current = parentOf(layout, current);
+    current = index.parentOf.get(current);
   }
   return false;
 }
