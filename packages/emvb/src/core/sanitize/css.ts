@@ -23,6 +23,7 @@ import { STYLE_STATES, type StyleStateName } from "../schema/state-names.ts";
 import type { StyleProps } from "../schema/style.ts";
 import { sanitizeMediaUrl } from "./media-url.ts";
 import { motionDeclarations, withMotion } from "./motion.ts";
+import { isRecord } from "../record.ts";
 
 const setOf = (values: readonly string[]) => new Set<string>(values);
 const VAR_ID = /^[a-z0-9-]{1,40}$/;
@@ -404,9 +405,6 @@ const BACKGROUND_KEYS = new Set([
 function isSafeBackground(value: string): boolean {
   return value.length > 0 && value.length <= 4096 && !/[{};<>\\`]|\/\*|\n|\r/.test(value);
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** A media URL wrapped for CSS. The schema already refuses quotes, spaces and parentheses. */
 function cssBackgroundImage(value: unknown): string | undefined {

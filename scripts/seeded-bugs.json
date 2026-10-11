@@ -28518,6 +28518,26 @@
         "no data is an error"
       ],
       "expect": "\\(fail\\).*no data is an error"
+    },
+    {
+      "id": "W-377/array-is-record",
+      "requirement": "W-377",
+      "description": "an array counts as a record",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/record.ts",
+          "search": "  typeof value === \"object\" && value !== null && !Array.isArray(value);",
+          "replace": "  typeof value === \"object\" && value !== null;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/record.test.ts",
+        "-t",
+        "an array and null"
+      ],
+      "expect": "\\(fail\\).*an array and null"
     }
   ]
 }

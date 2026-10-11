@@ -1,3 +1,4 @@
+import { isRecord } from "../record.ts";
 import { LAYOUT_SCHEMA_VERSION } from "../schema/layout.ts";
 
 export type Migration = (doc: Record<string, unknown>) => Record<string, unknown>;
@@ -18,9 +19,6 @@ export type Migration = (doc: Record<string, unknown>) => Record<string, unknown
  * button icons, table of contents, container queries). Every other value is unchanged.
  */
 const unchanged: Migration = (doc) => doc;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
 
 /** v11 two-stop gradient → v12 stops. A gradient that already has `stops` is left as it is. */
 function convertGradient(value: unknown): unknown {

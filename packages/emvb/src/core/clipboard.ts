@@ -12,6 +12,7 @@ import type { VariableKind } from "./design/variables.ts";
 import { clearVariableRefs, forEachStyleRef } from "./design/variables.ts";
 import { ELEMENT_DESCRIPTORS, ELEMENTS, type ElementType } from "./elements/index.ts";
 import { MAX_LAYOUT_BYTES } from "./limits.ts";
+import { isRecord } from "./record.ts";
 import { serialize } from "./render/vnode.ts";
 import { sanitizeHref } from "./sanitize/href.ts";
 import { sanitizeMediaUrl } from "./sanitize/media-url.ts";
@@ -93,9 +94,6 @@ export const encodeClip = (clip: ClipEnvelope): string => JSON.stringify(clip);
 export type ReadClip = { ok: true; clip: Clip } | Refusal;
 
 const refuse = (reason: string): Refusal => ({ ok: false, reason });
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === "object" && !Array.isArray(value);
 
 const isCount = (value: unknown): value is number =>
   typeof value === "number" && Number.isInteger(value) && value >= 1;

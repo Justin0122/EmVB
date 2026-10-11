@@ -3,6 +3,7 @@ import type { ArchivePagination } from "./pagination.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
 import { LOOP_FILTER, LOOP_PERMALINK } from "../schema/layout.ts";
 import { forEachNode, knownChildren } from "../tree-ops.ts";
+import { isRecord } from "../record.ts";
 
 const FIELD_SLUG = /^[a-z][a-z0-9_]{0,63}$/;
 import type { VNode } from "../render/vnode.ts";
@@ -74,9 +75,6 @@ export const SAMPLE_POST: ThemePostFields = {
   permalink: "#",
   featuredImageAlt: "Featured image",
 };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  Boolean(value) && typeof value === "object";
 
 const BLOCK_STYLES = new Set(["normal", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote"]);
 /** Portable Text decorators kept as their HTML element (W-328). */

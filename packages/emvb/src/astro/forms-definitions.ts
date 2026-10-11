@@ -6,6 +6,7 @@ import {
   type PublicFormDefinition,
   type PublicFormField,
 } from "../core/index.ts";
+import { isRecord } from "../core/record.ts";
 import { forEachNode } from "../core/tree-ops.ts";
 
 const FORMS_PLUGIN = "emdash-forms";
@@ -27,9 +28,6 @@ export function formIdsInLayouts(layouts: readonly (Layout | null | undefined)[]
   }
   return [...ids];
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === "object" && !Array.isArray(value);
 
 const isOption = (value: unknown): value is { label: string; value: string } =>
   isRecord(value) && typeof value.label === "string" && typeof value.value === "string";
