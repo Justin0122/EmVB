@@ -15,19 +15,11 @@ import {
 } from "../core/index.ts";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
 import { listAllItems, requestJson, type Fetcher } from "./api.ts";
+import { titleOf, type ContentItem } from "./content-item.ts";
 import { publishEntry } from "./content-api.ts";
 import { entryStatus } from "./entry-status.ts";
 
 const CONTENT = `/_emdash/api/content/${THEME_PARTS_COLLECTION}`;
-
-type RawItem = {
-  id: string;
-  slug?: string | null;
-  status?: string;
-  draftRevisionId?: string | null;
-  updatedAt?: string;
-  data?: Record<string, unknown>;
-};
 
 export type ThemePartSummary = {
   id: string;
@@ -48,12 +40,7 @@ export type ThemePartDraft = {
   layout: Layout | null;
 };
 
-const titleOf = (item: RawItem) =>
-  typeof item.data?.["title"] === "string" && item.data["title"]
-    ? item.data["title"]
-    : "Untitled theme part";
-
-function partTypeOf(item: RawItem): ThemePartType {
+function partTypeOf(item: ContentItem): ThemePartType {
   return parseThemePartType(item.data?.["part_type"]) ?? "header";
 }
 
@@ -132,10 +119,10 @@ export function summarizeConditions(raw: unknown): string {
 }
 
 export async function listThemeParts(fetcher: Fetcher): Promise<ThemePartSummary[]> {
-  const items = await listAllItems<RawItem>(fetcher, CONTENT);
+  const items = await listAllItems<ContentItem>(fetcher, CONTENT);
   return items.map((item) => ({
     id: item.id,
-    title: titleOf(item),
+    title: titleOf(item, "Untitled theme part"),
     partType: partTypeOf(item),
     status: entryStatus(item),
     updatedAt: item.updatedAt ?? "",
@@ -164,7 +151,7 @@ export async function createThemePart(
   fetcher: Fetcher,
   input: { title: string; slug: string; partType: ThemePartType },
 ): Promise<string> {
-  const body = await requestJson<{ item: RawItem }>(fetcher, CONTENT, {
+  const body = await requestJson<{ item: ContentItem }>(fetcher, CONTENT, {
     method: "POST",
     body: {
       data: {

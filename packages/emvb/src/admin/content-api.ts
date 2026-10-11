@@ -1,32 +1,18 @@
 import type {
   ConditionsDoc,
-  DesignSystem,
   FloatSettings,
   Layout,
   ThemePartType,
   TriggersDoc,
 } from "../core/index.ts";
-import { PAGES_COLLECTION, PLUGIN_ID } from "../constants.ts";
+import { PAGES_COLLECTION } from "../constants.ts";
 import { listAllItems, requestJson, type Fetcher } from "./api.ts";
+import { titleOf, type ContentItem } from "./content-item.ts";
 import { entryStatus } from "./entry-status.ts";
 
-const CONTENT = `/_emdash/api/content/${PAGES_COLLECTION}`;
+export { publishDesign, saveDesign } from "./design-api.ts";
 
-type RawItem = {
-  id: string;
-  slug?: string | null;
-  status?: string;
-  draftRevisionId?: string | null;
-  updatedAt?: string;
-  data?: Record<string, unknown>;
-  seo?: {
-    title?: string | null;
-    description?: string | null;
-    canonical?: string | null;
-    noIndex?: boolean | null;
-    image?: string | null;
-  } | null;
-};
+const CONTENT = `/_emdash/api/content/${PAGES_COLLECTION}`;
 
 export type PageSummary = {
   id: string;
@@ -36,16 +22,11 @@ export type PageSummary = {
   updatedAt: string;
 };
 
-const titleOf = (item: RawItem) =>
-  typeof item.data?.["title"] === "string" && item.data["title"]
-    ? item.data["title"]
-    : "Untitled page";
-
 export async function listPages(fetcher: Fetcher): Promise<PageSummary[]> {
-  const items = await listAllItems<RawItem>(fetcher, CONTENT);
+  const items = await listAllItems<ContentItem>(fetcher, CONTENT);
   return items.map((item) => ({
     id: item.id,
-    title: titleOf(item),
+    title: titleOf(item, "Untitled page"),
     slug: item.slug ?? "",
     status: entryStatus(item),
     updatedAt: item.updatedAt ?? "",
@@ -56,7 +37,7 @@ export async function createPage(
   fetcher: Fetcher,
   input: { title: string; slug: string; layout: Layout },
 ): Promise<string> {
-  const body = await requestJson<{ item: RawItem }>(fetcher, CONTENT, {
+  const body = await requestJson<{ item: ContentItem }>(fetcher, CONTENT, {
     method: "POST",
     body: { data: { title: input.title, layout: input.layout }, slug: input.slug },
   });
@@ -182,29 +163,4 @@ export async function previewUrl(fetcher: Fetcher, id: string): Promise<string> 
     { method: "POST", body: {} },
   );
   return body.url;
-}
-
-export async function saveDesign(
-  fetcher: Fetcher,
-  design: DesignSystem,
-  revision: string | null,
-): Promise<string> {
-  const body = await requestJson<{ revision: string }>(
-    fetcher,
-    `/_emdash/api/plugins/${PLUGIN_ID}/design/save`,
-    { method: "POST", body: { design, revision } },
-  );
-  return body.revision;
-}
-
-export async function publishDesign(
-  fetcher: Fetcher,
-  publishedRevision: string | null,
-): Promise<string> {
-  const body = await requestJson<{ revision: string }>(
-    fetcher,
-    `/_emdash/api/plugins/${PLUGIN_ID}/design/publish`,
-    { method: "POST", body: { publishedRevision } },
-  );
-  return body.revision;
 }

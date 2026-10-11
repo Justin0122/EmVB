@@ -28365,6 +28365,26 @@
         "a tablet patch stays on the tablet slot"
       ],
       "expect": "\\(fail\\).*a tablet patch stays on the tablet slot"
+    },
+    {
+      "id": "W-366/blank-title-kept",
+      "requirement": "W-366",
+      "description": "a page with no title keeps the blank string",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/content-api.ts",
+          "search": "title: titleOf(item, \"Untitled page\"),",
+          "replace": "title: titleOf(item, \"\"),"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/content-item.test.ts",
+        "-t",
+        "a page with no title reads Untitled page"
+      ],
+      "expect": "\\(fail\\).*a page with no title reads Untitled page"
     }
   ]
 }
