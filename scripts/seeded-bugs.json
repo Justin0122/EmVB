@@ -8316,8 +8316,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "  props,\n  style: StyleProps.optional(),\n  states: StyleStates.optional(),\n",
-          "replace": "  props,\n  style: StyleProps.optional(),\n"
+          "search": "  style: StyleProps.optional(),\n  states: StyleStates.optional(),\n",
+          "replace": "  style: StyleProps.optional(),\n"
         }
       ],
       "command": [
@@ -28179,8 +28179,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "  audience: Audience.optional(),\n  devices: DeviceStyles.optional(),\n  hiddenOn: HiddenOn.optional(),\n",
-          "replace": "  audience: Audience.optional(),\n"
+          "search": "  devices: DeviceStyles.optional(),\n  hiddenOn: HiddenOn.optional(),\n",
+          "replace": ""
         }
       ],
       "command": [
@@ -28191,6 +28191,26 @@
         "hidden on a device or given device styles"
       ],
       "expect": "\\(fail\\).*hidden on a device or given device styles"
+    },
+    {
+      "id": "W-352/unknown-node-dir-query-stripped",
+      "requirement": "R-033",
+      "description": "an unknown node drops its direction, container flag and container query",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "  /** Text direction for this element only (W-341). Unset follows the site direction. */\n  dir: z.enum([\"ltr\", \"rtl\", \"auto\"]).optional(),\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/schema/unknown-node.test.ts",
+        "-t",
+        "keeps direction"
+      ],
+      "expect": "\\(fail\\).*keeps direction"
     },
     {
       "id": "W-351/timeline-canvas-styles-dropped",

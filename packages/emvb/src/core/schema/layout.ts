@@ -147,11 +147,12 @@ const BoxLink = {
   newTab: z.boolean().optional(),
 };
 
-/** The fields every element has; `props` is the element's own strict props schema. */
-const nodeFields = <T extends string, P extends z.ZodType>(type: T, props: P) => ({
-  id: NodeId,
-  type: z.literal(type),
-  props,
+/**
+ * Fields every element carries, known or unknown (W-352). One object so a new field cannot
+ * land on known nodes and be stripped from unknown ones, which is what happened to
+ * `dir`, `container` and `query` before this.
+ */
+const sharedNodeFields = {
   style: StyleProps.optional(),
   states: StyleStates.optional(),
   devices: DeviceStyles.optional(),
@@ -177,6 +178,14 @@ const nodeFields = <T extends string, P extends z.ZodType>(type: T, props: P) =>
       style: StyleProps,
     })
     .optional(),
+};
+
+/** The fields every element has; `props` is the element's own strict props schema. */
+const nodeFields = <T extends string, P extends z.ZodType>(type: T, props: P) => ({
+  id: NodeId,
+  type: z.literal(type),
+  props,
+  ...sharedNodeFields,
 });
 
 const leafNode = <T extends string, P extends z.ZodType>(type: T, props: P) =>
@@ -709,17 +718,7 @@ const UnknownNodeSchema = z.strictObject({
     .max(64)
     .refine((value) => !knownTypeSet.has(value), "Unknown element type"),
   props: z.record(z.string(), z.unknown()),
-  style: StyleProps.optional(),
-  states: StyleStates.optional(),
-  classes: ClassIds.optional(),
-  htmlId: HtmlId.optional(),
-  attributes: HtmlAttributes.optional(),
-  label: NodeLabel.optional(),
-  bind: Bindings.optional(),
-  variant: Variant.optional(),
-  audience: Audience.optional(),
-  devices: DeviceStyles.optional(),
-  hiddenOn: HiddenOn.optional(),
+  ...sharedNodeFields,
   get children(): z.ZodType<LayoutNode[] | undefined> {
     return z.array(LayoutNode).optional();
   },
@@ -816,11 +815,9 @@ export type NodeExtras = {
   query?: { min: number; style: StyleOf };
 };
 
-/** Manual recursive types so UnknownNode does not poison `z.infer` of the tree. */
-export type UnknownNode = NodeExtras & {
+/** Identity, style and extras shared by every node type (W-352). */
+type NodeEnvelope = {
   id: IdOf;
-  type: string;
-  props: Record<string, unknown>;
   style?: StyleOf;
   states?: StatesOf;
   devices?: DevicesOf;
@@ -829,60 +826,38 @@ export type UnknownNode = NodeExtras & {
   htmlId?: HtmlIdOf;
   attributes?: HtmlAttributeOf[];
   label?: string;
+} & NodeExtras;
+
+/** Manual recursive types so UnknownNode does not poison `z.infer` of the tree. */
+export type UnknownNode = NodeEnvelope & {
+  type: string;
+  props: Record<string, unknown>;
   children?: LayoutNode[];
 };
 
-export type ContainerNode = NodeExtras & {
-  id: IdOf;
+export type ContainerNode = NodeEnvelope & {
   type: "container";
   props: { tag?: (typeof CONTAINER_TAGS)[number]; href?: string; newTab?: boolean };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type DivBlockNode = NodeExtras & {
-  id: IdOf;
+export type DivBlockNode = NodeEnvelope & {
   type: "div-block";
   props: { href?: string; newTab?: boolean };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type LayoutSectionNode = NodeExtras & {
-  id: IdOf;
+export type LayoutSectionNode = NodeEnvelope & {
   type: "layout-section";
   props: {
     tag?: (typeof CONTAINER_TAGS)[number];
     contentWidth?: z.infer<typeof Length>;
     fullWidth?: boolean;
   };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type GridNode = NodeExtras & {
-  id: IdOf;
+export type GridNode = NodeEnvelope & {
   type: "grid";
   props: {
     columns: number;
@@ -891,34 +866,16 @@ export type GridNode = NodeExtras & {
     href?: string;
     newTab?: boolean;
   };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type FlexboxNode = NodeExtras & {
-  id: IdOf;
+export type FlexboxNode = NodeEnvelope & {
   type: "flexbox";
   props: { href?: string; newTab?: boolean };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type SvgNode = NodeExtras & {
-  id: IdOf;
+export type SvgNode = NodeEnvelope & {
   type: "svg";
   props: {
     markup: string;
@@ -926,63 +883,27 @@ export type SvgNode = NodeExtras & {
     decorative?: boolean;
     size?: number;
   };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
 };
 
-export type TabPanelNode = NodeExtras & {
-  id: IdOf;
+export type TabPanelNode = NodeEnvelope & {
   type: "tab-panel";
   props: { label: string };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type TabsNode = NodeExtras & {
-  id: IdOf;
+export type TabsNode = NodeEnvelope & {
   type: "tabs";
   props: { href?: string; newTab?: boolean };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type FormNode = NodeExtras & {
-  id: IdOf;
+export type FormNode = NodeEnvelope & {
   type: "form";
   props: { formId: string };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type LoopNode = NodeExtras & {
-  id: IdOf;
+export type LoopNode = NodeEnvelope & {
   type: "loop";
   props: {
     itemPartId?: string;
@@ -993,104 +914,42 @@ export type LoopNode = NodeExtras & {
     display?: (typeof LOOP_DISPLAYS)[number];
     columns?: number;
   };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type LoopEmptyNode = NodeExtras & {
-  id: IdOf;
+export type LoopEmptyNode = NodeEnvelope & {
   type: "loop-empty";
   props: Record<string, never>;
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type SectionNode = NodeExtras & {
-  id: IdOf;
+export type SectionNode = NodeEnvelope & {
   type: "section";
   props: { partId?: string };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type AccordionNode = NodeExtras & {
-  id: IdOf;
+export type AccordionNode = NodeEnvelope & {
   type: "accordion";
   props: Record<string, never>;
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type MenuNode = NodeExtras & {
-  id: IdOf;
+export type MenuNode = NodeEnvelope & {
   type: "menu";
   props: { direction: "row" | "column"; label?: string };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type MenuItemNode = NodeExtras & {
-  id: IdOf;
+export type MenuItemNode = NodeEnvelope & {
   type: "menu-item";
   props: { text: string; href?: string; newTab?: boolean; wide?: boolean };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 
-export type AccordionItemNode = NodeExtras & {
-  id: IdOf;
+export type AccordionItemNode = NodeEnvelope & {
   type: "accordion-item";
   props: { summary: string; open?: boolean };
-  style?: StyleOf;
-  states?: StatesOf;
-  devices?: DevicesOf;
-  hiddenOn?: HiddenOnOf;
-  classes?: ClassesOf;
-  htmlId?: HtmlIdOf;
-  attributes?: HtmlAttributeOf[];
-  label?: string;
   children: LayoutNode[];
 };
 

@@ -48,6 +48,32 @@ describe("unknown nodes (W-022, R-033)", () => {
     expect(validateLayout(badId).ok).toBe(false);
   });
 
+  test("an unknown node keeps direction, container and query styles", () => {
+    const page = {
+      ...withUnknown,
+      root: {
+        ...withUnknown.root,
+        children: [
+          {
+            id: "car00001",
+            type: "carousel",
+            props: { slides: 3 },
+            dir: "rtl" as const,
+            container: true as const,
+            query: { min: 480, style: { color: "#111111" } },
+          },
+        ],
+      },
+    };
+    const saved = validateLayout(page);
+    expect(saved.ok).toBe(true);
+    if (!saved.ok) return;
+    const node = saved.layout.root.children[0];
+    expect(node && "dir" in node && node.dir).toBe("rtl");
+    expect(node && "container" in node && node.container).toBe(true);
+    expect(node && "query" in node && node.query?.min).toBe(480);
+  });
+
   test("an unknown node can be hidden on a device or given device styles and still saves", () => {
     const page = (node: UnknownNode) => ({
       ...withUnknown,
