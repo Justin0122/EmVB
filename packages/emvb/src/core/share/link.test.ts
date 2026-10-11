@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { DESIGN_SCHEMA_VERSION, emptyDesign, type DesignSystem } from "../schema/design.ts";
 import { LAYOUT_SCHEMA_VERSION, type Layout } from "../schema/layout.ts";
-import { decodeSharedPage, encodeSharedPage, sharedFromHash, shareUrl } from "./link.ts";
+import { decodeSharedPage, encodeSharedPage, pipeBytes, sharedFromHash, shareUrl } from "./link.ts";
 
 const layout: Layout = {
   schemaVersion: LAYOUT_SCHEMA_VERSION,
@@ -91,6 +91,39 @@ describe("W-321 shareable playground links", () => {
       }),
     );
     expect(await decodeSharedPage(xss)).toMatchObject({ ok: false, reason: "invalid" });
+  });
+
+  test("W-371 a corrupt deflate is refused instead of hanging", async () => {
+    const corrupt = `1.${btoa("not-deflate").replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "")}`;
+    const read = await decodeSharedPage(corrupt);
+    expect(read).toMatchObject({ ok: false, reason: "unreadable" });
+  });
+
+  test("W-371 a writer failure does not leave the reader waiting", async () => {
+    const stream = {
+      writable: {
+        getWriter: () => ({
+          write: () => Promise.reject(new Error("corrupt")),
+          close: () => Promise.resolve(),
+        }),
+      },
+      readable: {
+        getReader: () => ({
+          read: () => new Promise<ReadableStreamReadResult<Uint8Array>>(() => {}),
+          cancel: () => Promise.resolve(),
+        }),
+      },
+    };
+    const result = await Promise.race([
+      pipeBytes(new Uint8Array([1]), stream, 100).then(
+        () => "resolved",
+        (error: unknown) => (error instanceof Error ? error.message : "error"),
+      ),
+      new Promise<string>((resolve) => {
+        setTimeout(() => resolve("hung"), 500);
+      }),
+    ]);
+    expect(result).toBe("corrupt");
   });
 
   test("W-321 a small link can't unpack into something huge", async () => {

@@ -40,38 +40,78 @@ function fromBase64Url(text: string): Uint8Array {
   return bytes;
 }
 
-async function pipe(
+type ByteWriter = {
+  write(chunk?: BufferSource): Promise<void>;
+  close(): Promise<void>;
+};
+type ByteReader = {
+  read(): Promise<ReadableStreamReadResult<Uint8Array>>;
+  cancel(): Promise<void>;
+};
+type BytePipe = {
+  readable: { getReader(): ByteReader };
+  writable: { getWriter(): ByteWriter };
+};
+
+/**
+ * Copies bytes through a compression stream. Reading runs alongside the write, and a writer
+ * failure rejects even when the reader would wait forever.
+ */
+export async function pipeBytes(
   bytes: Uint8Array,
-  stream: CompressionStream | DecompressionStream,
+  stream: BytePipe,
   max: number,
-) {
+): Promise<Uint8Array> {
   const writer = stream.writable.getWriter();
-  void writer
-    .write(bytes as Uint8Array<ArrayBuffer>)
-    .then(() => writer.close())
-    .catch(() => {});
   const reader = stream.readable.getReader();
-  const parts: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    // Read in order; stop early so a tiny link can't unpack into something huge.
-    // oxlint-disable-next-line no-await-in-loop
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > max) {
-      void reader.cancel();
-      throw new Error("too big");
+  let writerError: unknown;
+  const writerFailed = new Promise<unknown>((resolve) => {
+    writer
+      .write(bytes as Uint8Array<ArrayBuffer>)
+      .then(() => writer.close())
+      .then(
+        () => undefined,
+        (error: unknown) => {
+          writerError = error;
+          resolve(error);
+        },
+      );
+  });
+  try {
+    const parts: Uint8Array[] = [];
+    let size = 0;
+    for (;;) {
+      // Read in order; stop early so a tiny link can't unpack into something huge.
+      // oxlint-disable-next-line no-await-in-loop
+      const next = await Promise.race([
+        reader.read().then(
+          (chunk) => ({ kind: "chunk" as const, chunk }),
+          (error: unknown) => ({ kind: "failed" as const, error }),
+        ),
+        writerFailed.then((error) => ({ kind: "failed" as const, error })),
+      ]);
+      if (next.kind === "failed") throw next.error;
+      const { done, value } = next.chunk;
+      if (done) break;
+      size += value.byteLength;
+      if (size > max) {
+        void reader.cancel().catch(() => {});
+        throw new Error("too big");
+      }
+      parts.push(value);
     }
-    parts.push(value);
+    if (writerError !== undefined) throw writerError;
+    const out = new Uint8Array(size);
+    let at = 0;
+    for (const part of parts) {
+      out.set(part, at);
+      at += part.byteLength;
+    }
+    return out;
+  } catch (error) {
+    void reader.cancel().catch(() => {});
+    throw error;
   }
-  const out = new Uint8Array(size);
-  let at = 0;
-  for (const part of parts) {
-    out.set(part, at);
-    at += part.byteLength;
-  }
-  return out;
 }
 
 /**
@@ -84,7 +124,7 @@ export async function encodeSharedPage(page: SharedPage): Promise<string> {
     l: page.layout,
     ...(page.design ? { d: page.design } : {}),
   });
-  const packed = await pipe(
+  const packed = await pipeBytes(
     new TextEncoder().encode(json),
     new CompressionStream("deflate-raw"),
     Number.MAX_SAFE_INTEGER,
@@ -117,7 +157,7 @@ export async function decodeSharedPage(encoded: string): Promise<ShareRead> {
   }
   let parsed: unknown;
   try {
-    const bytes = await pipe(
+    const bytes = await pipeBytes(
       fromBase64Url(body),
       new DecompressionStream("deflate-raw"),
       MAX_UNPACKED_BYTES,

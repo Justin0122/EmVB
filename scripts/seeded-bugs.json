@@ -28424,6 +28424,26 @@
         "hostile viewBox"
       ],
       "expect": "\\(fail\\).*hostile viewBox"
+    },
+    {
+      "id": "W-371/corrupt-deflate-hangs",
+      "requirement": "W-371",
+      "description": "a corrupt share link waits forever instead of being refused",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/share/link.ts",
+          "search": "        reader.read().then(\n          (chunk) => ({ kind: \"chunk\" as const, chunk }),\n          (error: unknown) => ({ kind: \"failed\" as const, error }),\n        ),\n        writerFailed.then((error) => ({ kind: \"failed\" as const, error })),",
+          "replace": "        reader.read().then(\n          (chunk) => ({ kind: \"chunk\" as const, chunk }),\n          (error: unknown) => ({ kind: \"failed\" as const, error }),\n        ),"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/share/link.test.ts",
+        "-t",
+        "writer failure"
+      ],
+      "expect": "\\(fail\\).*writer failure"
     }
   ]
 }
