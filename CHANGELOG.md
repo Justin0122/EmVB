@@ -60,6 +60,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **A page and its theme parts agree on new vs returning (W-313).** Within one request, a first visit no longer turns into a returning one for the header, so a "first time here?" bar shows on the visit it is for. The seen cookie is read as the browser sent it.
+- **Ctrl/Cmd+K no longer opens the command palette over an open dialog (W-314).** Escape no longer strands focus outside the dialog. Ctrl/Cmd+K still opens the palette from a text field.
 - **An unknown element can still be saved after a device hide or a pasted style (W-351).** Hiding it on a device, or pasting a style that sets device overrides, no longer makes the whole page fail to save.
 - **Version history looks like the canvas (W-351).** The before/after snapshots load the host's stylesheets before EmVB's CSS, in the same order as the canvas. A stylesheet that isn't an `http(s)` URL or a site path is left out.
 - The emvb.dev changelog page leaves out a release with no entries yet, such as an empty Unreleased (W-324).

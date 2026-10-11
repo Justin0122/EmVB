@@ -12,7 +12,7 @@ import {
   previousInOrder,
 } from "../../core/index.ts";
 import type { EditorState, HistoryAction } from "./store.ts";
-import { isPaletteShortcut } from "./shortcuts.ts";
+import { inDialog, isPaletteShortcut } from "./shortcuts.ts";
 
 const isTextField = (target: EventTarget | null) => {
   const element = target as HTMLElement | null;
@@ -23,9 +23,6 @@ const isTextField = (target: EventTarget | null) => {
     element.getAttribute("role") === "combobox"
   );
 };
-
-export const inDialog = (target: EventTarget | null) =>
-  !!(target as HTMLElement | null)?.closest?.('[role="dialog"], [role="alertdialog"]');
 
 /**
  * Element shortcuts (traverse, arrange, delete, duplicate, copy, paste, Escape) act only from the
