@@ -15138,9 +15138,9 @@
       "description": "Copy style also carries the classes",
       "edits": [
         {
-          "file": "packages/emvb/src/core/clipboard.ts",
-          "search": "  if (node.states) copied.states = structuredClone(node.states);\n",
-          "replace": "  if (node.states) copied.states = structuredClone(node.states);\n  if (node.classes) (copied as Record<string, unknown>)[\"classes\"] = node.classes;\n"
+          "file": "packages/emvb/src/core/local-style.ts",
+          "search": "const LOCAL_STYLE_KEYS = [\"style\", \"states\", \"devices\", \"hiddenOn\"] as const;",
+          "replace": "const LOCAL_STYLE_KEYS = [\"style\", \"states\", \"devices\", \"hiddenOn\", \"classes\"] as const;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/clipboard.test.ts"],
@@ -15432,9 +15432,9 @@
       "description": "Paste style removes the classes",
       "edits": [
         {
-          "file": "packages/emvb/src/core/clipboard.ts",
-          "search": "  const next = { ...node };\n  delete next.style;",
-          "replace": "  const next = { ...node };\n  delete next.classes;\n  delete next.style;"
+          "file": "packages/emvb/src/core/local-style.ts",
+          "search": "  const next = { ...node } as Record<string, unknown>;",
+          "replace": "  const next = { ...node } as Record<string, unknown>;\n  delete next.classes;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/clipboard.test.ts"],
@@ -15446,9 +15446,9 @@
       "description": "Paste style keeps the old states",
       "edits": [
         {
-          "file": "packages/emvb/src/core/clipboard.ts",
-          "search": "  delete next.style;\n  delete next.states;\n",
-          "replace": "  delete next.style;\n"
+          "file": "packages/emvb/src/core/local-style.ts",
+          "search": "const LOCAL_STYLE_KEYS = [\"style\", \"states\", \"devices\", \"hiddenOn\"] as const;",
+          "replace": "const LOCAL_STYLE_KEYS = [\"style\", \"devices\", \"hiddenOn\"] as const;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/clipboard.test.ts"],
@@ -18371,7 +18371,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/classes.ts",
-          "search": "    ...(node.devices ? { devices: structuredClone(node.devices) } : {}),\n",
+          "search": "    ...(local.devices ? { devices: local.devices } : {}),\n",
           "replace": ""
         }
       ],
@@ -18385,8 +18385,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/classes.ts",
-          "search": "node: { ...rest, classes: addClassId(node.classes ?? [], id) } as LayoutNode,",
-          "replace": "node: { ...rest, classes: [id, ...(node.classes ?? [])] } as LayoutNode,"
+          "search": "node: { ...cleared, classes: addClassId(node.classes ?? [], id) },",
+          "replace": "node: { ...cleared, classes: [id, ...(node.classes ?? [])] },"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/design/classes.test.ts"],
@@ -18399,8 +18399,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/classes.ts",
-          "search": "  const { style: _style, states: _states, devices: _devices, ...rest } = node;",
-          "replace": "  const rest = { ...node };"
+          "search": "  const cleared = withLocalStyle(node, local.hiddenOn ? { hiddenOn: local.hiddenOn } : {});",
+          "replace": "  const cleared = node;"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/design/classes.test.ts"],
@@ -28211,6 +28211,26 @@
         "visits children of an unknown node"
       ],
       "expect": "\\(fail\\).*visits children of an unknown node"
+    },
+    {
+      "id": "W-355/device-styles-left-off-class",
+      "requirement": "W-134",
+      "description": "saving local styles as a class drops tablet and mobile styles",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/local-style.ts",
+          "search": "const LOCAL_STYLE_KEYS = [\"style\", \"states\", \"devices\", \"hiddenOn\"] as const;",
+          "replace": "const LOCAL_STYLE_KEYS = [\"style\", \"states\", \"hiddenOn\"] as const;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/design/classes.test.ts",
+        "-t",
+        "device-only styles count"
+      ],
+      "expect": "\\(fail\\).*device-only styles count"
     },
     {
       "id": "W-352/unknown-node-dir-query-stripped",

@@ -1,6 +1,7 @@
 import type { DesignSystem } from "../schema/design.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
 import type { StyleProps } from "../schema/style.ts";
+import { localStyleOf, withLocalStyle } from "../local-style.ts";
 import { forEachNode, slugify, updateNode } from "../tree-ops.ts";
 
 /** Reorder an applied class-id list. Out-of-range moves are no-ops. Pure (W-031). */
@@ -80,10 +81,11 @@ const filled = (style: object | undefined) =>
 
 /** Whether an element has local styles: base, hover/focus/active or tablet/mobile (W-134). */
 export function hasLocalStyles(node: LayoutNode): boolean {
+  const local = localStyleOf(node);
   return (
-    filled(node.style) ||
-    Object.values(node.states ?? {}).some(filled) ||
-    Object.values(node.devices ?? {}).some(filled)
+    filled(local.style) ||
+    Object.values(local.states ?? {}).some(filled) ||
+    Object.values(local.devices ?? {}).some(filled)
   );
 }
 
@@ -125,17 +127,18 @@ export function localStylesToClass(
   const taken = new Set(classes.map((c) => c.id));
   let id = base;
   for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
+  const local = localStyleOf(node);
   const cls = {
     id,
     name: trimmed,
-    style: structuredClone(node.style ?? {}) as StyleProps,
-    ...(node.states ? { states: structuredClone(node.states) } : {}),
-    ...(node.devices ? { devices: structuredClone(node.devices) } : {}),
+    style: (local.style ?? {}) as StyleProps,
+    ...(local.states ? { states: local.states } : {}),
+    ...(local.devices ? { devices: local.devices } : {}),
   };
-  const { style: _style, states: _states, devices: _devices, ...rest } = node;
+  const cleared = withLocalStyle(node, local.hiddenOn ? { hiddenOn: local.hiddenOn } : {});
   return {
     design: { ...design, classes: [...classes, cls] },
-    node: { ...rest, classes: addClassId(node.classes ?? [], id) } as LayoutNode,
+    node: { ...cleared, classes: addClassId(node.classes ?? [], id) },
     classId: id,
   };
 }

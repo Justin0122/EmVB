@@ -26,6 +26,7 @@ import {
 } from "./schema/layout.ts";
 import { STYLE_STATES } from "./schema/state-names.ts";
 import type { DeviceStyles, HiddenOn, StyleProps, StyleStates } from "./schema/style.ts";
+import { localStyleOf, withLocalStyle } from "./local-style.ts";
 import { findNode, nodeChildren } from "./tree-ops.ts";
 import { summarizeIssues, validateLayout } from "./validate.ts";
 
@@ -73,14 +74,7 @@ const header = () =>
   }) as const;
 
 /** The local style of a node; classes stay behind (D-033). */
-export function styleOf(node: LayoutNode): CopiedStyle {
-  const copied: CopiedStyle = {};
-  if (node.style) copied.style = structuredClone(node.style);
-  if (node.states) copied.states = structuredClone(node.states);
-  if (node.devices) copied.devices = structuredClone(node.devices);
-  if (node.hiddenOn) copied.hiddenOn = structuredClone(node.hiddenOn);
-  return copied;
-}
+export const styleOf = localStyleOf;
 
 export const elementClip = (node: LayoutNode): ClipEnvelope => ({
   ...header(),
@@ -413,17 +407,7 @@ function styleFor(type: string, style: CopiedStyle): CopiedStyle {
  * Icon glyph keys are left out on anything but an Icon (W-292).
  */
 export function applyStyle<T extends LayoutNode>(node: T, copied: CopiedStyle): T {
-  const style = styleFor(node.type, copied);
-  const next = { ...node };
-  delete next.style;
-  delete next.states;
-  delete next.devices;
-  delete next.hiddenOn;
-  if (style.style) next.style = structuredClone(style.style);
-  if (style.states) next.states = structuredClone(style.states);
-  if (style.devices) next.devices = structuredClone(style.devices);
-  if (style.hiddenOn) next.hiddenOn = structuredClone(style.hiddenOn);
-  return next;
+  return withLocalStyle(node, styleFor(node.type, copied));
 }
 
 export type PasteMode = "auto" | "inside";
