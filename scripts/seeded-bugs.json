@@ -28552,6 +28552,26 @@
       ],
       "command": ["bun", "test", "./test/site/json-ld.test.ts", "-t", "cannot close"],
       "expect": "\\(fail\\).*cannot close"
+    },
+    {
+      "id": "W-380/feature-css-hex",
+      "requirement": "W-380",
+      "description": "a timeline status color is a raw hex",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/feature-css.ts",
+          "search": ".emvb-timeline-changes > li[data-kind=\"added\"] .emvb-timeline-kind { color: var(--text-color-kumo-success); }",
+          "replace": ".emvb-timeline-changes > li[data-kind=\"added\"] .emvb-timeline-kind { color: #15803d; }"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/feature-css.test.ts",
+        "-t",
+        "Kumo roles"
+      ],
+      "expect": "\\(fail\\).*Kumo roles"
     }
   ]
 }
