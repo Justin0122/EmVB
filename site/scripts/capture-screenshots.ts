@@ -18,7 +18,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { api, BASE, STATE_FILE } from "./seed-demo.ts";
+import { api, BASE, isRecord, STATE_FILE } from "./seed-demo.ts";
 
 const HERE = fileURLToPath(new URL(".", import.meta.url));
 
@@ -44,7 +44,9 @@ const canvas = (page: Page): FrameLocator => page.frameLocator("iframe[data-emvb
 
 async function storedLayout(page: Page, id: string, collection = "emvb_pages") {
   const data = await api(page.context().request, "GET", `/_emdash/api/content/${collection}/${id}`);
-  const layout = data.item.data.layout;
+  const item = isRecord(data) ? data.item : undefined;
+  const stored = isRecord(item) ? item.data : undefined;
+  const layout = isRecord(stored) ? stored.layout : undefined;
   return (typeof layout === "string" ? JSON.parse(layout) : layout) as { root: LayoutNode };
 }
 

@@ -28538,6 +28538,20 @@
         "an array and null"
       ],
       "expect": "\\(fail\\).*an array and null"
+    },
+    {
+      "id": "W-379/json-ld-closes-script",
+      "requirement": "W-379",
+      "description": "JSON-LD writes a raw less-than",
+      "edits": [
+        {
+          "file": "site/src/json-ld.ts",
+          "search": "  return JSON.stringify(value).replace(/</g, \"\\\\u003c\");",
+          "replace": "  return JSON.stringify(value);"
+        }
+      ],
+      "command": ["bun", "test", "./test/site/json-ld.test.ts", "-t", "cannot close"],
+      "expect": "\\(fail\\).*cannot close"
     }
   ]
 }

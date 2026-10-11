@@ -41,12 +41,16 @@ const photos: Record<keyof Media, [file: string, width: number, height: number, 
   river: ["river.jpg", 1600, 1000, "A river through a misty forest"],
 };
 
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export async function api(
   request: APIRequestContext,
   method: string,
   path: string,
   body?: unknown,
-) {
+): Promise<unknown> {
   const response = await request.fetch(path, {
     method,
     headers: {
@@ -55,11 +59,10 @@ export async function api(
     },
     ...(body === undefined ? {} : { data: JSON.stringify(body) }),
   });
-  // oxlint-disable-next-line typescript/no-explicit-any -- callers read loosely shaped EmDash API data
-  const json = (await response.json().catch(() => null)) as Record<string, any> | null;
+  const json: unknown = await response.json().catch(() => null);
   if (!response.ok())
     throw new Error(`${method} ${path}: ${response.status()} ${JSON.stringify(json)}`);
-  return json?.["data"];
+  return isRecord(json) ? json["data"] : undefined;
 }
 
 /** Signs in through the dev bypass and loads the admin until it renders without the welcome dialog. */
@@ -148,11 +151,14 @@ async function createForm(request: APIRequestContext) {
       retentionDays: 0,
     },
   });
-  return created.id as string;
+  if (!isRecord(created) || typeof created.id !== "string")
+    throw new Error("The form was not created.");
+  return created.id;
 }
 
 async function publishDesign(request: APIRequestContext) {
   const draft = await api(request, "GET", "/_emdash/api/plugins/emvb/design/draft");
+  if (!isRecord(draft)) throw new Error("No design draft.");
   await api(request, "POST", "/_emdash/api/plugins/emvb/design/save", {
     design,
     revision: draft.revision,
@@ -170,9 +176,12 @@ async function createEntry(
   publish = true,
 ) {
   const created = await api(request, "POST", `/_emdash/api/content/${collection}`, { data, slug });
-  const id = created.item.id as string;
+  const item = isRecord(created) ? created.item : undefined;
+  const id = isRecord(item) && typeof item.id === "string" ? item.id : undefined;
+  if (!id) throw new Error("The entry was not created.");
   if (publish) {
     const current = await api(request, "GET", `/_emdash/api/content/${collection}/${id}`);
+    if (!isRecord(current)) throw new Error("The entry was not found.");
     await api(request, "POST", `/_emdash/api/content/${collection}/${id}/publish`, {
       _rev: current["_rev"],
     });
