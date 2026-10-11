@@ -22872,7 +22872,7 @@
       "description": "The library forgets the stored icon's set and style and opens on All icons.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
+          "file": "packages/emvb/src/admin/editor/icons/use-icon-library.ts",
           "search": "  return style?.id ?? at.set;",
           "replace": "  return ALL_ICONS;"
         }
@@ -22900,7 +22900,7 @@
       "description": "Choosing Brands (or any style) still shows the whole set.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
+          "file": "packages/emvb/src/admin/editor/icons/use-icon-library.ts",
           "search": "              : [...(inAll ? (uploads ?? []) : []), ...needed.flatMap((id) => sets[id] ?? [])],\n            category,\n",
           "replace": "              : [...(inAll ? (uploads ?? []) : []), ...needed.flatMap((id) => sets[id] ?? [])],\n            ICON_CATEGORIES[0] as IconCategory,\n"
         }
@@ -22950,7 +22950,7 @@
       "description": "The keyboard cursor index from the last list carries into a new search, so the results open scrolled to the end.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
+          "file": "packages/emvb/src/admin/editor/icons/use-icon-library.ts",
           "search": "    cursor.list === filtered ? cursor.index : filtered.findIndex((icon) => icon.id === selectedId);",
           "replace": "    cursor.index >= 0 ? cursor.index : filtered.findIndex((icon) => icon.id === selectedId);"
         }
@@ -23138,7 +23138,7 @@
       "description": "A new upload is added at the end of My uploads instead of first.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
+          "file": "packages/emvb/src/admin/editor/icons/use-icon-library.ts",
           "search": "      setUploads((prev) => [icon, ...(prev ?? []).filter((other) => other.id !== icon.id)]);",
           "replace": "      setUploads((prev) => [...(prev ?? []).filter((other) => other.id !== icon.id), icon]);"
         }
@@ -23272,7 +23272,7 @@
       "description": "The duplicate check compares ids instead of the cleaned SVG, so a re-export of the same drawing is stored again.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
+          "file": "packages/emvb/src/admin/editor/icons/use-icon-library.ts",
           "search": "other.markup === probe?.markup",
           "replace": "other.id === probe?.id"
         }
@@ -25421,7 +25421,7 @@
       "description": "All icons leaves uploaded icons out.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
+          "file": "packages/emvb/src/admin/editor/icons/use-icon-library.ts",
           "search": "              : [...(inAll ? (uploads ?? []) : []), ...needed.flatMap((id) => sets[id] ?? [])],\n",
           "replace": "              : needed.flatMap((id) => sets[id] ?? []),\n"
         }
@@ -25435,7 +25435,7 @@
       "description": "A failed uploads list leaves All icons loading forever.",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
+          "file": "packages/emvb/src/admin/editor/icons/use-icon-library.ts",
           "search": "  const uploadsSettled = !fetcher || uploads !== undefined || uploadsFailed !== undefined;\n",
           "replace": "  const uploadsSettled = !fetcher || uploads !== undefined;\n"
         }
