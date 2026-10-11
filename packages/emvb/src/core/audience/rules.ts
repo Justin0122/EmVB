@@ -77,8 +77,20 @@ export function layoutUsesAudience(layout: Layout): boolean {
   return hasAudience(layout.root);
 }
 
+/**
+ * A new/returning rule is the only reason to read or set the `emvb_seen` cookie.
+ * Country, device and segment rules do not.
+ */
+export function layoutUsesVisitorRule(layout: Layout): boolean {
+  return hasVisitorRule(layout.root);
+}
+
 const hasAudience = (node: LayoutNode): boolean =>
   Boolean(node.audience) || (isParentNode(node) && node.children.some(hasAudience));
+
+const hasVisitorRule = (node: LayoutNode): boolean =>
+  node.audience?.visitor !== undefined ||
+  (isParentNode(node) && node.children.some(hasVisitorRule));
 
 /** A device from a User-Agent and the Sec-CH-UA-Mobile hint (W-313). */
 export function deviceFromUserAgent(

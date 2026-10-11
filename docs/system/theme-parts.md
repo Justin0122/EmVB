@@ -113,6 +113,7 @@ Hosts call `resolveThemeParts(Astro, ctx, options)` from `emvb/astro`. `options.
 - `css` — concatenated CSS for all winners (includes popup chrome CSS when popups match, and float chrome when floats match)
 - `needsPopupsRuntime` — when true, host renders `<EmVBPopupsRuntime />` from `emvb/astro/popups`
 - `needsFloatsRuntime` — when true, host renders `<EmVBFloatsRuntime />` from `emvb/astro/floats`
+- `needsFormsRuntime` — when true, host renders `<EmVBFormsRuntime />` from `emvb/astro/forms/client`. A form in a header, footer, popup, float, synced section, or loop item counts. Field options come from that form's own definition.
 - `notFound` — an archive page past the last one (`/posts/page/9` with no posts there); answer 404. Page 1 with no posts is not a 404 (W-221)
 - `canonicalPath` — the archive page's canonical path: the bare archive path for page 1 (redirect `/page/1` there, 301), else `<archive>/page/N`
 - `archiveTitle` / `archivePage` — the winning Archive part's title (e.g. "Posts", the category name) and the page number; build the paged `<title>` with `archivePageTitle(title, page)` from `@perkyzz/emvb/astro` ("Posts – page 2", W-229)

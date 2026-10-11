@@ -43,7 +43,9 @@ describe("Visitors rules match host segments (W-329)", () => {
         children: [{ ...node(undefined), audience: { segments } }],
       },
     });
-    expect(validateLayout(page(["member", "pro_1"])).ok).toBe(true);
+    expect(validateLayout(page(["member", "pro_1", "plan:pro"])).ok).toBe(true);
+    expect(validateLayout(page(["a".repeat(64)])).ok).toBe(true);
+    expect(validateLayout(page(["a".repeat(65)])).ok).toBe(false);
     expect(validateLayout(page(["Member"])).ok).toBe(false);
     expect(validateLayout(page([])).ok).toBe(false);
     const v13 = { ...(page(["member"]) as Layout), schemaVersion: 13 };

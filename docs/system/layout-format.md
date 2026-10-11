@@ -66,7 +66,7 @@ How EmVB stores a page and its site-wide design, at schema 15 (per-element direc
 | `post-author` | (none) | none | The author's name |
 | `pagination` | optional `prevText`, `nextText`, `showCount` and `countText` (`{page}` and `{total}`; unset text is "Page {page} of {total}") | none | `nav` of Previous, page numbers and Next. Nothing on a single page, with no archive data, or inside a Loop item |
 | `loop` | optional `itemPartId`; `perPage` (1–50, unset = 20) on an archive; a collection Loop also takes `collection`, `limit`, `order`, `display`, `columns`, `permalink`, `imageField`, `excerptField` and `filter` (see [Schema 13](#schema-13-the-w-307-feature-batch) and [Schema 14](#schema-14)) | `children: Node[]` (inline item template when no part id) | Repeats the item template for each post or collection entry |
-| `grid` | `columns` (1–12); optional `columnsTablet` and `columnsMobile` (1–12, W-139) | `children: Node[]` | `display: grid` with that many equal columns; the device counts go in the tablet and mobile media queries, and an unset one follows the next wider device |
+| `grid` | `columns` (1–12); optional `columnsTablet` and `columnsMobile` (1–12, W-139); optional `columnTracks`, `columnTracksTablet`, `columnTracksMobile` (1–12 tracks: `1fr`, `2fr`, `3fr`, `auto`, `min-content`, `max-content`, or a length) | `children: Node[]` | `display: grid` with that many equal columns, or the custom tracks when that device sets them; the device values go in the tablet and mobile media queries, and an unset one follows the next wider device |
 | `section` (shown as "Theme section") | optional `partId` | `children: Node[]` (inline contents when no part id) | When `partId` is set, the published Section theme part's children replace the local ones |
 
 Every node may also carry an optional `label` (1–80 characters, trimmed; an editor-only name shown in Layers and on the canvas, never rendered, W-157), optional `htmlId` (CSS `id`, unique on the page), `classes` (style-class ids from the design system, S4), `devices` and `hiddenOn` (W-096, below).
@@ -85,6 +85,7 @@ Lengths are `{ "value": 0–10000, "unit": "px" | "rem" | "em" | "%" | "vw" | "v
 | `alignItems` | `stretch`, `flex-start`, `flex-end`, `center`, `baseline` | `align-items` |
 | `gap` | length | `gap` |
 | `gridColumnSpan` / `gridRowSpan` (W-099) | whole number 1–12 | `grid-column` / `grid-row` as `span N` |
+| `gridColumnStart` / `gridRowStart` | whole number 1–13 | `grid-column` / `grid-row` as the line number, or `start / span N` when a span is set too |
 | `width` / `height` | size | `width` / `height` |
 | `minWidth` / `maxWidth` / `minHeight` / `maxHeight` | length | matching size properties (`maxHeight` since W-088) |
 | `overflow` | `visible`, `hidden`, `clip`, `scroll`, `auto` | `overflow` |
@@ -211,7 +212,7 @@ Issues carry a path such as `root.children[0].props.level`, which the editor use
 
 - **`div-block`**: block container (`display:block`); children like Container. Optional `href` and `newTab`, like Container.
 - **`flexbox`**: flex container defaulting to row + wrap + gap (Container stays column). Optional `href` and `newTab`.
-- **`svg`**: `props.markup` (sanitized allowlist; no scripts/handlers/`use`/`foreignObject`); optional `title`, `decorative`, `size`.
+- **`svg`**: `props.markup` (sanitized allowlist; no scripts/handlers/`use`/`foreignObject`); optional `title`, `decorative`, `size`. A valid non-square `viewBox` keeps its ratio: the longer side is `size` (48 when unset) and the other side scales. A square, missing, or unreadable `viewBox` stays a square of `size`.
 - **`tabs` / `tab-panel`**: Tabs hold only tab-panels. Public markup is CSS-only (radio + `:has()`); the optional tabs script only takes the hidden radios out of the tab order.
 - **`accordion` / `accordion-item`**: items are `<details>`. An item needs `summary` (1–200) and may start `open`. No script.
 - **`menu` / `menu-item`**: a `nav` (named by `label`, default "Menu") of links. `direction` is `row` or `column`. An item with children is a dropdown; `wide` stretches that panel across the menu. A menu with a dropdown can load the optional menu script so Escape closes it. An empty menu is a plain box, not a `nav`.

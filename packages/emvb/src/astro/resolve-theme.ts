@@ -1,5 +1,6 @@
 import { getEmDashCollection, getEmDashEntry, getTerm } from "emdash";
 import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
+import { formIdsInLayouts, loadFormDefinitions } from "./forms-definitions.ts";
 import {
   collectLoopItemPartIds,
   escapeAttr,
@@ -90,6 +91,8 @@ export type ResolvedThemeParts = {
   needsTabsRuntime: boolean;
   /** Hosts load `EmVBMenuRuntime` only when a winning part has a Menu dropdown (W-197). */
   needsMenuRuntime: boolean;
+  /** Hosts load `EmVBFormsRuntime` only when a winning part renders a form. */
+  needsFormsRuntime: boolean;
   /**
    * True for an archive page past the last one (`/posts/page/9` with no posts there). Hosts
    * answer 404 (W-221). Page 1 with no posts is not a 404.
@@ -224,10 +227,31 @@ function loadSectionTemplates(layout: Layout, parts: StoredPart[]): Record<strin
   return templates;
 }
 
-/** Published Section layouts a page references. Empty when the page has no section parts. */
-export async function sectionTemplatesFor(layout: Layout): Promise<Record<string, Layout>> {
-  if (collectSectionPartIds(layout).length === 0) return {};
-  return loadSectionTemplates(layout, await loadPublishedThemeParts());
+/** Section and loop-item layouts a layout references, including sections nested in those loop items. */
+async function templatesFrom(
+  layout: Layout,
+  parts: StoredPart[],
+): Promise<{ sectionTemplates: Record<string, Layout>; loopTemplates: Record<string, Layout> }> {
+  const loopTemplates = await loadLoopTemplates(layout, parts);
+  const sectionTemplates = loadSectionTemplates(layout, parts);
+  for (const item of Object.values(loopTemplates)) {
+    const nested = loadSectionTemplates(item, parts);
+    for (const [id, value] of Object.entries(nested)) {
+      if (!sectionTemplates[id]) sectionTemplates[id] = value;
+    }
+  }
+  return { sectionTemplates, loopTemplates };
+}
+
+/** Published section and loop-item layouts a page references. */
+export async function referencedTemplatesFor(layout: Layout): Promise<{
+  sectionTemplates: Record<string, Layout>;
+  loopTemplates: Record<string, Layout>;
+}> {
+  if (collectSectionPartIds(layout).length === 0 && collectLoopItemPartIds(layout).length === 0) {
+    return { sectionTemplates: {}, loopTemplates: {} };
+  }
+  return templatesFrom(layout, await loadPublishedThemeParts());
 }
 
 async function loadSingularPost(ctx: ThemeRequestContext): Promise<ThemePostFields | undefined> {
@@ -307,8 +331,7 @@ async function buildDynamicForContent(
   layout: Layout,
   parts: StoredPart[],
 ): Promise<ThemeDynamicData | undefined> {
-  const loopTemplates = await loadLoopTemplates(layout, parts);
-  const sectionTemplates = loadSectionTemplates(layout, parts);
+  const { sectionTemplates, loopTemplates } = await templatesFrom(layout, parts);
   const referenced: ThemeDynamicData = {
     ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
@@ -357,6 +380,7 @@ export async function resolveThemeParts(
     needsFloatsRuntime: false,
     needsTabsRuntime: false,
     needsMenuRuntime: false,
+    needsFormsRuntime: false,
     notFound: false,
     ...(context.kind === "archive" && !context.isSearch
       ? { canonicalPath: archivePagePath(context.path, context.page ?? 1) }
@@ -408,13 +432,22 @@ export async function resolveThemeParts(
       ],
       options.visitor ? { visitor: options.visitor } : {},
     );
-  const renderOne = (
+  const renderOne = async (
     stored: StoredPart,
     partDynamic: ThemeDynamicData | undefined,
     bound: Awaited<ReturnType<typeof bindingDataFor>>,
   ) => {
     const dynamic = Object.keys(bound).length > 0 ? { ...partDynamic, ...bound } : partDynamic;
-    const page = renderStored(stored.layout, design, stored.id, undefined, dynamic);
+    const formDefinitions = await loadFormDefinitions(
+      handler,
+      astro.url,
+      formIdsInLayouts([
+        readLayout(stored.layout),
+        ...Object.values(dynamic?.sectionTemplates ?? {}),
+        ...Object.values(dynamic?.loopTemplates ?? {}),
+      ]),
+    );
+    const page = renderStored(stored.layout, design, stored.id, formDefinitions, dynamic);
     rendered.push(page);
     // W-216: a header or footer part is the page's banner or contentinfo landmark (hosts put it
     // straight in <body> instead of their own <header>/<footer>).
@@ -429,8 +462,9 @@ export async function resolveThemeParts(
   /** Synced sections and loop items a part uses, for every part type (W-200). */
   const templatesFor = async (stored: StoredPart): Promise<ThemeDynamicData | undefined> => {
     const layout = readLayout(stored.layout);
-    const sectionTemplates = layout ? loadSectionTemplates(layout, parts) : {};
-    const loopTemplates = layout ? await loadLoopTemplates(layout, parts) : {};
+    const { sectionTemplates, loopTemplates } = layout
+      ? await templatesFrom(layout, parts)
+      : { sectionTemplates: {}, loopTemplates: {} };
     return Object.keys(sectionTemplates).length > 0 || Object.keys(loopTemplates).length > 0
       ? {
           ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
@@ -462,7 +496,7 @@ export async function resolveThemeParts(
     if (winner === contentWinner && (dynamic?.pagination?.page ?? 1) > 1) {
       pastLastPage = (dynamic?.posts ?? []).length === 0;
     }
-    const { html, css } = renderOne(stored, dynamic, await boundFor(stored, referenced));
+    const { html, css } = await renderOne(stored, dynamic, await boundFor(stored, referenced));
     return { id: stored.id, title: stored.title, partType: stored.partType, html, css };
   };
 
@@ -487,43 +521,51 @@ export async function resolveThemeParts(
     ),
   );
 
-  const popups: RenderedPopup[] = [];
-  for (const match of popupMatches) {
-    const stored = byId.get(match.id);
-    if (!stored) continue;
-    const { html, css } = renderOne(
-      stored,
-      extraTemplates.get(stored.id),
-      extraBound.get(stored.id) ?? {},
-    );
-    popups.push({
-      id: stored.id,
-      title: stored.title,
-      html: wrapPopupMarkup(stored.id, html, stored.triggers),
-      css,
-      triggers: stored.triggers,
-    });
-  }
+  const popups = (
+    await Promise.all(
+      popupMatches.map(async (match) => {
+        const stored = byId.get(match.id);
+        if (!stored) return null;
+        const { html, css } = await renderOne(
+          stored,
+          extraTemplates.get(stored.id),
+          extraBound.get(stored.id) ?? {},
+        );
+        const popup: RenderedPopup = {
+          id: stored.id,
+          title: stored.title,
+          html: wrapPopupMarkup(stored.id, html, stored.triggers),
+          css,
+          triggers: stored.triggers,
+        };
+        return popup;
+      }),
+    )
+  ).filter((popup): popup is RenderedPopup => popup !== null);
 
-  const floats: RenderedFloat[] = [];
-  for (const match of floatMatches) {
-    const stored = byId.get(match.id);
-    if (!stored) continue;
-    const { html, css } = renderOne(
-      stored,
-      extraTemplates.get(stored.id),
-      extraBound.get(stored.id) ?? {},
-    );
-    const layout = readLayout(stored.layout);
-    const surface = !layout || !floatHasOwnSurface(layout, design);
-    floats.push({
-      id: stored.id,
-      title: stored.title,
-      html: wrapFloatMarkup(stored.id, stored.title, html, stored.float, surface),
-      css,
-      settings: stored.float,
-    });
-  }
+  const floats = (
+    await Promise.all(
+      floatMatches.map(async (match) => {
+        const stored = byId.get(match.id);
+        if (!stored) return null;
+        const { html, css } = await renderOne(
+          stored,
+          extraTemplates.get(stored.id),
+          extraBound.get(stored.id) ?? {},
+        );
+        const layout = readLayout(stored.layout);
+        const surface = !layout || !floatHasOwnSurface(layout, design);
+        const item: RenderedFloat = {
+          id: stored.id,
+          title: stored.title,
+          html: wrapFloatMarkup(stored.id, stored.title, html, stored.float, surface),
+          css,
+          settings: stored.float,
+        };
+        return item;
+      }),
+    )
+  ).filter((item): item is RenderedFloat => item !== null);
 
   const cssParts = [
     header?.css,
@@ -546,6 +588,7 @@ export async function resolveThemeParts(
     needsFloatsRuntime: floats.length > 0,
     needsTabsRuntime: rendered.some((page) => page.needsTabsRuntime),
     needsMenuRuntime: rendered.some((page) => page.needsMenuRuntime),
+    needsFormsRuntime: rendered.some((page) => page.needsFormsRuntime),
     notFound: pastLastPage,
     ...(design.direction ? { dir: design.direction } : {}),
     ...(archiveInfo?.title ? { archiveTitle: archiveInfo.title } : {}),

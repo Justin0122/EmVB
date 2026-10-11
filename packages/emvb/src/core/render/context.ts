@@ -18,4 +18,6 @@ export type RenderContext = {
    * stay with their own copy.
    */
   uniqueId: (base: string) => string;
+  /** The form whose children are rendering, so each field reads that form's definition. */
+  formId?: string;
 };

@@ -62,6 +62,27 @@ describe("CSS grid", () => {
     expect(none).not.toMatch(/@media[^{]*\{\.emvb-e-grid0001/);
   });
 
+  test("custom tracks replace equal columns, and a child can start on a line", () => {
+    const tracked = page(3, [heading("head0001")]);
+    const grid = tracked.root.children[0] as LayoutNode;
+    grid.props = {
+      columns: 3,
+      columnTracks: ["2fr", "200px", "auto"],
+      columnTracksTablet: ["1fr"],
+    };
+    const placed = (grid as { children: LayoutNode[] }).children[0];
+    if (placed) placed.style = { gridColumnStart: 2, gridColumnSpan: 2 };
+    const css = renderPage(tracked, emptyDesign()).css;
+    expect(css).toContain("grid-template-columns:2fr 200px auto");
+    expect(css).not.toContain("repeat(3, minmax(0, 1fr))");
+    expect(css).toContain("grid-template-columns:1fr");
+    expect(css).toContain("grid-column:2 / span 2");
+    expect(validateLayout(tracked).ok).toBe(true);
+    const bad = page(3, []);
+    (bad.root.children[0] as LayoutNode).props = { columns: 3, columnTracks: ["minmax(0,1fr)"] };
+    expect(validateLayout(bad).ok).toBe(false);
+  });
+
   test("a device column count outside 1–12 is refused by the schema and dropped by the renderer (W-139)", () => {
     expect(validateLayout(page(3, [], { columnsTablet: 13 })).ok).toBe(false);
     expect(validateLayout(page(3, [], { columnsMobile: 0 })).ok).toBe(false);

@@ -27,6 +27,24 @@ const imageNode = (props: Record<string, unknown>) =>
   ({ ...defaultElement("image", "img00001"), props }) as LayoutNode;
 
 describe("SVG element (W-091)", () => {
+  test("a wide viewBox keeps its ratio; a square or unreadable one stays square", () => {
+    const box = (markup: string, size?: number) =>
+      attrs(
+        render(
+          svgNode({
+            markup,
+            decorative: true,
+            ...(size ? { size } : {}),
+          }),
+        ).querySelector("svg"),
+      );
+    expect(box('<svg viewBox="0 0 200 100"></svg>')).toMatchObject({ width: "48", height: "24" });
+    expect(box('<svg viewBox="0 0 100 200"></svg>')).toMatchObject({ width: "24", height: "48" });
+    expect(box('<svg viewBox="0 0 1 1"></svg>')).toMatchObject({ width: "48", height: "48" });
+    expect(box('<svg viewBox="0 0 0 10"></svg>')).toMatchObject({ width: "48", height: "48" });
+    expect(box("<svg></svg>")).toMatchObject({ width: "48", height: "48" });
+  });
+
   test("a decorative SVG is hidden, 48 px by default, and filled with currentColor", () => {
     const el = render(
       svgNode({ markup: '<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>', decorative: true }),

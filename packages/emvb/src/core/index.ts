@@ -451,6 +451,7 @@ export {
   clockIn,
   deviceFromUserAgent,
   layoutUsesAudience,
+  layoutUsesVisitorRule,
   type VisitorInfo,
 } from "./audience/rules.ts";
 export { changedIds, diffSections, restoreSection, type SectionChange } from "./history/diff.ts";

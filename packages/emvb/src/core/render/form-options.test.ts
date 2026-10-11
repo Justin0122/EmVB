@@ -238,3 +238,116 @@ describe("form fields take the definition's type and limits (W-297)", () => {
     expect(rendered.includes("(a|aa)+")).toBe(false);
   });
 });
+
+describe("a field uses the form it sits in", () => {
+  test("two forms with the same field name keep their own options", () => {
+    const select = (id: string): LayoutNode =>
+      ({ id, type: "select", props: { field: "topic", label: "Topic" } }) as LayoutNode;
+    const form = (id: string, formId: string, fieldId: string): LayoutNode =>
+      ({
+        id,
+        type: "form",
+        props: { formId },
+        children: [select(fieldId)],
+      }) as LayoutNode;
+    const page: Layout = {
+      schemaVersion: 15,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [form("form0001", "alpha", "sele0001"), form("form0002", "beta", "sele0002")],
+      },
+    };
+    const def = (name: string, value: string): PublicFormDefinition => ({
+      name,
+      slug: name,
+      status: "active",
+      settings: {},
+      pages: [
+        {
+          fields: [
+            {
+              name: "topic",
+              type: "select",
+              label: "Topic",
+              required: false,
+              options: [{ label: name, value }],
+            },
+          ],
+        },
+      ],
+    });
+    const html = renderPage(page, emptyDesign(), {
+      formDefinitions: new Map([
+        ["alpha", def("Alpha", "a")],
+        ["beta", def("Beta", "b")],
+      ]),
+    }).html;
+    expect(html).toContain('<option value="a">Alpha</option>');
+    expect(html).toContain('<option value="b">Beta</option>');
+    expect(html.includes('<option value="a">Alpha</option><option value="b">Beta</option>')).toBe(
+      false,
+    );
+  });
+
+  test("a form inside a synced section uses that section's definition", () => {
+    const sectionForm: Layout = {
+      schemaVersion: 15,
+      root: {
+        id: "rootsec1",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "form0001",
+            type: "form",
+            props: { formId: "newsletter" },
+            children: [
+              { id: "sele0001", type: "select", props: { field: "topic", label: "Topic" } },
+            ],
+          } as LayoutNode,
+        ],
+      },
+    };
+    const page: Layout = {
+      schemaVersion: 15,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          { id: "sec00001", type: "section", props: { partId: "SEC00001" }, children: [] },
+        ],
+      },
+    };
+    const html = renderPage(page, emptyDesign(), {
+      dynamic: { sectionTemplates: { SEC00001: sectionForm } },
+      formDefinitions: new Map([
+        [
+          "newsletter",
+          {
+            name: "News",
+            slug: "newsletter",
+            status: "active",
+            settings: {},
+            pages: [
+              {
+                fields: [
+                  {
+                    name: "topic",
+                    type: "select",
+                    label: "Topic",
+                    required: false,
+                    options: [{ label: "Weekly", value: "weekly" }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      ]),
+    }).html;
+    expect(html).toContain('<option value="weekly">Weekly</option>');
+  });
+});

@@ -94,6 +94,10 @@ export const StyleProps = z.strictObject({
   gridColumnSpan: z.number().int().min(1).max(12).optional(),
   /** How many grid rows this element spans (1–12). */
   gridRowSpan: z.number().int().min(1).max(12).optional(),
+  /** First column line (1–13). With a span, emits `start / span n`. */
+  gridColumnStart: z.number().int().min(1).max(13).optional(),
+  /** First row line (1–13). With a span, emits `start / span n`. */
+  gridRowStart: z.number().int().min(1).max(13).optional(),
   width: SizeValue.optional(),
   minWidth: LengthValue.optional(),
   maxWidth: LengthValue.optional(),

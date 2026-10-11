@@ -204,6 +204,28 @@ const cssGridSpan = (value: unknown): string | undefined =>
     ? `span ${value}`
     : undefined;
 
+const cssGridStart = (value: unknown): number | undefined =>
+  Number.isInteger(value) && (value as number) >= 1 && (value as number) <= 13
+    ? (value as number)
+    : undefined;
+
+/** `span N`, a line number, or `start / span N` when both are set. */
+function gridPlacement(
+  start: unknown,
+  span: unknown,
+): { value?: string; badStart: boolean; badSpan: boolean } {
+  const badStart = start !== undefined && cssGridStart(start) === undefined;
+  const badSpan = span !== undefined && cssGridSpan(span) === undefined;
+  const line = cssGridStart(start);
+  const across = cssGridSpan(span);
+  if (line !== undefined && across !== undefined) {
+    return { value: `${line} / ${across}`, badStart, badSpan };
+  }
+  if (line !== undefined) return { value: String(line), badStart, badSpan };
+  if (across !== undefined) return { value: across, badStart, badSpan };
+  return { badStart, badSpan };
+}
+
 const inRange = (value: unknown, min: number, max: number): value is number =>
   typeof value === "number" && Number.isFinite(value) && value >= min && value <= max;
 
@@ -588,6 +610,9 @@ const PROPERTY_MAP: {
   gap: { css: "gap", toValue: cssLength },
   gridColumnSpan: { css: "grid-column", toValue: cssGridSpan },
   gridRowSpan: { css: "grid-row", toValue: cssGridSpan },
+  // Composed with the span in `styleDeclarations` (`start / span n`).
+  gridColumnStart: { css: "grid-column", toValue: () => undefined },
+  gridRowStart: { css: "grid-row", toValue: () => undefined },
   width: { css: "width", toValue: cssLengthOrAuto },
   minWidth: { css: "min-width", toValue: cssLength },
   maxWidth: { css: "max-width", toValue: cssLength },
@@ -683,6 +708,14 @@ export function styleDeclarations(style: unknown): {
   let motion: Declaration[] = [];
   for (const [key, raw] of shorthandsFirst(record)) {
     if (BACKGROUND_KEYS.has(key)) continue;
+    if (
+      key === "gridColumnSpan" ||
+      key === "gridRowSpan" ||
+      key === "gridColumnStart" ||
+      key === "gridRowStart"
+    ) {
+      continue;
+    }
     if (key === "scrollMotion") {
       const found = motionDeclarations(raw);
       if (found && found.every((d) => isSafeCssValue(d.value))) motion = found;
@@ -714,6 +747,14 @@ export function styleDeclarations(style: unknown): {
   const background = composeBackground(record);
   declarations.push(...background.declarations);
   rejected.push(...background.rejected);
+  const column = gridPlacement(record["gridColumnStart"], record["gridColumnSpan"]);
+  const row = gridPlacement(record["gridRowStart"], record["gridRowSpan"]);
+  if (column.value) declarations.push({ property: "grid-column", value: column.value });
+  if (row.value) declarations.push({ property: "grid-row", value: row.value });
+  if (column.badStart) rejected.push("gridColumnStart");
+  if (column.badSpan) rejected.push("gridColumnSpan");
+  if (row.badStart) rejected.push("gridRowStart");
+  if (row.badSpan) rejected.push("gridRowSpan");
   return { declarations: withMotion(declarations, motion), rejected };
 }
 

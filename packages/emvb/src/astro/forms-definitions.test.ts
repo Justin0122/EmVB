@@ -7,7 +7,7 @@ import {
   type Layout,
   type LayoutNode,
 } from "../core/index.ts";
-import { formIdsInLayout, loadFormDefinitions } from "./forms-definitions.ts";
+import { formIdsInLayout, formIdsInLayouts, loadFormDefinitions } from "./forms-definitions.ts";
 
 const form = (id: string, formId?: string): LayoutNode =>
   ({ ...defaultElement("form", id), props: formId ? { formId } : {} }) as LayoutNode;
@@ -39,6 +39,16 @@ describe("form ids in a layout (D-015)", () => {
       children: [form("form0002", "newsletter"), form("form0003", "contact")],
     } as LayoutNode;
     expect(formIdsInLayout(layout(form("form0001", "contact"), nested, form("form0004")))).toEqual([
+      "contact",
+      "newsletter",
+    ]);
+  });
+
+  test("ids in synced sections and loop items are included once", () => {
+    const page = layout(form("form0001", "contact"));
+    const section = layout(form("form0002", "newsletter"));
+    const loopItem = layout(form("form0003", "contact"));
+    expect(formIdsInLayouts([page, section, loopItem, undefined])).toEqual([
       "contact",
       "newsletter",
     ]);

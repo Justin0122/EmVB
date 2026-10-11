@@ -106,7 +106,9 @@ describe("Size section (W-088)", () => {
       "alignItems",
       "gap",
       "gridColumnSpan",
+      "gridColumnStart",
       "gridRowSpan",
+      "gridRowStart",
     ]);
   });
 
@@ -573,7 +575,12 @@ describe("Transition (W-089)", () => {
 
 describe("Div Block layout controls (W-144)", () => {
   test("a Div Block offers no flex controls, only the grid spans; Flexbox keeps them", () => {
-    expect(keysFor("div-block", "layout")).toEqual(["gridColumnSpan", "gridRowSpan"]);
+    expect(keysFor("div-block", "layout")).toEqual([
+      "gridColumnSpan",
+      "gridColumnStart",
+      "gridRowSpan",
+      "gridRowStart",
+    ]);
     expect(keysFor("flexbox", "layout")).toEqual(
       expect.arrayContaining(["flexDirection", "justifyContent", "alignItems", "gap"]),
     );
@@ -583,7 +590,9 @@ describe("Div Block layout controls (W-144)", () => {
     expect(keysFor("div-block", "layout", { gap: { value: 8, unit: "px" } })).toEqual([
       "gap",
       "gridColumnSpan",
+      "gridColumnStart",
       "gridRowSpan",
+      "gridRowStart",
     ]);
   });
 });
@@ -602,15 +611,32 @@ describe("Items layout (W-163)", () => {
       "alignItems",
       "gap",
       "gridColumnSpan",
+      "gridColumnStart",
       "gridRowSpan",
+      "gridRowStart",
     ]);
     expect(keysFor("grid", "layout")).not.toContain("flexDirection");
     expect(keysFor("icon", "layout")).toEqual(
       expect.arrayContaining(["flexDirection", "justifyContent", "alignItems", "gap"]),
     );
-    expect(keysFor("heading", "layout")).toEqual(["gridColumnSpan", "gridRowSpan"]);
-    expect(keysFor("menu-item", "layout")).toEqual(["gridColumnSpan", "gridRowSpan"]);
-    expect(keysFor("post-title", "layout")).toEqual(["gridColumnSpan", "gridRowSpan"]);
+    expect(keysFor("heading", "layout")).toEqual([
+      "gridColumnSpan",
+      "gridColumnStart",
+      "gridRowSpan",
+      "gridRowStart",
+    ]);
+    expect(keysFor("menu-item", "layout")).toEqual([
+      "gridColumnSpan",
+      "gridColumnStart",
+      "gridRowSpan",
+      "gridRowStart",
+    ]);
+    expect(keysFor("post-title", "layout")).toEqual([
+      "gridColumnSpan",
+      "gridColumnStart",
+      "gridRowSpan",
+      "gridRowStart",
+    ]);
   });
 
   test("Direction, alignment and wrap are icon buttons, and the gap slider sets the length", async () => {

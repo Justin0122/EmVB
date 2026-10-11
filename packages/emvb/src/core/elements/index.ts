@@ -761,6 +761,26 @@ const video: ElementDefinition<VideoNode> = {
   },
 };
 
+const SVG_WSP = String.raw`[ \t\r\n]`;
+const SVG_NUM = String.raw`[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?`;
+const SVG_SEP = `(?:${SVG_WSP}*,${SVG_WSP}*|${SVG_WSP}+)`;
+const VIEW_BOX = new RegExp(
+  `^${SVG_WSP}*${SVG_NUM}${SVG_SEP}${SVG_NUM}${SVG_SEP}(${SVG_NUM})${SVG_SEP}(${SVG_NUM})${SVG_WSP}*$`,
+);
+
+/** Longer side at `size`; the other side keeps the viewBox ratio. Square or unreadable stays square. */
+function svgBox(size: number, viewBox: string | undefined): { width: string; height: string } {
+  const match = VIEW_BOX.exec(viewBox ?? "");
+  const vbWidth = Number(match?.[1]);
+  const vbHeight = Number(match?.[2]);
+  const across = vbWidth / vbHeight;
+  const down = vbHeight / vbWidth;
+  const valid = vbWidth > 0 && [across, down].every((ratio) => Number.isFinite(ratio) && ratio > 0);
+  if (!valid) return { width: String(size), height: String(size) };
+  const side = (ratio: number) => String(Math.max(1, Math.round(size * Math.min(1, ratio))));
+  return { width: side(across), height: side(down) };
+}
+
 const DEFAULT_SVG =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>';
 
@@ -817,8 +837,7 @@ const svgEl: ElementDefinition<SvgNode> = {
     const svgAttrs: Record<string, string> = {
       ...tree.attrs,
       xmlns: tree.attrs.xmlns ?? "http://www.w3.org/2000/svg",
-      width: String(size),
-      height: String(size),
+      ...svgBox(size, tree.attrs.viewBox),
       focusable: "false",
     };
     if (!svgAttrs.fill && !svgAttrs.stroke) {
@@ -956,6 +975,27 @@ const grid: ElementDefinition<GridNode> = {
           value: n,
           label: String(n),
         })),
+      },
+      {
+        key: "columnTracks",
+        kind: "list-items",
+        label: "Custom tracks",
+        optional: true,
+        message: "One track per line: 1fr, 2fr, 3fr, auto, min-content, max-content, or a length.",
+      },
+      {
+        key: "columnTracksTablet",
+        kind: "list-items",
+        label: "Custom tracks on tablet",
+        optional: true,
+        message: "Leave empty to follow the desktop tracks.",
+      },
+      {
+        key: "columnTracksMobile",
+        kind: "list-items",
+        label: "Custom tracks on mobile",
+        optional: true,
+        message: "Leave empty to follow the next wider device.",
       },
       ...BOX_LINK_FIELDS,
     ],

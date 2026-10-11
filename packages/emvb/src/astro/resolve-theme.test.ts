@@ -117,6 +117,7 @@ describe("resolveThemeParts (R-062)", () => {
       needsFloatsRuntime: false,
       needsTabsRuntime: false,
       needsMenuRuntime: false,
+      needsFormsRuntime: false,
       notFound: false,
     });
   });
@@ -392,6 +393,21 @@ describe("resolveThemeParts (R-062)", () => {
     expect((await resolveThemeParts(astro("/about"))).needsTabsRuntime).toBe(true);
     themeEntries = [header, part("POPUP001", "popup", [tabs])];
     expect((await resolveThemeParts(astro("/about"))).needsTabsRuntime).toBe(true);
+  });
+
+  test("a form in a header asks for the forms runtime", async () => {
+    const form = {
+      id: "form0001",
+      type: "form",
+      props: { formId: "contact" },
+      children: [{ id: "fld00001", type: "text-input", props: { field: "email", label: "Email" } }],
+    } as LayoutNode;
+    themeEntries = [part("HEAD0001", "header", [heading("head0001", "Plain")])];
+    expect((await resolveThemeParts(astro("/about"))).needsFormsRuntime).toBe(false);
+    themeEntries = [part("HEAD0001", "header", [form])];
+    const resolved = await resolveThemeParts(astro("/about"));
+    expect(resolved.needsFormsRuntime).toBe(true);
+    expect(resolved.header?.html).toContain('data-form-id="contact"');
   });
 
   test("a single-post part fills post fields from the post at /posts/<slug>", async () => {

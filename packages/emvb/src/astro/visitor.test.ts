@@ -98,10 +98,29 @@ describe("server-side visitor facts (W-313)", () => {
       headers: { "cf-ipcountry": "ca", "user-agent": "Mozilla/5.0 (iPhone) Mobile" },
     });
     const visitor = visitorFor(withAudience, { ...astro, request });
-    expect(visitor).toMatchObject({ country: "CA", device: "mobile", returning: false });
+    expect(visitor).toMatchObject({ country: "CA", device: "mobile" });
+    expect(visitor?.returning).toBeUndefined();
     expect(typeof visitor?.now).toBe("number");
-    expect(jar.get("emvb_seen")?.value).toBe("1");
+    expect(jar.get("emvb_seen")).toBeUndefined();
     expect(headers.get("Cache-Control")).toBe("private, no-store");
+  });
+
+  test("a new or returning rule sets the seen cookie", () => {
+    const { astro, jar } = astroWith();
+    const ruled = {
+      ...withAudience,
+      root: {
+        ...withAudience.root,
+        children: [
+          {
+            ...withAudience.root.children[0],
+            audience: { visitor: "new" as const },
+          },
+        ],
+      },
+    } as Layout;
+    visitorFor(ruled, astro);
+    expect(jar.get("emvb_seen")?.value).toBe("1");
   });
 
   test("W-313 a seen visitor is returning; XX is no country; request.cf is read, locals.runtime.cf never", () => {
@@ -117,7 +136,19 @@ describe("server-side visitor facts (W-313)", () => {
         throw new Error("Astro.locals.runtime.cf has been removed in Astro v6.");
       },
     };
-    const visitor = visitorFor(withAudience, { ...astro, request, locals: { runtime } });
+    const visitorRule = {
+      ...withAudience,
+      root: {
+        ...withAudience.root,
+        children: [
+          {
+            ...withAudience.root.children[0],
+            audience: { countries: ["CA"], visitor: "returning" as const },
+          },
+        ],
+      },
+    } as Layout;
+    const visitor = visitorFor(visitorRule, { ...astro, request, locals: { runtime } });
     expect(visitor?.returning).toBe(true);
     expect(visitor?.country).toBe("FR");
   });

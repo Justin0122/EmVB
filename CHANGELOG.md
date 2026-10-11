@@ -8,12 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Breaking
 
-- **Layout and design schema 15.** Pages and site styles saved now can't be opened by an EmVB that only knows schema 14. Older pages and styles open and upgrade unchanged. Schema 15 adds optional fields only: per-element text direction, image link, caption, focal point and extra image sources, a button icon, a table of contents element, and container queries.
+- **Layout and design schema 15.** Pages and site styles saved now can't be opened by an EmVB that only knows schema 14. Older pages and styles open and upgrade unchanged. Schema 15 adds optional fields only: per-element text direction, image link, caption, focal point and extra image sources, a button icon, a table of contents element, container queries, custom grid column tracks, and a grid child's column or row start line.
 - **Layout and design schema 14 (W-329).** Pages and site styles saved now can't be opened by EmVB 0.3.0 or earlier; update the plugin everywhere first. Older pages and styles open and upgrade unchanged.
 - **Forms runtime import.** `@perkyzz/emvb/astro/forms` no longer imports `@emdash-cms/plugin-forms`, so a host without that plugin can import it and the build still succeeds. Hosts that have the forms plugin import `@perkyzz/emvb/astro/forms/client` instead. That subpath calls `initForms`.
 
 ### Added
 
+- **Custom grid tracks and a start line (W-350).** A grid can list its own column tracks (`1fr`, `2fr`, `3fr`, `auto`, `min-content`, `max-content`, or a length), per device, instead of equal columns. A child can start on a column or row line (1–13) and still span.
+- **An SVG keeps its viewBox ratio (W-350).** The longer side is the Size and the other side follows the viewBox. A square, missing, or unreadable viewBox stays square.
+- **Forms inside theme parts (W-350).** A form in a header, footer, popup, float, synced section, or loop item loads that form's field definitions. `resolveThemeParts` sets `needsFormsRuntime` so the host can mount `EmVBFormsRuntime`. The demo layouts do.
+- **Field options come from the form they sit in (W-350).** A select or radio uses that form's definition, including a form inside a synced section or loop item. Another form on the page with the same field name does not supply the options.
+- **Segment names can include a colon (W-350).** `plan:pro` is valid (a letter or digit, then letters, digits, `:`, `_`, or `-`, up to 64 characters). A rejected name stays in the field with an error and does not clear the stored rule. "Only" with no rules says to add a country, device, segment, or time.
+- **The seen cookie is written only for a new or returning rule (W-350).** Country, device, and segment rules still personalize. They do not set `emvb_seen`.
 - **Wrap the selection.** The command palette can wrap the selected element in a Flexbox, Grid or Div Block in one step. The page root stays put.
 - **Find text.** The command palette's `/` prefix lists the text on the page (headings, buttons, accordion titles, captions) and jumps to that element.
 - **Publish styles lists the change.** While site styles are unpublished, the site styles drawer names the variables, classes and settings Publish styles will add, change or remove.
@@ -46,6 +52,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- **CI runs the same checks as `bun run check` (W-350).** After format, GitHub CI runs fallow, the runtime check, and the seed check, then the unit and Astro tests.
 - **The canvas uses the same style scope as the published page.** Editor CSS is prefixed the way public CSS is, and the canvas markup sits in the same scope wrapper.
 - **A site-styles save from another tab is replayed when it can be.** If the other tab changed different variables or classes, this tab's edit is saved on top. If both tabs changed the same one, the latest styles load and the edit is not overwritten.
 - **Post Content keeps the post's formatting (W-328).** Bold, italic, code, underline, strike-through, links (only hrefs that pass the link check), bulleted and numbered lists (nested), headings h1–h6, block quotes and line breaks now show on the page and in the editor. Images, embeds, custom blocks and raw HTML are still left out, and all text is escaped.

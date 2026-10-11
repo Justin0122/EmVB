@@ -148,7 +148,9 @@ const SECTION_KEYS: Record<StyleSectionId, StyleKey[]> = {
     "alignItems",
     "gap",
     "gridColumnSpan",
+    "gridColumnStart",
     "gridRowSpan",
+    "gridRowStart",
   ],
   spacing: [
     "paddingTop",
@@ -228,7 +230,7 @@ const ONLY_FOR: Partial<Record<StyleKey, string[]>> = {
   ),
 };
 
-const SPANS: StyleKey[] = ["gridColumnSpan", "gridRowSpan"];
+const SPANS: StyleKey[] = ["gridColumnSpan", "gridColumnStart", "gridRowSpan", "gridRowStart"];
 
 /**
  * Direction, wrap, justify, align and gap only where the element's own box is a flex or grid
@@ -323,7 +325,9 @@ export const STYLE_LABELS: Record<StyleKey, string> = {
   alignItems: "Align",
   gap: "Gap",
   gridColumnSpan: "Column span",
+  gridColumnStart: "Column start",
   gridRowSpan: "Row span",
+  gridRowStart: "Row start",
   width: "Width",
   minWidth: "Min width",
   maxWidth: "Max width",

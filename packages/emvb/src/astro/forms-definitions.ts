@@ -24,6 +24,16 @@ export function formIdsInLayout(layout: Layout): string[] {
   return [...ids];
 }
 
+/** Form ids in a page and in the synced sections and loop items it renders. */
+export function formIdsInLayouts(layouts: readonly (Layout | null | undefined)[]): string[] {
+  const ids = new Set<string>();
+  for (const layout of layouts) {
+    if (!layout) continue;
+    for (const id of formIdsInLayout(layout)) ids.add(id);
+  }
+  return [...ids];
+}
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === "object" && !Array.isArray(value);
 

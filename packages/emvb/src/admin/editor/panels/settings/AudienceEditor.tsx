@@ -60,6 +60,7 @@ export function AudienceEditor({
 }) {
   const [countryText, setCountryText] = React.useState(node.audience?.countries?.join(", ") ?? "");
   const [segmentText, setSegmentText] = React.useState(node.audience?.segments?.join(", ") ?? "");
+  const [segmentError, setSegmentError] = React.useState<string | null>(null);
   React.useEffect(() => {
     setCountryText(node.audience?.countries?.join(", ") ?? "");
     setSegmentText(node.audience?.segments?.join(", ") ?? "");
@@ -155,16 +156,52 @@ export function AudienceEditor({
             <input
               className="emvb-native-input"
               value={segmentText}
-              placeholder="member, pro"
+              placeholder="member, plan:pro"
               data-emvb-audience-segments=""
-              onChange={(event) => setSegmentText(event.currentTarget.value)}
+              aria-invalid={segmentError ? true : undefined}
+              aria-describedby={segmentError ? `${id}-segment-error` : undefined}
+              onChange={(event) => {
+                setSegmentText(event.currentTarget.value);
+                setSegmentError(null);
+              }}
               onBlur={() => {
+                const raw = segmentText.trim();
+                if (raw === "") {
+                  setSegmentText("");
+                  setSegmentError(null);
+                  set({ ...base, segments: [] });
+                  return;
+                }
+                const tokens = raw
+                  .toLowerCase()
+                  .split(/[\s,;]+/)
+                  .filter((name) => name.length > 0);
+                const bad = tokens.find((name) => !AUDIENCE_SEGMENT.test(name));
+                if (bad) {
+                  setSegmentError(`${bad} isn't a segment name. Use letters, numbers, and : _ -`);
+                  return;
+                }
                 const segments = parseSegments(segmentText);
+                setSegmentError(null);
                 setSegmentText(segments.join(", "));
                 set({ ...base, segments });
               }}
             />
+            {segmentError && (
+              <span
+                className="emvb-helper"
+                id={`${id}-segment-error`}
+                data-emvb-audience-segment-error=""
+              >
+                {segmentError}
+              </span>
+            )}
           </label>
+          {mode === "only" && ruleCount(base) === 0 && (
+            <p className="emvb-helper" data-emvb-audience-empty="">
+              Add a country, device, segment, or time. Until then, everyone sees this.
+            </p>
+          )}
           <div className="emvb-bind-row">
             <span className="emvb-bind-label">Hours (24 h, empty = all day)</span>
             <input

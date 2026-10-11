@@ -4,6 +4,7 @@ import {
   collectAbTests,
   deviceFromUserAgent,
   layoutUsesAudience,
+  layoutUsesVisitorRule,
   pickArm,
   type AbArm,
   type Layout,
@@ -163,7 +164,7 @@ export function visitorFor(
   if (country) visitor.country = country;
   const device = deviceFromUserAgent(headers?.get("user-agent"), headers?.get("sec-ch-ua-mobile"));
   if (device) visitor.device = device;
-  if (astro.cookies) {
+  if (astro.cookies && layoutUsesVisitorRule(layout)) {
     visitor.returning = astro.cookies.get(SEEN_COOKIE)?.value === "1";
     if (!visitor.returning) {
       try {

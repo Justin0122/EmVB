@@ -68,7 +68,26 @@ describe("Visitors editor (W-313)", () => {
 describe("Visitors segments (W-329)", () => {
   test("segment text is cleaned to unique lowercase names", async () => {
     const { parseSegments } = await import("./AudienceEditor.tsx");
-    expect(parseSegments("Member, pro;vip  member no!pe")).toEqual(["member", "pro", "vip"]);
+    expect(parseSegments("Member, pro;vip  member no!pe plan:pro")).toEqual([
+      "member",
+      "pro",
+      "vip",
+      "plan:pro",
+    ]);
+  });
+
+  test("a rejected segment name stays in the field and keeps the stored rule", async () => {
+    let node = { ...heading, audience: { segments: ["member"] } } as LayoutNode;
+    const onChange = (next: LayoutNode) => {
+      node = next;
+    };
+    await mount(<AudienceEditor node={node} isRoot={false} onChange={onChange} />);
+    const input = q("[data-emvb-audience-segments]") as HTMLInputElement;
+    await act(async () => change(input, "no!pe"));
+    await act(async () => input.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+    expect(node.audience?.segments).toEqual(["member"]);
+    expect(input.value).toBe("no!pe");
+    expect(q("[data-emvb-audience-segment-error]")?.textContent ?? "").toContain("no!pe");
   });
 
   test("typing segments stores them on blur; clearing removes the rule", async () => {

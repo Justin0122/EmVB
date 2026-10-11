@@ -87,10 +87,14 @@ export function renderForm(
     firstSubmitLabel(node.children) ??
     ctx.definitions.get(formId)?.settings.submitLabel ??
     "Submit";
+  const previousForm = ctx.formId;
+  ctx.formId = formId;
+  const fieldNodes = ctx.children(node.children, dynamic);
+  ctx.formId = previousForm;
   const page: VNode = {
     tag: "div",
     attrs: { "data-page": "0" },
-    children: ctx.children(node.children, dynamic),
+    children: fieldNodes,
   };
   return {
     tag: "form",
@@ -305,20 +309,20 @@ function withFieldMeta(vnode: VNode, node: LayoutNode, meta: PublicFormField): V
   });
 }
 
-/** Fills a field from the first bound form definition that has it: options, type, limits. */
+/** Fills a field from the form it sits in: options, type, limits. Other forms are left alone. */
 export function withFieldOptions(
   vnode: VNode,
   node: LayoutNode,
   definitions: FormDefinitions,
+  formId?: string,
 ): VNode {
   const field = (node.props as { field?: unknown }).field;
-  if (typeof field !== "string") return vnode;
-  for (const definition of definitions.values()) {
-    const meta = fieldByName(definition, field);
-    if (!meta) continue;
-    return withFieldMeta(withOptions(vnode, node, meta), node, meta);
-  }
-  return vnode;
+  if (typeof field !== "string" || !formId) return vnode;
+  const definition = definitions.get(formId);
+  if (!definition) return vnode;
+  const meta = fieldByName(definition, field);
+  if (!meta) return vnode;
+  return withFieldMeta(withOptions(vnode, node, meta), node, meta);
 }
 
 /** A select or radio field filled with the definition's options. */

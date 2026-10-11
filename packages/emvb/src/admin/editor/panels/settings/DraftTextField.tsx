@@ -98,6 +98,10 @@ export function DraftTextField({
         .split("\n")
         .map((line) => line.trimEnd())
         .filter((line) => line.length > 0);
+      if (items.length === 0 && field.optional) {
+        onChange(withProp(node, field.key, undefined));
+        return;
+      }
       onChange(withProp(node, field.key, items.length > 0 ? items : [""]));
     };
     return (

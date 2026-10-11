@@ -1,11 +1,11 @@
 import { decodeSlug, getEmDashEntry } from "emdash";
 import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
 import { PAGES_COLLECTION } from "../constants.ts";
-import { formIdsInLayout, loadFormDefinitions } from "./forms-definitions.ts";
+import { formIdsInLayouts, loadFormDefinitions } from "./forms-definitions.ts";
 import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
 import { bindingDataFor } from "./request-data.ts";
 import type { HostVisitor, VisitorAstro } from "./visitor.ts";
-import { sectionTemplatesFor } from "./resolve-theme.ts";
+import { referencedTemplatesFor } from "./resolve-theme.ts";
 
 type EmDashEntry = NonNullable<Awaited<ReturnType<typeof getEmDashEntry>>["entry"]>;
 
@@ -55,12 +55,24 @@ export async function resolveEmVBPage(
   const handler = getPublicPluginApiRouteHandler(astro.locals as never);
   const design = await loadDesign(handler, astro.url);
   const layout = readLayout(data["layout"]);
+  const referenced = layout
+    ? await referencedTemplatesFor(layout)
+    : { sectionTemplates: {}, loopTemplates: {} };
+  const { sectionTemplates, loopTemplates } = referenced;
   const formDefinitions = layout
-    ? await loadFormDefinitions(handler, astro.url, formIdsInLayout(layout))
+    ? await loadFormDefinitions(
+        handler,
+        astro.url,
+        formIdsInLayouts([
+          layout,
+          ...Object.values(sectionTemplates),
+          ...Object.values(loopTemplates),
+        ]),
+      )
     : undefined;
-  const sectionTemplates = layout ? await sectionTemplatesFor(layout) : {};
   const dynamic = {
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+    ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
     ...(await bindingDataFor(
       layout,
       astro.url,

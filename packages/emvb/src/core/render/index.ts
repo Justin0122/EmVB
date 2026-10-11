@@ -128,6 +128,23 @@ const gridTracks = (columns: unknown): Declaration[] =>
     ? [{ property: "grid-template-columns", value: `repeat(${columns}, minmax(0, 1fr))` }]
     : [];
 
+const GRID_TRACK =
+  /^(?:1fr|2fr|3fr|auto|min-content|max-content|0|(?:\d+(?:\.\d+)?)(?:px|rem|em|%|vw|vh|ch))$/;
+
+/** Custom tracks replace equal columns when every track is in the allowlist. */
+const customTracks = (value: unknown): string | undefined => {
+  if (!Array.isArray(value) || value.length < 1 || value.length > 12) return undefined;
+  if (!value.every((track) => typeof track === "string" && GRID_TRACK.test(track)))
+    return undefined;
+  return value.join(" ");
+};
+
+const gridTemplate = (tracks: unknown, columns: unknown): Declaration[] => {
+  const custom = customTracks(tracks);
+  if (custom) return [{ property: "grid-template-columns", value: custom }];
+  return gridTracks(columns);
+};
+
 /** A node with at least one child; tolerant of a malformed node without a children array. */
 const hasChildren = (node: LayoutNode): boolean => {
   const children: unknown = (node as { children?: unknown }).children;
@@ -304,10 +321,16 @@ export function renderPage(
     }
     if (node.type === "grid") {
       const props = (node as { props: Record<string, unknown> }).props;
-      declarations.push(...gridTracks(props["columns"]));
-      // Tablet and mobile counts go in their media queries (W-139).
-      tablet.declarations.unshift(...gridTracks(props["columnsTablet"]));
-      mobile.declarations.unshift(...gridTracks(props["columnsMobile"]));
+      declarations.push(...gridTemplate(props["columnTracks"], props["columns"]));
+      // Tablet and mobile counts go in their media queries (W-139). Custom tracks replace them.
+      const tabletColumns = gridTemplate(props["columnTracksTablet"], props["columnsTablet"]);
+      const mobileColumns = gridTemplate(props["columnTracksMobile"], props["columnsMobile"]);
+      if (props["columnTracksTablet"] !== undefined || props["columnsTablet"] !== undefined) {
+        tablet.declarations.unshift(...tabletColumns);
+      }
+      if (props["columnTracksMobile"] !== undefined || props["columnsMobile"] !== undefined) {
+        mobile.declarations.unshift(...mobileColumns);
+      }
     }
     const states = stateDeclarations(node.states);
     for (const key of states.rejected) {
@@ -416,7 +439,12 @@ export function renderPage(
       const preview = videoPreview(node, attrs);
       if (preview) return finish(node, preview);
     }
-    const built = withFieldOptions(def.build(node as never, attrs, []), node, ctx.definitions);
+    const built = withFieldOptions(
+      def.build(node as never, attrs, []),
+      node,
+      ctx.definitions,
+      ctx.formId,
+    );
     return finish(node, FIELD_TYPES.has(type) && id ? uniqueField(built, controlId(id)) : built);
   }
 

@@ -157,7 +157,9 @@ describe("SiteStylesDrawer (W-032)", () => {
         "alignItems",
         "gap",
         "gridColumnSpan",
+        "gridColumnStart",
         "gridRowSpan",
+        "gridRowStart",
       ]),
     );
     await act(async () => {

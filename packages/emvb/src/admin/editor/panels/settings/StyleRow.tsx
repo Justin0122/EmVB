@@ -62,6 +62,7 @@ const LENGTH_KEYS = new Set<StyleKey>([
 
 const Z_INDEX: NumberSpec = { min: -9999, max: 9999, integer: true, example: "10" };
 const GRID_SPAN: NumberSpec = { min: 1, max: 12, integer: true, example: "2" };
+const GRID_LINE: NumberSpec = { min: 1, max: 13, integer: true, example: "1" };
 const OPACITY: NumberSpec = { min: 0, max: 100, scale: 100, example: "50", suffix: "%" };
 
 const COLOR_KEYS = new Set<StyleKey>(["color", "backgroundColor", "borderColor"]);
@@ -410,9 +411,18 @@ export function StyleRow({
     styleKey === "zIndex" ||
     styleKey === "opacity" ||
     styleKey === "gridColumnSpan" ||
-    styleKey === "gridRowSpan"
+    styleKey === "gridRowSpan" ||
+    styleKey === "gridColumnStart" ||
+    styleKey === "gridRowStart"
   ) {
-    const spec = styleKey === "zIndex" ? Z_INDEX : styleKey === "opacity" ? OPACITY : GRID_SPAN;
+    const spec =
+      styleKey === "zIndex"
+        ? Z_INDEX
+        : styleKey === "opacity"
+          ? OPACITY
+          : styleKey === "gridColumnStart" || styleKey === "gridRowStart"
+            ? GRID_LINE
+            : GRID_SPAN;
     return (
       <NumberRow
         rowKey={styleKey}
@@ -553,7 +563,9 @@ export const IMPLEMENTED_STYLE_KEYS: StyleKey[] = [
   "fontFamily",
   "zIndex",
   "gridColumnSpan",
+  "gridColumnStart",
   "gridRowSpan",
+  "gridRowStart",
   "opacity",
   "boxShadow",
   "filter",

@@ -11546,8 +11546,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "? await loadFormDefinitions(handler, astro.url, formIdsInLayout(layout))",
-          "replace": "? await loadFormDefinitions(undefined, astro.url, formIdsInLayout(layout))"
+          "search": "    ? await loadFormDefinitions(\n        handler,\n",
+          "replace": "    ? await loadFormDefinitions(\n        undefined,\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
@@ -16341,8 +16341,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve-theme.ts",
-          "search": "  if (collectSectionPartIds(layout).length === 0) return {};",
-          "replace": "  if (collectSectionPartIds(layout).length === 0) return {};\n  return {};"
+          "search": "  return templatesFrom(layout, await loadPublishedThemeParts());\n",
+          "replace": "  return { sectionTemplates: {}, loopTemplates: {} };\n"
         }
       ],
       "command": [
@@ -18753,7 +18753,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "      tablet.declarations.unshift(...gridTracks(props[\"columnsTablet\"]));\n",
+          "search": "      if (props[\"columnTracksTablet\"] !== undefined || props[\"columnsTablet\"] !== undefined) {\n        tablet.declarations.unshift(...tabletColumns);\n      }\n",
           "replace": ""
         }
       ],
@@ -21258,8 +21258,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve-theme.ts",
-          "search": "    const { html, css } = renderOne(\n      stored,\n      extraTemplates.get(stored.id),\n      extraBound.get(stored.id) ?? {},\n    );\n    const layout = readLayout(stored.layout);",
-          "replace": "    const { html, css } = renderOne(stored, undefined, extraBound.get(stored.id) ?? {});\n    const layout = readLayout(stored.layout);"
+          "search": "        const { html, css } = await renderOne(\n          stored,\n          extraTemplates.get(stored.id),\n          extraBound.get(stored.id) ?? {},\n        );\n        const layout = readLayout(stored.layout);",
+          "replace": "        const { html, css } = await renderOne(stored, undefined, extraBound.get(stored.id) ?? {});\n        const layout = readLayout(stored.layout);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve-theme.test.ts"],
@@ -21272,8 +21272,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve-theme.ts",
-          "search": "    const { html, css } = renderOne(\n      stored,\n      extraTemplates.get(stored.id),\n      extraBound.get(stored.id) ?? {},\n    );\n    popups.push({",
-          "replace": "    const { html, css } = renderOne(stored, undefined, extraBound.get(stored.id) ?? {});\n    popups.push({"
+          "search": "        const { html, css } = await renderOne(\n          stored,\n          extraTemplates.get(stored.id),\n          extraBound.get(stored.id) ?? {},\n        );\n        const popup: RenderedPopup = {",
+          "replace": "        const { html, css } = await renderOne(stored, undefined, extraBound.get(stored.id) ?? {});\n        const popup: RenderedPopup = {"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve-theme.test.ts"],
@@ -28011,6 +28011,166 @@
         "markup pins the edge"
       ],
       "expect": "\\(fail\\).*markup pins the edge"
+    },
+    {
+      "id": "W-350/svg-square-box",
+      "requirement": "W-350",
+      "description": "a non-square SVG viewBox is forced into a square box",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "  return { width: side(across), height: side(down) };\n",
+          "replace": "  return { width: String(size), height: String(size) };\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/elements/media-elements.test.ts",
+        "-t",
+        "wide viewBox"
+      ],
+      "expect": "\\(fail\\).*wide viewBox"
+    },
+    {
+      "id": "W-350/form-field-first-definition",
+      "requirement": "W-350",
+      "description": "a field takes options from the first form definition, not its own form",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/form.ts",
+          "search": "  if (typeof field !== \"string\" || !formId) return vnode;\n  const definition = definitions.get(formId);\n  if (!definition) return vnode;\n  const meta = fieldByName(definition, field);\n  if (!meta) return vnode;\n  return withFieldMeta(withOptions(vnode, node, meta), node, meta);\n",
+          "replace": "  if (typeof field !== \"string\") return vnode;\n  for (const definition of definitions.values()) {\n    const meta = fieldByName(definition, field);\n    if (!meta) continue;\n    return withFieldMeta(withOptions(vnode, node, meta), node, meta);\n  }\n  return vnode;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/form-options.test.ts",
+        "-t",
+        "two forms"
+      ],
+      "expect": "\\(fail\\).*two forms"
+    },
+    {
+      "id": "W-350/form-ids-page-only",
+      "requirement": "W-350",
+      "description": "form ids are collected from the first layout only",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/forms-definitions.ts",
+          "search": "  for (const layout of layouts) {\n    if (!layout) continue;\n    for (const id of formIdsInLayout(layout)) ids.add(id);\n  }\n",
+          "replace": "  const layout = layouts[0];\n  if (layout) {\n    for (const id of formIdsInLayout(layout)) ids.add(id);\n  }\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/forms-definitions.test.ts",
+        "-t",
+        "synced sections"
+      ],
+      "expect": "\\(fail\\).*synced sections"
+    },
+    {
+      "id": "W-350/theme-forms-runtime-off",
+      "requirement": "W-350",
+      "description": "a form in a theme part does not ask for the forms runtime",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve-theme.ts",
+          "search": "    needsFormsRuntime: rendered.some((page) => page.needsFormsRuntime),\n",
+          "replace": "    needsFormsRuntime: false,\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/resolve-theme.test.ts",
+        "-t",
+        "forms runtime"
+      ],
+      "expect": "\\(fail\\).*forms runtime"
+    },
+    {
+      "id": "W-350/segment-colon-refused",
+      "requirement": "W-350",
+      "description": "a segment name with a colon is refused",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "export const AUDIENCE_SEGMENT = /^[a-z0-9][a-z0-9:_-]{0,63}$/;\n",
+          "replace": "export const AUDIENCE_SEGMENT = /^[a-z0-9][a-z0-9_-]{0,39}$/;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/audience/segments.test.ts",
+        "-t",
+        "schema 14"
+      ],
+      "expect": "\\(fail\\).*schema 14"
+    },
+    {
+      "id": "W-350/seen-cookie-always",
+      "requirement": "W-350",
+      "description": "any Visitors rule sets the seen cookie",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/visitor.ts",
+          "search": "  if (astro.cookies && layoutUsesVisitorRule(layout)) {\n",
+          "replace": "  if (astro.cookies) {\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/visitor.test.ts",
+        "-t",
+        "first-visit cookie"
+      ],
+      "expect": "\\(fail\\).*first-visit cookie"
+    },
+    {
+      "id": "W-350/grid-tracks-ignored",
+      "requirement": "W-350",
+      "description": "custom grid tracks are ignored and equal columns are used",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "  return value.join(\" \");\n",
+          "replace": "  return undefined;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/css/grid.test.ts",
+        "-t",
+        "custom tracks"
+      ],
+      "expect": "\\(fail\\).*custom tracks"
+    },
+    {
+      "id": "W-350/segment-name-dropped",
+      "requirement": "W-350",
+      "description": "a rejected segment name is dropped and the stored rule is cleared",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/AudienceEditor.tsx",
+          "search": "                if (bad) {\n                  setSegmentError(`${bad} isn't a segment name. Use letters, numbers, and : _ -`);\n                  return;\n                }\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/audience-editor.test.tsx",
+        "-t",
+        "rejected segment"
+      ],
+      "expect": "\\(fail\\).*rejected segment"
     }
   ]
 }

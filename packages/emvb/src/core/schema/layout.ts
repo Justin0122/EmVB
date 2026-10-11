@@ -102,7 +102,8 @@ export type Variant = z.infer<typeof Variant>;
 
 export const AUDIENCE_DEVICES = ["mobile", "tablet", "desktop"] as const;
 /** A visitor segment name the host passes and a Visitors rule matches (W-329). */
-export const AUDIENCE_SEGMENT = /^[a-z0-9][a-z0-9_-]{0,39}$/;
+/** A host segment name: letters, digits, and `:` `_` `-`, up to 64 characters (`plan:pro`). */
+export const AUDIENCE_SEGMENT = /^[a-z0-9][a-z0-9:_-]{0,63}$/;
 const SEGMENT_HINT = "Segments are lowercase letters, digits, - or _, e.g. member";
 
 /**
@@ -371,15 +372,29 @@ export const LayoutSectionNode = parentNode(
 export const FlexboxNode = parentNode("flexbox", z.strictObject({ ...BoxLink }));
 
 /**
- * Equal columns. Children span with `gridColumnSpan` and `gridRowSpan` on their style. Tablet
- * and mobile may have their own count (W-139); unset follows the next wider device.
+ * Equal columns, or custom tracks when `columnTracks` is set for that device. Children span
+ * with `gridColumnSpan` and `gridRowSpan`, and can start on a line with `gridColumnStart` and
+ * `gridRowStart`. Tablet and mobile may have their own count (W-139); unset follows the next
+ * wider device.
  */
+/**
+ * One grid track: `1fr`/`2fr`/`3fr`, `auto`, `min-content`, `max-content`, or a length
+ * in the same units as other lengths (`200px`, `20%`, `1.5rem`).
+ */
+const GRID_TRACK =
+  /^(?:1fr|2fr|3fr|auto|min-content|max-content|0|(?:\d+(?:\.\d+)?)(?:px|rem|em|%|vw|vh|ch))$/;
+const GridTracks = z.array(z.string().regex(GRID_TRACK)).min(1).max(12);
+
 export const GridNode = parentNode(
   "grid",
   z.strictObject({
     columns: z.number().int().min(1).max(12),
     columnsTablet: z.number().int().min(1).max(12).optional(),
     columnsMobile: z.number().int().min(1).max(12).optional(),
+    /** Replaces equal `columns` on that device when set. */
+    columnTracks: GridTracks.optional(),
+    columnTracksTablet: GridTracks.optional(),
+    columnTracksMobile: GridTracks.optional(),
     ...BoxLink,
   }),
 );
