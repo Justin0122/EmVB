@@ -152,6 +152,18 @@ describe("resolveThemeParts (R-062)", () => {
     expect(resolved.needsPopupsRuntime).toBe(false);
   });
 
+  test("a theme part id is escaped in the wrapper", async () => {
+    themeEntries = [
+      part('HEAD"><img src=x onerror=alert(1)>', "header", [heading("head0001", "Hi")]),
+    ];
+    const resolved = await resolveThemeParts(astro("/about"));
+    const html = resolved.header?.html ?? "";
+    expect(html.includes("<img")).toBe(false);
+    expect(html).toContain(
+      'data-emvb-theme-part="HEAD&quot;&gt;&lt;img src=x onerror=alert(1)&gt;"',
+    );
+  });
+
   test("parts past the first page of the collection still take part (QA-8)", async () => {
     themeEntries = [
       ...Array.from({ length: 120 }, (_, i) =>

@@ -149,8 +149,9 @@ const isControl = (node: VNode) =>
   ["input", "select", "textarea"].includes(node.tag) && node.attrs.type !== "hidden";
 
 /**
- * A `pattern` the browser can compile. Nested quantifiers (`(a+)+`) are left off: they can hang
- * the visitor's tab while they type. A pattern that does not compile is left off too.
+ * A `pattern` the browser can compile. A group that can repeat and that itself contains `|` or
+ * another quantifier (`(a+)+`, `(a|aa)+`) is left off: it can hang the visitor's tab while they
+ * type. A pattern that does not compile is left off too.
  */
 function hasControlChar(value: string): boolean {
   for (const char of value) {
@@ -160,10 +161,85 @@ function hasControlChar(value: string): boolean {
   return false;
 }
 
+/** How much of `pattern` at `index` is a quantifier, and whether it can repeat enough to hang. */
+function quantifierAt(
+  pattern: string,
+  index: number,
+): { consumed: number; dangerous: boolean; repeats: boolean } {
+  const none = { consumed: 0, dangerous: false, repeats: false };
+  const ch = pattern[index];
+  if (ch === "+" || ch === "*") {
+    const lazy = pattern[index + 1] === "?" ? 1 : 0;
+    return { consumed: 1 + lazy, dangerous: true, repeats: true };
+  }
+  if (ch === "?") return { consumed: 1, dangerous: false, repeats: false };
+  if (ch !== "{") return none;
+  const match = /^\{(\d+)(?:\s*,\s*(\d+)?)?\}\??/.exec(pattern.slice(index));
+  if (!match) return none;
+  const min = Number(match[1]);
+  const hasComma = match[0].includes(",");
+  const max =
+    match[2] === undefined ? (hasComma ? Number.POSITIVE_INFINITY : min) : Number(match[2]);
+  if (max < min) return none;
+  return { consumed: match[0].length, dangerous: max > 20, repeats: max > 1 };
+}
+
+/**
+ * True when a group that contains `|` or a quantifier is itself repeated without a small bound.
+ * `(abc)+` and `(https?:\/\/)?` stay allowed.
+ */
+function repeatsARiskyGroup(pattern: string): boolean {
+  const stack: { risky: boolean }[] = [];
+  let inClass = false;
+  const mark = () => {
+    const frame = stack[stack.length - 1];
+    if (frame) frame.risky = true;
+  };
+  for (let i = 0; i < pattern.length; i += 1) {
+    const ch = pattern[i];
+    if (ch === "\\") {
+      i += 1;
+      continue;
+    }
+    if (inClass) {
+      if (ch === "]") inClass = false;
+      continue;
+    }
+    if (ch === "[") {
+      inClass = true;
+      continue;
+    }
+    if (ch === "(") {
+      stack.push({ risky: false });
+      continue;
+    }
+    if (ch === ")") {
+      const frame = stack.pop();
+      if (!frame) return true;
+      const quantifier = quantifierAt(pattern, i + 1);
+      if (quantifier.dangerous && frame.risky) return true;
+      if (quantifier.repeats || frame.risky) mark();
+      i += quantifier.consumed;
+      continue;
+    }
+    if (ch === "|" || ch === "+" || ch === "*" || ch === "?") {
+      mark();
+      continue;
+    }
+    if (ch === "{") {
+      const quantifier = quantifierAt(pattern, i);
+      if (quantifier.consumed === 0) continue;
+      mark();
+      i += quantifier.consumed - 1;
+    }
+  }
+  return false;
+}
+
 function safeInputPattern(pattern: string): string | undefined {
   const value = pattern.trim();
   if (!value || value.length > 200 || hasControlChar(value)) return undefined;
-  if (/\([^)]*[+*][^)]*\)[+*{]/.test(value)) return undefined;
+  if (repeatsARiskyGroup(value)) return undefined;
   try {
     const compiled = new RegExp(value);
     compiled.test("");

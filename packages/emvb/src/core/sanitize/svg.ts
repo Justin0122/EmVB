@@ -198,9 +198,14 @@ function isSafeHref(tag: string, name: string, value: string): boolean {
 const isHrefName = (name: string) => name === "href" || name === "xlink:href";
 
 function isSafeUrlRefAttr(name: string, value: string): boolean {
-  if (name !== "clip-path" && name !== "mask") return true;
-  if (value === "none") return true;
-  return URL_HASH_REF.test(value);
+  if (name === "clip-path" || name === "mask") {
+    if (value === "none") return true;
+    return URL_HASH_REF.test(value);
+  }
+  // fill, stroke and the rest: `url(https://…)` is a request from the visitor's browser.
+  // A fragment (`url(#id)`) stays inside this SVG.
+  if (/url\s*\(/i.test(value)) return URL_HASH_REF.test(value);
+  return true;
 }
 
 type ParsedAttrs = { attrs: Record<string, string>; external: boolean };

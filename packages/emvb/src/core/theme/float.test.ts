@@ -33,6 +33,14 @@ describe("float settings", () => {
       dismiss: false,
     });
     expect(open).toContain('data-emvb-float-edge="top"');
+    const quoted = wrapFloatMarkup('a"b', "Note", "<p>Hi</p>", {
+      schemaVersion: 1,
+      edge: 'top"><script>' as "top",
+      dismiss: false,
+    });
+    expect(quoted.includes("<script")).toBe(false);
+    expect(quoted).toContain('data-emvb-float="a&quot;b"');
+    expect(quoted).toContain('data-emvb-float-edge="top&quot;&gt;&lt;script&gt;"');
     expect(open).toContain('aria-label="Sale"');
     expect(open.includes("data-emvb-float-dismiss")).toBe(false);
     const closing = wrapFloatMarkup("float1", "Sale", "<p>Half off</p>", {

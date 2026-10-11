@@ -2,6 +2,7 @@ import { getEmDashCollection, getEmDashEntry, getTerm } from "emdash";
 import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
 import {
   collectLoopItemPartIds,
+  escapeAttr,
   collectSectionPartIds,
   contentPartTypeForContext,
   defaultConditions,
@@ -418,8 +419,9 @@ export async function resolveThemeParts(
     // W-216: a header or footer part is the page's banner or contentinfo landmark (hosts put it
     // straight in <body> instead of their own <header>/<footer>).
     const tag = WRAPPER_TAGS[stored.partType] ?? "div";
+    const partId = escapeAttr(stored.id);
     const html = page.html
-      ? `<${tag} class="emvb-theme-${stored.partType}" data-emvb-theme-part="${stored.id}">${page.html}</${tag}>`
+      ? `<${tag} class="emvb-theme-${stored.partType}" data-emvb-theme-part="${partId}">${page.html}</${tag}>`
       : "";
     return { html, css: page.css };
   };

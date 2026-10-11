@@ -40,6 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Uploaded icons are checked again when they are listed.** A stored SVG that no longer passes the allowlist is left out of My uploads.
 - **Style numbers stay numbers.** A focal point, a button icon gap, and a container-query width are written into CSS only when they are whole numbers in range. Text direction is only `ltr`, `rtl`, or `auto`.
 - **A form pattern that can hang the browser is left off.** A pattern that does not compile, or that nests quantifiers such as `(a+)+`, is not copied onto the control. Ordinary patterns such as `.+@example.com` still are.
+- **An SVG paint server stays inside the file (W-349).** `fill` and `stroke` may use `url(#id)`. A `url(https://…)` is refused, so a pasted icon cannot make the visitor's browser request another site. `url(#id)` gradients still work.
+- **Alternating form patterns are left off too (W-349).** `(a|aa)+` can hang a tab the same way a nested quantifier can. A single optional group such as `(https?:\/\/)?` is still copied onto the control.
+- **Theme-part ids and float edges are escaped (W-349).** The wrapper and the float markup escape those strings before they are written into the page.
 
 ### Changed
 

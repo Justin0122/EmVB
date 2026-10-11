@@ -13749,8 +13749,13 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/sanitize/svg.ts",
-          "search": "if (name !== \"clip-path\" && name !== \"mask\") return true;",
-          "replace": "if (name !== \"clip-path\") return true;"
+          "search": "if (name === \"clip-path\" || name === \"mask\")",
+          "replace": "if (name === \"clip-path\")"
+        },
+        {
+          "file": "packages/emvb/src/core/sanitize/svg.ts",
+          "search": "  if (/url\\s*\\(/i.test(value)) return URL_HASH_REF.test(value);\n",
+          "replace": "\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/svg-allowlist.test.ts"],
@@ -27926,6 +27931,86 @@
         "hang the browser"
       ],
       "expect": "\\(fail\\).*hang the browser"
+    },
+    {
+      "id": "W-349/svg-remote-fill",
+      "requirement": "W-349",
+      "description": "an SVG fill can name a remote paint server",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/svg.ts",
+          "search": "  if (/url\\s*\\(/i.test(value)) return URL_HASH_REF.test(value);\n  return true;\n",
+          "replace": "  return true;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/sanitize/svg-allowlist.test.ts",
+        "-t",
+        "remote url\\(\\) fill"
+      ],
+      "expect": "\\(fail\\).*remote url\\(\\) fill"
+    },
+    {
+      "id": "W-349/form-alternation-kept",
+      "requirement": "W-349",
+      "description": "an alternating form pattern is copied onto the control",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/form.ts",
+          "search": "  if (repeatsARiskyGroup(value)) return undefined;\n",
+          "replace": "\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/form-options.test.ts",
+        "-t",
+        "alternating form pattern"
+      ],
+      "expect": "\\(fail\\).*alternating form pattern"
+    },
+    {
+      "id": "W-349/theme-part-id-raw",
+      "requirement": "W-349",
+      "description": "a theme part id is written into the wrapper without escaping",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve-theme.ts",
+          "search": "    const partId = escapeAttr(stored.id);\n",
+          "replace": "    const partId = stored.id;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/resolve-theme.test.ts",
+        "-t",
+        "id is escaped"
+      ],
+      "expect": "\\(fail\\).*id is escaped"
+    },
+    {
+      "id": "W-349/float-edge-raw",
+      "requirement": "W-349",
+      "description": "a float edge is written into the markup without escaping",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/float.ts",
+          "search": "  const edge = escapeAttr(settings.edge);\n",
+          "replace": "  const edge = settings.edge;\n"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/theme/float.test.ts",
+        "-t",
+        "markup pins the edge"
+      ],
+      "expect": "\\(fail\\).*markup pins the edge"
     }
   ]
 }

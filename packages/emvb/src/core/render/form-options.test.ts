@@ -213,4 +213,28 @@ describe("form fields take the definition's type and limits (W-297)", () => {
     expect(rendered.includes("pattern=")).toBe(false);
     expect(rendered.includes("(a+)+")).toBe(false);
   });
+
+  test("an alternating form pattern that can hang the browser is left off the control", () => {
+    const bad: PublicFormDefinition = {
+      ...typed,
+      pages: [
+        {
+          fields: [
+            {
+              name: "email",
+              type: "email",
+              label: "Email",
+              required: false,
+              validation: { pattern: "(a|aa)+" },
+            },
+          ],
+        },
+      ],
+    };
+    const rendered = renderPage(typedLayout, emptyDesign(), {
+      formDefinitions: new Map([["contact", bad]]),
+    }).html;
+    expect(rendered.includes("pattern=")).toBe(false);
+    expect(rendered.includes("(a|aa)+")).toBe(false);
+  });
 });

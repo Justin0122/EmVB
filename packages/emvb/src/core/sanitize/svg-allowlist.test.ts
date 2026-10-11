@@ -143,6 +143,8 @@ describe("SVG rejects (W-091)", () => {
     ["a style attribute with spaces", '<svg><path style = "fill:red"/></svg>'],
     ["a remote xlink:href on use", '<svg><use xlink:href="https://x.test/s.svg#a"/></svg>'],
     ["a remote url() mask", '<svg><g mask="url(https://x.test/m)"/></svg>'],
+    ["a remote url() fill", '<svg><path fill="url(https://x.test/p.svg#a)" d="M0 0"/></svg>'],
+    ["a remote url() stroke", '<svg><path stroke="url(https://x.test/p.svg#a)" d="M0 0"/></svg>'],
     ["an href with a space", '<svg><use href="#a b"/></svg>'],
     ["a clip-path with a prefix", '<svg><g clip-path="xurl(#c)"/></svg>'],
     ["a clip-path with a suffix", '<svg><g clip-path="url(#c) url(#d)"/></svg>'],

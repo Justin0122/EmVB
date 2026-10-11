@@ -100,7 +100,7 @@ export function wrapFloatMarkup(
 ): string {
   const safeId = escapeAttr(id);
   const label = escapeAttr(title.trim() || "Notice");
-  const edge = settings.edge;
+  const edge = escapeAttr(settings.edge);
   const close = settings.dismiss
     ? `<button type="button" class="emvb-float__close" data-emvb-float-dismiss aria-label="Close"><span aria-hidden="true">×</span></button>`
     : "";
