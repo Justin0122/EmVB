@@ -1,4 +1,25 @@
 import { z } from "zod";
+import {
+  ALIGN_ITEMS,
+  BACKGROUND_POSITIONS,
+  BACKGROUND_REPEATS,
+  BACKGROUND_SIZES,
+  BORDER_STYLES,
+  CURSORS,
+  FLEX_DIRECTIONS,
+  FLEX_WRAPS,
+  HEX_COLOR,
+  JUSTIFY_CONTENT,
+  LENGTH_UNITS,
+  OBJECT_FITS,
+  OVERFLOWS,
+  POSITIONS,
+  TEXT_ALIGNS,
+  TEXT_DECORATIONS,
+  TEXT_TRANSFORMS,
+  TRANSITION_EASINGS,
+  TRANSITION_PROPERTIES,
+} from "../css-keywords.ts";
 import { isSafeFontStack } from "../sanitize/css.ts";
 import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { POPUP_DEVICES } from "../theme/popup-rules.ts";
@@ -10,14 +31,13 @@ export const VariableRef = z.strictObject({
   from: z.enum(["color", "font", "fontSize", "spacing"]).optional(),
 });
 
-const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 export const ColorValue = z.union([
   z.string().regex(HEX_COLOR, "Use a hex color such as #1a2b3c"),
   VariableRef,
 ]);
 
 /** `ch` since W-331: the width of a "0", for readable line lengths such as 65ch. */
-const LengthUnit = z.enum(["px", "rem", "em", "%", "vw", "vh", "ch"]);
+const LengthUnit = z.enum(LENGTH_UNITS);
 
 export const Length = z.strictObject({
   value: z.number().finite().min(0).max(10_000),
@@ -77,18 +97,16 @@ const Filter = z
 const Transition = z.strictObject({
   duration: z.number().int().min(0).max(2000),
   delay: z.number().int().min(0).max(2000).optional(),
-  easing: z.enum(["ease", "ease-in", "ease-out", "ease-in-out", "linear"]),
-  property: z.enum(["all", "colors", "opacity", "shadow", "filter"]),
+  easing: z.enum(TRANSITION_EASINGS),
+  property: z.enum(TRANSITION_PROPERTIES),
 });
 
 /** Style properties for layout and text elements (W-017 / R-012). Unknown keys are rejected. */
 export const StyleProps = z.strictObject({
-  flexDirection: z.enum(["row", "column", "row-reverse", "column-reverse"]).optional(),
-  flexWrap: z.enum(["nowrap", "wrap", "wrap-reverse"]).optional(),
-  justifyContent: z
-    .enum(["flex-start", "flex-end", "center", "space-between", "space-around", "space-evenly"])
-    .optional(),
-  alignItems: z.enum(["stretch", "flex-start", "flex-end", "center", "baseline"]).optional(),
+  flexDirection: z.enum(FLEX_DIRECTIONS).optional(),
+  flexWrap: z.enum(FLEX_WRAPS).optional(),
+  justifyContent: z.enum(JUSTIFY_CONTENT).optional(),
+  alignItems: z.enum(ALIGN_ITEMS).optional(),
   gap: LengthValue.optional(),
   /** How many grid columns this element spans (1–12). */
   gridColumnSpan: z.number().int().min(1).max(12).optional(),
@@ -104,11 +122,11 @@ export const StyleProps = z.strictObject({
   height: SizeValue.optional(),
   minHeight: LengthValue.optional(),
   maxHeight: LengthValue.optional(),
-  overflow: z.enum(["visible", "hidden", "clip", "scroll", "auto"]).optional(),
+  overflow: z.enum(OVERFLOWS).optional(),
   aspectRatio: z
     .union([z.literal("auto"), z.string().regex(ASPECT_RATIO, "Use a ratio such as 16/9")])
     .optional(),
-  objectFit: z.enum(["fill", "contain", "cover", "none", "scale-down"]).optional(),
+  objectFit: z.enum(OBJECT_FITS).optional(),
   paddingTop: LengthValue.optional(),
   paddingRight: LengthValue.optional(),
   paddingBottom: LengthValue.optional(),
@@ -117,7 +135,7 @@ export const StyleProps = z.strictObject({
   marginRight: OffsetValue.optional(),
   marginBottom: OffsetValue.optional(),
   marginLeft: OffsetValue.optional(),
-  position: z.enum(["static", "relative", "absolute", "fixed", "sticky"]).optional(),
+  position: z.enum(POSITIONS).optional(),
   top: OffsetValue.optional(),
   right: OffsetValue.optional(),
   bottom: OffsetValue.optional(),
@@ -154,10 +172,10 @@ export const StyleProps = z.strictObject({
       VariableRef,
     ])
     .optional(),
-  textAlign: z.enum(["left", "center", "right", "justify"]).optional(),
-  textTransform: z.enum(["none", "uppercase", "lowercase", "capitalize"]).optional(),
+  textAlign: z.enum(TEXT_ALIGNS).optional(),
+  textTransform: z.enum(TEXT_TRANSFORMS).optional(),
   /** W-113. A button sets `none` in its base CSS, so it is not underlined unless a style says so. */
-  textDecoration: z.enum(["none", "underline", "overline", "line-through"]).optional(),
+  textDecoration: z.enum(TEXT_DECORATIONS).optional(),
   color: ColorValue.optional(),
   backgroundColor: ColorValue.optional(),
   /** http(s) or a site path. Spaces, quotes and parentheses are refused so the URL can sit inside `url("")`. */
@@ -170,21 +188,9 @@ export const StyleProps = z.strictObject({
       "Use an http(s) URL or a site path, with no spaces or parentheses",
     )
     .optional(),
-  backgroundSize: z.enum(["auto", "cover", "contain"]).optional(),
-  backgroundPosition: z
-    .enum([
-      "center",
-      "top",
-      "bottom",
-      "left",
-      "right",
-      "top left",
-      "top right",
-      "bottom left",
-      "bottom right",
-    ])
-    .optional(),
-  backgroundRepeat: z.enum(["no-repeat", "repeat", "repeat-x", "repeat-y"]).optional(),
+  backgroundSize: z.enum(BACKGROUND_SIZES).optional(),
+  backgroundPosition: z.enum(BACKGROUND_POSITIONS).optional(),
+  backgroundRepeat: z.enum(BACKGROUND_REPEATS).optional(),
   /** Video behind the element. Same URL rules as a background image (W-110). */
   backgroundVideo: z
     .string()
@@ -203,19 +209,7 @@ export const StyleProps = z.strictObject({
     .strictObject({
       type: z.enum(["linear", "radial", "conic"]),
       angle: z.number().int().min(0).max(360).optional(),
-      position: z
-        .enum([
-          "center",
-          "top",
-          "bottom",
-          "left",
-          "right",
-          "top left",
-          "top right",
-          "bottom left",
-          "bottom right",
-        ])
-        .optional(),
+      position: z.enum(BACKGROUND_POSITIONS).optional(),
       stops: z
         .array(
           z.strictObject({
@@ -240,7 +234,7 @@ export const StyleProps = z.strictObject({
   borderRightWidth: LengthValue.optional(),
   borderBottomWidth: LengthValue.optional(),
   borderLeftWidth: LengthValue.optional(),
-  borderStyle: z.enum(["none", "solid", "dashed", "dotted"]).optional(),
+  borderStyle: z.enum(BORDER_STYLES).optional(),
   borderColor: ColorValue.optional(),
   borderRadius: LengthValue.optional(),
   /** Per-corner radii (W-138, D-044), after `borderRadius`. */
@@ -251,19 +245,7 @@ export const StyleProps = z.strictObject({
   opacity: z.number().finite().min(0).max(1).optional(),
   boxShadow: BoxShadow.optional(),
   filter: Filter.optional(),
-  cursor: z
-    .enum([
-      "default",
-      "pointer",
-      "text",
-      "move",
-      "grab",
-      "not-allowed",
-      "help",
-      "crosshair",
-      "zoom-in",
-    ])
-    .optional(),
+  cursor: z.enum(CURSORS).optional(),
   transition: Transition.optional(),
   /**
    * Icon element glyph styling (W-237). Emitted as custom properties on the icon's wrapper, so

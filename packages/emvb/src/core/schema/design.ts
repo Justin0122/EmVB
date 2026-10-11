@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { HEX_COLOR } from "../css-keywords.ts";
 import { DeviceStyles, HiddenOn, StyleProps, StyleStates } from "./style.ts";
 
 /**
@@ -21,12 +22,7 @@ const VariableId = z
 export const ColorVariable = z.strictObject({
   id: VariableId,
   name: z.string().min(1).max(60),
-  value: z
-    .string()
-    .regex(
-      /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i,
-      "Use a hex color such as #1a2b3c",
-    ),
+  value: z.string().regex(HEX_COLOR, "Use a hex color such as #1a2b3c"),
 });
 
 /** Font stack string — commas and quoted family names allowed; `generateCss` drops an unsafe one. */

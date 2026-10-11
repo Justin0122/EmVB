@@ -6265,9 +6265,9 @@
       "description": "the CSS mapper refuses vw",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
-          "search": "const UNITS = new Set([\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"]);",
-          "replace": "const UNITS = new Set([\"px\", \"rem\", \"em\", \"%\", \"vh\", \"ch\"]);"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const LENGTH_UNITS = [\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"] as const;",
+          "replace": "export const LENGTH_UNITS = [\"px\", \"rem\", \"em\", \"%\", \"vh\", \"ch\"] as const;"
         }
       ],
       "command": [
@@ -11197,7 +11197,7 @@
       "description": "a colour with text before the hex value is accepted",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "const HEX_COLOR = /^#(?:",
           "replace": "const HEX_COLOR = /#(?:"
         }
@@ -11211,7 +11211,7 @@
       "description": "four-digit hex colours are refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "[0-9a-f]{3}|[0-9a-f]{4}|",
           "replace": "[0-9a-f]{3}|"
         }
@@ -13160,7 +13160,7 @@
       "description": "row-reverse is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"row\", \"column\", \"row-reverse\", \"column-reverse\"",
           "replace": "\"row\", \"column\", \"column-reverse\""
         }
@@ -13174,7 +13174,7 @@
       "description": "wrap-reverse is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"nowrap\", \"wrap\", \"wrap-reverse\"",
           "replace": "\"nowrap\", \"wrap\""
         }
@@ -13188,7 +13188,7 @@
       "description": "space-evenly is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "  \"space-around\",\n  \"space-evenly\",\n",
           "replace": "  \"space-around\",\n"
         }
@@ -13202,7 +13202,7 @@
       "description": "baseline is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"stretch\", \"flex-start\", \"flex-end\", \"center\", \"baseline\"",
           "replace": "\"stretch\", \"flex-start\", \"flex-end\", \"center\""
         }
@@ -13216,9 +13216,9 @@
       "description": "text-align justify is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
-          "search": "if (value === \"center\" || value === \"justify\") return value;",
-          "replace": "if (value === \"center\") return value;"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const TEXT_ALIGNS = [\"left\", \"center\", \"right\", \"justify\"] as const;",
+          "replace": "export const TEXT_ALIGNS = [\"left\", \"center\", \"right\"] as const;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/css-keywords.test.ts"],
@@ -13230,7 +13230,7 @@
       "description": "capitalize is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"none\", \"uppercase\", \"lowercase\", \"capitalize\"",
           "replace": "\"none\", \"uppercase\", \"lowercase\""
         }
@@ -13244,7 +13244,7 @@
       "description": "dotted borders are refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"none\", \"solid\", \"dashed\", \"dotted\"",
           "replace": "\"none\", \"solid\", \"dashed\""
         }
@@ -13258,7 +13258,7 @@
       "description": "overflow scroll is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"visible\", \"hidden\", \"clip\", \"scroll\", \"auto\"",
           "replace": "\"visible\", \"hidden\", \"clip\", \"auto\""
         }
@@ -13272,7 +13272,7 @@
       "description": "object-fit fill is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"fill\", \"contain\", \"cover\", \"none\", \"scale-down\"",
           "replace": "\"contain\", \"cover\", \"none\", \"scale-down\""
         }
@@ -13286,7 +13286,7 @@
       "description": "position fixed is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "\"static\", \"relative\", \"absolute\", \"fixed\", \"sticky\"",
           "replace": "\"static\", \"relative\", \"absolute\", \"sticky\""
         }
@@ -13300,7 +13300,7 @@
       "description": "cursor zoom-in is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "  \"crosshair\",\n  \"zoom-in\",\n",
           "replace": "  \"crosshair\",\n"
         }
@@ -13314,7 +13314,7 @@
       "description": "font weight 500 is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "file": "packages/emvb/src/core/css-keywords.ts",
           "search": "  \"400\",\n  \"500\",\n  \"600\",",
           "replace": "  \"400\",\n  \"600\","
         }
@@ -13328,9 +13328,9 @@
       "description": "the em unit is refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
-          "search": "new Set([\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"])",
-          "replace": "new Set([\"px\", \"rem\", \"%\", \"vw\", \"vh\", \"ch\"])"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const LENGTH_UNITS = [\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"] as const;",
+          "replace": "export const LENGTH_UNITS = [\"px\", \"rem\", \"%\", \"vw\", \"vh\", \"ch\"] as const;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/css-keywords.test.ts"],
@@ -13496,9 +13496,9 @@
       "description": "colour values are checked at the end only",
       "edits": [
         {
-          "file": "packages/emvb/src/core/schema/design.ts",
-          "search": "/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i,\n",
-          "replace": "/#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i,\n"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;",
+          "replace": "export const HEX_COLOR = /#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/schema/schema-edges.test.ts"],
@@ -13510,9 +13510,9 @@
       "description": "4- and 8-digit colours are refused",
       "edits": [
         {
-          "file": "packages/emvb/src/core/schema/design.ts",
-          "search": "/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i,\n",
-          "replace": "/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i,\n"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;",
+          "replace": "export const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/schema/schema-edges.test.ts"],
@@ -16928,9 +16928,9 @@
       "description": "the sanitizer drops line-through",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
-          "search": "const TEXT_DECORATION = new Set([\"none\", \"underline\", \"overline\", \"line-through\"]);",
-          "replace": "const TEXT_DECORATION = new Set([\"none\", \"underline\", \"overline\"]);"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const TEXT_DECORATIONS = [\"none\", \"underline\", \"overline\", \"line-through\"] as const;",
+          "replace": "export const TEXT_DECORATIONS = [\"none\", \"underline\", \"overline\"] as const;"
         }
       ],
       "command": [
@@ -16949,7 +16949,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/style.ts",
-          "search": "  textDecoration: z.enum([\"none\", \"underline\", \"overline\", \"line-through\"]).optional(),\n",
+          "search": "  textDecoration: z.enum(TEXT_DECORATIONS).optional(),\n",
           "replace": ""
         }
       ],
@@ -21646,9 +21646,9 @@
       "description": "Font weight 800 is dropped from the CSS.",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
-          "search": "  \"700\",\n  \"800\",\n  \"900\",\n]);",
-          "replace": "  \"700\",\n]);"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "  \"700\",\n  \"800\",\n  \"900\",\n] as const;",
+          "replace": "  \"700\",\n] as const;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/typography.test.ts"],
@@ -27398,9 +27398,9 @@
       "description": "The ch unit is refused by the schema.",
       "edits": [
         {
-          "file": "packages/emvb/src/core/schema/style.ts",
-          "search": "const LengthUnit = z.enum([\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"]);",
-          "replace": "const LengthUnit = z.enum([\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\"]);"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const LENGTH_UNITS = [\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"] as const;",
+          "replace": "export const LENGTH_UNITS = [\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\"] as const;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/ch-negative-margin.test.ts"],
@@ -27412,9 +27412,9 @@
       "description": "The CSS mapper drops ch lengths.",
       "edits": [
         {
-          "file": "packages/emvb/src/core/sanitize/css.ts",
-          "search": "const UNITS = new Set([\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"]);",
-          "replace": "const UNITS = new Set([\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\"]);"
+          "file": "packages/emvb/src/core/css-keywords.ts",
+          "search": "export const LENGTH_UNITS = [\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\", \"ch\"] as const;",
+          "replace": "export const LENGTH_UNITS = [\"px\", \"rem\", \"em\", \"%\", \"vw\", \"vh\"] as const;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/ch-negative-margin.test.ts"],

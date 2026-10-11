@@ -1,53 +1,45 @@
+import {
+  ALIGN_ITEMS,
+  BACKGROUND_POSITIONS,
+  BACKGROUND_REPEATS,
+  BACKGROUND_SIZES,
+  BORDER_STYLES,
+  CURSORS,
+  FLEX_DIRECTIONS as FLEX_DIRECTION_VALUES,
+  FLEX_WRAPS as FLEX_WRAP_VALUES,
+  FONT_WEIGHTS,
+  HEX_COLOR,
+  JUSTIFY_CONTENT,
+  LENGTH_UNITS,
+  OBJECT_FITS,
+  OVERFLOWS,
+  POSITIONS,
+  TEXT_ALIGNS,
+  TEXT_DECORATIONS,
+  TEXT_TRANSFORMS,
+  TRANSITION_EASINGS as TRANSITION_EASING_VALUES,
+} from "../css-keywords.ts";
 import { STYLE_STATES, type StyleStateName } from "../schema/state-names.ts";
 import type { StyleProps } from "../schema/style.ts";
 import { sanitizeMediaUrl } from "./media-url.ts";
 import { motionDeclarations, withMotion } from "./motion.ts";
 
-const HEX_COLOR = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+const setOf = (values: readonly string[]) => new Set<string>(values);
 const VAR_ID = /^[a-z0-9-]{1,40}$/;
-const UNITS = new Set(["px", "rem", "em", "%", "vw", "vh", "ch"]);
-const FLEX_DIRECTIONS = new Set(["row", "column", "row-reverse", "column-reverse"]);
-const FLEX_WRAPS = new Set(["nowrap", "wrap", "wrap-reverse"]);
-const JUSTIFY = new Set([
-  "flex-start",
-  "flex-end",
-  "center",
-  "space-between",
-  "space-around",
-  "space-evenly",
-]);
-const ALIGN = new Set(["stretch", "flex-start", "flex-end", "center", "baseline"]);
-const TEXT_TRANSFORM = new Set(["none", "uppercase", "lowercase", "capitalize"]);
-const TEXT_DECORATION = new Set(["none", "underline", "overline", "line-through"]);
-const BORDER_STYLE = new Set(["none", "solid", "dashed", "dotted"]);
-const OVERFLOW = new Set(["visible", "hidden", "clip", "scroll", "auto"]);
-const OBJECT_FIT = new Set(["fill", "contain", "cover", "none", "scale-down"]);
-const POSITION = new Set(["static", "relative", "absolute", "fixed", "sticky"]);
-const CURSOR = new Set([
-  "default",
-  "pointer",
-  "text",
-  "move",
-  "grab",
-  "not-allowed",
-  "help",
-  "crosshair",
-  "zoom-in",
-]);
+const UNITS = setOf(LENGTH_UNITS);
+const FLEX_DIRECTIONS = setOf(FLEX_DIRECTION_VALUES);
+const FLEX_WRAPS = setOf(FLEX_WRAP_VALUES);
+const JUSTIFY = setOf(JUSTIFY_CONTENT);
+const ALIGN = setOf(ALIGN_ITEMS);
+const TEXT_TRANSFORM = setOf(TEXT_TRANSFORMS);
+const TEXT_DECORATION = setOf(TEXT_DECORATIONS);
+const BORDER_STYLE = setOf(BORDER_STYLES);
+const OVERFLOW = setOf(OVERFLOWS);
+const OBJECT_FIT = setOf(OBJECT_FITS);
+const POSITION = setOf(POSITIONS);
+const CURSOR = setOf(CURSORS);
 const ASPECT_RATIO = /^([1-9]\d{0,3})\/([1-9]\d{0,3})$/;
-const FONT_WEIGHT = new Set([
-  "normal",
-  "bold",
-  "100",
-  "200",
-  "300",
-  "400",
-  "500",
-  "600",
-  "700",
-  "800",
-  "900",
-]);
+const FONT_WEIGHT = setOf(FONT_WEIGHTS);
 const FORBIDDEN = /[{};<>\\"'`]|\/\*|url\(|expression\(|@import|javascript:/i;
 
 /** Last line of defence on every emitted value, even ones built by the typed validators below. */
@@ -192,11 +184,13 @@ function cssEntrance(value: unknown): string | undefined {
   return `emvb-${type} ${duration}ms ease-out${wait} both`;
 }
 
+const TEXT_ALIGN = setOf(TEXT_ALIGNS);
+
 function cssTextAlign(value: unknown): string | undefined {
+  if (typeof value !== "string" || !TEXT_ALIGN.has(value)) return undefined;
   if (value === "left") return "start";
   if (value === "right") return "end";
-  if (value === "center" || value === "justify") return value;
-  return undefined;
+  return value;
 }
 
 const cssGridSpan = (value: unknown): string | undefined =>
@@ -305,7 +299,7 @@ function cssFontWeight(value: unknown): string | undefined {
   return undefined;
 }
 
-const TRANSITION_EASINGS = new Set(["ease", "ease-in", "ease-out", "ease-in-out", "linear"]);
+const TRANSITION_EASINGS = setOf(TRANSITION_EASING_VALUES);
 const TRANSITION_PROPERTIES: Readonly<Record<string, readonly string[]>> = {
   all: ["all"],
   colors: ["color", "background-color", "border-color"],
@@ -393,19 +387,9 @@ function cssIconAnimation(value: unknown): string | undefined {
 
 export type Declaration = { property: string; value: string };
 
-const BACKGROUND_SIZE = new Set(["auto", "cover", "contain"]);
-const BACKGROUND_POSITION = new Set([
-  "center",
-  "top",
-  "bottom",
-  "left",
-  "right",
-  "top left",
-  "top right",
-  "bottom left",
-  "bottom right",
-]);
-const BACKGROUND_REPEAT = new Set(["no-repeat", "repeat", "repeat-x", "repeat-y"]);
+const BACKGROUND_SIZE = setOf(BACKGROUND_SIZES);
+const BACKGROUND_POSITION = setOf(BACKGROUND_POSITIONS);
+const BACKGROUND_REPEAT = setOf(BACKGROUND_REPEATS);
 const BACKGROUND_KEYS = new Set([
   "backgroundImage",
   "backgroundSize",
@@ -432,17 +416,7 @@ function cssBackgroundImage(value: unknown): string | undefined {
   return isSafeBackground(css) ? css : undefined;
 }
 
-const GRADIENT_POSITION = new Set([
-  "center",
-  "top",
-  "bottom",
-  "left",
-  "right",
-  "top left",
-  "top right",
-  "bottom left",
-  "bottom right",
-]);
+const GRADIENT_POSITION = setOf(BACKGROUND_POSITIONS);
 
 function cssAngle(value: unknown, fallback: number): number | undefined {
   const angle = value === undefined ? fallback : value;
