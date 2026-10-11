@@ -1,4 +1,5 @@
 import { emdashContent, type ContentPort } from "./content-port.ts";
+import { siteFor } from "./render-session.ts";
 import {
   collectCollectionLoops,
   layoutUsesSource,
@@ -97,7 +98,9 @@ export async function bindingDataFor(
   }
   if (layoutUsesSource(layout.root, "site")) {
     try {
-      data.site = siteBindingValues(await content.getSiteSettings());
+      data.site = siteBindingValues(
+        await (astro ? siteFor(astro, () => content.getSiteSettings()) : content.getSiteSettings()),
+      );
     } catch {
       data.site = {};
     }

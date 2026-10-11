@@ -1,5 +1,5 @@
 import { emdashContent, type ContentPort } from "./content-port.ts";
-import { formIdsInLayouts, loadFormDefinitions } from "./forms-definitions.ts";
+import { formIdsInLayouts } from "./forms-definitions.ts";
 import {
   collectLoopItemPartIds,
   escapeAttr,
@@ -32,7 +32,8 @@ import {
   type ArchivePagination,
 } from "../core/index.ts";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
-import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
+import { readLayout, renderStored, type RenderedPage } from "./render.ts";
+import { designFor, formsFor, layoutFor, partsFor } from "./render-session.ts";
 import type { HostVisitor, VisitorAstro } from "./visitor.ts";
 import { bindingDataFor } from "./request-data.ts";
 import { decodePathSegment, themeContextFrom } from "./theme-context.ts";
@@ -164,7 +165,7 @@ const THEME_PARTS_PAGE = 50;
 const THEME_PARTS_MAX_PAGES = 20;
 
 /** Every published theme part, page by page; a failed page ends the read with what came before. */
-async function loadPublishedThemeParts(content: ContentPort): Promise<StoredPart[]> {
+async function fetchPublishedThemeParts(content: ContentPort): Promise<StoredPart[]> {
   const entries: Awaited<ReturnType<ContentPort["getCollection"]>>["entries"] = [];
   let cursor: string | undefined;
   for (let page = 0; page < THEME_PARTS_MAX_PAGES; page += 1) {
@@ -189,9 +190,15 @@ async function loadPublishedThemeParts(content: ContentPort): Promise<StoredPart
   return entries.map(storedPartFrom).filter((part): part is StoredPart => part !== undefined);
 }
 
+function loadPublishedThemeParts(content: ContentPort, request?: object): Promise<StoredPart[]> {
+  const load = () => fetchPublishedThemeParts(content);
+  return request ? partsFor(request, load) : load();
+}
+
 async function loadLoopTemplates(
   layout: Layout,
   parts: StoredPart[],
+  request?: object,
 ): Promise<Record<string, Layout>> {
   const ids = collectLoopItemPartIds(layout);
   if (ids.length === 0) return {};
@@ -200,14 +207,18 @@ async function loadLoopTemplates(
   for (const id of ids) {
     const part = byId.get(id);
     if (!part || part.partType !== "loop_item") continue;
-    const itemLayout = readLayout(part.layout);
+    const itemLayout = layoutFor(request, part.id, part.layout);
     if (itemLayout) templates[id] = itemLayout;
   }
   return templates;
 }
 
 /** Section parts referenced by `layout`, including sections nested inside those parts. */
-function loadSectionTemplates(layout: Layout, parts: StoredPart[]): Record<string, Layout> {
+function loadSectionTemplates(
+  layout: Layout,
+  parts: StoredPart[],
+  request?: object,
+): Record<string, Layout> {
   const byId = new Map(parts.map((p) => [p.id, p]));
   const templates: Record<string, Layout> = {};
   const queue = collectSectionPartIds(layout);
@@ -218,7 +229,7 @@ function loadSectionTemplates(layout: Layout, parts: StoredPart[]): Record<strin
     seen.add(id);
     const part = byId.get(id);
     if (!part || part.partType !== "section") continue;
-    const itemLayout = readLayout(part.layout);
+    const itemLayout = layoutFor(request, part.id, part.layout);
     if (!itemLayout) continue;
     templates[id] = itemLayout;
     queue.push(...collectSectionPartIds(itemLayout));
@@ -230,11 +241,12 @@ function loadSectionTemplates(layout: Layout, parts: StoredPart[]): Record<strin
 async function templatesFrom(
   layout: Layout,
   parts: StoredPart[],
+  request?: object,
 ): Promise<{ sectionTemplates: Record<string, Layout>; loopTemplates: Record<string, Layout> }> {
-  const loopTemplates = await loadLoopTemplates(layout, parts);
-  const sectionTemplates = loadSectionTemplates(layout, parts);
+  const loopTemplates = await loadLoopTemplates(layout, parts, request);
+  const sectionTemplates = loadSectionTemplates(layout, parts, request);
   for (const item of Object.values(loopTemplates)) {
-    const nested = loadSectionTemplates(item, parts);
+    const nested = loadSectionTemplates(item, parts, request);
     for (const [id, value] of Object.entries(nested)) {
       if (!sectionTemplates[id]) sectionTemplates[id] = value;
     }
@@ -246,6 +258,7 @@ async function templatesFrom(
 export async function referencedTemplatesFor(
   layout: Layout,
   content: ContentPort = emdashContent,
+  request?: object,
 ): Promise<{
   sectionTemplates: Record<string, Layout>;
   loopTemplates: Record<string, Layout>;
@@ -253,7 +266,7 @@ export async function referencedTemplatesFor(
   if (collectSectionPartIds(layout).length === 0 && collectLoopItemPartIds(layout).length === 0) {
     return { sectionTemplates: {}, loopTemplates: {} };
   }
-  return templatesFrom(layout, await loadPublishedThemeParts(content));
+  return templatesFrom(layout, await loadPublishedThemeParts(content, request), request);
 }
 
 async function loadSingularPost(
@@ -337,8 +350,9 @@ async function buildDynamicForContent(
   layout: Layout,
   parts: StoredPart[],
   content: ContentPort,
+  request?: object,
 ): Promise<ThemeDynamicData | undefined> {
-  const { sectionTemplates, loopTemplates } = await templatesFrom(layout, parts);
+  const { sectionTemplates, loopTemplates } = await templatesFrom(layout, parts, request);
   const referenced: ThemeDynamicData = {
     ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
@@ -408,7 +422,7 @@ export async function resolveThemePartsWith(
       : {}),
   };
 
-  const parts = await loadPublishedThemeParts(port);
+  const parts = await loadPublishedThemeParts(port, astro);
   if (parts.length === 0) return empty;
 
   const candidates: ThemePartCandidate[] = parts.map((part) => ({
@@ -436,7 +450,7 @@ export async function resolveThemePartsWith(
   }
 
   const handler = port.pluginHandler(astro.locals as never);
-  const design = await loadDesign(handler, astro.url);
+  const design = await designFor(astro, handler, astro.url);
 
   const byId = new Map(parts.map((part) => [part.id, part]));
   const rendered: RenderedPage[] = [];
@@ -460,7 +474,8 @@ export async function resolveThemePartsWith(
     bound: Awaited<ReturnType<typeof bindingDataFor>>,
   ) => {
     const dynamic = Object.keys(bound).length > 0 ? { ...partDynamic, ...bound } : partDynamic;
-    const formDefinitions = await loadFormDefinitions(
+    const formDefinitions = await formsFor(
+      astro,
       handler,
       astro.url,
       formIdsInLayouts([
@@ -485,7 +500,7 @@ export async function resolveThemePartsWith(
   const templatesFor = async (stored: StoredPart): Promise<ThemeDynamicData | undefined> => {
     const layout = readLayout(stored.layout);
     const { sectionTemplates, loopTemplates } = layout
-      ? await templatesFrom(layout, parts)
+      ? await templatesFrom(layout, parts, astro)
       : { sectionTemplates: {}, loopTemplates: {} };
     return Object.keys(sectionTemplates).length > 0 || Object.keys(loopTemplates).length > 0
       ? {
@@ -508,7 +523,7 @@ export async function resolveThemePartsWith(
       layout && winner === contentWinner
         ? {
             ...referenced,
-            ...(await buildDynamicForContent(stored.partType, context, layout, parts, port)),
+            ...(await buildDynamicForContent(stored.partType, context, layout, parts, port, astro)),
           }
         : referenced;
     // A page past the last one has no posts; the host answers 404 (W-221).

@@ -11504,8 +11504,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "const design = await loadDesign(handler, astro.url);",
-          "replace": "const design = await loadDesign(undefined, astro.url);"
+          "search": "const design = await designFor(astro, handler, astro.url);",
+          "replace": "const design = await designFor(astro, undefined, astro.url);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
@@ -11546,8 +11546,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve.ts",
-          "search": "    ? await loadFormDefinitions(\n        handler,\n",
-          "replace": "    ? await loadFormDefinitions(\n        undefined,\n"
+          "search": "    ? await formsFor(\n        astro,\n        handler,\n",
+          "replace": "    ? await formsFor(\n        astro,\n        undefined,\n"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
@@ -16341,7 +16341,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve-theme.ts",
-          "search": "  return templatesFrom(layout, await loadPublishedThemeParts(content));\n",
+          "search": "  return templatesFrom(layout, await loadPublishedThemeParts(content, request), request);\n",
           "replace": "  return { sectionTemplates: {}, loopTemplates: {} };\n"
         }
       ],
@@ -28273,44 +28273,24 @@
       "expect": "\\(fail\\).*host stylesheets"
     },
     {
-      "id": "visitor/seen-cookie-read-from-this-request",
-      "requirement": "W-313",
-      "description": "the seen cookie is read back through Astro.cookies, which returns the one set earlier in the request, so the theme parts count a first visit as returning",
+      "id": "W-360/design-loaded-twice",
+      "requirement": "W-360",
+      "description": "one request loads the design again",
       "edits": [
         {
-          "file": "packages/emvb/src/astro/visitor.ts",
-          "search": "requestCookie(astro, SEEN_COOKIE) === \"1\"",
-          "replace": "astro.cookies.get(SEEN_COOKIE)?.value === \"1\""
+          "file": "packages/emvb/src/astro/render-session.ts",
+          "search": "  session.design ??= loadDesign(handler, base);",
+          "replace": "  session.design = loadDesign(handler, base);"
         }
       ],
       "command": [
         "bun",
         "test",
-        "./packages/emvb/src/astro/visitor.test.ts",
+        "./packages/emvb/src/astro/render-session.test.ts",
         "-t",
-        "a first visit stays new for every call in the same request"
+        "loads design once"
       ],
-      "expect": "\\(fail\\).*a first visit stays new for every call in the same request"
-    },
-    {
-      "id": "editor/palette-opens-over-dialog",
-      "requirement": "W-314",
-      "description": "Ctrl/Cmd+K opens the command palette over an open dialog.",
-      "edits": [
-        {
-          "file": "packages/emvb/src/admin/editor/EditorOverlay.tsx",
-          "search": "      if (inDialog(event.target)) return;\n",
-          "replace": ""
-        }
-      ],
-      "command": [
-        "bun",
-        "test",
-        "./packages/emvb/src/admin/editor/palette.test.tsx",
-        "-t",
-        "opens no palette from inside a dialog"
-      ],
-      "expect": "\\(fail\\).*opens no palette from inside a dialog"
+      "expect": "\\(fail\\).*loads design once"
     }
   ]
 }

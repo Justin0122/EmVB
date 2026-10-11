@@ -1,7 +1,8 @@
 import { PAGES_COLLECTION } from "../constants.ts";
 import { emdashContent, type ContentPort } from "./content-port.ts";
-import { formIdsInLayouts, loadFormDefinitions } from "./forms-definitions.ts";
-import { loadDesign, readLayout, renderStored, type RenderedPage } from "./render.ts";
+import { formIdsInLayouts } from "./forms-definitions.ts";
+import { readLayout, renderStored, type RenderedPage } from "./render.ts";
+import { designFor, formsFor } from "./render-session.ts";
 import { bindingDataFor } from "./request-data.ts";
 import type { HostVisitor, VisitorAstro } from "./visitor.ts";
 import { referencedTemplatesFor } from "./resolve-theme.ts";
@@ -65,14 +66,15 @@ export async function resolveEmVBPageWith(
   if (!entry) return null;
   const data = entry.data as Record<string, unknown>;
   const handler = content.pluginHandler(astro.locals as never);
-  const design = await loadDesign(handler, astro.url);
+  const design = await designFor(astro, handler, astro.url);
   const layout = readLayout(data["layout"]);
   const referenced = layout
-    ? await referencedTemplatesFor(layout, content)
+    ? await referencedTemplatesFor(layout, content, astro)
     : { sectionTemplates: {}, loopTemplates: {} };
   const { sectionTemplates, loopTemplates } = referenced;
   const formDefinitions = layout
-    ? await loadFormDefinitions(
+    ? await formsFor(
+        astro,
         handler,
         astro.url,
         formIdsInLayouts([
