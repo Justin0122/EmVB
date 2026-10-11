@@ -7546,7 +7546,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/variables.ts",
-          "search": "  if (shadowColorMatches(style, id, kind)) hit(\"boxShadow.color\");\n",
+          "search": "  if (style.boxShadow) visit(style.boxShadow.color, \"boxShadow.color\");\n",
           "replace": ""
         }
       ],
@@ -7586,8 +7586,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/variables.ts",
-          "search": "  matches(style.boxShadow?.color, id, kind);",
-          "replace": "  matches(style.boxShadow?.color, id, undefined);"
+          "search": "    if (matches(value, id, kind)) hit(path);",
+          "replace": "    if (matches(value, id, undefined)) hit(path);"
         }
       ],
       "command": [
@@ -15250,9 +15250,9 @@
       "description": "the box shadow's colour ref isn't checked",
       "edits": [
         {
-          "file": "packages/emvb/src/core/clipboard.ts",
-          "search": "    ...Object.values(style),\n    style.boxShadow?.color,\n    style.iconShadow?.color,\n    ...(style.gradient?.stops ?? []).map((stop) => stop.color),",
-          "replace": "    ...Object.values(style),\n    style.iconShadow?.color,\n    ...(style.gradient?.stops ?? []).map((stop) => stop.color),"
+          "file": "packages/emvb/src/core/design/variables.ts",
+          "search": "  if (style.boxShadow) visit(style.boxShadow.color, \"boxShadow.color\");\n",
+          "replace": ""
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/clipboard.test.ts"],
@@ -23315,7 +23315,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/variables.ts",
-          "search": "  if (matches(style.iconShadow?.color, id, kind)) hit(\"iconShadow.color\");\n",
+          "search": "  if (style.iconShadow) visit(style.iconShadow.color, \"iconShadow.color\");\n",
           "replace": ""
         }
       ],
@@ -23342,8 +23342,8 @@
       "description": "Pasting a style onto a page whose design lacks the icon shadow's colour variable keeps the dangling ref.",
       "edits": [
         {
-          "file": "packages/emvb/src/core/clipboard.ts",
-          "search": "    style.iconShadow?.color,\n",
+          "file": "packages/emvb/src/core/design/variables.ts",
+          "search": "  if (style.iconShadow) visit(style.iconShadow.color, \"iconShadow.color\");\n",
           "replace": ""
         }
       ],

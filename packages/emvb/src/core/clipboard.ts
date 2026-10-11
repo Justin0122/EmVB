@@ -9,7 +9,7 @@ import {
   type Refusal,
 } from "./arrange.ts";
 import type { VariableKind } from "./design/variables.ts";
-import { clearVariableRefs } from "./design/variables.ts";
+import { clearVariableRefs, forEachStyleRef } from "./design/variables.ts";
 import { ELEMENT_DESCRIPTORS, ELEMENTS, type ElementType } from "./elements/index.ts";
 import { MAX_LAYOUT_BYTES } from "./limits.ts";
 import { serialize } from "./render/vnode.ts";
@@ -194,15 +194,12 @@ const asRef = (value: unknown): Ref | null =>
 
 /** Every variable ref in a style: each value, plus nested colours (shadows, gradient, overlay). */
 function refsInStyle(style: StyleProps | undefined): Ref[] {
-  if (!style) return [];
-  const values: unknown[] = [
-    ...Object.values(style),
-    style.boxShadow?.color,
-    style.iconShadow?.color,
-    ...(style.gradient?.stops ?? []).map((stop) => stop.color),
-    style.overlay?.color,
-  ];
-  return values.map(asRef).filter((ref): ref is Ref => ref !== null);
+  const refs: Ref[] = [];
+  forEachStyleRef(style, (value) => {
+    const ref = asRef(value);
+    if (ref) refs.push(ref);
+  });
+  return refs;
 }
 
 const refsOf = (owner: CopiedStyle): Ref[] => [

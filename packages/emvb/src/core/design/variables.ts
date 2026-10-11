@@ -32,9 +32,25 @@ export function refMatchesKind(ref: VariableRefLike, kind: VariableKind): boolea
 const matches = (value: unknown, id: string, kind: VariableKind | undefined) =>
   isVariableRef(value) && value.var === id && (kind === undefined || refMatchesKind(value, kind));
 
-/** Nested colour refs: the box shadow (W-088), and gradient stops and the overlay (W-094). */
-const shadowColorMatches = (style: StyleProps, id: string, kind: VariableKind | undefined) =>
-  matches(style.boxShadow?.color, id, kind);
+const NESTED_COLOR_KEYS = new Set(["boxShadow", "iconShadow", "gradient", "overlay"]);
+
+/** Every value that can be a variable, including nested colours (W-356). */
+export function forEachStyleRef(
+  style: StyleProps | undefined,
+  visit: (value: unknown, path: string) => void,
+): void {
+  if (!style) return;
+  for (const [prop, value] of Object.entries(style)) {
+    if (NESTED_COLOR_KEYS.has(prop)) continue;
+    visit(value, prop);
+  }
+  if (style.boxShadow) visit(style.boxShadow.color, "boxShadow.color");
+  if (style.iconShadow) visit(style.iconShadow.color, "iconShadow.color");
+  style.gradient?.stops.forEach((stop, index) => {
+    visit(stop.color, `gradient.stops.${index}`);
+  });
+  if (style.overlay) visit(style.overlay.color, "overlay.color");
+}
 
 function collectStyleUsages(
   style: StyleProps | undefined,
@@ -42,16 +58,9 @@ function collectStyleUsages(
   kind: VariableKind | undefined,
   hit: (prop: string) => void,
 ): void {
-  if (!style) return;
-  for (const [prop, value] of Object.entries(style)) {
-    if (matches(value, id, kind)) hit(prop);
-  }
-  if (shadowColorMatches(style, id, kind)) hit("boxShadow.color");
-  if (matches(style.iconShadow?.color, id, kind)) hit("iconShadow.color");
-  style.gradient?.stops.forEach((stop, index) => {
-    if (matches(stop.color, id, kind)) hit(`gradient.stops.${index}`);
+  forEachStyleRef(style, (value, path) => {
+    if (matches(value, id, kind)) hit(path);
   });
-  if (matches(style.overlay?.color, id, kind)) hit("overlay.color");
 }
 
 const RESPONSIVE = ["tablet", "mobile"] as const;
@@ -118,7 +127,7 @@ function stripRefsFromStyle(
     delete next[prop];
     changed = true;
   }
-  if (style.boxShadow && shadowColorMatches(style, id, kind)) {
+  if (style.boxShadow && matches(style.boxShadow.color, id, kind)) {
     const { color: _drop, ...shadow } = style.boxShadow;
     next["boxShadow"] = shadow;
     changed = true;
