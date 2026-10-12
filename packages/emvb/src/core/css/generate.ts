@@ -14,6 +14,7 @@ import {
   type Declaration,
   type StateDeclarations,
 } from "../sanitize/css.ts";
+import { isFontFileUrl } from "../sanitize/media-url.ts";
 import { STYLE_STATES, type StyleStateName } from "../schema/state-names.ts";
 import { DEVICE_MEDIA, type PopupDevice } from "../theme/popup-rules.ts";
 
@@ -83,6 +84,37 @@ function tagDefaultCss(design: DesignSystem): string {
 const safe = (value: string) => (isSafeCssValue(value) ? value : undefined);
 
 const fontStack = (value: string) => (isSafeFontStack(value) ? value : undefined);
+
+const FONT_FORMAT: Record<string, string> = {
+  woff2: "woff2",
+  woff: "woff",
+  ttf: "truetype",
+  otf: "opentype",
+};
+
+/**
+ * W-321: `@font-face` rules for each font variable's files, under the stack's first family name,
+ * so the site and the editor canvas load the same web font. An unsafe name or URL is skipped.
+ */
+function fontFaceCss(fonts: DesignSystem["variables"]["fonts"]): string {
+  return (fonts ?? [])
+    .flatMap((font) => {
+      const family =
+        font.value
+          .split(",")[0]
+          ?.trim()
+          .replace(/^(["'])(.*)\1$/, "$2") ?? "";
+      if (!/^[A-Za-z0-9][A-Za-z0-9 _-]{0,59}$/.test(family)) return [];
+      return (font.files ?? []).flatMap((file) => {
+        if (!isFontFileUrl(file.url)) return [];
+        const ext = /\.(woff2?|ttf|otf)(?:[?#]|$)/i.exec(file.url)?.[1]?.toLowerCase() ?? "";
+        return [
+          `@font-face{font-family:"${family}";src:url("${file.url}") format("${FONT_FORMAT[ext]}");font-weight:${file.weight ?? 400};font-style:${file.style ?? "normal"};font-display:swap}`,
+        ];
+      });
+    })
+    .join("");
+}
 
 const lengthCss = (length: { value: number; unit: string }) =>
   safe(`${length.value}${length.unit}`);
@@ -210,6 +242,7 @@ export function generateCss({
     }
   }
   return [
+    fontFaceCss(fonts),
     entrances.length > 0
       ? "@keyframes emvb-fade{from{opacity:0}to{opacity:1}}@keyframes emvb-fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes emvb-fade-down{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}@keyframes emvb-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}@keyframes emvb-slide-down{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}@keyframes emvb-scale{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:none}}"
       : "",

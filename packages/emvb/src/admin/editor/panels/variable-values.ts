@@ -1,4 +1,5 @@
-import type { VariableKind } from "../../../core/index.ts";
+import type { FontFile, VariableKind } from "../../../core/index.ts";
+import { isFontFileUrl } from "../../../core/sanitize/media-url.ts";
 
 export type Length = { value: number; unit: "px" | "rem" | "em" | "%" };
 
@@ -70,4 +71,47 @@ export function pickerHex(hex: string): string {
     return `#${Array.from(h.slice(1, 4), (c) => c + c).join("")}`;
   }
   return "#000000";
+}
+
+/** W-321: a font's files as editable lines: `url [weight] [italic]`. */
+export function fontFilesText(files: readonly FontFile[] | undefined): string {
+  return (files ?? [])
+    .map((file) =>
+      [
+        file.url,
+        file.weight && file.weight !== 400 ? String(file.weight) : "",
+        file.style === "italic" ? "italic" : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .join("\n");
+}
+
+/** W-321: the lines back as files. Each line is a file URL, then an optional weight and `italic`. */
+export function parseFontFiles(
+  text: string,
+): { ok: true; files: FontFile[] } | { ok: false; error: string } {
+  const files: FontFile[] = [];
+  for (const line of text.split("\n")) {
+    const [url, ...rest] = line.trim().split(/\s+/);
+    if (!url) continue;
+    if (!isFontFileUrl(url)) {
+      return {
+        ok: false,
+        error: `“${url.slice(0, 80)}” isn't a .woff2, .woff, .ttf or .otf file URL.`,
+      };
+    }
+    const file: FontFile = { url };
+    for (const word of rest) {
+      if (/^[1-9]00$/.test(word)) file.weight = Number(word);
+      else if (word === "italic") file.style = "italic";
+      else if (word !== "normal")
+        return { ok: false, error: `Unknown “${word}”: use a weight such as 700, or italic.` };
+    }
+    files.push(file);
+  }
+  return files.length > 18
+    ? { ok: false, error: "At most 18 files per font." }
+    : { ok: true, files };
 }

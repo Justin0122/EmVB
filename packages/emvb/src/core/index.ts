@@ -116,6 +116,7 @@ export {
   FontVariable,
   LengthVariable,
   type DefaultStyleTag,
+  type FontFile,
 } from "./schema/design.ts";
 export {
   MAX_VARIABLES,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isFontFileUrl } from "../sanitize/media-url.ts";
 import { DeviceStyles, HiddenOn, StyleProps, StyleStates } from "./style.ts";
 
 /** 12 since W-160: class gradients use the same stops as layouts. v11 `{ angle, from, to }` upgrades on read. */
@@ -25,10 +26,25 @@ export const ColorVariable = z.strictObject({
 });
 
 /** Font stack string — commas and quoted family names allowed; `generateCss` drops an unsafe one. */
+/**
+ * W-321: a web font file for the stack's first family, loaded with `@font-face` on the site and
+ * in the editor canvas. A same-site path or an http(s) URL to a .woff2, .woff, .ttf or .otf file.
+ */
+const FontFile = z.strictObject({
+  url: z
+    .string()
+    .min(1)
+    .max(2000)
+    .refine(isFontFileUrl, "Use a .woff2, .woff, .ttf or .otf file URL, with no spaces or quotes"),
+  weight: z.number().int().min(100).max(900).multipleOf(100).optional(),
+  style: z.enum(["normal", "italic"]).optional(),
+});
+
 export const FontVariable = z.strictObject({
   id: VariableId,
   name: z.string().min(1).max(60),
   value: z.string().min(1).max(200),
+  files: z.array(FontFile).max(18).optional(),
 });
 
 export const LengthVariable = z.strictObject({
@@ -83,6 +99,7 @@ export const DesignSystem = z.strictObject({
 
 export type ColorVariable = z.infer<typeof ColorVariable>;
 export type FontVariable = z.infer<typeof FontVariable>;
+export type FontFile = z.infer<typeof FontFile>;
 export type LengthVariable = z.infer<typeof LengthVariable>;
 export type DesignSystem = z.infer<typeof DesignSystem>;
 

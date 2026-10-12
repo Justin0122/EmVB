@@ -53,3 +53,32 @@ describe("variable values (W-087)", () => {
     expect(pickerHex("#12")).toBe("#000000");
   });
 });
+
+describe("font files (W-321)", () => {
+  test("lines are a URL, then an optional weight and italic, and read back the same", async () => {
+    const { fontFilesText, parseFontFiles } = await import("./variable-values.ts");
+    const parsed = parseFontFiles(
+      "/f/r.woff2\n\n /f/r-700.woff2  700 \n/f/ri.ttf italic\n/f/b.woff 700 italic",
+    );
+    expect(parsed).toEqual({
+      ok: true,
+      files: [
+        { url: "/f/r.woff2" },
+        { url: "/f/r-700.woff2", weight: 700 },
+        { url: "/f/ri.ttf", style: "italic" },
+        { url: "/f/b.woff", weight: 700, style: "italic" },
+      ],
+    });
+    if (parsed.ok)
+      expect(fontFilesText(parsed.files)).toBe(
+        "/f/r.woff2\n/f/r-700.woff2 700\n/f/ri.ttf italic\n/f/b.woff 700 italic",
+      );
+  });
+
+  test("a URL that isn't a font file, or an unknown word, is an error", async () => {
+    const { parseFontFiles } = await import("./variable-values.ts");
+    expect(parseFontFiles("/fonts/roboto.css").ok).toBe(false);
+    expect(parseFontFiles("javascript:alert(1).woff2").ok).toBe(false);
+    expect(parseFontFiles("/f/r.woff2 bold").ok).toBe(false);
+  });
+});

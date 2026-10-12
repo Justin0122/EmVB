@@ -588,6 +588,8 @@ export const EDITOR_CSS = `${UI_CSS}
 .emvb-site-picker::-moz-color-swatch { border: 0; border-radius: 4px; }
 .emvb-site-picker:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: 1px; }
 .emvb-site-font-sample { margin: 0; font-size: 14px; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-color-kumo-default); }
+.emvb-site-font-files { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-size: 12px; color: var(--text-color-kumo-subtle); }
+.emvb-site-font-files textarea { font-family: ui-monospace, monospace; font-size: 12px; resize: vertical; }
 .emvb-site-empty-card p { text-wrap: pretty; }
 .emvb-site-confirm {
   display: flex;

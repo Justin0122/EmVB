@@ -102,3 +102,30 @@ describe("design variables (W-028, R-020)", () => {
     ).toBe(true);
   });
 });
+
+describe("font files (W-321)", () => {
+  const withFiles = (files: unknown) =>
+    validateDesign({
+      ...emptyDesign(),
+      variables: {
+        colors: [],
+        fonts: [{ id: "sans", name: "Sans", value: "Roboto, sans-serif", files }],
+      },
+    }).ok;
+
+  test("a font can list web font files with a weight and style", () => {
+    expect(
+      withFiles([
+        { url: "/fonts/r.woff2" },
+        { url: "https://cdn.example/r-700.woff", weight: 700, style: "italic" },
+      ]),
+    ).toBe(true);
+  });
+
+  test("only font file URLs, real weights and at most 18 files", () => {
+    expect(withFiles([{ url: "/fonts/r.css" }])).toBe(false);
+    expect(withFiles([{ url: 'x.woff2")' }])).toBe(false);
+    expect(withFiles([{ url: "/r.woff2", weight: 450 }])).toBe(false);
+    expect(withFiles(Array.from({ length: 19 }, (_, i) => ({ url: `/r${i}.woff2` })))).toBe(false);
+  });
+});

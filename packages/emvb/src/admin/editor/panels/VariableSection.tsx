@@ -23,6 +23,7 @@ import {
   variableNameTaken,
   variableNameTakenMessage,
   type DesignSystem,
+  type FontFile,
   type Layout,
   type VariableKind,
 } from "../../../core/index.ts";
@@ -37,7 +38,9 @@ import {
   uniqueId,
 } from "./site-list.tsx";
 import {
+  fontFilesText,
   isLengthKind,
+  parseFontFiles,
   lengthPx,
   parseValue,
   pickerHex,
@@ -77,7 +80,7 @@ const EMPTY: Record<VariableKind, { icon: Icon; text: string }> = {
 const MAX_TYPE_PREVIEW = 24;
 const MAX_BAR = 64;
 
-type Item = { id: string; name: string; value: string | Length };
+type Item = { id: string; name: string; value: string | Length; files?: FontFile[] };
 
 function InlineError({ children }: { children: string }) {
   return (
@@ -129,6 +132,51 @@ function Preview({ kind, value }: { kind: VariableKind; value: string | Length }
     <span className="emvb-site-preview emvb-site-preview-icon" aria-hidden="true">
       <RulerIcon size={14} />
     </span>
+  );
+}
+
+/**
+ * W-321: a font's web font files, one per line (`url [weight] [italic]`), saved on blur. The site
+ * and the canvas load them with `@font-face`, so the canvas shows the real font.
+ */
+function FontFilesEditor({
+  item,
+  onCommit,
+}: {
+  item: Item;
+  onCommit: (files: FontFile[]) => void;
+}) {
+  const current = fontFilesText(item.files);
+  const [text, setText] = React.useState(current);
+  const [error, setError] = React.useState<string | null>(null);
+  const commit = (raw: string) => {
+    if (raw.trim() === current.trim()) return setError(null);
+    const parsed = parseFontFiles(raw);
+    if (!parsed.ok) return setError(parsed.error);
+    setError(null);
+    onCommit(parsed.files);
+  };
+  return (
+    <label className="emvb-site-font-files" data-emvb-font-files="">
+      <span>Font files</span>
+      <textarea
+        aria-label={`Font files of ${item.name}`}
+        className={FIELD}
+        rows={3}
+        placeholder="/fonts/roboto-400.woff2&#10;/fonts/roboto-700.woff2 700"
+        value={text}
+        aria-invalid={error ? true : undefined}
+        onChange={(event) => setText(event.currentTarget.value)}
+        onBlur={(event) => commit(event.currentTarget.value)}
+      />
+      {error ? (
+        <InlineError>{error}</InlineError>
+      ) : (
+        <small>
+          One file per line, then its weight (700) or italic. Loaded on the site and in the canvas.
+        </small>
+      )}
+    </label>
   );
 }
 
@@ -268,6 +316,19 @@ export function VariableSection({
         [listKey]: items.map((entry) =>
           entry.id === id ? Object.assign({}, entry, { value: next }) : entry,
         ),
+      },
+    });
+
+  const saveFiles = (id: string, files: FontFile[]) =>
+    void onSave({
+      ...design,
+      variables: {
+        ...design.variables,
+        fonts: (design.variables.fonts ?? []).map((font) => {
+          if (font.id !== id) return font;
+          const { files: _old, ...rest } = font;
+          return files.length > 0 ? Object.assign(rest, { files }) : rest;
+        }),
       },
     });
 
@@ -481,6 +542,9 @@ export function VariableSection({
                   token={token}
                   onCommit={(next) => saveValue(item.id, next)}
                 />
+              )}
+              {isOpen && kind === "font" && (
+                <FontFilesEditor item={item} onCommit={(files) => saveFiles(item.id, files)} />
               )}
             </li>
           );

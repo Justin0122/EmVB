@@ -82,3 +82,43 @@ test("an empty design emits no variable block", () => {
 
 const EXPECTED =
   ".emvb-root{--emvb-c-brand:#112233;--emvb-f-body:Inter, sans-serif;--emvb-fs-lg:1.5rem;--emvb-s-gap:16px}.emvb-heading{margin:0}.emvb-text{margin:0}.emvb-k-card{color:#abcdef}.emvb-e-abc{color:red}";
+
+test("W-321: a font's files become @font-face rules for its first family, before everything else", () => {
+  const css = generateCss({
+    design: {
+      schemaVersion: 12,
+      variables: {
+        colors: [],
+        fonts: [
+          {
+            id: "sans",
+            name: "Roboto",
+            value: "Roboto, Arial, sans-serif",
+            files: [
+              { url: "/fonts/roboto-400.woff2" },
+              { url: "/fonts/roboto-700.woff2", weight: 700 },
+              { url: "/fonts/roboto-400i.ttf", style: "italic" },
+              { url: '/fonts/x.woff2");}body{color:red' },
+            ],
+          },
+          { id: "bad", name: "Bad", value: "a{b}, serif", files: [{ url: "/fonts/b.woff2" }] },
+          { id: "quoted", name: "Q", value: '"Open Sans", sans-serif', files: [{ url: "/o.otf" }] },
+        ],
+      },
+    } as DesignSystem,
+    usedTypes: new Set(),
+    baseCss: new Map(),
+    localRules: [],
+  });
+  expect(css.startsWith("@font-face{")).toBe(true);
+  expect(css).toContain(
+    '@font-face{font-family:"Roboto";src:url("/fonts/roboto-400.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}',
+  );
+  expect(css).toContain('url("/fonts/roboto-700.woff2") format("woff2");font-weight:700');
+  expect(css).toContain(
+    'url("/fonts/roboto-400i.ttf") format("truetype");font-weight:400;font-style:italic',
+  );
+  expect(css).toContain('@font-face{font-family:"Open Sans";src:url("/o.otf") format("opentype")');
+  expect(css).not.toContain("color:red");
+  expect(css).not.toContain("/fonts/b.woff2");
+});
