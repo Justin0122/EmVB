@@ -84,11 +84,10 @@ async function renderEntry(
     ...Object.values(sectionTemplates),
   ]);
   // W-308: collection Loops on the page, in its synced sections or in its components.
-  const collectionLoops = await loadCollectionLoops([
-    layout,
-    ...Object.values(sectionTemplates),
-    ...componentLayouts(componentTemplates),
-  ]);
+  const collectionLoops = await loadCollectionLoops(
+    [layout, ...Object.values(sectionTemplates), ...componentLayouts(componentTemplates)],
+    componentTemplates,
+  );
   const dynamic = {
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
     ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),

@@ -103,6 +103,17 @@ describe("loadCollectionLoops (W-308)", () => {
     ]);
   });
 
+  test("a taxonomy filter asks EmDash for entries with those term slugs (W-318)", async () => {
+    entries = { news: [] };
+    const loops = await loadCollectionLoops([
+      page(loop("loop0001", { collection: "news", taxonomy: "tags", terms: "blogs,events" })),
+    ]);
+    expect(calls.map((c) => c.options)).toEqual([
+      { orderBy: { published_at: "desc" }, limit: 6, where: { tags: ["blogs", "events"] } },
+    ]);
+    expect(Object.keys(loops)).toEqual(["news|6|newest|tags:blogs,events"]);
+  });
+
   test("a missing collection lists nothing instead of failing the page", async () => {
     expect(await loadCollectionLoops([page(loop("loop0001", { collection: "gone" }))])).toEqual({
       "gone|6|newest": [],

@@ -109,3 +109,95 @@ describe("rendering a collection Loop (W-308)", () => {
     expect(items(one.html)).toEqual(["sample-1"]);
   });
 });
+
+describe("a Loop filtered by taxonomy terms (W-318)", () => {
+  test("terms are trimmed, blanks and repeats dropped, and both are part of the query and key", () => {
+    const query = loopQueryOf(
+      loop("loop0001", {
+        collection: "news",
+        taxonomy: "tags",
+        terms: " blogs, ,events,blogs ",
+      }) as LoopNode,
+    );
+    expect(query).toEqual({
+      collection: "news",
+      limit: 6,
+      order: "newest",
+      taxonomy: "tags",
+      terms: ["blogs", "events"],
+    });
+    expect(loopQueryKey(query as never)).toBe("news|6|newest|tags:blogs,events");
+  });
+
+  test("a taxonomy without terms, or terms without a taxonomy, filters nothing", () => {
+    for (const props of [{ taxonomy: "tags", terms: " , " }, { terms: "blogs" }]) {
+      expect(loopQueryOf(loop("loop0001", { collection: "news", ...props }) as LoopNode)).toEqual({
+        collection: "news",
+        limit: 6,
+        order: "newest",
+      });
+    }
+  });
+
+  test("the filtered Loop renders the entries loaded for its own key", () => {
+    const filtered = loop("loop0001", { collection: "news", taxonomy: "tags", terms: "blogs" });
+    const { html } = renderPage(page(filtered), emptyDesign(), {
+      dynamic: {
+        collectionLoops: { "news|6|newest": news(2), "news|6|newest|tags:blogs": news(1) },
+      },
+    });
+    expect(html).toContain("News 1");
+    expect(html).not.toContain("News 2");
+  });
+
+  test("a taxonomy name must look like one", () => {
+    expect(
+      validateLayout(page(loop("loop0001", { collection: "news", taxonomy: "tags" }))).ok,
+    ).toBe(true);
+    expect(
+      validateLayout(page(loop("loop0001", { collection: "news", taxonomy: "Tags!" }))).ok,
+    ).toBe(false);
+  });
+
+  test("Loops in component uses ask for what each use fills in", () => {
+    const template = {
+      fields: [
+        { key: "list", label: "List", kind: "text" as const },
+        { key: "tags", label: "Tags", kind: "text" as const },
+      ],
+      nodes: [
+        {
+          ...loop("loop0001", { collection: "news", taxonomy: "tags" }),
+          bind: { collection: "list", terms: "tags" },
+        } as LayoutNode,
+      ],
+    };
+    const use = (id: string, values: Record<string, unknown>) =>
+      ({ id, type: "component", props: { partId: "comp1", values } }) as LayoutNode;
+    const queries = collectLoopQueries(
+      [
+        page(
+          use("comp0001", { list: "references", tags: "buis" }),
+          use("comp0002", { list: "news" }),
+        ),
+      ],
+      { comp1: template },
+    );
+    expect(queries).toEqual([
+      { collection: "references", limit: 6, order: "newest", taxonomy: "tags", terms: ["buis"] },
+      { collection: "news", limit: 6, order: "newest" },
+    ]);
+  });
+
+  test("a component that uses itself is walked once", () => {
+    const self = {
+      id: "comp0001",
+      type: "component",
+      props: { partId: "comp1", values: {} },
+    } as LayoutNode;
+    const template = { fields: [], nodes: [self, loop("loop0001", { collection: "news" })] };
+    expect(collectLoopQueries([page(self)], { comp1: template })).toEqual([
+      { collection: "news", limit: 6, order: "newest" },
+    ]);
+  });
+});

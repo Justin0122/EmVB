@@ -195,6 +195,21 @@ export const loop: ElementDefinition<LoopNode> = {
         message: "How many entries a collection Loop shows, 1 to 50. Leave it empty for 6.",
       },
       {
+        key: "taxonomy",
+        kind: "text",
+        label: "Filter by taxonomy",
+        optional: true,
+        message:
+          "Only entries tagged in this taxonomy (for example tags), with one of the terms below.",
+      },
+      {
+        key: "terms",
+        kind: "text",
+        label: "Terms",
+        optional: true,
+        message: "Term slugs, separated by commas. An entry with any of them is shown.",
+      },
+      {
         key: "slidesInView",
         kind: "select",
         label: "Show as carousel",

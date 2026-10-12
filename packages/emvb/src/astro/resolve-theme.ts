@@ -382,12 +382,15 @@ async function buildDynamicForContent(
     [layout, ...Object.values(sectionTemplates), ...Object.values(loopTemplates)],
     parts,
   );
-  const collectionLoops = await loadCollectionLoops([
-    layout,
-    ...Object.values(sectionTemplates),
-    ...Object.values(loopTemplates),
-    ...componentLayouts(componentTemplates),
-  ]);
+  const collectionLoops = await loadCollectionLoops(
+    [
+      layout,
+      ...Object.values(sectionTemplates),
+      ...Object.values(loopTemplates),
+      ...componentLayouts(componentTemplates),
+    ],
+    componentTemplates,
+  );
   const referenced: ThemeDynamicData = {
     ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
@@ -498,12 +501,15 @@ export async function resolveThemeParts(
       parts,
     );
     // W-308: collection Loops in a header, footer, popup or float, or in what they include.
-    const collectionLoops = await loadCollectionLoops([
-      layout,
-      ...Object.values(sectionTemplates),
-      ...Object.values(loopTemplates),
-      ...componentLayouts(componentTemplates),
-    ]);
+    const collectionLoops = await loadCollectionLoops(
+      [
+        layout,
+        ...Object.values(sectionTemplates),
+        ...Object.values(loopTemplates),
+        ...componentLayouts(componentTemplates),
+      ],
+      componentTemplates,
+    );
     const dynamic: ThemeDynamicData = {
       ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
       ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),

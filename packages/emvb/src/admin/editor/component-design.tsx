@@ -342,7 +342,10 @@ const BINDABLE: Record<string, { prop: string; label: string; kinds: ComponentFi
     { prop: "text", label: "Text", kinds: ["text"] },
     { prop: "href", label: "Link", kinds: ["link"] },
   ],
-  loop: [{ prop: "collection", label: "Collection", kinds: ["select", "text"] }],
+  loop: [
+    { prop: "collection", label: "Collection", kinds: ["select", "text"] },
+    { prop: "terms", label: "Terms", kinds: ["select", "text"] },
+  ],
   flexbox: [{ prop: "href", label: "Link", kinds: ["link"] }],
   container: [{ prop: "href", label: "Link", kinds: ["link"] }],
   "div-block": [{ prop: "href", label: "Link", kinds: ["link"] }],

@@ -26742,6 +26742,62 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements/media-elements.test.ts"],
       "expect": "\\(fail\\).*W-317"
+    },
+    {
+      "id": "W-318/key-without-terms",
+      "requirement": "W-318",
+      "description": "Filtered and unfiltered Loops share a key.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "query.taxonomy ? `|${query.taxonomy}",
+          "replace": "false ? `|${query.taxonomy}"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-318"
+    },
+    {
+      "id": "W-318/template-not-use",
+      "requirement": "W-318",
+      "description": "Loops in component uses are read from the design, not the use.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "pushAll(applyComponent(template, values), [...components, partId]);",
+          "replace": "pushAll(template.nodes, [...components, partId]);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-318"
+    },
+    {
+      "id": "W-318/repeated-terms",
+      "requirement": "W-318",
+      "description": "Repeated terms stay in the query.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "return [...new Set(terms)].slice(0, MAX_LOOP_TERMS);",
+          "replace": "return terms.slice(0, MAX_LOOP_TERMS);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-318"
+    },
+    {
+      "id": "W-318/no-where",
+      "requirement": "W-318",
+      "description": "The taxonomy filter never reaches EmDash.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/collection-loops.ts",
+          "search": "? { where: { [query.taxonomy]: query.terms } }",
+          "replace": "? {}"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/collection-loops.test.ts"],
+      "expect": "\\(fail\\).*W-318"
     }
   ]
 }

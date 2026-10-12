@@ -1,6 +1,7 @@
 import { getCollectionInfo, getEmDashCollection } from "emdash";
 import {
   collectLoopQueries,
+  type ComponentTemplate,
   loopQueryKey,
   type Layout,
   type LoopQuery,
@@ -30,7 +31,14 @@ async function loadQuery(query: LoopQuery): Promise<ThemePostFields[]> {
   try {
     const [info, result] = await Promise.all([
       getCollectionInfo(query.collection).catch(() => null),
-      getEmDashCollection(query.collection, { orderBy: ORDER_BY[query.order], limit: query.limit }),
+      getEmDashCollection(query.collection, {
+        orderBy: ORDER_BY[query.order],
+        limit: query.limit,
+        // W-318: EmDash filters by a taxonomy's term slugs when the key names a taxonomy.
+        ...(query.taxonomy && query.terms?.length
+          ? { where: { [query.taxonomy]: query.terms } }
+          : {}),
+      }),
     ]);
     const urlPattern = (info as { urlPattern?: string | null } | null)?.urlPattern;
     const items: ThemePostFields[] = [];
@@ -48,12 +56,14 @@ async function loadQuery(query: LoopQuery): Promise<ThemePostFields[]> {
 
 /**
  * W-308: the entries every collection Loop in these layouts asks for, keyed by `loopQueryKey`.
- * Loops with the same collection, limit and order share one load.
+ * Loops with the same query share one load. Loops in component uses count as each use fills them
+ * in (W-318).
  */
 export async function loadCollectionLoops(
   layouts: readonly (Layout | null | undefined)[],
+  componentTemplates?: Readonly<Record<string, ComponentTemplate>>,
 ): Promise<Record<string, ThemePostFields[]>> {
-  const queries = collectLoopQueries(layouts);
+  const queries = collectLoopQueries(layouts, componentTemplates);
   const loaded = await Promise.all(queries.map(loadQuery));
   return Object.fromEntries(queries.map((query, i) => [loopQueryKey(query), loaded[i] ?? []]));
 }

@@ -481,6 +481,12 @@ export const LoopNode = parentNode(
     limit: z.number().int().min(1).max(50).optional(),
     /** W-308: newest first (unset), oldest first, or by title. */
     order: z.enum(LOOP_ORDERS).optional(),
+    /** W-318: only entries with one of `terms` (comma-separated term slugs) in this taxonomy. */
+    taxonomy: z
+      .string()
+      .regex(/^[a-z][a-z0-9_]{0,62}$/, "Use a taxonomy name such as tags")
+      .optional(),
+    terms: z.string().max(1000).optional(),
     /** W-315: show the items as a carousel, this many in view (per device). Unset = a list. */
     slidesInView: z.number().int().min(1).max(6).optional(),
     slidesInViewTablet: z.number().int().min(1).max(6).optional(),
@@ -874,6 +880,8 @@ export type LoopNode = {
     collection?: string;
     limit?: number;
     order?: LoopOrder;
+    taxonomy?: string;
+    terms?: string;
     slidesInView?: number;
     slidesInViewTablet?: number;
     slidesInViewMobile?: number;
