@@ -53,3 +53,18 @@ test("resolveEmbedUrl matches the recorded golden over hosts, path shapes and id
   }
   expect(accepted).toEqual(golden.accepted);
 });
+
+describe("a player host's file links (W-319)", () => {
+  test("Vimeo's progressive .mp4 link plays as a video file", () => {
+    const url =
+      "https://player.vimeo.com/progressive_redirect/playback/1062404854/rendition/1080p/file.mp4?loc=external&signature=abc123";
+    expect(resolveEmbedUrl(url)).toEqual({ kind: "video", src: url });
+  });
+
+  test("a player page without a video id or file is still refused", () => {
+    expect(
+      resolveEmbedUrl("https://player.vimeo.com/progressive_redirect/playback/x"),
+    ).toBeUndefined();
+    expect(resolveEmbedUrl("https://www.youtube.com/feed/trending")).toBeUndefined();
+  });
+});

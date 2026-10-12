@@ -136,16 +136,15 @@ export function resolveEmbedUrl(value: string): EmbedTarget | undefined {
 
   const host = parsed.hostname.toLowerCase();
   const provider = PROVIDERS.find((p) => p.hosts.has(host));
-  if (provider) {
-    const id = provider.id(parsed);
-    return id
-      ? {
-          kind: "iframe",
-          src: withStart(provider.provider, `${provider.embed}${id}`, startOf(parsed)),
-          provider: provider.provider,
-        }
-      : undefined;
+  const id = provider?.id(parsed);
+  if (provider && id) {
+    return {
+      kind: "iframe",
+      src: withStart(provider.provider, `${provider.embed}${id}`, startOf(parsed)),
+      provider: provider.provider,
+    };
   }
+  // W-319: a player host's own file links (Vimeo's progressive .mp4) are video files.
 
   // Allowlisted http(s) media file URLs for <video> (CDN / EmDash media file route).
   const media = sanitizeMediaUrl(trimmed);

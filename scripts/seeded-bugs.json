@@ -26798,6 +26798,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/collection-loops.test.ts"],
       "expect": "\\(fail\\).*W-318"
+    },
+    {
+      "id": "W-319/player-files-refused",
+      "requirement": "W-319",
+      "description": "A Vimeo .mp4 file link is refused like a bad player link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/embed-url.ts",
+          "search": "  // W-319: a player host's own file links (Vimeo's progressive .mp4) are video files.\n",
+          "replace": "  if (provider) return undefined;\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/embed-url.test.ts"],
+      "expect": "\\(fail\\).*W-319"
     }
   ]
 }
