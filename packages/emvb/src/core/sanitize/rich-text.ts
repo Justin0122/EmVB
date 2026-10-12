@@ -1,5 +1,6 @@
 import type { VNode } from "../render/vnode.ts";
 import { sanitizeHref } from "./href.ts";
+import { sanitizeMediaUrl } from "./media-url.ts";
 
 /**
  * W-309: Rich text. Stored HTML (pasted, imported or typed) becomes safe VNodes: a fixed set of
@@ -48,6 +49,7 @@ const TAGS: Record<string, string> = {
   tr: "tr",
   th: "th",
   td: "td",
+  img: "img",
 };
 const VOID = new Set([
   "br",
@@ -157,6 +159,22 @@ function attrsFor(tag: string, raw: string): Record<string, string> | null {
       ? { href: safe, target: "_blank", rel: "noopener noreferrer" }
       : { href: safe };
   }
+  if (tag === "img") {
+    // W-320: an image with a safe source, its alt text and size; always lazy.
+    const src = attrOf(raw, "src")?.trim();
+    const safe = src ? sanitizeMediaUrl(src) : undefined;
+    if (!safe) return null;
+    const attrs: Record<string, string> = {
+      src: safe,
+      alt: (attrOf(raw, "alt") ?? "").slice(0, 300),
+    };
+    for (const name of ["width", "height"]) {
+      const value = attrOf(raw, name)?.trim();
+      if (value && /^[1-9][0-9]{0,3}$/.test(value)) attrs[name] = value;
+    }
+    attrs.loading = "lazy";
+    return attrs;
+  }
   if (tag === "th" || tag === "td") {
     const attrs: Record<string, string> = {};
     for (const name of ["colspan", "rowspan"]) {
@@ -212,7 +230,7 @@ export function parseRichText(html: string): (VNode | string)[] {
     const attrs = attrsFor(tag, match[2] ?? "");
     if (attrs === null) continue; // An unsafe link: its text stays, in the parent.
     const node: VNode = { tag, attrs, children: [] };
-    if (tag === "br" || tag === "hr") {
+    if (tag === "br" || tag === "hr" || tag === "img") {
       top().children.push(node);
       continue;
     }
@@ -232,11 +250,17 @@ function closeFrame(stack: Frame[]) {
 const visibleText = (nodes: (VNode | string)[]): string =>
   nodes
     .map((n) =>
-      typeof n === "string" ? n : n.tag === "hr" || n.tag === "br" ? "" : visibleText(n.children),
+      typeof n === "string"
+        ? n
+        : n.tag === "img"
+          ? "\u{FFFC}"
+          : n.tag === "hr" || n.tag === "br"
+            ? ""
+            : visibleText(n.children),
     )
     .join("");
 
-/** True when the HTML holds no visible text, so an editor can show its placeholder. */
+/** True when the HTML holds no visible text or image, so an editor can show its placeholder. */
 export function richTextIsEmpty(html: string): boolean {
   return visibleText(parseRichText(html)).trim() === "";
 }

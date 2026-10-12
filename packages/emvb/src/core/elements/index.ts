@@ -222,7 +222,7 @@ const richText: ElementDefinition<RichTextNode> = {
   baseCss:
     // W-311: the text inside takes the element's colour, so a Rich text on a dark section isn't
     // painted with the site's tag defaults (dark headings and paragraphs).
-    ".emvb-rich-text{min-width:0;overflow-wrap:break-word}.emvb-rich-text :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,strong,em,u,s,code,th,td,caption){color:inherit}:where(.emvb-rich-text)>:first-child{margin-top:0}:where(.emvb-rich-text)>:last-child{margin-bottom:0}:where(.emvb-rich-text) table{width:100%;border-collapse:collapse}:where(.emvb-rich-text) :is(th,td){padding:.5em .75em;border:1px solid color-mix(in srgb,currentColor 20%,transparent);text-align:start;vertical-align:top}:where(.emvb-rich-text) :is(ul,ol){padding-inline-start:1.5em}:where(.emvb-rich-text) blockquote{margin-inline:0;padding-inline-start:1em;border-inline-start:3px solid currentColor}",
+    ".emvb-rich-text{min-width:0;overflow-wrap:break-word}.emvb-rich-text img{max-width:100%;height:auto;vertical-align:middle}.emvb-rich-text :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,strong,em,u,s,code,th,td,caption){color:inherit}:where(.emvb-rich-text)>:first-child{margin-top:0}:where(.emvb-rich-text)>:last-child{margin-bottom:0}:where(.emvb-rich-text) table{width:100%;border-collapse:collapse}:where(.emvb-rich-text) :is(th,td){padding:.5em .75em;border:1px solid color-mix(in srgb,currentColor 20%,transparent);text-align:start;vertical-align:top}:where(.emvb-rich-text) :is(ul,ol){padding-inline-start:1.5em}:where(.emvb-rich-text) blockquote{margin-inline:0;padding-inline-start:1em;border-inline-start:3px solid currentColor}",
   defaults: () => ({ type: "rich-text", props: { html: "<p>Rich text</p>" } }),
   descriptor: {
     type: "rich-text",

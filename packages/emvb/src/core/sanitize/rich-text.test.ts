@@ -78,7 +78,8 @@ describe("Rich text drops what isn't safe (W-309)", () => {
       html(
         '<p style="color:red" onmouseover="x()" id="i" class="c">p</p><img src=x onerror=alert(1)><span data-x="1">s</span>',
       ),
-    ).toBe("<p>p</p>s");
+      // W-320: an image is kept, without its handler.
+    ).toBe('<p>p</p><img src="x" alt="" loading="lazy">s');
   });
 
   test("comments, doctypes and CDATA are dropped; stray < stays as text", () => {
@@ -157,5 +158,29 @@ describe("Rich text colour (W-311)", () => {
       ".emvb-rich-text :is(h1,h2,h3,h4,h5,h6,p,li,blockquote,strong,em,u,s,code,th,td,caption){color:inherit}",
     );
     expect(css).toContain(".emvb-e-rich0001{color:#ffffff}");
+  });
+});
+
+describe("Rich text images (W-320)", () => {
+  test("an image keeps its safe source, alt text and size, and loads lazily", () => {
+    expect(
+      html(
+        '<p>Merken: <img src="/_emdash/api/media/file/a.png" alt="Durma" width="170" height="60" style="x" onerror="y"></p>',
+      ),
+    ).toBe(
+      '<p>Merken: <img src="/_emdash/api/media/file/a.png" alt="Durma" width="170" height="60" loading="lazy"></p>',
+    );
+  });
+
+  test("an image without a safe source is dropped; an odd size is left out", () => {
+    expect(html('<p>a<img src="javascript:alert(1)">b<img alt="x"></p>')).toBe("<p>ab</p>");
+    expect(html('<img src="https://cdn.example/x.jpg" width="100%" height="0">')).toBe(
+      '<img src="https://cdn.example/x.jpg" alt="" loading="lazy">',
+    );
+  });
+
+  test("an image alone is content, not an empty field", () => {
+    expect(richTextIsEmpty('<p><img src="/a.png" alt=""></p>')).toBe(false);
+    expect(richTextIsEmpty('<p><img src="javascript:x"></p>')).toBe(true);
   });
 });

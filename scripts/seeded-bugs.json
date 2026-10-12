@@ -26812,6 +26812,48 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/embed-url.test.ts"],
       "expect": "\\(fail\\).*W-319"
+    },
+    {
+      "id": "W-320/unsafe-src",
+      "requirement": "W-320",
+      "description": "An image's source isn't checked.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "const safe = src ? sanitizeMediaUrl(src) : undefined;",
+          "replace": "const safe = src;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-320"
+    },
+    {
+      "id": "W-320/eager",
+      "requirement": "W-320",
+      "description": "Rich text images load eagerly.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "attrs.loading = \"lazy\";",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-320"
+    },
+    {
+      "id": "W-320/image-is-empty",
+      "requirement": "W-320",
+      "description": "A field holding only an image counts as empty.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/rich-text.ts",
+          "search": "? \"\\u{FFFC}\"",
+          "replace": "? \"\""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/rich-text.test.ts"],
+      "expect": "\\(fail\\).*W-320"
     }
   ]
 }
