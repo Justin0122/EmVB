@@ -26910,6 +26910,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/variable-values.test.ts"],
       "expect": "\\(fail\\).*W-321"
+    },
+    {
+      "id": "W-322/stays-under",
+      "requirement": "W-322",
+      "description": "A gradient set over still paints under the image.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "search": "  if (gradient && gradientOver) push(gradient, \"auto\", \"center\", \"no-repeat\");\n  if (image)",
+          "replace": "  if (image)"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/background.test.ts"],
+      "expect": "\\(fail\\).*W-322"
+    },
+    {
+      "id": "W-322/over-rejected",
+      "requirement": "W-322",
+      "description": "A gradient with over is refused as unknown.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/css.ts",
+          "search": "        key !== \"over\",",
+          "replace": "        true,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/background.test.ts"],
+      "expect": "\\(fail\\).*W-322"
     }
   ]
 }

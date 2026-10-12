@@ -219,3 +219,45 @@ describe("background images, gradients and overlays (W-094)", () => {
     expect(emptyDesign().schemaVersion).toBe(DESIGN_SCHEMA_VERSION);
   });
 });
+
+describe("a gradient over the image (W-322)", () => {
+  const gradient = {
+    type: "linear",
+    angle: 90,
+    stops: [
+      { color: "#009fda", at: 40 },
+      { color: "#0092ffcc", at: 100 },
+    ],
+  };
+  const layers = (style: Record<string, unknown>) =>
+    styleDeclarations(style).declarations.find((d) => d.property === "background-image")?.value;
+
+  test("by default the gradient is under the image; with over, above it", () => {
+    expect(layers({ backgroundImage: image, gradient })).toBe(
+      `url("${image}"),linear-gradient(90deg, #009fda 40%, #0092ffcc 100%)`,
+    );
+    expect(layers({ backgroundImage: image, gradient: { ...gradient, over: true } })).toBe(
+      `linear-gradient(90deg, #009fda 40%, #0092ffcc 100%),url("${image}")`,
+    );
+  });
+
+  test("the overlay stays on top, and the sizes follow the layer order", () => {
+    const { declarations } = styleDeclarations({
+      backgroundImage: image,
+      backgroundSize: "contain",
+      overlay: { color: "#000000", opacity: 0.5 },
+      gradient: { ...gradient, over: true },
+    });
+    const value = (property: string) => declarations.find((d) => d.property === property)?.value;
+    expect(value("background-image")?.startsWith("linear-gradient(#00000080")).toBe(true);
+    expect(value("background-image")?.indexOf("90deg")).toBeLessThan(
+      value("background-image")?.indexOf("url(") ?? 0,
+    );
+    expect(value("background-size")).toBe("auto,auto,contain");
+  });
+
+  test("over is part of the schema", () => {
+    expect(StyleProps.safeParse({ gradient: { ...gradient, over: true } }).success).toBe(true);
+    expect(StyleProps.safeParse({ gradient: { ...gradient, over: "yes" } }).success).toBe(false);
+  });
+});

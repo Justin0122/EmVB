@@ -432,7 +432,12 @@ function cssGradient(value: unknown): string | undefined {
   if (!isRecord(value)) return undefined;
   if (
     Object.keys(value).some(
-      (key) => key !== "type" && key !== "angle" && key !== "position" && key !== "stops",
+      (key) =>
+        key !== "type" &&
+        key !== "angle" &&
+        key !== "position" &&
+        key !== "stops" &&
+        key !== "over",
     )
   )
     return undefined;
@@ -541,9 +546,12 @@ function composeBackground(style: Record<string, unknown>): {
     positions.push(layerPosition);
     repeats.push(layerRepeat);
   };
+  // W-322: a gradient set "over" sits between the overlay and the image, so it tints the image.
+  const gradientOver = isRecord(style["gradient"]) && style["gradient"]["over"] === true;
   if (overlay) push(overlay, "auto", "center", "no-repeat");
+  if (gradient && gradientOver) push(gradient, "auto", "center", "no-repeat");
   if (image) push(image, size ?? "cover", position ?? "center", repeat ?? "no-repeat");
-  if (gradient) push(gradient, "auto", "center", "no-repeat");
+  if (gradient && !gradientOver) push(gradient, "auto", "center", "no-repeat");
 
   const declarations: Declaration[] = [];
   if (layers.length > 0) {

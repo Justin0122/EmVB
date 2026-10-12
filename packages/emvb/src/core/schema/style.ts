@@ -216,6 +216,8 @@ export const StyleProps = z.strictObject({
         )
         .min(2)
         .max(10),
+      /** W-322: paint the gradient over the background image instead of under it. */
+      over: z.boolean().optional(),
     })
     .optional(),
   /** A colour laid over the image and gradient. `opacity` is 0–1 (W-094). */

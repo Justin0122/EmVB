@@ -345,6 +345,17 @@ export function GradientControl({
           )}
         </div>
       ))}
+      <label className="emvb-check-row" data-emvb-gradient-over="">
+        <input
+          type="checkbox"
+          checked={value.over === true}
+          onChange={(event) => {
+            const { over: _over, ...rest } = value;
+            onChange(event.currentTarget.checked ? { ...rest, over: true } : rest);
+          }}
+        />
+        Over the image
+      </label>
       {stops.length < 10 && (
         <Button
           type="button"
