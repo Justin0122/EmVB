@@ -26700,6 +26700,48 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/component-design.test.tsx"],
       "expect": "\\(fail\\).*W-316"
+    },
+    {
+      "id": "W-317/controls-stay",
+      "requirement": "W-317",
+      "description": "A background video keeps its controls.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "          : { controls: \"\", preload: \"metadata\" }),",
+          "replace": "          : {}), controls: \"\", preload: \"metadata\","
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/media-elements.test.ts"],
+      "expect": "\\(fail\\).*W-317"
+    },
+    {
+      "id": "W-317/vimeo-plain",
+      "requirement": "W-317",
+      "description": "A background Vimeo embed is the plain player.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "src: background ? backgroundEmbedSrc(target) : target.src,",
+          "replace": "src: target.src,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/media-elements.test.ts"],
+      "expect": "\\(fail\\).*W-317"
+    },
+    {
+      "id": "W-317/hash-join",
+      "requirement": "W-317",
+      "description": "An unlisted Vimeo video gets a second '?'.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/embed-url.ts",
+          "search": "const join = base.includes(\"?\") ? \"&\" : \"?\";",
+          "replace": "const join = \"?\";"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/media-elements.test.ts"],
+      "expect": "\\(fail\\).*W-317"
     }
   ]
 }

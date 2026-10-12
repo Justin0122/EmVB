@@ -187,6 +187,8 @@ export const VideoNode = leafNode(
     url: z.string().max(2000),
     title: z.string().min(1).max(200),
     mediaId: z.string().min(1).max(128).optional(),
+    /** W-317: plays muted, looping and without controls, as a backdrop. */
+    background: z.boolean().optional(),
   }),
 );
 

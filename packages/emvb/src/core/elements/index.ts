@@ -31,7 +31,7 @@ import { sanitizeSvgMarkup } from "../sanitize/svg.ts";
 import { parseRichText } from "../sanitize/rich-text.ts";
 import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { getBundledIcon } from "../icons/catalog.ts";
-import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
+import { backgroundEmbedSrc, resolveEmbedUrl } from "../sanitize/embed-url.ts";
 import type { VNode } from "../render/vnode.ts";
 
 import type { ElementDefinition } from "./definition.ts";
@@ -650,10 +650,18 @@ const video: ElementDefinition<VideoNode> = {
           "Use a YouTube or Vimeo link, or a media file path such as /_emdash/api/media/file/….",
       },
       { key: "title", kind: "text", label: "Title" },
+      {
+        key: "background",
+        kind: "boolean",
+        label: "Play as background",
+        optional: true,
+        message: "Muted, looping and without controls, like a moving backdrop.",
+      },
     ],
   },
   build: (node, attrs) => {
     const target = resolveEmbedUrl(node.props.url);
+    const background = node.props.background === true;
     if (!target) {
       return {
         tag: "span",
@@ -670,11 +678,13 @@ const video: ElementDefinition<VideoNode> = {
         tag: "iframe",
         attrs: {
           ...attrs,
-          src: target.src,
+          src: background ? backgroundEmbedSrc(target) : target.src,
           title: node.props.title,
-          loading: "lazy",
+          ...(background ? { tabindex: "-1", "aria-hidden": "true" } : { loading: "lazy" }),
           referrerpolicy: "strict-origin-when-cross-origin",
-          allow: "encrypted-media; picture-in-picture; fullscreen",
+          allow: background
+            ? "autoplay; encrypted-media"
+            : "encrypted-media; picture-in-picture; fullscreen",
         },
         children: [],
       };
@@ -685,8 +695,9 @@ const video: ElementDefinition<VideoNode> = {
         ...attrs,
         src: target.src,
         title: node.props.title,
-        controls: "",
-        preload: "metadata",
+        ...(background
+          ? { autoplay: "", muted: "", loop: "", playsinline: "", "aria-hidden": "true" }
+          : { controls: "", preload: "metadata" }),
       },
       children: [],
     };

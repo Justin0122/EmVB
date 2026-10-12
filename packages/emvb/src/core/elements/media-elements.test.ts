@@ -174,3 +174,42 @@ describe("dynamic element defaults (W-091)", () => {
     expect(defaultElement("post-image", "pimg0001").props).toEqual({ decorative: false });
   });
 });
+
+describe("a video played as background (W-317)", () => {
+  const videoNode = (props: Record<string, unknown>) =>
+    ({ ...defaultElement("video", "vid00001"), props: { title: "Video", ...props } }) as LayoutNode;
+
+  test("a file plays muted, looping and inline, without controls", () => {
+    const el = render(videoNode({ url: "/_emdash/api/media/file/clip.mp4", background: true }));
+    expect(attrs(el)).toMatchObject({ autoplay: "", muted: "", loop: "", playsinline: "" });
+    expect(el.hasAttribute("controls")).toBe(false);
+    expect(el.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  test("Vimeo uses its background mode; YouTube loops its own id, muted and without controls", () => {
+    const vimeo = render(videoNode({ url: "https://vimeo.com/1062404854", background: true }));
+    expect(vimeo.getAttribute("src")).toBe(
+      "https://player.vimeo.com/video/1062404854?background=1",
+    );
+    expect(vimeo.getAttribute("tabindex")).toBe("-1");
+    const hashed = render(
+      videoNode({ url: "https://vimeo.com/123456789/abcdef12", background: true }),
+    );
+    expect(hashed.getAttribute("src")).toBe(
+      "https://player.vimeo.com/video/123456789?h=abcdef12&background=1",
+    );
+    const youtube = render(videoNode({ url: "https://youtu.be/dQw4w9WgXcQ", background: true }));
+    expect(youtube.getAttribute("src")).toBe(
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?autoplay=1&mute=1&loop=1&controls=0&playsinline=1&playlist=dQw4w9WgXcQ",
+    );
+  });
+
+  test("without it, a video keeps its controls and the plain embed", () => {
+    const el = render(videoNode({ url: "/_emdash/api/media/file/clip.mp4" }));
+    expect(el.hasAttribute("controls")).toBe(true);
+    expect(el.hasAttribute("autoplay")).toBe(false);
+    expect(render(videoNode({ url: "https://vimeo.com/1062404854" })).getAttribute("src")).toBe(
+      "https://player.vimeo.com/video/1062404854",
+    );
+  });
+});

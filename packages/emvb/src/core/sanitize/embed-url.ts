@@ -1,6 +1,6 @@
 /**
  * YouTube / Vimeo → privacy-enhanced embed URLs, or media-library video sources (R-013 / R-032).
- * Never passes through autoplay query params.
+ * Never passes through autoplay query params; `backgroundEmbedSrc` adds its own (W-317).
  */
 
 import { sanitizeMediaUrl } from "./media-url.ts";
@@ -157,4 +157,18 @@ export function resolveEmbedUrl(value: string): EmbedTarget | undefined {
     return undefined;
   }
   return { kind: "video", src: media };
+}
+
+/**
+ * W-317: a player embed that plays as a backdrop (muted, looping, no controls). Vimeo has a
+ * background mode for that; YouTube needs its id again as the playlist to loop.
+ */
+export function backgroundEmbedSrc(target: Extract<EmbedTarget, { kind: "iframe" }>): string {
+  const [base = "", fragment] = target.src.split("#");
+  const join = base.includes("?") ? "&" : "?";
+  const params =
+    target.provider === "vimeo"
+      ? "background=1"
+      : `autoplay=1&mute=1&loop=1&controls=0&playsinline=1&playlist=${base.slice(base.lastIndexOf("/") + 1).split("?")[0]}`;
+  return `${base}${join}${params}${fragment ? `#${fragment}` : ""}`;
 }
