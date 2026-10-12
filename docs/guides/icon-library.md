@@ -52,7 +52,9 @@ An uploaded SVG keeps its own colours. To paint it in the icon colour instead, t
 single color** (see below). Uploads are stored by EmVB, not in the EmDash media library: EmDash
 doesn't accept SVG uploads, because an SVG opened from its URL could run a script. The page stores
 the cleaned SVG itself (with the id `upload:<id>`), so it keeps working even if the upload list
-changes. Uploads can't be renamed or deleted yet.
+changes. My uploads can rename or remove an SVG. An icon already placed on a page keeps its own copy.
+The grid tiles for bundled icons are cleaned the same way before they are shown (W-370). A tile whose
+viewBox breaks out into a handler is left out of the grid.
 
 ## Styling an icon
 

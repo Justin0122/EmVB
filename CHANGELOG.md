@@ -60,8 +60,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
-- **A page and its theme parts agree on new vs returning (W-313).** Within one request, a first visit no longer turns into a returning one for the header, so a "first time here?" bar shows on the visit it is for. The seen cookie is read as the browser sent it.
-- **Ctrl/Cmd+K no longer opens the command palette over an open dialog (W-314).** Escape no longer strands focus outside the dialog. Ctrl/Cmd+K still opens the palette from a text field.
+- **A bundled icon tile cannot carry a handler (W-370).** Tiles are built the same way an uploaded SVG is. A viewBox that breaks out into `onload` is left out of the grid.
+- **A broken share link is unreadable (W-371).** A link that fails while it is unpacked comes back as unreadable. It does not leave the reader waiting.
+- **A playground layout that is not JSON is unreadable (W-372).** The view shows the same message as a layout that fails validation.
+- **An unknown element keeps direction and container queries (W-352).** `dir`, `container` and `query` stay on a node this version does not recognize, so a later version still has them.
+- **Layers icons match the element (W-361).** A Layers row uses the same icon as the Add panel.
+- **JSON-LD cannot close its script tag (W-379).** A `<` in the site's structured data is written as a JSON escape.
+- **Editor feature colours follow the admin theme (W-380).** Timeline, accessibility and style-source colours use Kumo roles, including in dark mode.
+- **A corrupt style draft can be replaced (W-382).** The editor keeps that draft's revision, so the next save overwrites it. A missing draft still has no revision.
 - **An unknown element can still be saved after a device hide or a pasted style (W-351).** Hiding it on a device, or pasting a style that sets device overrides, no longer makes the whole page fail to save.
 - **Version history looks like the canvas (W-351).** The before/after snapshots load the host's stylesheets before EmVB's CSS, in the same order as the canvas. A stylesheet that isn't an `http(s)` URL or a site path is left out.
 - The emvb.dev changelog page leaves out a release with no entries yet, such as an empty Unreleased (W-324).
