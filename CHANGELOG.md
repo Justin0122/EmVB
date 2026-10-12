@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-11
+
+Schema 15. Container queries, per-element text direction, image links and captions, button icons, a table of contents, custom grid tracks, and the security fixes since 0.3.0.
+
 ### Breaking
 
 - **Layout and design schema 15.** Pages and site styles saved now can't be opened by an EmVB that only knows schema 14. Older pages and styles open and upgrade unchanged. Schema 15 adds optional fields only: per-element text direction, image link, caption, focal point and extra image sources, a button icon, a table of contents element, container queries, custom grid column tracks, and a grid child's column or row start line.
@@ -60,6 +64,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **A page and its theme parts agree on new vs returning (W-313).** Within one request, a first visit no longer turns into a returning one for the header, so a "first time here?" bar shows on the visit it is for. The seen cookie is read as the browser sent it.
+- **Ctrl/Cmd+K no longer opens the command palette over an open dialog (W-314).** Escape no longer strands focus outside the dialog. Ctrl/Cmd+K still opens the palette from a text field.
 - **A bundled icon tile cannot carry a handler (W-370).** Tiles are built the same way an uploaded SVG is. A viewBox that breaks out into `onload` is left out of the grid.
 - **A broken share link is unreadable (W-371).** A link that fails while it is unpacked comes back as unreadable. It does not leave the reader waiting.
 - **A playground layout that is not JSON is unreadable (W-372).** The view shows the same message as a layout that fails validation.
@@ -301,7 +307,8 @@ The first release, published on npm as [`@perkyzz/emvb`](https://www.npmjs.com/p
 - Video embeds use privacy-friendly domains and never autoplay (W-026).
 - The editor canvas is a sandboxed iframe (W-009), and an XSS test corpus runs against the editor and published pages in a real browser (W-042).
 
-[Unreleased]: https://github.com/PerkyZZ999/EmVB/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/PerkyZZ999/EmVB/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/PerkyZZ999/EmVB/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/PerkyZZ999/EmVB/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/PerkyZZ999/EmVB/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/PerkyZZ999/EmVB/compare/v0.1.0...v0.2.0
