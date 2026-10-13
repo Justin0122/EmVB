@@ -26326,8 +26326,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "    const nextBg = ownBg ?? bg;",
-          "replace": "    const nextBg = ownBg;"
+          "search": ": (ownBg ?? bg);",
+          "replace": ": ownBg;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/a11y/audit.test.ts"],
@@ -29180,6 +29180,26 @@
         "punctuation and arrows"
       ],
       "expect": "\\(fail\\).*punctuation and arrows"
+    },
+    {
+      "id": "W-412/alpha-ignored",
+      "requirement": "W-412",
+      "description": "Contrast ignores a colour's alpha.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "const ratio = contrastRatio(over(nextColor, nextBg), nextBg);",
+          "replace": "const ratio = contrastRatio(nextColor, nextBg);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/contrast-alpha.test.ts",
+        "-t",
+        "faint black"
+      ],
+      "expect": "\\(fail\\).*faint black"
     }
   ]
 }

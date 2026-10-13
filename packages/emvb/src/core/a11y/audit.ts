@@ -70,6 +70,23 @@ const lum = (hex: string) => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
 };
 
+/**
+ * W-412: `top` painted over opaque `bottom`, as 6-digit hex. A colour's alpha (#rgba,
+ * #rrggbbaa) used to be dropped, so faint text counted as full strength.
+ */
+function over(top: string, bottom: string): string {
+  let h = top.slice(1);
+  if (h.length <= 4) h = [...h].map((c) => c + c).join("");
+  const alpha = h.length === 8 ? Number.parseInt(h.slice(6, 8), 16) / 255 : 1;
+  if (alpha >= 1) return `#${h.slice(0, 6)}`;
+  const a = rgb(`#${h.slice(0, 6)}`);
+  const b = rgb(bottom);
+  return `#${a
+    .map((c, i) => Math.round(c * alpha + (b[i] ?? 0) * (1 - alpha)))
+    .map((c) => c.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
 /** WCAG contrast ratio between two hex colours, 1–21. */
 export function contrastRatio(a: string, b: string): number {
   const [hi, lo] = [lum(a), lum(b)].toSorted((x, y) => y - x) as [number, number];
@@ -136,7 +153,8 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       | undefined;
     // A background image hides the colour behind the text: contrast can't be judged below it.
     const ownBg = style?.backgroundImage ? "unknown" : hexOf(style?.backgroundColor, design);
-    const nextBg = ownBg ?? bg;
+    const nextBg =
+      ownBg && ownBg !== "unknown" && bg && bg !== "unknown" ? over(ownBg, bg) : (ownBg ?? bg);
     const nextColor = hexOf(style?.color, design) ?? color;
     // W-386: a linked image's alt text is the link's name, so it can't be decorative.
     const imageLinked =
@@ -281,7 +299,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       }
     }
     if (TEXT_TYPES.has(node.type) && nextColor && nextBg && nextBg !== "unknown") {
-      const ratio = contrastRatio(nextColor, nextBg);
+      const ratio = contrastRatio(over(nextColor, nextBg), nextBg);
       const needed = largeText(node) ? 3 : 4.5;
       if (ratio < needed) {
         const black = contrastRatio("#000000", nextBg);
