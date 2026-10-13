@@ -117,8 +117,17 @@ export function IconPicker({
     const patch: Record<string, unknown> = { iconId: icon.id, iconSvg: icon.markup };
     // Keep the title in step with the glyph while it is still a default or the old icon's name
     // (new Icon elements ship title "Star" with iconId "star"); a written title stays.
-    if (!title || title === "Icon" || title.toLowerCase() === previous) patch.title = icon.label;
+    // W-387: only the Icon element has a title; a Button with one is refused on save.
+    if (node.type === "icon" && (!title || title === "Icon" || title.toLowerCase() === previous)) {
+      patch.title = icon.label;
+    }
     onChange(withProps(node, patch));
+  };
+  // W-387: a Button's icon is optional, so it can be taken off again.
+  const removable = node.type !== "icon" && (current !== "" || typeof props.iconSvg === "string");
+  const remove = () => {
+    const { iconId: _id, iconSvg: _svg, ...rest } = propsOf(node);
+    onChange({ ...node, props: rest } as LayoutNode);
   };
 
   return (
@@ -156,6 +165,17 @@ export function IconPicker({
         >
           Choose…
         </Button>
+        {removable && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className={BUTTON}
+            data-emvb-icon-remove=""
+            onClick={remove}
+          >
+            Remove
+          </Button>
+        )}
       </div>
       <IconLibraryDialog
         open={open}

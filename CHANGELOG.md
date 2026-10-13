@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **A table of contents links only headings that render (W-384).** A heading in the other A/B arm or for another audience is no longer listed, and a repeated HTML ID is listed once.
 - **Extra image sources keep the main image in `srcset` (W-385).** The browser ignores `src` once `srcset` has widths, so a wide screen got only the smallest extra file. The main image is listed with its width when that is known.
 - **The accessibility check covers image links (W-386).** A decorative image that is a link is reported as a link with no name, a linked image isn't offered "Mark as decorative", and an image link that opens a new tab is noted like other links.
+- **A button icon can be saved and removed (W-387).** Choosing an icon for a Button no longer makes the page refuse to save, and the Icon field on a Button has Remove.
 
 ## [0.4.0] - 2026-10-11
 

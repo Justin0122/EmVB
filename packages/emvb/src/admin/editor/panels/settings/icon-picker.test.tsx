@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { act } from "react";
-import { emptyDesign, type LayoutNode } from "../../../../core/index.ts";
+import { emptyDesign, validateLayout, type LayoutNode } from "../../../../core/index.ts";
 import type { Fetcher } from "../../../api.ts";
 import { ElementPanel } from "../ElementPanel.tsx";
 import { cleanup, mount, settle } from "../../../../../test/dom/mount.ts";
@@ -149,5 +149,31 @@ describe("an uploaded icon in the field (W-239)", () => {
     expect(current.querySelector(".emvb-icon-current-preview")?.getAttribute("aria-label")).toBe(
       "Change icon (now Brand logo)",
     );
+  });
+});
+
+describe("a Button's icon (W-387)", () => {
+  const buttonNode = (props: Record<string, unknown>): LayoutNode =>
+    ({ id: "btn00001", type: "button", props: { text: "Go", ...props } }) as LayoutNode;
+
+  test("inserting an icon on a Button adds no title, so the page still saves", async () => {
+    const { state } = await mountPanel(buttonNode({}));
+    await pickInLibrary("heart", "lucide:heart");
+    expect(state.current.props).toMatchObject({ iconId: "lucide:heart" });
+    expect("title" in state.current.props).toBe(false);
+    const result = validateLayout(layoutWith(state.current));
+    expect(result.ok).toBe(true);
+  });
+
+  test("Remove takes the icon off a Button; the Icon element has no Remove", async () => {
+    const { state } = await mountPanel(
+      buttonNode({ iconId: "lucide:heart", iconSvg: "<svg viewBox='0 0 24 24'></svg>" }),
+    );
+    const remove = document.querySelector<HTMLButtonElement>("[data-emvb-icon-remove]");
+    await act(async () => remove?.click());
+    expect(state.current.props).toEqual({ text: "Go" });
+    await cleanup();
+    await mountPanel(iconNode({ iconId: "star", title: "Star" }));
+    expect(document.querySelector("[data-emvb-icon-remove]")).toBeNull();
   });
 });
