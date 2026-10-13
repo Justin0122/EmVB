@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   auditPage,
+  BUNDLED_ICON_IDS,
   byteLength,
   defaultElement,
   ELEMENT_DESCRIPTORS,
@@ -171,9 +172,26 @@ export const ListElementTypesOutput = z.object({
       allowedParents: z.array(z.string()),
       props: z.unknown(),
       example: z.unknown(),
+      notes: z.string().optional(),
     }),
   ),
 });
+
+/**
+ * W-474: what an agent can't learn from the props schema alone, found in the live skill run.
+ * Icon ids, where form and loop ids come from, and which types belong together.
+ */
+const ELEMENT_NOTES: Record<string, string> = {
+  icon: `iconId is one of the bundled icons: ${BUNDLED_ICON_IDS.join(", ")}. Colour it with style.color; size is in px. Set decorative: true next to a text label, or give it a title.`,
+  button: `iconId takes the same bundled icon ids as the icon element (${BUNDLED_ICON_IDS.slice(0, 6).join(", ")}, …). Style buttons with a site class (see get_site_styles classes) rather than per-button styles.`,
+  form: "formId is the id of a form made in the EmDash admin under Forms; there is no tool to list or create forms, so ask the person for it. An unbound form (empty formId) shows only in the editor, not on the live page. Each field's field prop must match a field name in that form; add a submit last.",
+  loop: "A collection Loop needs collection (a collection slug such as posts); ask the person which one if unsure. The children are the item template (post-title, post-image, post-excerpt, post-link, post-date), plus an optional loop-empty shown when there are no entries.",
+  tabs: "Holds only tab-panel children; each tab-panel's label is its tab. Put content inside the panels.",
+  accordion:
+    "Holds only accordion-item children; summary is the visible question, the children are the answer. Set open: true on at most one item.",
+  "layout-section":
+    "Use one per page band. props.contentWidth caps the inner width (for example 1200 px) while the background spans the screen.",
+};
 
 export function listElementTypes(input: z.infer<typeof ListElementTypesInput>) {
   const descriptors = input.type
@@ -194,6 +212,7 @@ export function listElementTypes(input: z.infer<typeof ListElementTypesInput>) {
         allowedParents: allowedParents(d.type),
         props: props ? z.toJSONSchema(props, { unrepresentable: "any" }) : {},
         example: { type: example.type, props: (example as { props?: unknown }).props ?? {} },
+        ...(ELEMENT_NOTES[d.type] ? { notes: ELEMENT_NOTES[d.type] } : {}),
       };
     }),
   };
@@ -263,7 +282,29 @@ export const DescribePageOutput = z.object({
   ),
   headingOutline: z.array(z.string()),
   wordCount: z.number(),
+  images: z
+    .array(z.object({ id: z.string(), alt: z.string(), src: z.string(), decorative: z.boolean() }))
+    .optional(),
 });
+
+/** W-474: a review needs the alt texts next to what the images are, which only get_layout had. */
+function imagesOf(root: LayoutNode) {
+  const found: { id: string; alt: string; src: string; decorative: boolean }[] = [];
+  const walk = (node: LayoutNode) => {
+    if (node.type === "image" && found.length < 50) {
+      const props = node.props as { alt?: unknown; src?: unknown; decorative?: unknown };
+      found.push({
+        id: node.id,
+        alt: typeof props.alt === "string" ? clip(props.alt, 300) : "",
+        src: typeof props.src === "string" ? clip(props.src, 300) : "",
+        decorative: props.decorative === true,
+      });
+    }
+    for (const child of nodeChildren(node)) walk(child);
+  };
+  walk(root);
+  return found;
+}
 
 const clip = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max - 1)}…` : text;
@@ -308,6 +349,7 @@ export async function describePage(ports: EmvbPorts, input: z.infer<typeof Descr
     sections,
     headingOutline: all.headings,
     wordCount,
+    images: imagesOf(layout.root),
   };
 }
 

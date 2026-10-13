@@ -21,6 +21,7 @@ import { removeNode, slugify, starterLayout, updateNode } from "../core/tree-ops
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts } from "./ports.ts";
 import { queued } from "./queue.ts";
+import { resolveDesignRefs } from "./refs.ts";
 import {
   findVariableUsages,
   findVariableUsagesInDesign,
@@ -33,6 +34,14 @@ const Rev = z.string().min(1).max(256);
 
 /** The editor's save checks, run here because plugin writes skip `content:beforeSave` (R1 P0b). */
 function checkLayout(candidate: unknown): Layout {
+  // Size first, so an oversized page reports TOO_LARGE rather than a generic INVALID_LAYOUT.
+  const size = byteLength(candidate);
+  if (size > MAX_LAYOUT_BYTES) {
+    throw new McpToolError(
+      "TOO_LARGE",
+      `The page would be ${size} bytes; the limit is ${MAX_LAYOUT_BYTES}. Split it into smaller pages or remove content.`,
+    );
+  }
   const result = validateLayout(candidate);
   if (!result.ok) {
     throw new McpToolError(
@@ -88,7 +97,7 @@ async function mutatePage(
       if (expectedRev !== undefined && page.rev !== expectedRev) {
         throw new McpToolError(
           "CONFLICT",
-          "The page changed since you read it. Call get_layout again and retry.",
+          "The page changed since you read it. Every write returns a new rev: pass that one to your next write. If someone else changed it, call get_layout again and retry.",
           { rev: page.rev },
         );
       }
@@ -164,13 +173,41 @@ export const CreatePageInput = z.strictObject({
 });
 export const CreatePageOutput = z.object({ pageId: z.string(), slug: z.string(), rev: z.string() });
 
+/** The hero's first heading becomes the page's h1 with the page title as its text. */
+function promoteHeroHeading(layout: Layout, title: string): Layout {
+  const hero = layout.root.children?.[0];
+  const find = (node: LayoutNode): LayoutNode | undefined =>
+    node.type === "heading" ? node : (node.children ?? []).map(find).find(Boolean);
+  const heading = hero ? find(hero) : undefined;
+  if (!heading) return layout;
+  return updateNode(
+    layout,
+    heading.id,
+    (node) =>
+      ({
+        ...node,
+        props: { ...(node.props as Record<string, unknown>), text: title, level: 1 },
+      }) as LayoutNode,
+  );
+}
+
 export async function createPage(ports: EmvbPorts, input: z.infer<typeof CreatePageInput>) {
   // EmDash derives the slug from the title; refuse a title whose slug is already taken.
   const slug = slugify(input.title);
   if (!slug) refused("Give the page a title with letters or digits.");
   const { design } = await ports.getDesign();
   let layout = starterLayout(input.title);
-  for (const id of input.recipes ?? []) {
+  const recipes = input.recipes ?? [];
+  if (recipes.length > 0) {
+    // W-474: sections sit edge to edge, and a hero first carries the page's one h1 itself
+    // instead of a bare title heading above it.
+    layout = {
+      ...layout,
+      root: { ...layout.root, style: { ...layout.root.style, gap: { value: 0, unit: "px" } } },
+    };
+    if (recipes[0] === "hero") layout = { ...layout, root: { ...layout.root, children: [] } };
+  }
+  for (const id of recipes) {
     const node = recipeNode(id, design, layout);
     if (node)
       layout = arranged(
@@ -180,6 +217,7 @@ export async function createPage(ports: EmvbPorts, input: z.infer<typeof CreateP
         }),
       );
   }
+  if (recipes[0] === "hero") layout = promoteHeroHeading(layout, input.title);
   const checked = checkLayout(layout);
   const taken = await ports.listPages({ limit: 50 });
   if (taken.pages.some((page) => page.slug === slug)) {
@@ -206,9 +244,15 @@ export const AddElementInput = z.strictObject({
   expectedRev: Rev.optional(),
 });
 
-export const addElement = (ports: EmvbPorts, input: z.infer<typeof AddElementInput>) =>
-  mutatePage(ports, "add_element", input.pageId, input.expectedRev, (layout) => {
-    const node = withFreshIds(layout, buildNode(input.element));
+export async function addElement(ports: EmvbPorts, input: z.infer<typeof AddElementInput>) {
+  const element = resolveDesignRefs(input.element, (await ports.getDesign()).design);
+  return mutatePage(ports, "add_element", input.pageId, input.expectedRev, (layout) => {
+    if (!findNode(layout, input.parentId)) {
+      refused(
+        `No element with id ${input.parentId} on this page to add into. Call get_layout for the ids.`,
+      );
+    }
+    const node = withFreshIds(layout, buildNode(element));
     const next = arranged(
       addNode(layout, node, {
         parentId: input.parentId,
@@ -217,6 +261,7 @@ export const addElement = (ports: EmvbPorts, input: z.infer<typeof AddElementInp
     );
     return { layout: next, changed: [node.id], summary: `Added ${node.type} ${node.id}` };
   });
+}
 
 export const MoveElementInput = z.strictObject({
   pageId: PageId,
@@ -227,11 +272,17 @@ export const MoveElementInput = z.strictObject({
 });
 
 export const moveElement = (ports: EmvbPorts, input: z.infer<typeof MoveElementInput>) =>
-  mutatePage(ports, "move_element", input.pageId, input.expectedRev, (layout) => ({
-    layout: arranged(moveNode(layout, input.nodeId, input.parentId, input.index)),
-    changed: [input.nodeId],
-    summary: `Moved ${input.nodeId}`,
-  }));
+  mutatePage(ports, "move_element", input.pageId, input.expectedRev, (layout) => {
+    for (const id of [input.nodeId, input.parentId]) {
+      if (!findNode(layout, id))
+        refused(`No element with id ${id} on this page. Call get_layout for the ids.`);
+    }
+    return {
+      layout: arranged(moveNode(layout, input.nodeId, input.parentId, input.index)),
+      changed: [input.nodeId],
+      summary: `Moved ${input.nodeId}`,
+    };
+  });
 
 const SETTABLE = [
   "props",
@@ -266,13 +317,14 @@ export const UpdateElementInput = z.strictObject({
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
-export const updateElement = (ports: EmvbPorts, input: z.infer<typeof UpdateElementInput>) =>
-  mutatePage(ports, "update_element", input.pageId, input.expectedRev, (layout) => {
+export async function updateElement(ports: EmvbPorts, input: z.infer<typeof UpdateElementInput>) {
+  const set = resolveDesignRefs(input.set ?? {}, (await ports.getDesign()).design);
+  return mutatePage(ports, "update_element", input.pageId, input.expectedRev, (layout) => {
     if (!findNode(layout, input.nodeId))
       refused(`No element with id ${input.nodeId} on this page.`);
     const next = updateNode(layout, input.nodeId, (node) => {
       const copy = structuredClone(node) as Record<string, unknown>;
-      for (const [key, value] of Object.entries(input.set ?? {})) {
+      for (const [key, value] of Object.entries(set)) {
         if (value === undefined) continue;
         // Objects merge one level deep, like the editor's panels; anything else replaces.
         copy[key] = isRecord(value) && isRecord(copy[key]) ? { ...copy[key], ...value } : value;
@@ -287,6 +339,7 @@ export const updateElement = (ports: EmvbPorts, input: z.infer<typeof UpdateElem
     });
     return { layout: next, changed: [input.nodeId], summary: `Updated ${input.nodeId}` };
   });
+}
 
 export const RemoveElementInput = z.strictObject({
   pageId: PageId,
@@ -483,8 +536,10 @@ export async function updateSiteStyles(
       draft.variables[kind] = (draft.variables[kind] ?? []).filter((v) => v.id !== id);
       changes.push(`removed ${kind} ${id}`);
     }
+    // Refs in new classes and tag defaults resolve against the variables after this change.
+    const withVars = { ...state.design, variables: draft.variables } as unknown as DesignSystem;
     if (input.classes?.length) {
-      draft.classes = upsert(draft.classes, input.classes as Item[]);
+      draft.classes = upsert(draft.classes, resolveDesignRefs(input.classes, withVars) as Item[]);
       changes.push(`${input.classes.length} classes`);
     }
     if (input.removeClasses?.length) {
@@ -492,7 +547,13 @@ export async function updateSiteStyles(
       changes.push(`removed ${input.removeClasses.length} classes`);
     }
     if (input.defaults) {
-      draft.defaults = { ...draft.defaults, ...input.defaults };
+      // Per tag, like update_element's style: { h1: { color } } keeps h1's other properties.
+      const merged: Record<string, unknown> = { ...draft.defaults };
+      for (const [tag, style] of Object.entries(resolveDesignRefs(input.defaults, withVars))) {
+        merged[tag] =
+          isRecord(style) && isRecord(merged[tag]) ? { ...merged[tag], ...style } : style;
+      }
+      draft.defaults = merged;
       changes.push("tag defaults");
     }
     if (input.direction) {

@@ -30298,6 +30298,26 @@
         "admins see the switches"
       ],
       "expect": "\\(fail\\).*admins see the switches"
+    },
+    {
+      "id": "W-474/unknown-class-accepted",
+      "requirement": "W-474",
+      "description": "An unknown class id in an MCP write is no longer refused.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/refs.ts",
+          "search": "  if (unknownClasses.size > 0) {",
+          "replace": "  if (unknownClasses.size < 0) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-live-round2.test.ts",
+        "-t",
+        "unknown variable or class"
+      ],
+      "expect": "\\(fail\\).*unknown variable or class"
     }
   ]
 }

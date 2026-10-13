@@ -71,7 +71,19 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   return {
     caller: { userId: ctx.user?.id ?? null, role: Number(ctx.user?.role ?? 0) },
     async listPages({ cursor, limit }) {
-      const result = await content.list(PAGES_COLLECTION, { limit, ...(cursor ? { cursor } : {}) });
+      let result: Awaited<ReturnType<Content["list"]>>;
+      try {
+        result = await content.list(PAGES_COLLECTION, { limit, ...(cursor ? { cursor } : {}) });
+      } catch (error) {
+        // W-474: a cursor the agent made up or truncated was an INTERNAL_ERROR.
+        if (cursor && /cursor/i.test(String((error as Error)?.message ?? error))) {
+          throw new McpToolError(
+            "INVALID_INPUT",
+            "That cursor isn't valid. Pass nextCursor exactly as list_pages returned it, or leave it out to start again.",
+          );
+        }
+        throw error;
+      }
       return {
         pages: result.items.map(summary),
         ...(result.hasMore && result.cursor ? { nextCursor: result.cursor } : {}),
@@ -191,6 +203,15 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   };
 }
 
+/** W-474: before "Set up EmVB" there is no `emvb_pages` table, and every page tool was an INTERNAL_ERROR. */
+export const NOT_SET_UP_MESSAGE =
+  'EmVB isn\'t set up on this site yet. Ask an admin to open Pages VisualBuilder in the EmDash admin and click "Set up EmVB", then try again.';
+
+export const isNotSetUp = (error: unknown) =>
+  /no such table:?\s*\W?ec_emvb_|relation "?ec_emvb_\w+"? does not exist|collection "?emvb_(pages|theme_parts)"? (not found|does not exist)/i.test(
+    String((error as Error)?.message ?? error),
+  );
+
 /** Routes `mcp/<tool>`: editors and above (D-056), POST JSON, one per tool (R1 D-054). */
 export function mcpRoutes(tools: readonly ToolDef[]): Record<string, PluginRoute> {
   return Object.fromEntries(
@@ -205,6 +226,9 @@ export function mcpRoutes(tools: readonly ToolDef[]): Record<string, PluginRoute
           } catch (error) {
             if (error instanceof McpToolError) {
               throw new PluginRouteError(error.code, error.message, error.status);
+            }
+            if (isNotSetUp(error)) {
+              throw new PluginRouteError("NOT_SET_UP", NOT_SET_UP_MESSAGE, 409);
             }
             throw error;
           }
