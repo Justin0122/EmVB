@@ -65,7 +65,7 @@ const summary = (item: Item): PageSummary => ({
 /** The tool core's ports on a plugin route (D-053, R1 save path). */
 function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   const content = ctx.content as unknown as Content | undefined;
-  if (!content) throw new McpMcpToolError("FORBIDDEN", "EmVB has no content access on this site.");
+  if (!content) throw new McpToolError("FORBIDDEN", "EmVB has no content access on this site.");
   const versioned = (id: string) =>
     content.getVersioned ? content.getVersioned(PAGES_COLLECTION, id) : Promise.resolve(null);
   return {
