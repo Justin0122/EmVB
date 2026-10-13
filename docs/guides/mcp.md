@@ -42,7 +42,8 @@ Local config:
 ```
 
 The bridge never takes the token on the command line; use `EMVB_TOKEN` or `--token-file`. It
-refuses `http://` sites except `localhost`, and logs to stderr only.
+refuses `http://` sites except `localhost`, and logs to stderr only. It warns when the token file
+can be read by other users of the computer; run `chmod 600` on it.
 
 ## Tokens and permissions
 
@@ -56,12 +57,15 @@ refuses `http://` sites except `localhost`, and logs to stderr only.
 | --- | --- | --- |
 | `list_pages`, `get_layout`, `describe_page`, `list_element_types`, `get_site_styles`, `list_section_recipes`, `get_accessibility_findings`, `list_versions` | `create_page`, `add_element`, `move_element`, `update_element`, `remove_element`, `apply_section_recipe`, `restore_version`, `update_site_styles` | `publish_page`, `publish_site_styles` |
 
-- Writes take an optional `expectedRev`; a stale one returns `CONFLICT`.
+- Writes take an optional `expectedRev`; a stale one returns `CONFLICT`. Every write returns a new
+  `rev`: pass that one to the next write.
+- Style references to a site variable can leave out `from`; EmVB fills it in from the variable's
+  kind and refuses ids and classes that don't exist, listing the ones that do.
 - `create_page` uses the slug EmDash derives from the title and refuses a taken one.
 - `update_site_styles` changes the style draft only, and refuses to remove a variable a page or class
   still uses unless `force: true`.
 - Errors come back as tool errors with a code (`NESTING`, `INVALID_LAYOUT`, `CONFLICT`,
-  `PUBLISH_DISABLED`, `FORBIDDEN`, `REFUSED`, …) and a message the agent can act on.
+  `PUBLISH_DISABLED`, `FORBIDDEN`, `REFUSED`, `TOO_LARGE`, `NOT_SET_UP`, …) and a message the agent can act on.
 
 ## Publishing
 
