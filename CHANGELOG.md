@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Floating bars keep the page clear when their height changes after load.
 - An open popup still closes with Escape, and Tab stays inside it, after the focused control inside it disappears.
 - Tabs arrow keys follow right-to-left text.
 - Container-query style rows accept a bare number as px and keywords in any case.

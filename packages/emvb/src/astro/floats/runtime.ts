@@ -59,6 +59,10 @@ function hide(el: HTMLElement): void {
 
 /** Hide floats already closed this visit, then keep bars stacked. */
 export function initFloats(): void {
+  // W-407: a second call (a host loading the script twice) added a second click handler.
+  const marked = document.documentElement;
+  if (marked.dataset["emvbFloatsReady"] === "1") return;
+  marked.dataset["emvbFloatsReady"] = "1";
   for (const el of bars()) {
     const id = el.getAttribute("data-emvb-float");
     if (id && closed(id)) el.hidden = true;
@@ -75,4 +79,10 @@ export function initFloats(): void {
     hide(float);
   });
   window.addEventListener("resize", placeFloats);
+  // W-407: a bar's height also changes without a window resize (web fonts arriving, text
+  // wrapping once styles load), which left the reserved padding short and the bar over content.
+  if (typeof ResizeObserver === "function") {
+    const observer = new ResizeObserver(() => placeFloats());
+    for (const el of bars()) observer.observe(el);
+  }
 }

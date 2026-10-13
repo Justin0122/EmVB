@@ -5,6 +5,7 @@ afterEach(() => {
   document.body.innerHTML = "";
   document.documentElement.style.cssText = "";
   sessionStorage.clear();
+  delete document.documentElement.dataset["emvbFloatsReady"];
 });
 
 function mount(dismiss: boolean) {
@@ -46,5 +47,30 @@ describe("float runtime", () => {
     expect(bar?.hidden).toBe(true);
     expect(sessionStorage.getItem("emvb-float-closed:bar1")).toBe("1");
     expect(document.documentElement.style.getPropertyValue("--emvb-float-top")).toBe("0px");
+  });
+});
+
+describe("float bars follow their own size (W-407)", () => {
+  test("a bar that grows without a window resize updates the reserved space", () => {
+    const callbacks: (() => void)[] = [];
+    const original = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(callback: () => void) {
+        callbacks.push(callback);
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+    try {
+      mount(false);
+      initFloats();
+      const bar = document.querySelector("aside") as HTMLElement;
+      bar.getBoundingClientRect = () => ({ height: 64 }) as DOMRect;
+      for (const callback of callbacks) callback();
+      expect(document.documentElement.style.getPropertyValue("--emvb-float-top")).toBe("64px");
+    } finally {
+      globalThis.ResizeObserver = original;
+    }
   });
 });

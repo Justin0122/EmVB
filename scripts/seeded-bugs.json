@@ -29080,6 +29080,26 @@
         "focus fell to"
       ],
       "expect": "\\(fail\\).*focus fell to"
+    },
+    {
+      "id": "W-407/float-no-resize-observer",
+      "requirement": "W-407",
+      "description": "Float bars only re-measure on window resize.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/floats/runtime.ts",
+          "search": "const observer = new ResizeObserver(() => placeFloats());",
+          "replace": "const observer = new ResizeObserver(() => undefined);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/floats/runtime.test.ts",
+        "-t",
+        "grows without a window resize"
+      ],
+      "expect": "\\(fail\\).*grows without a window resize"
     }
   ]
 }
