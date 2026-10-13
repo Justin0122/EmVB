@@ -1023,16 +1023,62 @@ const flexbox: ElementDefinition<FlexboxNode> = {
 
 const accordion: ElementDefinition<AccordionNode> = {
   baseCss:
-    ".emvb-accordion{display:flex;flex-direction:column;min-width:0}.emvb-accordion-item{border-bottom:1px solid currentColor}.emvb-accordion-item>summary{cursor:pointer;padding:12px 0;font-weight:600}.emvb-accordion-body{padding:0 0 12px}",
+    // W-328: an optional chevron that turns on open, a smooth open where the browser can animate
+    // to an auto height, and columns of items that open on their own.
+    ".emvb-accordion{display:flex;flex-direction:column;min-width:0}.emvb-accordion[data-emvb-columns]{display:grid;align-items:start}.emvb-accordion[data-emvb-columns=\"2\"]{grid-template-columns:repeat(2,minmax(0,1fr))}.emvb-accordion[data-emvb-columns=\"3\"]{grid-template-columns:repeat(3,minmax(0,1fr))}.emvb-accordion[data-emvb-columns=\"4\"]{grid-template-columns:repeat(4,minmax(0,1fr))}.emvb-accordion-column{display:flex;flex-direction:column;min-width:0}@media (max-width:767px){.emvb-accordion[data-emvb-columns]{grid-template-columns:minmax(0,1fr)}}.emvb-accordion-item{border-bottom:1px solid currentColor}.emvb-accordion-item>summary{cursor:pointer;padding:12px 0;font-weight:600}.emvb-accordion-body{padding:0 0 12px}.emvb-accordion[data-emvb-icon=chevron] .emvb-accordion-item>summary{display:flex;align-items:flex-start;gap:16px;list-style:none}.emvb-accordion[data-emvb-icon=chevron] .emvb-accordion-item>summary::-webkit-details-marker{display:none}.emvb-accordion[data-emvb-icon=chevron] .emvb-accordion-item>summary::before{content:'';flex:0 0 auto;width:1.5em;height:1.5em;margin-top:calc((1lh - 1.5em) / 2);background:var(--emvb-accordion-icon-color,currentColor);-webkit-mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\") center/contain no-repeat;mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 9l-7 7-7-7'/%3E%3C/svg%3E\") center/contain no-repeat;transition:transform .26s}.emvb-accordion[data-emvb-icon=chevron] .emvb-accordion-item[open]>summary::before{transform:rotate(180deg)}@supports (interpolate-size:allow-keywords){.emvb-accordion-item{interpolate-size:allow-keywords}.emvb-accordion-item::details-content{height:0;overflow:clip;transition:height .26s,content-visibility .26s allow-discrete}.emvb-accordion-item[open]::details-content{height:auto}}@media (prefers-reduced-motion:reduce){.emvb-accordion-item::details-content,.emvb-accordion[data-emvb-icon=chevron] .emvb-accordion-item>summary::before{transition:none}}",
   defaults: () => ({ type: "accordion", props: {}, children: [] }),
   descriptor: {
     type: "accordion",
     name: "Accordion",
     group: "layout",
     defaultTab: "content",
-    fields: [],
+    fields: [
+      {
+        key: "icon",
+        kind: "select",
+        label: "Icon",
+        optional: true,
+        options: [
+          { value: "marker", label: "Browser marker" },
+          { value: "chevron", label: "Chevron" },
+        ],
+      },
+      {
+        key: "columns",
+        kind: "select",
+        label: "Columns",
+        optional: true,
+        options: [1, 2, 3, 4].map((n) => ({
+          value: n,
+          label: n === 1 ? "1 column" : `${n} columns`,
+        })),
+        message:
+          "The items are split over the columns, the first ones on the left. Mobile shows one.",
+      },
+    ],
   },
-  build: (_node, attrs, children) => ({ tag: "div", attrs, children }),
+  build: (node, attrs, children) => {
+    const marker: Record<string, string> =
+      node.props.icon === "chevron" ? { "data-emvb-icon": "chevron" } : {};
+    const columns = node.props.columns ?? 1;
+    if (columns <= 1 || children.length < 2)
+      return { tag: "div", attrs: { ...attrs, ...marker }, children };
+    // W-328: each column its own stack, so opening an item moves only the items under it.
+    const per = Math.ceil(children.length / columns);
+    const stacks: VNode[] = [];
+    for (let i = 0; i < children.length; i += per) {
+      stacks.push({
+        tag: "div",
+        attrs: { class: "emvb-accordion-column" },
+        children: children.slice(i, i + per),
+      });
+    }
+    return {
+      tag: "div",
+      attrs: { ...attrs, ...marker, "data-emvb-columns": String(columns) },
+      children: stacks,
+    };
+  },
 };
 
 const accordionItem: ElementDefinition<AccordionItemNode> = {

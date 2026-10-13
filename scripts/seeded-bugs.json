@@ -27284,6 +27284,48 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
       "expect": "\\(fail\\).*W-327"
+    },
+    {
+      "id": "W-328/row-split",
+      "requirement": "W-328",
+      "description": "Columns take items in turn instead of the first ones on the left.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "const per = Math.ceil(children.length / columns);",
+          "replace": "const per = 1;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/accordion.test.ts"],
+      "expect": "\\(fail\\).*W-328"
+    },
+    {
+      "id": "W-328/no-turn",
+      "requirement": "W-328",
+      "description": "The chevron doesn't turn when an item opens.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "[open]>summary::before{transform:rotate(180deg)}",
+          "replace": "[open]>summary::before{transform:none}"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/accordion.test.ts"],
+      "expect": "\\(fail\\).*W-328"
+    },
+    {
+      "id": "W-328/no-animation",
+      "requirement": "W-328",
+      "description": "Opening an item jumps instead of animating.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "::details-content{height:0;overflow:clip;transition:height .26s",
+          "replace": "::details-content{overflow:clip;transition:none"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/accordion.test.ts"],
+      "expect": "\\(fail\\).*W-328"
     }
   ]
 }

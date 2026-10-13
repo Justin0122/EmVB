@@ -309,8 +309,18 @@ export const CarouselNode = parentNode(
   }),
 );
 
-/** Several disclosures. Items are `<details>`, so the public page needs no script (W-106). */
-export const AccordionNode = parentNode("accordion", z.strictObject({}));
+/**
+ * Several disclosures. Items are `<details>`, so the public page needs no script (W-106).
+ * W-328: `icon` swaps the browser's marker for a chevron that turns as an item opens; `columns`
+ * splits the items into that many columns, the first ones on the left (one column on mobile).
+ */
+export const AccordionNode = parentNode(
+  "accordion",
+  z.strictObject({
+    icon: z.enum(["marker", "chevron"]).optional(),
+    columns: z.number().int().min(1).max(4).optional(),
+  }),
+);
 
 export const AccordionItemNode = parentNode(
   "accordion-item",
@@ -917,7 +927,7 @@ export type SectionNode = {
 export type AccordionNode = {
   id: IdOf;
   type: "accordion";
-  props: Record<string, never>;
+  props: { icon?: "marker" | "chevron"; columns?: number };
   style?: StyleOf;
   states?: StatesOf;
   devices?: DevicesOf;
