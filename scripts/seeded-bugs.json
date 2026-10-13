@@ -29420,6 +29420,26 @@
         "pasted srcset line"
       ],
       "expect": "\\(fail\\).*pasted srcset line"
+    },
+    {
+      "id": "W-424/menu-names-silent",
+      "requirement": "W-424",
+      "description": "Same-named menus aren't flagged.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "if (menuNames.has(name.toLowerCase())) {",
+          "replace": "if (false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/menu-names.test.ts",
+        "-t",
+        "two unnamed menus"
+      ],
+      "expect": "\\(fail\\).*two unnamed menus"
     }
   ]
 }

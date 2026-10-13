@@ -43,6 +43,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- The accessibility check warns when two menus on a page have the same name.
 - The accessibility check warns about empty headings.
 - The accessibility check flags form fields with no label, or only a placeholder.
 - The accessibility check warns when an image has extra sizes but no Width (px).

@@ -24,7 +24,8 @@ export type A11yIssue = {
     | "new-tab"
     | "image-sizes"
     | "control-name"
-    | "empty-heading";
+    | "empty-heading"
+    | "landmark-name";
   severity: "error" | "warning";
   message: string;
   /** The one-click fix, when there is a safe one. */
@@ -140,6 +141,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   const beforeA = new Map<string, [number, number]>();
   const afterA = new Map<string, [number, number]>();
   let fade = 1;
+  const menuNames = new Set<string>();
   const walk = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     // W-413: an element hidden on every device (and what's inside it) is never shown or read.
     if (
@@ -260,6 +262,19 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
                 : "This accordion item's title is blank, so it has no name.",
         });
       }
+    }
+    // W-424: two menus with the same name are two "Menu navigation" landmarks nobody can tell apart.
+    if (node.type === "menu" && "children" in node && node.children.length > 0) {
+      const name = String(props["label"] ?? "").trim() || "Menu";
+      if (menuNames.has(name.toLowerCase())) {
+        add({
+          nodeId: node.id,
+          rule: "landmark-name",
+          severity: "warning",
+          message: `Another menu on this page is also named "${name}"; give each menu its own label.`,
+        });
+      }
+      menuNames.add(name.toLowerCase());
     }
     // W-419: an empty heading still shows up in screen readers' heading list, with nothing to say.
     if (node.type === "heading" && !String(props["text"] ?? "").trim() && !node.bind) {
