@@ -299,11 +299,16 @@ function withFieldMeta(vnode: VNode, node: LayoutNode, meta: PublicFormField): V
       return { ...child, children: [...child.children, mark] };
     }
     // The checkbox label wraps the input and the label text; the mark follows the text.
+    // W-441: the same hidden mark as other labels; a plain " *" was read out as "star".
     if (child.attrs.class === "emvb-form-checkbox-label") {
-      return {
-        ...child,
-        children: child.children.map((part) => (typeof part === "string" ? `${part} *` : part)),
-      };
+      let last = -1;
+      child.children.forEach((part, i) => {
+        if (typeof part === "string") last = i;
+      });
+      if (last === -1) return child;
+      const children = [...child.children];
+      children.splice(last + 1, 0, mark);
+      return { ...child, children };
     }
     return child;
   });

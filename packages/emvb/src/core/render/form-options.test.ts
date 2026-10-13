@@ -161,10 +161,11 @@ describe("form fields take the definition's type and limits (W-297)", () => {
       '<input type="checkbox" id="emvb-field-chek0001" name="agree" value="true" required="">',
     );
     expect(html).toContain('class="emvb-form-required" aria-hidden="true"> *</span>');
-    // Topic and Email carry the mark and I agree ends in one; Age and When don't.
+    // Topic, Email and I agree carry the mark; Age and When don't.
     const marks = html.split('class="emvb-form-required"').length - 1;
-    expect(marks).toBe(2);
-    expect(html).toContain("> I agree *<");
+    expect(marks).toBe(3);
+    // W-441: the checkbox's mark is hidden from screen readers too, not a plain " *".
+    expect(html).toContain('I agree<span class="emvb-form-required" aria-hidden="true"> *</span>');
   });
 
   test("a field the definition doesn't have keeps a plain, optional text input", () => {

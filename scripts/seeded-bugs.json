@@ -29760,6 +29760,20 @@
         "loop images wait"
       ],
       "expect": "\\(fail\\).*loop images wait"
+    },
+    {
+      "id": "W-441/checkbox-star",
+      "requirement": "W-441",
+      "description": "Checkbox star is plain text.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/form.ts",
+          "search": "      children.splice(last + 1, 0, mark);",
+          "replace": "      children.splice(last, 1, `${String(children[last])} *`);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/form-options.test.ts"],
+      "expect": "\\(fail\\)"
     }
   ]
 }

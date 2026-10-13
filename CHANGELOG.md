@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A required checkbox's asterisk is no longer read aloud by screen readers.
 - Featured images in a Loop load lazily.
 - Post links with shared text such as "Read more" include each post's title in their accessible name.
 - The Visitors time zone field can be typed normally, and an unknown time zone is pointed out instead of being treated as UTC.
