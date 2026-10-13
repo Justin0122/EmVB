@@ -29842,6 +29842,26 @@
         "desktop menu and a mobile"
       ],
       "expect": "\\(fail\\).*desktop menu and a mobile"
+    },
+    {
+      "id": "W-446/hidden-inside",
+      "requirement": "W-446",
+      "description": "Links in aria-hidden boxes pass.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "    if (ownAriaHidden) ariaHiddenAbove = true;",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/hidden-inside.test.ts",
+        "-t",
+        "without a fix"
+      ],
+      "expect": "\\(fail\\).*without a fix"
     }
   ]
 }

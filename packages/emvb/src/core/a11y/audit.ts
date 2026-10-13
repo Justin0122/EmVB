@@ -142,6 +142,8 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   const DEVICES = ["desktop", "tablet", "mobile"] as const;
   let h1s = [0, 0, 0];
   let shownOn = [true, true, true];
+  // W-446: aria-hidden on a box hides everything inside it from screen readers, links included.
+  let ariaHiddenAbove = false;
   // W-312 variants are alternatives: B is judged as if it stood where A does, so a page whose
   // A/B pair each have an H1 doesn't count two.
   const beforeA = new Map<string, [number[], number]>();
@@ -389,10 +391,10 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     }
     const focusable =
       LINKISH.has(node.type) || node.type === "text-input" || Boolean(props["href"]);
-    if (
-      focusable &&
-      (node.attributes ?? []).some((a) => a.name === "aria-hidden" && a.value === "true")
-    ) {
+    const ownAriaHidden = (node.attributes ?? []).some(
+      (a) => a.name === "aria-hidden" && a.value === "true",
+    );
+    if (focusable && ownAriaHidden) {
       add({
         nodeId: node.id,
         rule: "hidden-focusable",
@@ -401,8 +403,19 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         fix: { kind: "drop-aria-hidden" },
         fixLabel: "Remove aria-hidden",
       });
+    } else if (focusable && ariaHiddenAbove) {
+      add({
+        nodeId: node.id,
+        rule: "hidden-focusable",
+        severity: "error",
+        message:
+          "This sits inside an element with aria-hidden, so screen readers skip it, but the keyboard still reaches it.",
+      });
     }
+    const outerHidden = ariaHiddenAbove;
+    if (ownAriaHidden) ariaHiddenAbove = true;
     if (isParentNode(node)) for (const child of node.children) walk(child, nextBg, nextColor);
+    ariaHiddenAbove = outerHidden;
   };
   walk(layout.root, undefined, undefined);
   if (h1s.every((count) => count === 0) && layout.root.children.length > 0) {
