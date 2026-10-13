@@ -28826,6 +28826,26 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/audience/segment-hint.test.ts"],
       "expect": "\\(fail\\).*refusal message says so"
+    },
+    {
+      "id": "W-394/grid-tracks-unchecked",
+      "requirement": "W-394",
+      "description": "Line fields store refused values, so a bad grid track blocks the save.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/DraftTextField.tsx",
+          "search": "      if (!savableNode(next) && savableNode(node)) {",
+          "replace": "      if (false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/grid-tracks-field.test.tsx",
+        "-t",
+        "stays in the field"
+      ],
+      "expect": "\\(fail\\).*stays in the field"
     }
   ]
 }

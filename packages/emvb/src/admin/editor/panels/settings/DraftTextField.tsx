@@ -99,10 +99,19 @@ export function DraftTextField({
         .map((line) => line.trimEnd())
         .filter((line) => line.length > 0);
       if (items.length === 0 && field.optional) {
+        setError(null);
         onChange(withProp(node, field.key, undefined));
         return;
       }
-      onChange(withProp(node, field.key, items.length > 0 ? items : [""]));
+      const next = withProp(node, field.key, items.length > 0 ? items : [""]);
+      // W-394: a line the schema refuses (a grid track like 4fr) stays in the field with the
+      // field's hint instead of making the page fail to save.
+      if (!savableNode(next) && savableNode(node)) {
+        setError(field.message ?? "One of these lines can't be saved.");
+        return;
+      }
+      setError(null);
+      onChange(next);
     };
     return (
       <div className="emvb-field-group" data-emvb-field={field.key}>
@@ -115,6 +124,8 @@ export function DraftTextField({
           dir="auto"
           className={`${FIELD} emvb-textarea`}
           rows={field.kind === "list-items" ? 4 : 5}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${areaId}-error` : undefined}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onBlur={() => {
@@ -122,6 +133,11 @@ export function DraftTextField({
             else onChange(withProp(node, field.key, draft));
           }}
         />
+        {error && (
+          <span className="emvb-helper" id={`${areaId}-error`} data-emvb-field-error="">
+            {error}
+          </span>
+        )}
       </div>
     );
   }

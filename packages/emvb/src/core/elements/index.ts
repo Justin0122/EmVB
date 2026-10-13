@@ -973,6 +973,10 @@ const layoutSection: ElementDefinition<LayoutSectionNode> = {
   },
 };
 
+/** W-394: shown when a custom track line can't be saved. */
+const TRACKS_HINT =
+  "Up to 12 tracks, one per line: 1fr, 2fr, 3fr, auto, min-content, max-content, or a length.";
+
 const grid: ElementDefinition<GridNode> = {
   baseCss: ".emvb-grid{display:grid;min-width:0}",
   defaults: () => ({ type: "grid", props: { columns: 3 }, children: [] }),
@@ -997,21 +1001,21 @@ const grid: ElementDefinition<GridNode> = {
         kind: "list-items",
         label: "Custom tracks",
         optional: true,
-        message: "One track per line: 1fr, 2fr, 3fr, auto, min-content, max-content, or a length.",
+        message: TRACKS_HINT,
       },
       {
         key: "columnTracksTablet",
         kind: "list-items",
         label: "Custom tracks on tablet",
         optional: true,
-        message: "Leave empty to follow the desktop tracks.",
+        message: `${TRACKS_HINT} Leave empty to follow the desktop tracks.`,
       },
       {
         key: "columnTracksMobile",
         kind: "list-items",
         label: "Custom tracks on mobile",
         optional: true,
-        message: "Leave empty to follow the next wider device.",
+        message: `${TRACKS_HINT} Leave empty to follow the next wider device.`,
       },
       ...BOX_LINK_FIELDS,
     ],
