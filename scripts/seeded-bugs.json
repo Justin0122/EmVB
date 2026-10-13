@@ -29560,6 +29560,26 @@
         "no navigation landmark"
       ],
       "expect": "\\(fail\\).*no navigation landmark"
+    },
+    {
+      "id": "W-431/screenshot-alt",
+      "requirement": "W-431",
+      "description": "Spaced screenshot names pass.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "|screen ?shot|whatsapp image)[\\s_-]?",
+          "replace": "|screenshot)[_-]?"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/alt-filenames.test.ts",
+        "-t",
+        "screenshot and chat"
+      ],
+      "expect": "\\(fail\\).*screenshot and chat"
     }
   ]
 }

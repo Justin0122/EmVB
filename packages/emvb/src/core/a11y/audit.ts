@@ -38,8 +38,10 @@ export type A11yReport = { score: number; issues: A11yIssue[] };
 const WEIGHT = { error: 12, warning: 4 } as const;
 
 /** Alt text that names a file or says nothing a screen reader user can use. */
+// W-431: camera and screenshot file names as people get them, spaces included
+// ("Screenshot 2026-10-01 at 10.00.00", "WhatsApp Image 2024-…"), not only with _ or -.
 const USELESS_ALT =
-  /^(?:image|img|photo|picture|graphic|logo|icon|untitled|\s*)$|\.(?:jpe?g|png|gif|webp|avif|svg)$|^(?:img|dsc|pxl|screenshot)[_-]?\d+/i;
+  /^(?:image|img|photo|picture|graphic|logo|icon|untitled|\s*)$|\.(?:jpe?g|png|gif|webp|avif|svg)$|^(?:img|dsc|pxl|screen ?shot|whatsapp image)[\s_-]?\d+/i;
 /** Link text that makes no sense out of context. */
 /** W-411: trailing punctuation and arrows ("Read more…", "Learn more →", "Click here!") too. */
 const VAGUE =
