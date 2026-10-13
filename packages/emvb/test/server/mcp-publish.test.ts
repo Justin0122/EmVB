@@ -150,6 +150,8 @@ describe("Agent versions in the Timeline (W-460)", () => {
     const listed = (await run("list_versions", { pageId })).data as {
       versions: { revisionId: string }[];
     };
-    expect(listed.versions.map((v) => v.revisionId)).toContain(versions[0]?.revisionId);
+    expect(listed.versions.map((v) => v.revisionId)).toContain(
+      versions[0]?.revisionId ?? "missing",
+    );
   });
 });
