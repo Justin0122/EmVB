@@ -28846,6 +28846,20 @@
         "stays in the field"
       ],
       "expect": "\\(fail\\).*stays in the field"
+    },
+    {
+      "id": "W-395/icons-licenses-missing",
+      "requirement": "W-395",
+      "description": "The icons package does not publish its license texts.",
+      "edits": [
+        {
+          "file": "packages/emvb-icons/package.json",
+          "search": "    \"README.md\",\n    \"licenses\"\n",
+          "replace": "    \"README.md\"\n"
+        }
+      ],
+      "command": ["bun", "test", "./test/docs/icons-package-licenses.test.ts"],
+      "expect": "\\(fail\\).*publishes licenses"
     }
   ]
 }
