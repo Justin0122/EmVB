@@ -489,6 +489,12 @@ const validSourceWidth = (width: unknown): width is number =>
   Number.isInteger(width) && (width as number) >= 1 && (width as number) <= 8000;
 
 /**
+ * W-428: a same-site path may hold a space ("/uploads/my photo.jpg"); in srcset that space ends
+ * the URL, so the size was dropped. It's encoded; full addresses can't hold spaces anyway.
+ */
+const srcsetUrl = (url: string | undefined): string | undefined => url?.replaceAll(" ", "%20");
+
+/**
  * W-385: with `w` descriptors the browser picks only from srcset and ignores `src`, so the main
  * image is listed too when its width is known (its own source entry, else the Width field).
  */
@@ -502,9 +508,9 @@ function imageSources(
   const seen = new Set<string>();
   let srcWidth: number | undefined;
   for (const source of sources) {
-    const url = sanitizeMediaUrl(source.src);
+    const url = srcsetUrl(sanitizeMediaUrl(source.src));
     if (!validSourceWidth(source.width)) continue;
-    if (url === src) {
+    if (url === srcsetUrl(src)) {
       srcWidth ??= source.width;
       continue;
     }
@@ -515,7 +521,8 @@ function imageSources(
   }
   if (parts.length === 0) return undefined;
   srcWidth ??= validSourceWidth(width) ? width : undefined;
-  if (srcWidth !== undefined && !/[\s,]/.test(src)) parts.push(`${src} ${srcWidth}w`);
+  const main = srcsetUrl(src);
+  if (srcWidth !== undefined && main && !/[\s,]/.test(main)) parts.push(`${main} ${srcWidth}w`);
   return parts.join(", ");
 }
 

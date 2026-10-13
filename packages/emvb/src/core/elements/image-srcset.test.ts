@@ -41,3 +41,18 @@ describe("srcset keeps the main image (W-385)", () => {
     expect(srcset({ sources: [{ src: "/a-400.png", width: 400 }] })).toBe("/a-400.png 400w");
   });
 });
+
+describe("file names with spaces in srcset (W-428)", () => {
+  test("spaces are encoded so the size is kept", () => {
+    expect(
+      srcset({
+        src: "/my photo.png",
+        width: 1600,
+        sources: [{ src: "/my photo-400.png", width: 400 }],
+      }),
+    ).toBe("/my%20photo-400.png 400w, /my%20photo.png 1600w");
+  });
+  test("a smuggled second candidate is still dropped", () => {
+    expect(srcset({ sources: [{ src: "/a.png 1w, /b.png", width: 400 }] })).toBeUndefined();
+  });
+});

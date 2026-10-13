@@ -28660,7 +28660,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/index.ts",
-          "search": "parts.push(`${src} ${srcWidth}w`)",
+          "search": "parts.push(`${main} ${srcWidth}w`)",
           "replace": "void srcWidth"
         }
       ],
@@ -29500,6 +29500,26 @@
         "www"
       ],
       "expect": "\\(fail\\).*www"
+    },
+    {
+      "id": "W-428/srcset-space",
+      "requirement": "W-428",
+      "description": "Spaced paths drop out of srcset.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "url?.replaceAll(\" \", \"%20\");",
+          "replace": "url;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/elements/image-srcset.test.ts",
+        "-t",
+        "spaces are encoded"
+      ],
+      "expect": "\\(fail\\).*spaces are encoded"
     }
   ]
 }

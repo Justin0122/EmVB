@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Images whose file names contain spaces keep their extra sizes.
 - Links typed as www.example.com go to that site, and email links with a spaced subject work.
 - Pagination page number links are read as "Page 2" and so on by screen readers.
 - Pasting an image URL over a library image clears the old image's width and height.
