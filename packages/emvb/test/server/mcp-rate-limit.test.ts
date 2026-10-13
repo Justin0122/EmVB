@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { McpToolError } from "../../src/mcp/errors.ts";
+import type { McpToolError } from "../../src/mcp/errors.ts";
 import {
   callerKey,
   hitRateLimit,
@@ -43,7 +43,8 @@ describe("MCP rate limits (W-478)", () => {
     expect(RATE_LIMITS.read).toMatchObject({ limit: 300, windowMs: 60_000 });
     expect(RATE_LIMITS.write).toMatchObject({ limit: 60, windowMs: 60_000 });
     expect(RATE_LIMITS.publish).toMatchObject({ limit: 10, windowMs: 3_600_000 });
-    const cls = (name: string) => rateClassOf(TOOLS.find((t) => t.name === name)!);
+    const cls = (name: string) =>
+      rateClassOf(TOOLS.find((t) => t.name === name) ?? { readOnly: false, publish: "none" });
     expect(cls("get_layout")).toBe("read");
     expect(cls("add_element")).toBe("write");
     expect(cls("publish_page")).toBe("publish");
