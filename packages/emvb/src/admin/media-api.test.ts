@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Fetcher } from "./api.ts";
-import { propsFromMedia, type MediaLibraryItem } from "./media-api.ts";
+import { propsFromMedia, propsFromUrl, type MediaLibraryItem } from "./media-api.ts";
 
 const item = (over: Partial<MediaLibraryItem> = {}): MediaLibraryItem => ({
   id: "01MEDIA",
@@ -136,5 +136,21 @@ describe("library pick drops the old extra sizes (W-422)", () => {
       propsFromMedia({ alt: "A", src: "/_emdash/api/media/file/01MEDIA.png", sources }, item())
         .sources,
     ).toEqual(sources);
+  });
+});
+
+describe("propsFromUrl (W-425)", () => {
+  test("a URL pasted over a library image drops its width and height", () => {
+    const lib = { src: "/a.png", mediaId: "01M", width: 800, height: 600, alt: "A" };
+    expect(propsFromUrl(lib, "/b.png")).toEqual({ src: "/b.png", alt: "A" });
+  });
+  test("a URL image keeps its own width and height", () => {
+    const own = { src: "/a.png", width: 800, height: 600, alt: "A" };
+    expect(propsFromUrl(own, "/b.png")).toEqual({
+      src: "/b.png",
+      width: 800,
+      height: 600,
+      alt: "A",
+    });
   });
 });

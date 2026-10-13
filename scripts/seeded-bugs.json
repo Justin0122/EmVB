@@ -14302,9 +14302,9 @@
       "description": "a pasted URL keeps the old library id",
       "edits": [
         {
-          "file": "packages/emvb/src/admin/editor/panels/settings/MediaPicker.tsx",
-          "search": "    delete next.mediaId;\n",
-          "replace": ""
+          "file": "packages/emvb/src/admin/media-api.ts",
+          "search": "  const next: Record<string, unknown> = { ...current, src };\n  delete next.mediaId;\n",
+          "replace": "  const next: Record<string, unknown> = { ...current, src };\n"
         }
       ],
       "command": [
@@ -29440,6 +29440,26 @@
         "two unnamed menus"
       ],
       "expect": "\\(fail\\).*two unnamed menus"
+    },
+    {
+      "id": "W-425/url-keeps-size",
+      "requirement": "W-425",
+      "description": "Library dimensions survive a pasted URL.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/media-api.ts",
+          "search": "  if (current.mediaId) {\n    delete next.width;",
+          "replace": "  if (false) {\n    delete next.width;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/media-api.test.ts",
+        "-t",
+        "drops its width"
+      ],
+      "expect": "\\(fail\\).*drops its width"
     }
   ]
 }

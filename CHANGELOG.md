@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Pasting an image URL over a library image clears the old image's width and height.
 - Extra sizes accepts a pasted srcset line and widths written 400W, 400px or 400 w.
 - Choosing a different image clears the previous image's extra sizes.
 - Low contrast caused by opacity says to raise the opacity instead of offering a colour fix that can't help.

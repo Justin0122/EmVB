@@ -5,6 +5,7 @@ import type { Fetcher } from "../../../api.ts";
 import {
   listImages,
   propsFromMedia,
+  propsFromUrl,
   uploadImage,
   type MediaLibraryItem,
 } from "../../../media-api.ts";
@@ -103,11 +104,7 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image" }: Props)
     }
     setError(null);
     if (safe === src) return;
-    const next: Record<string, unknown> = { ...propsOf(node), src: safe };
-    delete next.mediaId;
-    // W-422: a different picture drops the old one's extra sizes.
-    if (propsOf(node).src !== safe) delete next.sources;
-    onChange(withProps(node, next));
+    onChange(withProps(node, propsFromUrl(propsOf(node), safe)));
   };
 
   return (

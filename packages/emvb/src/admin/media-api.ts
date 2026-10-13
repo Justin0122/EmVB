@@ -53,6 +53,24 @@ export async function uploadImage(
   return payload.data.item;
 }
 
+/** Applies a pasted URL onto an image node's props; the URL is already sanitized. */
+export function propsFromUrl(
+  current: Record<string, unknown>,
+  src: string,
+): Record<string, unknown> {
+  const next: Record<string, unknown> = { ...current, src };
+  delete next.mediaId;
+  if (current.src === src) return next;
+  // W-422: a different picture drops the old one's extra sizes.
+  delete next.sources;
+  // W-425: a library image's width and height describe that file, not the pasted one.
+  if (current.mediaId) {
+    delete next.width;
+    delete next.height;
+  }
+  return next;
+}
+
 /** Applies a library item onto an image node's props (id, URL, alt, dimensions). */
 export function propsFromMedia(
   current: Record<string, unknown>,
