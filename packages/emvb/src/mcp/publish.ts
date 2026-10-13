@@ -6,7 +6,7 @@ import { queued } from "./queue.ts";
 const off = (what: string) =>
   new McpToolError(
     "PUBLISH_DISABLED",
-    `Agents may not publish ${what} on this site. Leave the draft for a person to review, or ask an admin to allow it in Pages VisualBuilder → Agents.`,
+    `Agents may not publish ${what} on this site. Leave the draft for a person to review, or ask an admin to allow it in Pages VisualBuilder → AI agents.`,
   );
 
 export const PublishPageInput = z.strictObject({

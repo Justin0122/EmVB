@@ -90,6 +90,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- Docs for 0.5.0: the READMEs, the install guide and the MCP guide cover EmDash 1.2+ with `mcp: true`, token scope and role, the bridge's options, rate limits, resources, prompts and the skill, and the AI agents page. Tool messages name the **AI agents** page by its label.
 - The AI agents page, the timeline's All/People/Agents filter and Agent badge, and the "An AI agent changed this page" notice match the editor's design.
 - The emvb-page-builder skill pushes agents toward designed pages with a new design reference, documents what the tools can't do, and ships scripted trigger and task evals.
 - The contrast check accounts for an element's opacity and its parents'.

@@ -18,7 +18,7 @@ A visual page builder plugin for [EmDash CMS](https://github.com/emdash-cms/emda
 - **Accessibility check:** a score and a list of issues in the editor (alt text, headings, link and field names, contrast including opacity, new-tab links, landmarks), most with a one-click fix.
 - **Site styles:** variables (including fluid type and spacing), classes in a clear priority order, tag defaults, text direction, changes staged until **Publish styles**, import and export as JSON.
 - **Theme Builder:** headers, footers, Error 404, Search Results, Single Page, Single Post, Archive, Loop Item, synced sections, page templates, popups and floating bars, with display conditions.
-- **AI agents (MCP):** agents build and edit draft pages through EmDash's MCP (EmDash 1.2+) or the local `@perkyzz/emvb-mcp` bridge; publishing stays with people unless an admin allows it. See [the MCP guide](docs/guides/mcp.md).
+- **AI agents (MCP):** agents build and edit draft pages through EmDash's MCP (EmDash 1.2+ with `mcp: true`) or the local [`@perkyzz/emvb-mcp`](packages/emvb-mcp/) bridge, with an API token scoped `mcp:tools:emvb` for an editor. An admin turns them on in **AI agents**; publishing stays with people unless an admin allows it, every change is in the version timeline with an **Agent** badge, and each token is rate limited. The bridge ships the `emvb-page-builder` skill. See [the MCP guide](docs/guides/mcp.md).
 - **Live data and personalization:** bind text and images to a post, a site setting or a URL parameter; collection Loops; visitor rules (country, device, new or returning, hours, and segments the host passes); edge A/B tests decided on the server.
 
 More screenshots are in [`site/public/screenshots/`](site/public/screenshots/), and the project site in `site/` shows them all.
@@ -80,7 +80,7 @@ Then add the public route and run **Set up EmVB** once, as [docs/guides/install-
 ## Docs
 
 - [docs/guides/install-in-a-host-site.md](docs/guides/install-in-a-host-site.md): install, the public route, runtimes and visitor data.
-- [docs/guides/mcp.md](docs/guides/mcp.md): connecting AI agents, tokens, tools and publishing.
+- [docs/guides/mcp.md](docs/guides/mcp.md): connecting AI agents, tokens, tools, rate limits and publishing.
 - [docs/guides/icon-library.md](docs/guides/icon-library.md): the Icon library, uploads and attribution.
 - [docs/system/layout-format.md](docs/system/layout-format.md): how pages and the design system are stored.
 - [docs/system/theme-parts.md](docs/system/theme-parts.md): theme parts, conditions, triggers and dynamic data.

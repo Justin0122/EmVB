@@ -28,7 +28,7 @@ describe("Agent settings and the publish gate (W-463, W-464, D-055)", () => {
   test("every tool is refused while the master switch is off (the default)", async () => {
     const result = await run("list_pages", {});
     expect(result.success).toBe(false);
-    expect(result.error?.message).toContain("Agents");
+    expect(result.error?.message).toContain("AI agents");
   });
 
   test("only admins can read or change the agent settings", async () => {

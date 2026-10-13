@@ -67,6 +67,10 @@ A fixed route has no slug parameter. Pass the page's slug: `await resolveEmVBPag
 
 Then sign in as an admin, open **Pages VisualBuilder** and click **Set up EmVB** once.
 
+## AI agents (MCP)
+
+On EmDash 1.2+ with `emdash({ mcp: true, … })`, AI agents can build and edit draft EmVB pages. An admin turns them on in **Pages VisualBuilder → AI agents** (off by default) and approves the EmVB tools on EmDash's Plugins screen. Agents connect to EmDash's own endpoint (`/_emdash/api/mcp`) or through the local bridge, `npx -y @perkyzz/emvb-mcp --site https://your.site` with the token in `EMVB_TOKEN`. Tokens need the `mcp:tools:emvb` scope and an editor (not an admin) user. Agents only change drafts unless an admin allows publishing; each token may make 300 reads and 60 changes a minute and 10 publishes an hour. Every agent change shows in the version timeline with an **Agent** badge. See the [MCP guide](https://github.com/PerkyZZ999/EmVB/blob/main/docs/guides/mcp.md).
+
 Website: <https://emvb.dev>. The full guide, the demos and the source are on GitHub: <https://github.com/PerkyZZ999/EmVB>.
 
 ## License

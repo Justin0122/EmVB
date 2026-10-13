@@ -138,7 +138,11 @@ const theme = await resolveThemeParts(Astro, undefined, { visitor }); // theme p
 3. Open **Pages VisualBuilder** → **Set up EmVB** once (creates the hidden `emvb_pages` collection).
 4. Create a page, publish it, open `/{slug}`.
 
-## 5. Package shape check
+## 5. Optional: AI agents (EmDash 1.2+)
+
+Turn on EmDash's MCP server with `emdash({ mcp: true, … })`, then open **Pages VisualBuilder → AI agents** to switch agents on and approve the EmVB tools on EmDash's Plugins screen. [The MCP guide](mcp.md) covers tokens (scope `mcp:tools:emvb`, an editor user), the `@perkyzz/emvb-mcp` bridge, publishing and rate limits.
+
+## 6. Package shape check
 
 From the EmVB repo, to try an unreleased change in a host site:
 
@@ -148,4 +152,4 @@ bun pm pack --cwd packages/emvb
 bun run pack:smoke
 ```
 
-`pack:smoke` checks that the packed package is `@perkyzz/emvb`, isn't private, exports TypeScript source for `.`, `./astro`, `./astro/forms`, `./astro/forms/client`, `./admin` and `./core`, ships no tests, and has no `workspace:` or `catalog:` ranges. The package also exports `./astro/popups`, `./astro/floats`, `./astro/tabs` and `./astro/menu`.
+`pack:smoke` checks that the packed package is `@perkyzz/emvb`, isn't private, exports TypeScript source for `.`, `./astro`, `./astro/forms`, `./astro/forms/client`, `./admin` and `./core`, ships no tests, and has no `workspace:` or `catalog:` ranges. The package also exports `./astro/popups`, `./astro/floats`, `./astro/tabs`, `./astro/menu` and `./mcp` (the tool definitions the `@perkyzz/emvb-mcp` bridge uses).

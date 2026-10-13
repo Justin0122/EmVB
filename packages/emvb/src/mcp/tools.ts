@@ -253,7 +253,7 @@ export async function runTool(def: ToolDef, ports: EmvbPorts, input: unknown) {
   if (!(await ports.settings()).mcpEnabled) {
     throw new McpToolError(
       "FORBIDDEN",
-      "AI agent access to EmVB is off on this site. An admin can turn it on in Pages VisualBuilder → Agents.",
+      "AI agent access to EmVB is off on this site. An admin can turn it on in Pages VisualBuilder → AI agents.",
     );
   }
   await ports.rateLimit?.(rateClassOf(def));

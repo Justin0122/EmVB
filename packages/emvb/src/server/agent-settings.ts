@@ -129,6 +129,6 @@ export async function beforePublish(
   return {
     cancel: true,
     reason:
-      "Agents may not publish EmVB pages on this site. An admin can allow it in Pages VisualBuilder → Agents.",
+      "Agents may not publish EmVB pages on this site. An admin can allow it in Pages VisualBuilder → AI agents.",
   };
 }

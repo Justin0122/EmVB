@@ -56,6 +56,8 @@ instructions.
 - `PUBLISH_DISABLED`: leave the draft for review.
 - `FORBIDDEN`: agent access is off on the site, or the token can't use EmVB; tell the person.
 - `NOT_SET_UP`: an admin must click "Set up EmVB" in the EmDash admin first; tell the person.
+- `RATE_LIMITED`: the token made too many calls (300 reads or 60 changes a minute, 10 publishes an
+  hour). Wait the seconds the message gives, then continue; batch changes into fewer, larger writes.
 
 See `references/workflow.md` for a full page build, `references/design.md` for how to make
 pages look designed, and `references/layout.md` for the format.
