@@ -6,7 +6,7 @@ import { cleanup, mount, settle } from "../../../test/dom/mount.ts";
 
 afterEach(cleanup);
 
-function fakeApi(role: number) {
+function fakeApi(role: number, activity = true) {
   const saved: unknown[] = [];
   const fetcher: Fetcher = async (path, init) => {
     if (path === "/_emdash/api/auth/me") return Response.json({ data: { id: "u1", role } });
@@ -20,17 +20,19 @@ function fakeApi(role: number) {
           settings: { mcpEnabled: false, publishPages: false, publishStyles: false },
           revision: "r1",
           endpoint: "https://example.com/_emdash/api/mcp",
-          activity: [
-            {
-              id: "a1",
-              at: "2026-10-13T12:00:00.000Z",
-              tool: "add_element",
-              target: "page",
-              pageId: "p1",
-              summary: "Added heading h1",
-              userId: "editor-1",
-            },
-          ],
+          activity: !activity
+            ? []
+            : [
+                {
+                  id: "a1",
+                  at: "2026-10-13T12:00:00.000Z",
+                  tool: "add_element",
+                  target: "page",
+                  pageId: "p1",
+                  summary: "Added heading h1",
+                  userId: "editor-1",
+                },
+              ],
         },
       });
     }
@@ -58,6 +60,20 @@ describe("AI agents page (W-463)", () => {
     expect(stdio).toContain("@perkyzz/emvb-mcp");
     expect(stdio).toContain('"https://example.com"');
     expect(host.textContent).not.toContain('EMVB_TOKEN": "ec_');
+    // W-477: a status pill, icon headings and an Agent badge on each activity row.
+    expect(host.querySelector(".emvb-agents-status")?.textContent).toBe("Agents off");
+    expect(host.querySelectorAll(".emvb-agents-icon[aria-hidden=true] svg")).toHaveLength(4);
+    expect(host.querySelector(".emvb-agents-who .emvb-timeline-agent")?.textContent).toBe("Agent");
+  });
+
+  test("W-477 no activity shows an empty state, not a bare sentence", async () => {
+    const host = await mount(<AgentsPage fetcher={fakeApi(50, false).fetcher} />);
+    await settle();
+    await settle();
+    expect(host.querySelector("[data-emvb-agents-empty]")?.textContent).toContain(
+      "No agent changes yet",
+    );
+    expect(host.querySelector("table")).toBeNull();
   });
 
   test("turning on the master switch saves the settings with the last revision", async () => {

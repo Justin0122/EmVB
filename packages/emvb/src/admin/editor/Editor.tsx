@@ -1,7 +1,9 @@
 import { Banner, Button, createKumoToastManager, Empty, Loader, Toasty } from "@cloudflare/kumo";
 import {
+  ArrowsClockwiseIcon,
   ClockCounterClockwiseIcon,
   GaugeIcon,
+  RobotIcon,
   ShareNetworkIcon,
   WarningCircleIcon,
 } from "@phosphor-icons/react";
@@ -333,10 +335,22 @@ function EditorApp({
       <Toasty toastManager={toasts}>
         {remoteChange && (
           <div className="emvb-remote-change" role="status" data-emvb-remote-change={remoteChange}>
-            {remoteChange === "agent"
-              ? "An AI agent changed this page."
-              : "This page was changed somewhere else."}{" "}
-            <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
+            <span className="emvb-remote-change-icon" aria-hidden="true">
+              {remoteChange === "agent" ? (
+                <RobotIcon size={16} />
+              ) : (
+                <ArrowsClockwiseIcon size={16} />
+              )}
+            </span>
+            <span className="emvb-remote-change-text">
+              <strong>
+                {remoteChange === "agent"
+                  ? "An AI agent changed this page."
+                  : "This page was changed somewhere else."}
+              </strong>{" "}
+              <span>Reload to see the latest draft. Its changes are in the version timeline.</span>
+            </span>
+            <Button size="sm" variant="primary" onClick={() => window.location.reload()}>
               Reload
             </Button>
           </div>

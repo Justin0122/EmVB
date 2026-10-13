@@ -53,14 +53,29 @@ export const FEATURE_CSS = `
 .emvb-palette-empty { padding: 12px; color: var(--text-color-kumo-subtle); font-size: 13px; }
 .emvb-palette-tips { margin: 0; padding: 6px 12px; border-top: 1px solid var(--color-kumo-line); font-size: 11px; color: var(--text-color-kumo-subtle); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.emvb-timeline-body { display: grid; grid-template-columns: 200px 1fr; gap: 16px; margin: 12px 0; min-height: 0; }
+.emvb-timeline-body { display: grid; grid-template-columns: 220px 1fr; gap: 16px; margin: 12px 0; min-height: 0; }
 .emvb-timeline-list { margin: 0; padding: 0; list-style: none; max-height: 60vh; overflow-y: auto; }
-.emvb-timeline-version { width: 100%; padding: 6px 8px; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 12px; text-align: start; cursor: pointer; }
-.emvb-timeline-version[aria-current="true"] { background: var(--color-kumo-tint); font-weight: 600; }
-.emvb-timeline-agent { margin-inline-start: 6px; padding: 0 6px; border-radius: 999px; background: var(--color-kumo-tint); font-size: 11px; font-weight: 600; }
-.emvb-remote-change { position: fixed; inset-block-start: 56px; inset-inline-end: 16px; z-index: 50; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--color-kumo-elevated); box-shadow: var(--shadow-lg); font-size: 13px; }
-.emvb-timeline-who { display: flex; gap: 12px; margin-block: 8px; }
-.emvb-timeline-who [aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
+.emvb-timeline-list { display: grid; gap: 2px; padding-inline-end: 4px; }
+.emvb-timeline-version { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--text-color-kumo-default); font: inherit; font-size: 13px; line-height: 18px; text-align: start; cursor: pointer; }
+.emvb-timeline-version:hover { background: var(--color-kumo-tint); }
+.emvb-timeline-version:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: -2px; }
+.emvb-timeline-when { display: grid; min-width: 0; }
+.emvb-timeline-time { color: var(--text-color-kumo-subtle); font-size: 12px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.emvb-timeline-version[aria-current="true"] { background: var(--color-kumo-base); box-shadow: var(--shadow-sm); outline: 1px solid var(--color-kumo-line); font-weight: 600; }
+.emvb-timeline-agent { display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 1px 7px 1px 5px; border: 1px solid var(--color-kumo-line); border-radius: 999px; background: var(--color-kumo-base); color: var(--text-color-kumo-default); font-size: 11px; line-height: 16px; font-weight: 600; }
+/* W-477: a themed card under the top bar, centred over the canvas so it never hides the inspector. */
+.emvb-remote-change { position: fixed; inset-block-start: 96px; inset-inline-start: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100vw - 32px)); padding: 10px 10px 10px 12px; border: 1px solid var(--color-kumo-line); border-radius: 12px; background: var(--color-kumo-base); color: var(--text-color-kumo-default); box-shadow: var(--shadow-lg); font-size: 13px; line-height: 18px; }
+.emvb-remote-change-icon { display: grid; flex: none; place-items: center; width: 32px; height: 32px; border-radius: 999px; background: var(--color-kumo-tint); color: var(--text-color-kumo-brand, var(--text-color-kumo-default)); }
+.emvb-remote-change-text { display: grid; min-width: 0; }
+.emvb-remote-change-text strong { font-weight: 600; }
+.emvb-remote-change-text span { color: var(--text-color-kumo-subtle); }
+/* W-477: All | People | Agents as the editor's segmented control (Kumo Tabs "segmented" look). */
+.emvb-timeline-who { display: inline-flex; gap: 2px; margin-block: 12px 4px; padding: 2px; border-radius: 8px; background: var(--color-kumo-recessed); }
+.emvb-timeline-who-option { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border: 0; border-radius: 6px; background: transparent; color: var(--text-color-kumo-default); font: inherit; font-size: 13px; cursor: pointer; }
+.emvb-timeline-who-option:hover { background: var(--color-kumo-tint); }
+.emvb-timeline-who-option:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: 1px; }
+.emvb-timeline-who-option[aria-pressed="true"] { background: var(--color-kumo-base); box-shadow: var(--shadow-sm); outline: 1px solid var(--color-kumo-line); font-weight: 500; }
+.emvb-timeline-count { min-width: 18px; padding: 0 5px; border-radius: 999px; background: var(--color-kumo-tint); color: var(--text-color-kumo-subtle); font-size: 11px; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums; }
 .emvb-timeline-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .emvb-timeline-frames figure { margin: 0; }
 .emvb-timeline-frames figcaption { font-size: 12px; color: var(--text-color-kumo-subtle); margin-bottom: 4px; }

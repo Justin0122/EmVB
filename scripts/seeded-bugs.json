@@ -30358,6 +30358,26 @@
         "names its limits"
       ],
       "expect": "\\(fail\\).*names its limits"
+    },
+    {
+      "id": "W-477/timeline-filter-plain",
+      "requirement": "W-477",
+      "description": "The timeline filter goes back to plain links.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/Timeline.tsx",
+          "search": "className=\"emvb-timeline-who-option\"",
+          "replace": "className=\"emvb-link-button\""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/timeline.test.tsx",
+        "-t",
+        "agent"
+      ],
+      "expect": "\\(fail\\)"
     }
   ]
 }

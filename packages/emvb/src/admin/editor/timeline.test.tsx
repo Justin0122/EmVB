@@ -132,7 +132,16 @@ describe("version timeline dialog (W-315)", () => {
     expect(document.querySelector('[data-emvb-version="r1"] [data-emvb-agent-version]')).toBeNull();
     const pick = (who: string) =>
       document.querySelector(`[data-emvb-timeline-who="${who}"]`) as HTMLButtonElement;
+    // W-477: a segmented control with counts, and the badge carries an icon, not just a word.
+    expect(pick("agents").getAttribute("aria-pressed")).toBe("false");
+    expect(pick("all").className).toBe("emvb-timeline-who-option");
+    expect(pick("agents").querySelector(".emvb-timeline-count")?.textContent).toBe("1");
+    expect(pick("all").querySelector(".emvb-timeline-count")?.textContent).toBe("2");
+    expect(
+      document.querySelector('[data-emvb-agent-version] svg[aria-hidden="true"]'),
+    ).not.toBeNull();
     await act(async () => pick("agents").click());
+    expect(pick("agents").getAttribute("aria-pressed")).toBe("true");
     expect(ids()).toEqual(["r2"]);
     await act(async () => pick("people").click());
     expect(ids()).toEqual(["r1"]);

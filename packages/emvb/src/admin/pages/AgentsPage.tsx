@@ -1,5 +1,17 @@
 import { Banner, ClipboardText, Empty, Loader, Switch, Table } from "@cloudflare/kumo";
-import { LockKeyIcon, WarningCircleIcon } from "@phosphor-icons/react";
+import {
+  ArrowSquareOutIcon,
+  GlobeIcon,
+  LockKeyIcon,
+  PlugsConnectedIcon,
+  RobotIcon,
+  ShieldCheckIcon,
+  TerminalWindowIcon,
+  UploadSimpleIcon,
+  WarningCircleIcon,
+  type Icon,
+} from "@phosphor-icons/react";
+import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { defaultFetcher, type Fetcher } from "../api.ts";
 import { loadAgents, saveAgentSettings, type AgentsState } from "../agents-api.ts";
@@ -28,6 +40,31 @@ const stdioSnippet = (site: string) =>
 
 const remoteSnippet = (endpoint: string) =>
   JSON.stringify({ mcpServers: { emvb: { url: endpoint } } }, null, 2);
+
+/** A card's heading row: an icon tile, the title and one line on what the card is for (W-477). */
+function SectionHead({
+  id,
+  icon: SectionIcon,
+  title,
+  children,
+}: {
+  id: string;
+  icon: Icon;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="emvb-agents-head">
+      <span className="emvb-agents-icon" aria-hidden="true">
+        <SectionIcon size={18} />
+      </span>
+      <div>
+        <h2 id={id}>{title}</h2>
+        <p>{children}</p>
+      </div>
+    </div>
+  );
+}
 
 /** AI agents (`/agents`, W-463): the master switch, publishing, how to connect, recent activity. */
 export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) {
@@ -86,90 +123,150 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
   return (
     <div className="emvb-pages emvb-agents" data-emvb-agents="ready">
       <style>{UI_CSS}</style>
-      <h1 className="emvb-page-title">AI agents</h1>
+      <header className="emvb-agents-header">
+        <div>
+          <h1 className="emvb-page-title">AI agents</h1>
+          <p>Let AI assistants build and edit EmVB pages through MCP. They only change drafts.</p>
+        </div>
+        <span className="emvb-agents-status" data-on={settings.mcpEnabled ? "true" : "false"}>
+          <span aria-hidden="true" />
+          {settings.mcpEnabled ? "Agents on" : "Agents off"}
+        </span>
+      </header>
       <section
         className="emvb-surface-card emvb-agents-section"
         aria-labelledby="emvb-agents-access"
       >
-        <h2 id="emvb-agents-access">Access</h2>
-        <Switch
-          label="Let AI agents edit EmVB pages"
-          checked={settings.mcpEnabled}
-          disabled={saving}
-          onCheckedChange={(checked: boolean) => void change({ mcpEnabled: checked })}
-        />
-        <p>
-          Agents only change drafts. Every change shows in the page's version timeline and can be
-          restored. MCP endpoint:
-        </p>
-        <ClipboardText text={state.endpoint} />
+        <SectionHead id="emvb-agents-access" icon={ShieldCheckIcon} title="Access">
+          The master switch. Turning it off refuses every agent call at once.
+        </SectionHead>
+        <div className="emvb-agents-option">
+          <Switch
+            label="Let AI agents edit EmVB pages"
+            checked={settings.mcpEnabled}
+            disabled={saving}
+            onCheckedChange={(checked: boolean) => void change({ mcpEnabled: checked })}
+          />
+          <p>
+            Agents only change drafts. Every change shows in the page's version timeline and can be
+            restored.
+          </p>
+        </div>
+        <div className="emvb-agents-field">
+          <h3>MCP endpoint</h3>
+          <ClipboardText text={state.endpoint} />
+        </div>
       </section>
       <section
         className="emvb-surface-card emvb-agents-section"
         aria-labelledby="emvb-agents-publish"
       >
-        <h2 id="emvb-agents-publish">Publishing</h2>
-        <Switch
-          label="Agents may publish pages"
-          checked={settings.publishPages}
-          disabled={saving || !settings.mcpEnabled}
-          onCheckedChange={(checked: boolean) => void change({ publishPages: checked })}
-        />
-        <Switch
-          label="Agents may publish site styles"
-          checked={settings.publishStyles}
-          disabled={saving || !settings.mcpEnabled}
-          onCheckedChange={(checked: boolean) => void change({ publishStyles: checked })}
-        />
-        <p>Published changes go live immediately. Each one is still in the version timeline.</p>
+        <SectionHead id="emvb-agents-publish" icon={UploadSimpleIcon} title="Publishing">
+          Published changes go live immediately. Each one is still in the version timeline.
+        </SectionHead>
+        <div className="emvb-agents-option">
+          <Switch
+            label="Agents may publish pages"
+            checked={settings.publishPages}
+            disabled={saving || !settings.mcpEnabled}
+            onCheckedChange={(checked: boolean) => void change({ publishPages: checked })}
+          />
+          <p>Off: agents save drafts and a person publishes them.</p>
+        </div>
+        <div className="emvb-agents-option">
+          <Switch
+            label="Agents may publish site styles"
+            checked={settings.publishStyles}
+            disabled={saving || !settings.mcpEnabled}
+            onCheckedChange={(checked: boolean) => void change({ publishStyles: checked })}
+          />
+          <p>Site styles change every page at once, so leave this off unless you need it.</p>
+        </div>
       </section>
       <section
         className="emvb-surface-card emvb-agents-section"
         aria-labelledby="emvb-agents-connect"
       >
-        <h2 id="emvb-agents-connect">How to connect</h2>
-        <p>
+        <SectionHead id="emvb-agents-connect" icon={PlugsConnectedIcon} title="How to connect">
           Create a token in EmDash → API tokens with the scope <code>mcp:tools:emvb</code> for a
           user who is an editor or above. Never give an agent an admin token.
-        </p>
-        <h3>Remote (EmDash MCP, sign in with OAuth)</h3>
-        <pre data-emvb-snippet="remote">{remoteSnippet(state.endpoint)}</pre>
-        <h3>Local (stdio)</h3>
-        <pre data-emvb-snippet="stdio">{stdioSnippet(site)}</pre>
+        </SectionHead>
+        <div className="emvb-agents-snippets">
+          <div className="emvb-agents-snippet">
+            <h3>
+              <GlobeIcon aria-hidden="true" size={16} />
+              Remote (EmDash MCP, sign in with OAuth)
+            </h3>
+            <pre data-emvb-snippet="remote">{remoteSnippet(state.endpoint)}</pre>
+          </div>
+          <div className="emvb-agents-snippet">
+            <h3>
+              <TerminalWindowIcon aria-hidden="true" size={16} />
+              Local (stdio)
+            </h3>
+            <pre data-emvb-snippet="stdio">{stdioSnippet(site)}</pre>
+          </div>
+        </div>
       </section>
       <section
         className="emvb-surface-card emvb-agents-section"
         aria-labelledby="emvb-agents-activity"
       >
-        <h2 id="emvb-agents-activity">Recent agent activity</h2>
+        <SectionHead id="emvb-agents-activity" icon={RobotIcon} title="Recent agent activity">
+          The latest changes agents made, newest first.
+        </SectionHead>
         {state.activity.length === 0 ? (
-          <p>No agent changes yet.</p>
+          <div data-emvb-agents-empty="">
+            <Empty
+              icon={<RobotIcon aria-hidden="true" />}
+              title="No agent changes yet"
+              description="When an agent edits a page, it shows up here with a link to the editor."
+            />
+          </div>
         ) : (
-          <Table>
-            <Table.Header>
-              <Table.Row>
-                <Table.Head>When</Table.Head>
-                <Table.Head>Who</Table.Head>
-                <Table.Head>Change</Table.Head>
-                <Table.Head>Page</Table.Head>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {state.activity.map((entry) => (
-                <Table.Row key={entry.id}>
-                  <Table.Cell>{new Date(entry.at).toLocaleString()}</Table.Cell>
-                  <Table.Cell>
-                    {entry.userId ?? "unknown"}
-                    {entry.client ? ` (${entry.client})` : ""}
-                  </Table.Cell>
-                  <Table.Cell>{entry.summary}</Table.Cell>
-                  <Table.Cell>
-                    {entry.pageId ? <a href={editorUrl(entry.pageId)}>Open in editor</a> : "—"}
-                  </Table.Cell>
+          <div className="emvb-agents-table">
+            <Table>
+              <Table.Header>
+                <Table.Row>
+                  <Table.Head>When</Table.Head>
+                  <Table.Head>Who</Table.Head>
+                  <Table.Head>Change</Table.Head>
+                  <Table.Head>Page</Table.Head>
                 </Table.Row>
-              ))}
-            </Table.Body>
-          </Table>
+              </Table.Header>
+              <Table.Body>
+                {state.activity.map((entry) => (
+                  <Table.Row key={entry.id}>
+                    <Table.Cell>
+                      <span className="emvb-agents-when">
+                        {new Date(entry.at).toLocaleString()}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="emvb-agents-who">
+                        <span className="emvb-timeline-agent">
+                          <RobotIcon aria-hidden="true" size={12} />
+                          {entry.client ?? "Agent"}
+                        </span>
+                        {entry.userId ?? "unknown"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>{entry.summary}</Table.Cell>
+                    <Table.Cell>
+                      {entry.pageId ? (
+                        <a className="emvb-agents-link" href={editorUrl(entry.pageId)}>
+                          Open in editor
+                          <ArrowSquareOutIcon aria-hidden="true" size={14} />
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          </div>
         )}
       </section>
     </div>

@@ -92,10 +92,33 @@ export const UI_CSS = `
   box-shadow: var(--emvb-elevation-s);
 }
 /* Live MCP test: the AI agents page reads as cards with clear headings, not bare browser defaults. */
+.emvb-agents { max-width: 960px; }
+.emvb-agents-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.emvb-agents-header p { margin: 4px 0 0; font-size: 14px; line-height: 20px; color: var(--text-color-kumo-subtle); }
+.emvb-agents-status { display: inline-flex; flex: none; align-items: center; gap: 6px; margin-top: 6px; padding: 2px 10px; border: 1px solid var(--color-kumo-line); border-radius: 999px; background: var(--color-kumo-base); color: var(--text-color-kumo-default); font-size: 12px; line-height: 20px; font-weight: 600; }
+.emvb-agents-status > span { width: 8px; height: 8px; border-radius: 999px; background: var(--text-color-kumo-subtle); }
+.emvb-agents-status[data-on="true"] > span { background: var(--text-color-kumo-success); }
+.emvb-agents-section { gap: 16px; padding: 20px; }
+.emvb-agents-head { display: flex; align-items: flex-start; gap: 12px; }
+.emvb-agents-icon { display: grid; flex: none; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--color-kumo-tint); color: var(--text-color-kumo-default); }
 .emvb-agents-section h2 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; color: var(--text-color-kumo-default); }
-.emvb-agents-section h3 { margin: 8px 0 0; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text-color-kumo-default); }
+.emvb-agents-section h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; line-height: 20px; font-weight: 600; color: var(--text-color-kumo-default); }
 .emvb-agents-section p { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-color-kumo-subtle); }
-.emvb-agents-section pre { margin: 0; padding: 12px; overflow-x: auto; border-radius: 8px; background: var(--color-kumo-elevated, rgba(127,127,127,.08)); font-family: var(--font-mono); font-size: 12px; line-height: 18px; }
+.emvb-agents-section code { padding: 1px 5px; border-radius: 4px; background: var(--color-kumo-tint); font-family: var(--font-mono); font-size: 12px; }
+.emvb-agents-option { display: grid; gap: 4px; padding-top: 16px; border-top: 1px solid var(--color-kumo-line); }
+.emvb-agents-option > p { padding-inline-start: 44px; font-size: 13px; }
+.emvb-agents-field { display: grid; gap: 6px; }
+.emvb-agents-snippets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.emvb-agents-snippet { display: grid; align-content: start; gap: 8px; min-width: 0; padding: 12px; border: 1px solid var(--color-kumo-line); border-radius: 8px; }
+.emvb-agents-section pre { margin: 0; padding: 12px; overflow-x: auto; border-radius: 6px; background: var(--color-kumo-recessed, rgba(127,127,127,.08)); font-family: var(--font-mono); font-size: 12px; line-height: 18px; }
+.emvb-agents-table { overflow-x: auto; margin-inline: -20px; margin-bottom: -20px; border-top: 1px solid var(--color-kumo-line); }
+.emvb-agents-table table { width: 100%; }
+.emvb-agents-when { color: var(--text-color-kumo-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.emvb-agents-who { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.emvb-agents-link { display: inline-flex; align-items: center; gap: 4px; color: var(--text-color-kumo-link, var(--text-color-kumo-brand)); font-weight: 500; white-space: nowrap; }
+.emvb-agents-link:hover { text-decoration: underline; }
+.emvb-agents-link:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: 2px; border-radius: 4px; }
+.emvb-timeline-agent { display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 1px 7px 1px 5px; border: 1px solid var(--color-kumo-line); border-radius: 999px; background: var(--color-kumo-base); color: var(--text-color-kumo-default); font-size: 11px; line-height: 16px; font-weight: 600; }
 .emvb-surface-card[data-emvb-list] { gap: 0; padding: 0; overflow: hidden; }
 .emvb-surface-card[data-emvb-list] table { width: 100%; }
 .emvb-surface-card .emvb-empty-shell,

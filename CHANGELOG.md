@@ -89,6 +89,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
+- The AI agents page, the timeline's All/People/Agents filter and Agent badge, and the "An AI agent changed this page" notice match the editor's design.
 - The emvb-page-builder skill pushes agents toward designed pages with a new design reference, documents what the tools can't do, and ships scripted trigger and task evals.
 - The contrast check accounts for an element's opacity and its parents'.
 - A table of contents link to a heading inside a closed tab opens the tab and scrolls to the heading.

@@ -1,4 +1,5 @@
 import { Button, Dialog } from "@cloudflare/kumo";
+import { RobotIcon, SquaresFourIcon, UserIcon, type Icon } from "@phosphor-icons/react";
 import * as React from "react";
 import {
   canvasStyleUrls,
@@ -49,6 +50,7 @@ const agentVersions = (fetcher: Fetcher, entryId: string) =>
 
 type Who = "all" | "people" | "agents";
 const WHO_LABELS: Record<Who, string> = { all: "All", people: "People", agents: "Agents" };
+const WHO_ICONS: Record<Who, Icon> = { all: SquaresFourIcon, people: UserIcon, agents: RobotIcon };
 
 /** A revision's layout, or null when it has none or it doesn't validate (W-315). */
 export function revisionLayout(data: Record<string, unknown> | undefined): Layout | null {
@@ -135,6 +137,20 @@ const DIFF_CSS = {
 const when = (iso: string) => {
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? iso : date.toLocaleString();
+};
+
+/** A version's day and time on two short lines, so the list doesn't wrap mid-time (W-477). */
+const whenParts = (iso: string) => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return { day: iso, time: "" };
+  return {
+    day: date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }),
+    time: date.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+    }),
+  };
 };
 
 /** A small, script-free picture of one version with its changed sections outlined (W-315). */
@@ -224,21 +240,32 @@ export function TimelineDialog({
         )}
         {hasAgents && (
           <div className="emvb-timeline-who" role="group" aria-label="Show versions by">
-            {(Object.keys(WHO_LABELS) as Who[]).map((key) => (
-              <button
-                key={key}
-                type="button"
-                className="emvb-link-button"
-                aria-pressed={who === key}
-                data-emvb-timeline-who={key}
-                onClick={() => {
-                  setWho(key);
-                  setPickedId(null);
-                }}
-              >
-                {WHO_LABELS[key]}
-              </button>
-            ))}
+            {(Object.keys(WHO_LABELS) as Who[]).map((key) => {
+              const WhoIcon = WHO_ICONS[key];
+              const count =
+                key === "all"
+                  ? all.length
+                  : all.filter((v) => (key === "agents" ? v.agent : !v.agent)).length;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className="emvb-timeline-who-option"
+                  aria-pressed={who === key}
+                  data-emvb-timeline-who={key}
+                  onClick={() => {
+                    setWho(key);
+                    setPickedId(null);
+                  }}
+                >
+                  <WhoIcon aria-hidden="true" size={14} />
+                  {WHO_LABELS[key]}
+                  <span className="emvb-timeline-count" aria-label={`, ${count}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
         {picked && current && (
@@ -253,14 +280,20 @@ export function TimelineDialog({
                     data-emvb-version={v.id}
                     onClick={() => setPickedId(v.id)}
                   >
-                    {when(v.at)}
-                    {!v.layout && " (no layout)"}
+                    <span className="emvb-timeline-when">
+                      <span>{whenParts(v.at).day}</span>
+                      <span className="emvb-timeline-time">
+                        {whenParts(v.at).time}
+                        {!v.layout && " (no layout)"}
+                      </span>
+                    </span>
                     {v.agent && (
                       <span
                         className="emvb-timeline-agent"
                         data-emvb-agent-version=""
                         title={v.agent.summary}
                       >
+                        <RobotIcon aria-hidden="true" size={12} />
                         Agent
                       </span>
                     )}
