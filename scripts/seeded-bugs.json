@@ -29120,6 +29120,26 @@
         "blank ones are errors"
       ],
       "expect": "\\(fail\\).*blank ones are errors"
+    },
+    {
+      "id": "W-409/toc-lists-hidden",
+      "requirement": "W-409",
+      "description": "Headings hidden everywhere are listed in the contents.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "if (text && !hiddenEverywhere && !renderedHeadings",
+          "replace": "if (text && !renderedHeadings"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/toc.test.ts",
+        "-t",
+        "hidden everywhere is left out"
+      ],
+      "expect": "\\(fail\\).*hidden everywhere is left out"
     }
   ]
 }

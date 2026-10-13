@@ -58,3 +58,25 @@ describe("table of contents lists rendered headings (W-384)", () => {
     ]);
   });
 });
+
+describe("headings hidden on every device stay out of the contents (W-409)", () => {
+  test("hidden everywhere is left out; hidden on one device stays", () => {
+    const page = {
+      schemaVersion: 15,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          { id: "toc00001", type: "toc", props: {} },
+          h("head0001", "Gone", { hiddenOn: ["desktop", "tablet", "mobile"] }),
+          h("head0002", "Phones only", { hiddenOn: ["desktop", "tablet"] }),
+        ],
+      },
+    } as unknown as Layout;
+    const html = renderPage(page, emptyDesign(), { scope: "p" }).html;
+    const toc = html.match(/<nav class="emvb-toc"[^]*?<\/nav>/)?.[0] ?? "";
+    expect(toc).not.toContain("Gone");
+    expect(toc).toContain("Phones only");
+  });
+});

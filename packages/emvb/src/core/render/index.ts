@@ -445,7 +445,11 @@ export function renderPage(
     }
     if (node.type === "heading" && pageHeadings?.has(stored) && attrs.id) {
       const text = String((node.props as { text?: unknown }).text ?? "").trim();
-      if (text && !renderedHeadings.some((h) => h.id === attrs.id)) {
+      // W-409: a heading hidden on every device has nothing to jump to.
+      const hiddenEverywhere = (["desktop", "tablet", "mobile"] as const).every((device) =>
+        node.hiddenOn?.includes(device),
+      );
+      if (text && !hiddenEverywhere && !renderedHeadings.some((h) => h.id === attrs.id)) {
         renderedHeadings.push({ id: attrs.id, text });
       }
     }
