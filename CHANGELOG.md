@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- **A table of contents links only headings that render (W-384).** A heading in the other A/B arm or for another audience is no longer listed, and a repeated HTML ID is listed once.
+
 ## [0.4.0] - 2026-10-11
 
 Schema 15. Container queries, per-element text direction, image links and captions, button icons, a table of contents, custom grid tracks, and the security fixes since 0.3.0.

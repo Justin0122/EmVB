@@ -28632,6 +28632,26 @@
         "opens no palette from inside a dialog"
       ],
       "expect": "\\(fail\\).*opens no palette from inside a dialog"
+    },
+    {
+      "id": "W-384/toc-lists-hidden-headings",
+      "requirement": "W-384",
+      "description": "The table of contents lists headings from the layout, including hidden A/B arms and audience headings.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "toc.vnode.children = tocChildren(toc.node, renderedHeadings, mode);",
+          "replace": "toc.vnode.children = tocChildren(toc.node, headingAnchors(layout.root).map(({ node }) => ({ id: node.htmlId ?? `emvb-h-${node.id}`, text: String((node.props as { text?: unknown }).text) })), mode);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/toc.test.ts",
+        "-t",
+        "hidden A/B arm"
+      ],
+      "expect": "\\(fail\\).*hidden A/B arm"
     }
   ]
 }

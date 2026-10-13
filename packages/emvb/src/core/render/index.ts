@@ -218,6 +218,13 @@ export function renderPage(
     queryMin?: number;
   }[] = [];
   const layoutHasToc = treeHasType(layout.root, "toc");
+  // W-384: a table of contents lists the page's headings that actually render, with their
+  // rendered text, so a hidden A/B arm or audience heading is not a dead link.
+  const pageHeadings = layoutHasToc
+    ? new Set(headingAnchors(layout.root).map((h) => h.node))
+    : undefined;
+  const renderedHeadings: { id: string; text: string }[] = [];
+  const tocNodes: { node: LayoutNode; vnode: VNode }[] = [];
   const knownVariables = new Set(design.variables.colors.map((c) => c.id));
   let backgroundVideo = false;
 
@@ -432,7 +439,15 @@ export function renderPage(
     if (isTabsNode(node)) return finish(node, renderTabs(node, id, attrs, ctx, dynamic));
     if (node.type === "toc") {
       const built = def.build(node as never, attrs, []);
-      return finish(node, { ...built, children: tocChildren(layout, node, mode) });
+      const vnode = { ...built, children: [] as (VNode | string)[] };
+      tocNodes.push({ node, vnode });
+      return finish(node, vnode);
+    }
+    if (node.type === "heading" && pageHeadings?.has(stored) && attrs.id) {
+      const text = String((node.props as { text?: unknown }).text ?? "").trim();
+      if (text && !renderedHeadings.some((h) => h.id === attrs.id)) {
+        renderedHeadings.push({ id: attrs.id, text });
+      }
     }
     if (isParentNode(node)) {
       return finish(node, def.build(node as never, attrs, ctx.children(node.children, dynamic)));
@@ -487,6 +502,7 @@ export function renderPage(
     attrs: { class: "emvb-root" },
     children: [],
   };
+  for (const toc of tocNodes) toc.vnode.children = tocChildren(toc.node, renderedHeadings, mode);
   const baseCss = new Map(Object.entries(ELEMENTS).map(([type, def]) => [type, def.baseCss]));
   const css = generateCss({
     design,
@@ -518,24 +534,24 @@ function treeHasType(node: LayoutNode, type: string): boolean {
   return someNode(node, (current) => current.type === type);
 }
 
-function headingAnchors(root: LayoutNode): { id: string; text: string }[] {
-  const out: { id: string; text: string }[] = [];
+/** The page's own heading nodes (not synced section or loop item contents). */
+function headingAnchors(root: LayoutNode): { node: LayoutNode }[] {
+  const out: { node: LayoutNode }[] = [];
   forEachNode(root, (node) => {
-    if (node.type !== "heading") return;
-    const text = String((node.props as { text?: unknown }).text ?? "").trim();
-    if (!text) return;
-    const id = node.htmlId && HTML_ID.test(node.htmlId) ? node.htmlId : `emvb-h-${node.id}`;
-    out.push({ id, text });
+    if (node.type === "heading") out.push({ node });
   });
   return out;
 }
 
-function tocChildren(layout: Layout, node: LayoutNode, mode: RenderMode): (VNode | string)[] {
+function tocChildren(
+  node: LayoutNode,
+  items: { id: string; text: string }[],
+  mode: RenderMode,
+): (VNode | string)[] {
   const title =
     node.type === "toc"
       ? String((node.props as { title?: unknown }).title ?? "").trim() || undefined
       : undefined;
-  const items = headingAnchors(layout.root);
   const children: (VNode | string)[] = [];
   if (title) children.push({ tag: "p", attrs: { class: "emvb-toc-title" }, children: [title] });
   if (items.length === 0) {
