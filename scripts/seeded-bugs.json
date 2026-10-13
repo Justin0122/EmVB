@@ -28792,6 +28792,26 @@
         "refused at once"
       ],
       "expect": "\\(fail\\).*refused at once"
+    },
+    {
+      "id": "W-392/nested-post-links",
+      "requirement": "W-392",
+      "description": "Every link mark on a span wraps it, so links nest.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/dynamic.ts",
+          "search": "    else if (mark === link) {",
+          "replace": "    else if (links.has(mark)) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/theme/post-content-format.test.ts",
+        "-t",
+        "several link marks"
+      ],
+      "expect": "\\(fail\\).*several link marks"
     }
   ]
 }

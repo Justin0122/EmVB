@@ -106,4 +106,14 @@ describe("Post Content keeps safe formatting (W-328)", () => {
       '<p>&lt;iframe src="x"&gt;&lt;/iframe&gt;&lt;script&gt;alert(1)&lt;/script&gt;</p><p>kept</p>',
     );
   });
+
+  test("a span with several link marks is one link (W-392)", () => {
+    const defs = [
+      { _type: "link", _key: "k", href: "https://a.example" },
+      { _type: "link", _key: "j", href: "/b" },
+    ];
+    expect(html([block([span("x", ["strong", "k", "j", "k"])], { markDefs: defs })])).toBe(
+      '<p><strong><a href="https://a.example">x</a></strong></p>',
+    );
+  });
 });

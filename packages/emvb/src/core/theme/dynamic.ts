@@ -110,12 +110,13 @@ function spanNode(
     ? span["marks"].filter((m) => typeof m === "string")
     : [];
   let node: VNode | string = text;
-  for (const mark of marks.toReversed()) {
+  // W-392: a link can't hold a link, so only the span's first (outermost) link mark is kept.
+  const link = marks.find((mark) => !DECORATORS[mark] && links.has(mark));
+  for (const mark of new Set(marks.toReversed())) {
     const tag = DECORATORS[mark];
     if (tag) node = { tag, attrs: {}, children: [node] };
-    else {
-      const href = links.get(mark);
-      if (href) node = { tag: "a", attrs: { href }, children: [node] };
+    else if (mark === link) {
+      node = { tag: "a", attrs: { href: links.get(mark) as string }, children: [node] };
     }
   }
   return node;
