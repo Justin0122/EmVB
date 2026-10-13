@@ -29280,6 +29280,26 @@
         "only a placeholder"
       ],
       "expect": "\\(fail\\).*only a placeholder"
+    },
+    {
+      "id": "W-417/tel-spaces-refused",
+      "requirement": "W-417",
+      "description": "tel: links with spaces are refused.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/href.ts",
+          "search": "value.replace(/\\s+/g, \"\")",
+          "replace": "value"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/sanitize/href-tel.test.ts",
+        "-t",
+        "spaces are dropped"
+      ],
+      "expect": "\\(fail\\).*spaces are dropped"
     }
   ]
 }
