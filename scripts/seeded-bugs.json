@@ -30338,6 +30338,26 @@
         "chmod warning"
       ],
       "expect": "\\(fail\\).*chmod warning"
+    },
+    {
+      "id": "W-476/skill-limits-missing",
+      "requirement": "W-476",
+      "description": "The skill no longer says agents cannot make popups.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/skill/emvb-page-builder/SKILL.md",
+          "search": "- **Popups, headers",
+          "replace": "- **Overlays, headers"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb-mcp/test/evals.test.ts",
+        "-t",
+        "names its limits"
+      ],
+      "expect": "\\(fail\\).*names its limits"
     }
   ]
 }

@@ -1,0 +1,18 @@
+{
+  "shouldTrigger": [
+    "Build a landing page for our new analytics product on the EmDash site",
+    "Restyle the site with a darker brand colour and new fonts",
+    "Create a restaurant menu page with our dishes and prices",
+    "Make a portfolio page that lists my posts as project cards",
+    "Add an FAQ accordion and a contact form to the pricing page",
+    "Review the about page and tell me what to improve",
+    "Fix the accessibility problems on the home page",
+    "Change the hero headline on the EmVB page to say Spring sale"
+  ],
+  "shouldNotTrigger": [
+    "Write a Python script that parses CSV files",
+    "Summarise this PDF for me",
+    "Fix the failing unit test in the Rust crate",
+    "What's the weather in Toronto tomorrow?"
+  ]
+}
