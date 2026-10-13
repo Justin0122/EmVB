@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A table of contents with no headings no longer adds an empty navigation region to the page.
 - The Link field explains when a link was refused because of a space or an unsupported scheme.
 - Images whose file names contain spaces keep their extra sizes.
 - Links typed as www.example.com go to that site, and email links with a spaced subject work.

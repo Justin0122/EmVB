@@ -80,3 +80,25 @@ describe("headings hidden on every device stay out of the contents (W-409)", () 
     expect(toc).toContain("Phones only");
   });
 });
+
+describe("a table of contents with no headings (W-430)", () => {
+  const empty = {
+    schemaVersion: 15,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      children: [{ id: "toc00001", type: "toc", props: { title: "On this page" } }],
+    },
+  } as unknown as Layout;
+  test("is no navigation landmark on the public page", () => {
+    const html = renderPage(empty, emptyDesign()).html;
+    expect(html).not.toContain("<nav");
+    expect(html).not.toContain("On this page");
+  });
+  test("the editor still shows the hint", () => {
+    expect(renderPage(empty, emptyDesign(), { mode: "editor" }).html).toContain(
+      "Headings on this page appear here.",
+    );
+  });
+});

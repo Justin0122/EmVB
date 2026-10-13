@@ -506,7 +506,16 @@ export function renderPage(
     attrs: { class: "emvb-root" },
     children: [],
   };
-  for (const toc of tocNodes) toc.vnode.children = tocChildren(toc.node, renderedHeadings, mode);
+  for (const toc of tocNodes) {
+    toc.vnode.children = tocChildren(toc.node, renderedHeadings, mode);
+    // W-430: with no headings the public page had an empty "Table of contents" navigation
+    // landmark (or just its title). It's left as a plain empty box instead.
+    if (mode !== "editor" && renderedHeadings.length === 0) {
+      toc.vnode.tag = "div";
+      delete toc.vnode.attrs["aria-label"];
+      toc.vnode.children = [];
+    }
+  }
   const baseCss = new Map(Object.entries(ELEMENTS).map(([type, def]) => [type, def.baseCss]));
   const css = generateCss({
     design,

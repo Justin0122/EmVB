@@ -29540,6 +29540,26 @@
         "space"
       ],
       "expect": "\\(fail\\).*space"
+    },
+    {
+      "id": "W-430/empty-toc-nav",
+      "requirement": "W-430",
+      "description": "Empty TOC stays a nav.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "if (mode !== \"editor\" && renderedHeadings.length === 0) {",
+          "replace": "if (false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/toc.test.ts",
+        "-t",
+        "no navigation landmark"
+      ],
+      "expect": "\\(fail\\).*no navigation landmark"
     }
   ]
 }
