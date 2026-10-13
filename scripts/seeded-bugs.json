@@ -29220,6 +29220,26 @@
         "no H1, order"
       ],
       "expect": "\\(fail\\).*no H1, order"
+    },
+    {
+      "id": "W-414/closed-tab-link",
+      "requirement": "W-414",
+      "description": "Links into a closed tab don't open it.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/tabs/runtime.ts",
+          "search": "    activate(root, index);\n    opened = true;",
+          "replace": "    opened = true;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/tabs/runtime.test.ts",
+        "-t",
+        "selects that tab"
+      ],
+      "expect": "\\(fail\\).*selects that tab"
     }
   ]
 }

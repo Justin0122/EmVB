@@ -113,9 +113,60 @@ function enhance(root: HTMLElement): void {
   });
 }
 
+/**
+ * W-414: opens every closed tab around `target` (outermost first) so a link to something inside a
+ * tab, a table of contents entry most often, lands on it. True when a tab was opened.
+ */
+function revealInTabs(target: Element): boolean {
+  const steps: { root: HTMLElement; index: number }[] = [];
+  let panel = target.closest<HTMLElement>(".emvb-tab-panel");
+  while (panel) {
+    const root = panel.parentElement?.parentElement;
+    if (root?.classList.contains("emvb-tabs")) {
+      const index = parts(root).panels.indexOf(panel);
+      if (index >= 0) steps.unshift({ root, index });
+    }
+    panel = root?.parentElement?.closest<HTMLElement>(".emvb-tab-panel") ?? null;
+  }
+  let opened = false;
+  for (const { root, index } of steps) {
+    if (selectedIndex(root) === index) continue;
+    activate(root, index);
+    opened = true;
+  }
+  return opened;
+}
+
+function targetOf(hash: string): Element | null {
+  if (!hash || hash === "#") return null;
+  try {
+    return document.getElementById(decodeURIComponent(hash.slice(1)));
+  } catch {
+    return null;
+  }
+}
+
+/** After opening a tab, the browser's own jump already happened, so scroll again. */
+function revealHash(hash: string): void {
+  const target = targetOf(hash);
+  if (!target || !revealInTabs(target)) return;
+  target.scrollIntoView?.({ block: "start" });
+}
+
+let hashWatch = false;
+
 export function initTabs(root: ParentNode = document): void {
   const nodes = root.querySelectorAll<HTMLElement>(".emvb-tabs");
   for (const node of nodes) enhance(node);
+  if (hashWatch || typeof window === "undefined") return;
+  hashWatch = true;
+  // A link to the page's own anchors, then the URL's hash on load and on back/forward.
+  document.addEventListener("click", (event) => {
+    const link = (event.target as Element | null)?.closest?.<HTMLAnchorElement>('a[href^="#"]');
+    if (link) revealHash(link.getAttribute("href") ?? "");
+  });
+  window.addEventListener("hashchange", () => revealHash(window.location.hash));
+  revealHash(window.location.hash);
 }
 
 /** Test helper: select tab by index after enhance. */

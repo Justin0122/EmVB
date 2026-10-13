@@ -288,3 +288,23 @@ describe("tabs in right-to-left text (W-405)", () => {
     expect(labels[0]?.getAttribute("aria-selected")).toBe("true");
   });
 });
+
+describe("links into a closed tab open it (W-414)", () => {
+  test("a contents link to a heading in the second tab selects that tab", () => {
+    const root = fixture();
+    const panels = root.querySelectorAll(".emvb-tab-panel");
+    panels[1]?.insertAdjacentHTML("beforeend", '<h2 id="emvb-h-head0008">In tab</h2>');
+    document.body.insertAdjacentHTML(
+      "afterbegin",
+      '<a id="toc-link" href="#emvb-h-head0008">In tab</a>',
+    );
+    initTabs(document);
+    const labels = [...root.querySelectorAll<HTMLElement>(".emvb-tab-label")];
+    expect(labels[1]?.getAttribute("aria-selected")).toBe("false");
+    (document.getElementById("toc-link") as HTMLAnchorElement).dispatchEvent(
+      new MouseEvent("click", { bubbles: true, cancelable: true }),
+    );
+    expect(labels[1]?.getAttribute("aria-selected")).toBe("true");
+    expect((root.querySelectorAll(".emvb-tab-input")[1] as HTMLInputElement).checked).toBe(true);
+  });
+});
