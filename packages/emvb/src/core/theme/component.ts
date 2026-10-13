@@ -146,22 +146,38 @@ function isSet(value: unknown): boolean {
   return true;
 }
 
-type Scope = { values: Record<string, unknown>; fields: ComponentField[] };
+/** `path` is where a scope's values sit in the use's values: "" or "buttons.0." (W-324). */
+type Scope = { values: Record<string, unknown>; fields: ComponentField[]; path: string };
+
+/**
+ * W-324: where an applied element's text comes from: a text or rich-text field of the use, by
+ * its path in the use's values ("title", "buttons.0.label"). The canvas edits that field in place.
+ */
+export type BoundField = { path: string; kind: "text" | "rich-text" };
+
+const BOUND = new WeakMap<LayoutNode, BoundField>();
+
+/** The field an element made by `applyComponent` shows as its text, if any (W-324). */
+export const boundFieldOf = (node: LayoutNode): BoundField | undefined => BOUND.get(node);
+
+/** Props that hold an element's visible text. */
+const TEXT_TARGETS = new Set(["text", "html", "summary", "label"]);
 
 /** The resolved value of `key`: the list item's own field first, then the component's. */
 function lookup(
   key: string,
   scopes: Scope[],
-): { field: ComponentField; value: unknown } | undefined {
+): { field: ComponentField; value: unknown; path: string } | undefined {
   for (let i = scopes.length - 1; i >= 0; i--) {
     const scope = scopes[i] as Scope;
     const field = scope.fields.find((f) => f.key === key);
     if (!field) continue;
+    const path = `${scope.path}${key}`;
     if (field.kind === "list") {
       const items = Array.isArray(scope.values[key]) ? (scope.values[key] as unknown[]) : [];
-      return { field, value: items.filter(isRecord).slice(0, field.max ?? 50) };
+      return { field, value: items.filter(isRecord).slice(0, field.max ?? 50), path };
     }
-    return { field, value: fieldValue(field, scope.values[key]) };
+    return { field, value: fieldValue(field, scope.values[key]), path };
   }
   return undefined;
 }
@@ -202,7 +218,7 @@ export function applyComponent(
   template: ComponentTemplate,
   values: Record<string, unknown> | undefined,
 ): LayoutNode[] {
-  const root: Scope = { values: values ?? {}, fields: template.fields };
+  const root: Scope = { values: values ?? {}, fields: template.fields, path: "" };
   return applyNodes(template.nodes, [root], "", 0);
 }
 
@@ -222,10 +238,14 @@ function applyNodes(
       const found = lookup(repeatKey, scopes);
       if (!found || found.field.kind !== "list") continue;
       const items = (found.value as Record<string, unknown>[]).slice(0, MAX_COPIES);
+      // Bad entries are filtered out before this, so the path uses the item's stored position.
+      const stored = componentValueAt(scopes[0]?.values, found.path);
       items.forEach((item, index) => {
+        const at = Array.isArray(stored) ? stored.indexOf(item) : -1;
         const itemScope: Scope = {
           values: item,
           fields: found.field.kind === "list" ? found.field.fields : [],
+          path: `${found.path}.${at < 0 ? index : at}.`,
         };
         const copy = applyNode(
           { ...node, bind: withoutKey(bind, "repeat") },
@@ -259,10 +279,17 @@ function applyNode(
   if (showKey && !isSet(lookup(showKey, scopes)?.value)) return null;
   const props = { ...(node.props as Record<string, unknown>) };
   let classes = node.classes;
+  let bound: BoundField | undefined;
   for (const [target, key] of Object.entries(bind)) {
     if (target === "show" || target === "repeat") continue;
     const found = lookup(key, scopes);
     if (!found) continue;
+    if (
+      TEXT_TARGETS.has(target) &&
+      (found.field.kind === "text" || found.field.kind === "rich-text")
+    ) {
+      bound = { path: found.path, kind: found.field.kind };
+    }
     if (target === "classes") {
       if (found.field.kind === "select" && typeof found.value === "string") {
         classes = [...(classes ?? []), found.value].slice(0, 20);
@@ -278,6 +305,7 @@ function applyNode(
     props,
     ...(classes ? { classes } : {}),
   } as LayoutNode;
+  if (bound) BOUND.set(next, bound);
   if (isParentNode(next)) {
     (next as { children: LayoutNode[] }).children = applyNodes(
       next.children,
@@ -302,4 +330,39 @@ export function collectComponentPartIds(nodes: readonly LayoutNode[]): string[] 
     if (isParentNode(node)) stack.push(...node.children);
   }
   return [...ids];
+}
+
+/** The value at a field path in a use's values ("title", "buttons.0.label"), W-324. */
+export function componentValueAt(
+  values: Record<string, unknown> | undefined,
+  path: string,
+): unknown {
+  let current: unknown = values;
+  for (const part of path.split(".")) {
+    if (Array.isArray(current)) current = current[Number(part)];
+    else if (isRecord(current)) current = current[part];
+    else return undefined;
+  }
+  return current;
+}
+
+/** The use's values with `value` at `path`; lists and items are copied, never changed (W-324). */
+export function withComponentValue(
+  values: Record<string, unknown> | undefined,
+  path: string,
+  value: unknown,
+): Record<string, unknown> {
+  const [head = "", ...rest] = path.split(".");
+  const base = values ?? {};
+  if (rest.length === 0) return { ...base, [head]: value };
+  const list = base[head];
+  const index = Number(rest[0]);
+  if (!Array.isArray(list) || !Number.isInteger(index) || !isRecord(list[index])) return base;
+  const items = [...list];
+  items[index] = withComponentValue(
+    list[index] as Record<string, unknown>,
+    rest.slice(1).join("."),
+    value,
+  );
+  return { ...base, [head]: items };
 }

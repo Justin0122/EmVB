@@ -185,7 +185,7 @@ function ImageRow({
 }
 
 /** The formatting buttons for an editor; shared by the panel field and the canvas (W-324). */
-function RichTextToolbar({
+export function RichTextToolbar({
   editor,
   fetcher,
   source,

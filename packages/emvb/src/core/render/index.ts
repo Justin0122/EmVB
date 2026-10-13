@@ -28,6 +28,7 @@ import {
 } from "../sanitize/css.ts";
 import { STYLE_STATES } from "../schema/state-names.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
+import { boundFieldOf } from "../theme/component.ts";
 import { resolvePostForRender, type ThemeDynamicData } from "../theme/dynamic.ts";
 import type { FormDefinitions } from "../forms/definition.ts";
 import type { PopupDevice } from "../theme/popup-rules.ts";
@@ -222,6 +223,7 @@ export function renderPage(
     nodeId: string,
     ruleId: string | undefined,
     insideComponent = false,
+    boundUse?: string,
   ): Record<string, string> => {
     const classes = [...(isRoot ? ["emvb-root"] : []), `emvb-${node.type}`];
     for (const classId of node.classes ?? []) {
@@ -317,6 +319,9 @@ export function renderPage(
     const attrs: Record<string, string> = { class: classes.join(" "), ...customAttributes(node) };
     // W-312: elements inside a component aren't editable on their own; the component is.
     if (mode === "editor" && id && !insideComponent) attrs["data-emvb-id"] = id;
+    // W-324: a text inside a component use names the use's field it shows.
+    const bound = insideComponent && mode === "editor" ? boundFieldOf(node) : undefined;
+    if (bound && boundUse) attrs["data-emvb-bound"] = `${boundUse}|${bound.path}|${bound.kind}`;
     if (node.htmlId && HTML_ID.test(node.htmlId)) attrs.id = node.htmlId;
     // W-230: the site's text direction on the root, also a fallback when the host's <html> has none.
     if (isRoot && design.direction) attrs.dir = design.direction;
@@ -352,6 +357,7 @@ export function renderPage(
       nodeId,
       ruleId,
       (dynamic?.componentStack?.length ?? 0) > 0,
+      dynamic?.componentUse,
     );
     const def = ELEMENTS[type as keyof typeof ELEMENTS];
     if (isFormNode(node)) return finish(node, renderForm(node, attrs, ctx, dynamic));

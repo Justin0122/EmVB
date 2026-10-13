@@ -357,6 +357,8 @@ export {
 export {
   applyComponent,
   collectComponentPartIds,
+  componentValueAt,
+  withComponentValue,
   COMPONENT_FIELD_KINDS,
   COMPONENT_FIELDS_VERSION,
   type ComponentFieldsDoc,

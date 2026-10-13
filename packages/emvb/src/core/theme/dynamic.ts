@@ -50,6 +50,8 @@ export type ThemeDynamicData = {
   componentTemplates?: Record<string, ComponentTemplate>;
   /** W-312: components being rendered, so a component can't include itself. */
   componentStack?: readonly string[];
+  /** W-324: the page's component use being rendered, so the canvas can edit its texts. */
+  componentUse?: string;
 };
 
 /** Editor canvas placeholders when no live post is bound. */

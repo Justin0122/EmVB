@@ -7,7 +7,6 @@ import {
   moveUp,
   renderPage,
   toggleHidden,
-  withPlainText,
   type LayoutNode,
   type PopupDevice,
 } from "../../core/index.ts";
@@ -413,13 +412,8 @@ function EditorApp({
                         onMove={(id, parentId, index) =>
                           dispatch({ type: "move-node", id, parentId, index })
                         }
-                        onCommitText={(id, text) =>
-                          dispatch({
-                            type: "update-node",
-                            id,
-                            update: (node) => withPlainText(node, text),
-                          })
-                        }
+                        onUpdateNode={(id, update) => dispatch({ type: "update-node", id, update })}
+                        fetcher={fetcher}
                       />
                     ) : (
                       <EmptyCanvas latest={latest} dispatch={dispatch} />

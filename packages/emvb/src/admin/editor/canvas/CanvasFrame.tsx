@@ -4,9 +4,6 @@ import {
   isParentNode,
   canDrop,
   findNode,
-  isPlainTextNode,
-  isMultilineText,
-  plainTextOf,
   DEVICE_PREVIEW_PX,
   REASONS,
   type DragSource,
@@ -36,7 +33,10 @@ import {
 } from "./SelectionOverlay.tsx";
 import { applyStatePreview, type StatePreview } from "./state-preview.ts";
 import { revealInAccordions, revealInMenus, revealInTabs } from "./tab-reveal.ts";
+import { canvasEditFor, type CanvasEdit } from "./canvas-edit.ts";
+import { CanvasRichTextEdit } from "./CanvasRichTextEdit.tsx";
 import { CanvasTextEdit } from "./CanvasTextEdit.tsx";
+import type { Fetcher } from "../../api.ts";
 import { vnodeToReact } from "./vnode-react.tsx";
 import type { ClipboardActions, PasteRefusal } from "../useClipboardActions.ts";
 
@@ -80,7 +80,7 @@ const EDITOR_CANVAS_CSS =
   `:where(${NO_ITEMS}){min-height:48px}` +
   `:is(${NO_ITEMS}){outline:1px dashed #94a3b8;outline-offset:-1px}` +
   `:is(${NO_ITEMS})::after{content:"No items yet: add them in this element's Content settings";display:block;line-height:48px;text-align:center;${HINT}}` +
-  ".emvb-image-missing{display:inline-block;min-width:48px;min-height:48px;background:var(--color-kumo-tint, #eee)}[data-emvb-editing]{color:transparent !important}";
+  ".emvb-image-missing{display:inline-block;min-width:48px;min-height:48px;background:var(--color-kumo-tint, #eee)}[data-emvb-editing]{color:transparent !important}[data-emvb-canvas-rte] .ProseMirror{outline:none;min-height:1em}[data-emvb-canvas-rte] .ProseMirror>:first-child{margin-top:0}[data-emvb-canvas-rte] .ProseMirror>:last-child{margin-bottom:0}[data-emvb-canvas-rte] .ProseMirror img.ProseMirror-selectednode{outline:2px solid #2f6feb}[data-emvb-canvas-rte] .selectedCell{background:rgba(47,111,235,.15)}[data-emvb-bound]{cursor:text}";
 
 /**
  * Tablet and Mobile previews scroll without a visible scrollbar (W-140), as phones and tablets
@@ -126,12 +126,15 @@ const zoomInvalid = (drop: InvalidDrop | null, scale: number): InvalidDrop | nul
     label: { ...drop.label, x: drop.label.x * scale, y: drop.label.y * scale },
   };
 
+const boxOfElement = (element: Element): Box => {
+  const rect = element.getBoundingClientRect();
+  return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+};
+
 const boxOf = (doc: Document, id: string | null): Box | null => {
   if (!id) return null;
   const element = doc.querySelector(`[data-emvb-id="${CSS.escape(id)}"]`);
-  if (!element) return null;
-  const rect = element.getBoundingClientRect();
-  return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
+  return element ? boxOfElement(element) : null;
 };
 
 const rectOf = (doc: Document, id: string): Rect | null => {
@@ -224,7 +227,8 @@ export function CanvasFrame({
   refusal = null,
   onDropNew,
   onMove,
-  onCommitText,
+  onUpdateNode,
+  fetcher,
 }: {
   vnode: VNode | null;
   css: string;
@@ -242,8 +246,10 @@ export function CanvasFrame({
   refusal?: PasteRefusal | null;
   onDropNew: (elementType: string, parentId: string, index: number) => void;
   onMove: (id: string, parentId: string, index: number) => void;
-  /** Stores a canvas plain-text edit (W-097). */
-  onCommitText: (id: string, text: string) => void;
+  /** Stores a canvas text edit (W-097, W-324). */
+  onUpdateNode: (id: string, update: (node: LayoutNode) => LayoutNode) => void;
+  /** For the rich text toolbar's image library (W-324). */
+  fetcher?: Fetcher;
 }) {
   const frame = React.useRef<HTMLIFrameElement>(null);
   const stage = React.useRef<HTMLDivElement>(null);
@@ -277,19 +283,25 @@ export function CanvasFrame({
     hover: null,
     selected: null,
   });
-  const [editingId, setEditingId] = React.useState<string | null>(null);
-  const handlers = React.useRef<CanvasSelection & { onEditText?: (id: string) => void }>(selection);
+  const [editing, setEditing] = React.useState<CanvasEdit | null>(null);
+  const editingId = editing?.id ?? null;
+  const handlers = React.useRef<
+    CanvasSelection & { onEditText?: (id: string, target: EventTarget | null) => void }
+  >(selection);
   const layoutRef = React.useRef(layout);
   layoutRef.current = layout;
   handlers.current = {
     ...selection,
-    onEditText: (id) => {
-      const node = layoutRef.current ? findNode(layoutRef.current, id) : undefined;
-      if (node && isPlainTextNode(node) && plainTextOf(node) !== null) {
-        selection.onSelect(id);
-        setEditingId(id);
-      }
+    onEditText: (id, target) => {
+      const edit = doc ? canvasEditFor(doc, layoutRef.current, id, target) : null;
+      if (!edit) return;
+      selection.onSelect(id);
+      setEditing(edit);
     },
+  };
+  const commitEdit = (value: string) => {
+    if (editing) onUpdateNode(editing.id, (node) => editing.update(node, value));
+    setEditing(null);
   };
   const dropRef = React.useRef(onDropNew);
   dropRef.current = onDropNew;
@@ -433,13 +445,9 @@ export function CanvasFrame({
   }, [doc, refusal]);
 
   const { selectedId } = selection;
-  const editingNode = editingId && layout ? findNode(layout, editingId) : undefined;
-  const editingText = editingNode ? plainTextOf(editingNode) : null;
-  const editingBox = doc && editingId && editingText !== null ? boxOf(doc, editingId) : null;
-  const editingEl =
-    doc && editingId && editingText !== null
-      ? doc.querySelector(`[data-emvb-id="${CSS.escape(editingId)}"]`)
-      : null;
+  // An edit whose element left the page (undo, another panel) ends.
+  const editingLive = editing && editing.element.isConnected ? editing : null;
+  const editingBox = editingLive ? boxOfElement(editingLive.element) : null;
   React.useEffect(() => {
     if (!doc) return;
     revealInTabs(doc, selectedId);
@@ -503,17 +511,14 @@ export function CanvasFrame({
             sandbox="allow-same-origin"
             onLoad={onLoad}
           />
-          {editingId && editingText !== null && editingBox && editingEl?.nodeType === 1 && (
+          {editingLive?.kind === "plain" && editingBox && (
             <CanvasTextEdit
-              element={editingEl}
+              element={editingLive.element}
               box={editingBox}
-              text={editingText}
-              multiline={editingNode ? isMultilineText(editingNode) : false}
-              onCommit={(text) => {
-                onCommitText(editingId, text);
-                setEditingId(null);
-              }}
-              onCancel={() => setEditingId(null)}
+              text={editingLive.value}
+              multiline={editingLive.multiline}
+              onCommit={commitEdit}
+              onCancel={() => setEditing(null)}
             />
           )}
         </div>
@@ -531,6 +536,17 @@ export function CanvasFrame({
           invalid={zoomInvalid(invalid ?? refused, scale)}
           editing={!!editingId && editingId === selectedId}
         />
+        {editingLive?.kind === "rich" && editingBox && (
+          <CanvasRichTextEdit
+            key={`${editingLive.id}:${editingLive.value.length}`}
+            element={editingLive.element}
+            value={editingLive.value}
+            toolbarAt={zoomBox(editingBox, scale)}
+            fetcher={fetcher}
+            onCommit={commitEdit}
+            onCancel={() => setEditing(null)}
+          />
+        )}
       </div>
       {doc && createPortal(<style data-emvb-canvas-css="">{css}</style>, doc.head)}
       {doc &&

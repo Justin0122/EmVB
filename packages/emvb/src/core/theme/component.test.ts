@@ -236,3 +236,93 @@ describe("rendering a component (W-312)", () => {
     ).toBe(false);
   });
 });
+
+describe("texts inside a use name their field in the editor (W-324)", () => {
+  const usePage = (values: Record<string, unknown>) =>
+    ({
+      schemaVersion: 12,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [{ id: "use00001", type: "component", props: { partId: "c1", values } }],
+      },
+    }) as unknown as Layout;
+  const editor = (values: Record<string, unknown>, templates = { c1: template }) =>
+    renderPage(usePage(values), emptyDesign(), {
+      mode: "editor",
+      dynamic: { componentTemplates: templates },
+    }).html;
+
+  test("a text field, a rich-text field and each list item's text, by path", () => {
+    const html = editor({
+      title: "Een",
+      body: "<p>Tekst</p>",
+      buttons: [
+        { label: "A", link: "/a" },
+        { label: "B", link: "/b" },
+      ],
+    });
+    expect(html.match(/data-emvb-bound="([^"]+)"/g)).toEqual([
+      'data-emvb-bound="use00001|title|text"',
+      'data-emvb-bound="use00001|body|rich-text"',
+      'data-emvb-bound="use00001|buttons.0.label|text"',
+      'data-emvb-bound="use00001|buttons.1.label|text"',
+    ]);
+  });
+
+  test("a list item's path is its stored position, past a bad entry", () => {
+    const html = editor({ buttons: ["oops", { label: "B", link: "/b" }] });
+    expect(html).toContain('data-emvb-bound="use00001|buttons.1.label|text"');
+  });
+
+  test("the published page carries no markers", () => {
+    const { html } = renderPage(usePage({ title: "Een" }), emptyDesign(), {
+      dynamic: { componentTemplates: { c1: template } },
+    });
+    expect(html).not.toContain("data-emvb-bound");
+  });
+
+  test("a component inside a design isn't edited through the outer use", () => {
+    const outer: ComponentTemplate = {
+      fields: [],
+      nodes: [
+        n({
+          id: "inner001",
+          type: "component",
+          props: { partId: "c1", values: { title: "Vast" } },
+        }),
+      ],
+    };
+
+    const html = renderPage(
+      {
+        schemaVersion: 12,
+        root: {
+          id: "root0001",
+          type: "container",
+          props: {},
+          children: [
+            n({ id: "use00002", type: "component", props: { partId: "outer", values: {} } }),
+          ],
+        },
+      } as Layout,
+      emptyDesign(),
+      { mode: "editor", dynamic: { componentTemplates: { c1: template, outer } } },
+    ).html;
+    expect(html).toContain(">Vast<");
+    expect(html).not.toContain("data-emvb-bound");
+  });
+
+  test("values are read and written by path, copying what changes", async () => {
+    const { componentValueAt, withComponentValue } = await import("./component.ts");
+    const values = { title: "Een", buttons: [{ label: "A" }, { label: "B" }] };
+    expect(componentValueAt(values, "buttons.1.label")).toBe("B");
+    expect(componentValueAt(values, "buttons.5.label")).toBeUndefined();
+    const next = withComponentValue(values, "buttons.1.label", "Bee");
+    expect(next).toEqual({ title: "Een", buttons: [{ label: "A" }, { label: "Bee" }] });
+    expect(values.buttons[1]?.label).toBe("B");
+    expect(next["buttons"]).not.toBe(values.buttons);
+    expect(withComponentValue(values, "buttons.9.label", "x")).toBe(values);
+  });
+});

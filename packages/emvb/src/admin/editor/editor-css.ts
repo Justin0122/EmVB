@@ -429,6 +429,9 @@ export const EDITOR_CSS = `${UI_CSS}
 .emvb-rte-content :is(th,td) p { margin: 0; }
 .emvb-rte-content .selectedCell::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--color-kumo-brand) 15%, transparent); pointer-events: none; }
 .emvb-rte-source { min-height: 200px; font-family: ui-monospace, monospace; font-size: 12px; }
+.emvb-canvas-rte-toolbar { position: absolute; z-index: 30; transform: translateY(-100%); display: flex; align-items: flex-start; gap: 4px; padding: 4px; border-radius: 8px; background: var(--color-kumo-base, #fff); box-shadow: 0 4px 16px rgba(0,0,0,.18), 0 0 0 1px var(--color-kumo-line); pointer-events: auto; max-width: min(640px, 100%); }
+.emvb-canvas-rte-toolbar .emvb-rte-toolbar { flex: 1; min-width: 0; }
+.emvb-rte-done { font-weight: 600; color: var(--color-kumo-brand); }
 .emvb-field-label { font-size: 12px; font-weight: 500; color: var(--text-color-kumo-subtle); }
 .emvb-panel [data-emvb-panel] .emvb-helper { margin-top: -2px; }
 

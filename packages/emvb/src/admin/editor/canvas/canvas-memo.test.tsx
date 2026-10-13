@@ -52,7 +52,7 @@ const frame = (vnode: VNode, selectedId: string | null) => (
     selection={selection(selectedId)}
     onDropNew={() => {}}
     onMove={() => {}}
-    onCommitText={() => {}}
+    onUpdateNode={() => {}}
   />
 );
 

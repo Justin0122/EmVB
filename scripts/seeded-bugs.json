@@ -16255,8 +16255,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
-          "search": "        setEditingId(id);",
-          "replace": "        setEditingId(null);"
+          "search": "      setEditing(edit);",
+          "replace": "      setEditing(null);"
         }
       ],
       "command": [
@@ -27010,6 +27010,126 @@
         "./packages/emvb/src/admin/editor/rich-text/RichTextEditor.test.tsx"
       ],
       "expect": "\\(fail\\).*W-323"
+    },
+    {
+      "id": "W-324/no-marker",
+      "requirement": "W-324",
+      "description": "Texts in a use carry no field marker.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "  if (bound) BOUND.set(next, bound);\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-324/index-path",
+      "requirement": "W-324",
+      "description": "A list item's path skips bad entries.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "path: `${found.path}.${at < 0 ? index : at}.`,",
+          "replace": "path: `${found.path}.${index}.`,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-324/published-marker",
+      "requirement": "W-324",
+      "description": "The published page carries editor markers.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "const bound = insideComponent && mode === \"editor\" ? boundFieldOf(node) : undefined;",
+          "replace": "const bound = insideComponent ? boundFieldOf(node) : undefined;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-324/nested-use",
+      "requirement": "W-324",
+      "description": "A component inside a design is edited through the outer use.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/component.ts",
+          "search": "componentUse: stack.length === 0 ? node.id : undefined,",
+          "replace": "componentUse: node.id,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-324/shared-list",
+      "requirement": "W-324",
+      "description": "Editing an item changes the stored list in place.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "  const items = [...list];\n",
+          "replace": "  const items = list;\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-324/other-use",
+      "requirement": "W-324",
+      "description": "A marker for another use is edited here.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/canvas/canvas-edit.ts",
+          "search": "if (use !== id || !path) return null;",
+          "replace": "if (!path) return null;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/canvas/canvas-edit.test.ts"],
+      "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-324/unchanged-commit",
+      "requirement": "W-324",
+      "description": "Leaving the editor without a change stores it anyway.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/canvas/CanvasRichTextEdit.tsx",
+          "search": "if (keep && html !== value) onCommit(html);",
+          "replace": "if (keep) onCommit(html);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/canvas/CanvasRichTextEdit.test.tsx"
+      ],
+      "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-324/element-shown",
+      "requirement": "W-324",
+      "description": "The element stays visible under the editor.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/canvas/CanvasRichTextEdit.tsx",
+          "search": "    element.style.visibility = \"hidden\";\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/canvas/CanvasRichTextEdit.test.tsx"
+      ],
+      "expect": "\\(fail\\).*W-324"
     }
   ]
 }
