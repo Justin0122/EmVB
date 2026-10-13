@@ -29700,6 +29700,26 @@
         "wrapped link"
       ],
       "expect": "\\(fail\\).*wrapped link"
+    },
+    {
+      "id": "W-438/zone-unchecked",
+      "requirement": "W-438",
+      "description": "Misspelt zones are saved.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/AudienceEditor.tsx",
+          "search": "  if (!ZONE.test(value)) return null;\n  try {",
+          "replace": "  if (ZONE.test(value)) return value;\n  try {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/audience-editor.test.tsx",
+        "-t",
+        "case fixed"
+      ],
+      "expect": "\\(fail\\).*case fixed"
     }
   ]
 }

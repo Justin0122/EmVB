@@ -29,6 +29,25 @@ export function parseSegments(text: string): string[] {
   return [...new Set(names)].slice(0, 20);
 }
 
+const ZONE = /^[A-Za-z][A-Za-z0-9_+-]*(\/[A-Za-z0-9_+-]+){0,2}$/;
+
+/**
+ * W-438: the time zone as stored ("" for UTC), or null when it isn't a zone this server knows.
+ * "america/toronto" becomes "America/Toronto". An unknown zone used to be saved and silently
+ * read as UTC.
+ */
+export function readTimeZone(text: string): string | null {
+  const value = text.trim();
+  if (value === "") return "";
+  if (!ZONE.test(value)) return null;
+  try {
+    const zone = new Intl.DateTimeFormat("en-US", { timeZone: value }).resolvedOptions().timeZone;
+    return ZONE.test(zone) ? zone : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Drops empty rules so the stored audience stays valid (W-313). */
 function tidy(audience: Audience): Audience | undefined {
   const next: Audience = { ...audience };
@@ -61,9 +80,14 @@ export function AudienceEditor({
   const [countryText, setCountryText] = React.useState(node.audience?.countries?.join(", ") ?? "");
   const [segmentText, setSegmentText] = React.useState(node.audience?.segments?.join(", ") ?? "");
   const [segmentError, setSegmentError] = React.useState<string | null>(null);
+  // W-438: the zone is typed in full before it's checked; checking each keystroke refused the "/".
+  const [zoneText, setZoneText] = React.useState(node.audience?.timeZone ?? "");
+  const [zoneError, setZoneError] = React.useState<string | null>(null);
   React.useEffect(() => {
     setCountryText(node.audience?.countries?.join(", ") ?? "");
     setSegmentText(node.audience?.segments?.join(", ") ?? "");
+    setZoneText(node.audience?.timeZone ?? "");
+    setZoneError(null);
   }, [node.id]);
   if (isRoot) return null;
   const audience = node.audience;
@@ -261,17 +285,31 @@ export function AudienceEditor({
               <span className="emvb-bind-label">Time zone</span>
               <input
                 className="emvb-native-input"
-                value={base.timeZone ?? ""}
+                value={zoneText}
                 placeholder="UTC"
                 data-emvb-audience-zone=""
+                aria-invalid={zoneError ? true : undefined}
+                aria-describedby={zoneError ? `${id}-zone-error` : undefined}
                 onChange={(event) => {
-                  const value = event.currentTarget.value.trim();
-                  if (value && !/^[A-Za-z][A-Za-z0-9_+-]*(\/[A-Za-z0-9_+-]+){0,2}$/.test(value))
+                  setZoneText(event.currentTarget.value);
+                  setZoneError(null);
+                }}
+                onBlur={() => {
+                  const zone = readTimeZone(zoneText);
+                  if (zone === null) {
+                    setZoneError("Unknown time zone. Use a name such as America/Toronto.");
                     return;
-                  set({ ...base, timeZone: value });
+                  }
+                  setZoneText(zone);
+                  if (zone !== (base.timeZone ?? "")) set({ ...base, timeZone: zone });
                 }}
               />
             </label>
+          )}
+          {(base.hours || base.days) && zoneError && (
+            <span className="emvb-helper" id={`${id}-zone-error`} data-emvb-audience-zone-error="">
+              {zoneError}
+            </span>
           )}
           <p className="emvb-helper" data-emvb-audience-help="">
             {ruleCount(base) === 0

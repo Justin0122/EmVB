@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { act } from "react";
 import type { LayoutNode } from "../../../../core/index.ts";
 import { cleanup, mount, rerender } from "../../../../../test/dom/mount.ts";
-import { AudienceEditor, parseCountries } from "./AudienceEditor.tsx";
+import { AudienceEditor, parseCountries, readTimeZone } from "./AudienceEditor.tsx";
 import { VariantEditor } from "./VariantEditor.tsx";
 
 afterEach(cleanup);
@@ -104,5 +104,28 @@ describe("Visitors segments (W-329)", () => {
     await act(async () => change(input, ""));
     await act(async () => input.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
     expect(node.audience).toEqual({});
+  });
+});
+
+describe("time zone field (W-438)", () => {
+  test("zones are read whole, case fixed, and unknown ones refused", () => {
+    expect(readTimeZone(" america/toronto ")).toBe("America/Toronto");
+    expect(readTimeZone("")).toBe("");
+    expect(readTimeZone("America/Torronto")).toBeNull();
+    expect(readTimeZone("America/")).toBeNull();
+  });
+
+  test("a zone can be typed with its slash and is saved on blur", async () => {
+    let node = { ...heading, audience: { hours: { from: 9, to: 17 } } } as LayoutNode;
+    const onChange = (next: LayoutNode) => {
+      node = next;
+    };
+    await mount(<AudienceEditor node={node} isRoot={false} onChange={onChange} />);
+    const input = q("[data-emvb-audience-zone]") as HTMLInputElement;
+    await act(async () => change(input, "America/"));
+    expect(input.value).toBe("America/");
+    await act(async () => change(input, "America/Toronto"));
+    await act(async () => input.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+    expect(node.audience?.timeZone).toBe("America/Toronto");
   });
 });
