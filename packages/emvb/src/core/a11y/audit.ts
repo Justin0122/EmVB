@@ -264,7 +264,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       }
     }
     // W-424: two menus with the same name are two "Menu navigation" landmarks nobody can tell apart.
-    if (node.type === "menu" && "children" in node && node.children.length > 0) {
+    if (node.type === "menu" && (node.children?.length ?? 0) > 0) {
       const name = String(props["label"] ?? "").trim() || "Menu";
       if (menuNames.has(name.toLowerCase())) {
         add({
