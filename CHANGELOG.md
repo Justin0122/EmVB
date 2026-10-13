@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **A button icon can be saved and removed (W-387).** Choosing an icon for a Button no longer makes the page refuse to save, and the Icon field on a Button has Remove.
 - **Focal point and button icon gap take 0 and stop at their maximum (W-388).** A 0 % focal point or a 0 px gap can be typed, and 101 % or a 65 px gap is refused in the field instead of at save.
 - **Wrap the selection follows the nesting rules (W-389).** An accordion item, tab panel or menu item is no longer wrapped into a page that can't save, and a wrap that would go past the depth limit is refused with the reason.
+- **Renaming an uploaded icon returns the checked SVG (W-390).** The rename answer goes through the same allowlist as My uploads, so a stored row that fails it is not sent back to the picker.
 
 ## [0.4.0] - 2026-10-11
 

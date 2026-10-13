@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { publicUploadedIcon, uploadName } from "../../src/server/icon-routes.ts";
+import { iconRenameRoute, publicUploadedIcon, uploadName } from "../../src/server/icon-routes.ts";
 import { createTestRuntime, ROLES, userWithRole } from "./runtime.ts";
 
 // W-239: uploaded SVG icons live in EmVB's plugin storage, sanitized on the server.
@@ -114,5 +114,41 @@ describe("icon upload routes (W-239)", () => {
     expect(uploadName("/home/me/Icons/rocket.SVG")).toBe("rocket");
     expect(uploadName(".svg")).toBe("Uploaded icon");
     expect(uploadName("x".repeat(300)).length).toBe(80);
+  });
+});
+
+describe("renaming a stored upload (W-390)", () => {
+  const renameIn = (svg: string) => {
+    const rows = new Map([
+      ["0123456789abcdef", { name: "Old", svg, uploadedAt: "2026-10-10T00:00:00.000Z" }],
+    ]);
+    const ctx = {
+      input: { id: "0123456789abcdef", name: "New.svg" },
+      storage: {
+        icons: {
+          get: async (id: string) => rows.get(id) ?? null,
+          put: async (id: string, data: { name: string; svg: string; uploadedAt: string }) => {
+            rows.set(id, data);
+          },
+        },
+      },
+    };
+    const run = iconRenameRoute.handler as unknown as (c: typeof ctx) => Promise<{ item: Item }>;
+    return { rows, result: run(ctx) };
+  };
+
+  test("answers with the checked markup the list sends", async () => {
+    const { result } = renameIn('<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>');
+    const { item } = await result;
+    expect(item.name).toBe("New");
+    expect(item.svg).toBe('<svg viewBox="0 0 1 1"><path d="M0 0"></path></svg>');
+  });
+
+  test("a row that fails the allowlist is not echoed back or renamed", async () => {
+    const { rows, result } = renameIn(
+      '<svg viewBox="0 0 1 1" onload="alert(1)"><path d="M0 0"/></svg>',
+    );
+    await expect(result).rejects.toThrow("not in My uploads");
+    expect(rows.get("0123456789abcdef")?.name).toBe("Old");
   });
 });

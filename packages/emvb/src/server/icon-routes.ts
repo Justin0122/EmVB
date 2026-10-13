@@ -111,8 +111,12 @@ export const iconRenameRoute: PluginRoute<z.infer<typeof RenameInput>> = {
     const current = await store(ctx).get(ctx.input.id);
     if (!current) throw new PluginRouteError("NOT_FOUND", "That upload is not in My uploads.", 404);
     const name = uploadName(ctx.input.name);
+    // W-390: answer with the same checked markup the list sends; a row that fails the
+    // allowlist is not renamed or echoed back.
+    const item = publicUploadedIcon(ctx.input.id, { ...current, name });
+    if (!item) throw new PluginRouteError("NOT_FOUND", "That upload is not in My uploads.", 404);
     await store(ctx).put(ctx.input.id, { ...current, name });
-    return { item: { id: ctx.input.id, ...current, name } };
+    return { item };
   },
 };
 

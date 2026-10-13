@@ -27756,8 +27756,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/icon-routes.ts",
-          "search": "    await store(ctx).put(ctx.input.id, { ...current, name });\n    return { item: { id: ctx.input.id, ...current, name } };",
-          "replace": "    await store(ctx).put(ctx.input.id, current);\n    return { item: { id: ctx.input.id, ...current } };"
+          "search": "    await store(ctx).put(ctx.input.id, { ...current, name });\n    return { item };",
+          "replace": "    await store(ctx).put(ctx.input.id, current);\n    return { item: { ...item, name: current.name } };"
         }
       ],
       "command": [
@@ -28752,6 +28752,26 @@
         "tab panel or menu item"
       ],
       "expect": "\\(fail\\).*tab panel or menu item"
+    },
+    {
+      "id": "W-390/rename-echoes-raw-svg",
+      "requirement": "W-390",
+      "description": "Rename sends the stored SVG back unchecked.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/icon-routes.ts",
+          "search": "    if (!item) throw new PluginRouteError(\"NOT_FOUND\", \"That upload is not in My uploads.\", 404);\n    await store(ctx).put(ctx.input.id, { ...current, name });\n    return { item };",
+          "replace": "    await store(ctx).put(ctx.input.id, { ...current, name });\n    return { item: item ?? { id: ctx.input.id, ...current, name } };"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/icon-uploads.test.ts",
+        "-t",
+        "not echoed back"
+      ],
+      "expect": "\\(fail\\).*not echoed back"
     }
   ]
 }
