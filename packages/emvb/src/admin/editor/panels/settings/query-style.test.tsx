@@ -128,3 +128,29 @@ describe("the container width is a draft (W-401)", () => {
     expect(host.textContent).toContain("1 to 3840");
   });
 });
+
+describe("copying the style asks before replacing query styles (W-402)", () => {
+  const click = async (host: HTMLElement, text: string) =>
+    act(async () => {
+      [...host.querySelectorAll("button")].find((b) => b.textContent?.trim() === text)?.click();
+    });
+
+  test("edited query styles need a confirm; Keep them leaves them", async () => {
+    const { host, sent } = await panel({ min: 480, style: { flexDirection: "row" } });
+    await click(host, "Use current style at that width");
+    expect(sent).toEqual([]);
+    expect(host.querySelector("[data-emvb-query-confirm]")).not.toBeNull();
+    await click(host, "Keep them");
+    expect(sent).toEqual([]);
+    expect(host.querySelector("[data-emvb-query-confirm]")).toBeNull();
+    await click(host, "Use current style at that width");
+    await click(host, "Replace");
+    expect(sent.at(-1)?.query).toEqual({ min: 480, style: {} });
+  });
+
+  test("empty query styles are copied straight away", async () => {
+    const { host, sent } = await panel({ min: 480, style: {} });
+    await click(host, "Use current style at that width");
+    expect(sent.length).toBe(1);
+  });
+});

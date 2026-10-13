@@ -92,6 +92,12 @@ export function ContainerQueryFields({
     setDraft(stored);
     setError(null);
   }, [node.id, stored]);
+  const [confirming, setConfirming] = React.useState(false);
+  React.useEffect(() => setConfirming(false), [node.id]);
+  const copyStyle = () => {
+    setConfirming(false);
+    onChange({ ...node, query: { min: node.query?.min ?? 480, style: node.style ?? {} } });
+  };
   const commitMin = () => {
     const next = draft.trim();
     if (next === stored) {
@@ -144,13 +150,36 @@ export function ContainerQueryFields({
         type="button"
         variant="secondary"
         className={BUTTON}
+        data-emvb-query-copy=""
         onClick={() => {
-          const width = node.query?.min ?? 480;
-          onChange({ ...node, query: { min: width, style: node.style ?? {} } });
+          // W-402: ask before replacing container-query styles that differ from the style.
+          const own = Object.keys(node.query?.style ?? {}).length;
+          const same = JSON.stringify(node.query?.style ?? {}) === JSON.stringify(node.style ?? {});
+          if (own > 0 && !same) setConfirming(true);
+          else copyStyle();
         }}
       >
         Use current style at that width
       </Button>
+      {confirming && (
+        <div className="emvb-query-confirm" role="alert" data-emvb-query-confirm="">
+          <p className="emvb-helper">
+            Replace the {Object.keys(node.query?.style ?? {}).length} styles set for this width with
+            the current style?
+          </p>
+          <Button type="button" variant="destructive" className={BUTTON} onClick={copyStyle}>
+            Replace
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className={BUTTON}
+            onClick={() => setConfirming(false)}
+          >
+            Keep them
+          </Button>
+        </div>
+      )}
       <QueryStyleRows node={node} onChange={onChange} />
       <p className="emvb-helper">
         Query container makes this box the size children measure. The styles listed here apply
