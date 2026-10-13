@@ -59,7 +59,9 @@ describe("EmVB MCP tools on EmDash's plugin MCP (W-452, W-453, W-454)", () => {
       get_accessibility_findings: { pageId: id },
       list_versions: { pageId: id },
     };
-    const results = await Promise.all(TOOLS.map((tool) => t.mcp(tool.name, inputs[tool.name])));
+    const results = await Promise.all(
+      TOOLS.filter((tool) => tool.readOnly).map((tool) => t.mcp(tool.name, inputs[tool.name])),
+    );
     results.forEach((result, i) => {
       expect(TOOLS[i]?.output.safeParse(data(result)).success).toBe(true);
     });

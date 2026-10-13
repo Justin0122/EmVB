@@ -19,7 +19,13 @@ export function createPlugin(options: { canvasStyles?: unknown } = {}) {
     version: PLUGIN_VERSION,
     capabilities: ["content:read", "content:write", "content:publish", "content:revisions:read"],
     // W-239: uploaded SVG icons (EmDash's media library refuses SVG by default).
-    storage: { design: { indexes: [] }, icons: { indexes: ["uploadedAt"] } },
+    storage: {
+      design: { indexes: [] },
+      icons: { indexes: ["uploadedAt"] },
+      // D-057: agent changes and the site styles history.
+      agentlog: { indexes: ["at", "pageId"] },
+      designhistory: { indexes: ["at"] },
+    },
     hooks: {
       "content:beforeSave": { handler: beforeSave, errorPolicy: "abort" },
     },

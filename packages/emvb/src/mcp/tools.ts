@@ -1,6 +1,7 @@
 import type { z } from "zod";
 import type { EmvbPorts } from "./ports.ts";
 import * as read from "./read.ts";
+import * as write from "./write.ts";
 
 /**
  * One MCP tool, defined once for every door (D-053). On the site it becomes the plugin route
@@ -117,4 +118,95 @@ const READ_TOOLS: ToolDef[] = [
   }),
 ];
 
-export const TOOLS: ToolDef[] = [...READ_TOOLS];
+/** Draft-only write tools (W-457, W-458). Nothing here publishes (D-055). */
+const WRITE_TOOLS: ToolDef[] = [
+  tool({
+    name: "create_page",
+    title: "Create a page",
+    description:
+      "Creates a new unpublished EmVB page with a starter layout, optionally followed by section recipes (hero, features, …). Returns the page id and rev.",
+    input: write.CreatePageInput,
+    output: write.CreatePageOutput,
+    readOnly: false,
+    destructive: false,
+    run: (ports, input) => write.createPage(ports, input),
+  }),
+  tool({
+    name: "add_element",
+    title: "Add an element",
+    description:
+      "Adds an element (with optional children) into parentId at index (default: last). Unset props take the type's defaults; ids are generated. Refused with the editor's reason when the parent can't hold it.",
+    input: write.AddElementInput,
+    output: write.WriteOutput,
+    readOnly: false,
+    destructive: false,
+    run: (ports, input) => write.addElement(ports, input),
+  }),
+  tool({
+    name: "move_element",
+    title: "Move an element",
+    description: "Moves an element into parentId at index (counted before the move).",
+    input: write.MoveElementInput,
+    output: write.WriteOutput,
+    readOnly: false,
+    destructive: false,
+    run: (ports, input) => write.moveElement(ports, input),
+  }),
+  tool({
+    name: "update_element",
+    title: "Update an element",
+    description:
+      'Changes an element: `set` merges objects (props, style, states, devices, attributes) one level deep and replaces other fields; `unset` removes fields such as "style.color" or "label". Never changes id, type or children.',
+    input: write.UpdateElementInput,
+    output: write.WriteOutput,
+    readOnly: false,
+    destructive: false,
+    run: (ports, input) => write.updateElement(ports, input),
+  }),
+  tool({
+    name: "remove_element",
+    title: "Remove an element",
+    description:
+      "Removes an element and everything inside it from the draft. Undo with restore_version.",
+    input: write.RemoveElementInput,
+    output: write.WriteOutput,
+    readOnly: false,
+    destructive: true,
+    run: (ports, input) => write.removeElement(ports, input),
+  }),
+  tool({
+    name: "apply_section_recipe",
+    title: "Add a ready-made section",
+    description:
+      "Adds a section recipe (see list_section_recipes), styled with the site's variables, at parentId/index (default: end of the page).",
+    input: write.ApplyRecipeInput,
+    output: write.WriteOutput,
+    readOnly: false,
+    destructive: false,
+    run: (ports, input) => write.applySectionRecipe(ports, input),
+  }),
+  tool({
+    name: "update_site_styles",
+    title: "Update site styles (draft)",
+    description:
+      "Adds or changes variables (by id), classes (by id), tag defaults or direction in the site styles draft. Never publishes: a person or publish_site_styles does that.",
+    input: write.UpdateSiteStylesInput,
+    output: write.UpdateSiteStylesOutput,
+    readOnly: false,
+    destructive: false,
+    run: (ports, input) => write.updateSiteStyles(ports, input),
+  }),
+  tool({
+    name: "restore_version",
+    title: "Restore a version",
+    description:
+      "Saves an earlier version (from list_versions) as the new draft. Nothing is published.",
+    input: write.RestoreVersionInput,
+    output: write.WriteOutput,
+    readOnly: false,
+    destructive: false,
+    run: (ports, input) => write.restoreVersion(ports, input),
+  }),
+];
+
+export const TOOLS: ToolDef[] = [...READ_TOOLS, ...WRITE_TOOLS];

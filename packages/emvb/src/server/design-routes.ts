@@ -91,19 +91,61 @@ export const designSaveRoute: PluginRoute<z.infer<typeof SaveInput>> = {
       const summary = summarizeIssues(result.issues);
       throw new PluginRouteError("INVALID_DESIGN", `The design system is invalid. ${summary}`, 422);
     }
-    const write = await store(ctx).compareAndSet(
-      DESIGN_DRAFT_KEY,
-      ctx.input.revision,
-      result.design,
-    );
-    if (!write.applied) {
+    const write = await writeDesignDraft(ctx, result.design, ctx.input.revision, "editor");
+    if (!write) {
       throw PluginRouteError.conflict(
         "The design system was changed somewhere else. Reload it and try again.",
       );
     }
-    return { revision: write.revision };
+    return { revision: write };
   },
 };
+
+/** Keep the last 50 style drafts and publishes (D-057), newest first by key. */
+const DESIGN_HISTORY_LIMIT = 50;
+
+type HistoryStore = {
+  put(id: string, data: unknown): Promise<void>;
+  query(o: { orderBy: Record<string, "asc" | "desc">; limit: number; cursor?: string }): Promise<{
+    items: { id: string; data: unknown }[];
+  }>;
+  deleteMany(ids: string[]): Promise<number>;
+};
+
+/** Records a style draft or publish in the design history, then trims it to the limit. */
+async function recordDesign(
+  ctx: RouteContext<unknown>,
+  design: DesignSystem,
+  kind: "draft" | "publish",
+  by: "editor" | "agent",
+) {
+  const history = ctx.storage["designhistory"] as unknown as HistoryStore | undefined;
+  if (!history) return;
+  const at = new Date().toISOString();
+  await history.put(`${at}-${crypto.randomUUID().slice(0, 8)}`, {
+    at,
+    kind,
+    by,
+    userId: ctx.user?.id ?? null,
+    design,
+  });
+  const old = await history.query({ orderBy: { at: "desc" }, limit: 100 });
+  const extra = old.items.slice(DESIGN_HISTORY_LIMIT).map((item) => item.id);
+  if (extra.length > 0) await history.deleteMany(extra);
+}
+
+/** Compare-and-set of the style draft, recorded in the history. The new revision, or null on conflict. */
+export async function writeDesignDraft(
+  ctx: RouteContext<unknown>,
+  design: DesignSystem,
+  expectedRevision: string | null,
+  by: "editor" | "agent",
+): Promise<string | null> {
+  const write = await store(ctx).compareAndSet(DESIGN_DRAFT_KEY, expectedRevision, design);
+  if (!write.applied) return null;
+  await recordDesign(ctx, design, "draft", by);
+  return write.revision;
+}
 
 const PublishInput = z.object({ publishedRevision: z.string().nullable() });
 
@@ -126,6 +168,7 @@ export const designPublishRoute: PluginRoute<z.infer<typeof PublishInput>> = {
         "Site styles were published somewhere else. Reload the editor and try again.",
       );
     }
+    await recordDesign(ctx, draft.design, "publish", "editor");
     return { revision: write.revision };
   },
 };

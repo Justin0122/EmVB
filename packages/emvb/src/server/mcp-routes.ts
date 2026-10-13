@@ -3,7 +3,8 @@ import { PAGES_COLLECTION, DESIGN_DRAFT_KEY, DESIGN_KEY } from "../constants.ts"
 import { McpToolError } from "../mcp/errors.ts";
 import type { EmvbPorts, PageRecord, PageSummary } from "../mcp/ports.ts";
 import type { ToolDef } from "../mcp/tools.ts";
-import { readDesign } from "./design-routes.ts";
+import { readDesign, writeDesignDraft } from "./design-routes.ts";
+import { McpToolError as ToolError } from "../mcp/errors.ts";
 
 type Item = {
   id: string;
@@ -31,7 +32,16 @@ type Content = {
     id: string,
     o: { limit?: number },
   ): Promise<{ id: string; createdAt: string; authorId?: string | null }[]>;
+  getRevision?(
+    c: string,
+    id: string,
+    revisionId: string,
+  ): Promise<{ data: Record<string, unknown> } | null>;
+  update(c: string, id: string, data: Record<string, unknown>): Promise<Item>;
+  create(c: string, data: Record<string, unknown>): Promise<Item>;
 };
+
+type LogStore = { put(id: string, data: unknown): Promise<void> };
 
 const parseJson = (raw: unknown) => {
   if (typeof raw !== "string") return raw;
@@ -55,6 +65,8 @@ const summary = (item: Item): PageSummary => ({
 function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   const content = ctx.content as unknown as Content | undefined;
   if (!content) throw new McpToolError("FORBIDDEN", "EmVB has no content access on this site.");
+  const versioned = (id: string) =>
+    content.getVersioned ? content.getVersioned(PAGES_COLLECTION, id) : Promise.resolve(null);
   return {
     caller: { userId: ctx.user?.id ?? null, role: Number(ctx.user?.role ?? 0) },
     async listPages({ cursor, limit }) {
@@ -78,6 +90,51 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
         ? await content.listRevisions(PAGES_COLLECTION, id, { limit })
         : [];
       return list.map((r) => ({ id: r.id, createdAt: r.createdAt, authorId: r.authorId ?? null }));
+    },
+    async getRevisionData(id, revisionId) {
+      const revision = content.getRevision
+        ? await content.getRevision(PAGES_COLLECTION, id, revisionId)
+        : null;
+      return revision?.data ?? null;
+    },
+    async savePage(id, patch, expectedRev) {
+      const current = await versioned(id);
+      if (!current) throw new ToolError("NOT_FOUND", `No EmVB page with id ${id}.`);
+      if (current["_rev"] !== expectedRev) {
+        throw new ToolError("CONFLICT", "The page changed since it was read.", {
+          rev: current["_rev"],
+        });
+      }
+      await content.update(PAGES_COLLECTION, id, {
+        ...(patch.layout ? { layout: patch.layout } : {}),
+        ...(patch.title ? { title: patch.title } : {}),
+      });
+      const after = await versioned(id);
+      return {
+        rev: after?.["_rev"] ?? "",
+        ...(after?.item.draftRevisionId ? { revisionId: after.item.draftRevisionId } : {}),
+      };
+    },
+    async createPage({ title, layout }) {
+      // Plugins can't choose a slug on create; EmDash derives it from the title.
+      const item = await content.create(PAGES_COLLECTION, { title, layout });
+      const after = await versioned(item.id);
+      return { id: item.id, slug: String(item.slug ?? ""), rev: after?.["_rev"] ?? "" };
+    },
+    async saveDesign(design, expectedRevision) {
+      const written = await writeDesignDraft(ctx, design, expectedRevision, "agent");
+      if (!written) throw new ToolError("CONFLICT", "Site styles changed since they were read.");
+      return { revision: written };
+    },
+    async log(entry) {
+      const at = new Date().toISOString();
+      const store = ctx.storage["agentlog"] as unknown as LogStore;
+      await store.put(`${at}-${crypto.randomUUID().slice(0, 8)}`, {
+        ...entry,
+        at,
+        userId: ctx.user?.id ?? null,
+        client: (ctx.request.headers.get("user-agent") ?? "").slice(0, 120),
+      });
     },
     async getDesign() {
       const published = await readDesign(ctx, DESIGN_KEY);

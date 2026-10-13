@@ -1,4 +1,4 @@
-import type { DesignSystem } from "../core/index.ts";
+import type { DesignSystem, Layout } from "../core/index.ts";
 
 /** A page as the tool core sees it: the current draft (or published) data and its revision. */
 export type PageRecord = {
@@ -26,7 +26,17 @@ export type DesignState = {
 };
 
 /** Who is calling. EmDash has already checked the token scope and the editor role (D-056). */
-export type Caller = { userId: string | null; role: number };
+export type Caller = { userId: string | null; role: number; client?: string };
+
+/** One agent change, shown in the Timeline and the Agents tab (D-057). */
+export type AgentLogEntry = {
+  target: "page" | "styles";
+  tool: string;
+  pageId?: string;
+  rev?: string;
+  revisionId?: string;
+  summary: string;
+};
 
 /**
  * Everything the tool core reads or writes goes through these ports (D-053). The plugin builds
@@ -41,4 +51,18 @@ export interface EmvbPorts {
   getPage(id: string): Promise<PageRecord | null>;
   listRevisions(id: string, limit: number): Promise<RevisionSummary[]>;
   getDesign(): Promise<DesignState>;
+  getRevisionData(pageId: string, revisionId: string): Promise<Record<string, unknown> | null>;
+  /** Writes the draft when the stored `_rev` is still `expectedRev`; else McpToolError CONFLICT. */
+  savePage(
+    id: string,
+    patch: { layout?: Layout; title?: string },
+    expectedRev: string,
+  ): Promise<{ rev: string; revisionId?: string }>;
+  createPage(input: {
+    title: string;
+    layout: Layout;
+  }): Promise<{ id: string; slug: string; rev: string }>;
+  /** Saves the style draft with compare-and-set; McpToolError CONFLICT when it moved. */
+  saveDesign(design: DesignSystem, expectedRevision: string | null): Promise<{ revision: string }>;
+  log(entry: AgentLogEntry): Promise<void>;
 }

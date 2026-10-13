@@ -459,8 +459,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/design-routes.ts",
-          "search": "    const write = await store(ctx).compareAndSet(\n      DESIGN_DRAFT_KEY,\n      ctx.input.revision,\n      result.design,\n    );",
-          "replace": "    await (ctx.storage[\"design\"] as unknown as { put(id: string, v: unknown): Promise<void> }).put(DESIGN_DRAFT_KEY, result.design);\n    const write = { applied: true as const, revision: crypto.randomUUID() };"
+          "search": "    const write = await writeDesignDraft(ctx, result.design, ctx.input.revision, \"editor\");",
+          "replace": "    await (ctx.storage[\"design\"] as unknown as { put(id: string, v: unknown): Promise<void> }).put(DESIGN_DRAFT_KEY, result.design);\n    const write = crypto.randomUUID();"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/test/server"],
@@ -16416,8 +16416,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/design-routes.ts",
-          "search": "    const write = await store(ctx).compareAndSet(\n      DESIGN_DRAFT_KEY,\n      ctx.input.revision,",
-          "replace": "    const write = await store(ctx).compareAndSet(\n      DESIGN_KEY,\n      ctx.input.revision,"
+          "search": "  const write = await store(ctx).compareAndSet(DESIGN_DRAFT_KEY, expectedRevision, design);",
+          "replace": "  const write = await store(ctx).compareAndSet(DESIGN_KEY, expectedRevision, design);"
         }
       ],
       "command": [
@@ -17389,8 +17389,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/design-routes.ts",
-          "search": "      DESIGN_DRAFT_KEY,\n      ctx.input.revision,\n      result.design,\n",
-          "replace": "      DESIGN_DRAFT_KEY,\n      ctx.input.revision,\n      { ...result.design, classes: result.design.classes?.map(({ states: _states, ...cls }) => cls) },\n"
+          "search": "    const write = await writeDesignDraft(ctx, result.design, ctx.input.revision, \"editor\");",
+          "replace": "    const write = await writeDesignDraft(ctx, { ...result.design, classes: result.design.classes?.map(({ states: _states, ...cls }) => cls) }, ctx.input.revision, \"editor\");"
         }
       ],
       "command": [
@@ -17433,8 +17433,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/design-routes.ts",
-          "search": "      DESIGN_DRAFT_KEY,\n      ctx.input.revision,\n      result.design,\n",
-          "replace": "      DESIGN_DRAFT_KEY,\n      ctx.input.revision,\n      { ...result.design, classes: result.design.classes?.map((cls) => ({ ...cls, style: {} })) },\n"
+          "search": "    const write = await writeDesignDraft(ctx, result.design, ctx.input.revision, \"editor\");",
+          "replace": "    const write = await writeDesignDraft(ctx, { ...result.design, classes: result.design.classes?.map((cls) => ({ ...cls, style: {} })) }, ctx.input.revision, \"editor\");"
         }
       ],
       "command": [
@@ -29942,6 +29942,46 @@
         "allowed parents"
       ],
       "expect": "\\(fail\\).*allowed parents"
+    },
+    {
+      "id": "W-457/mcp-skips-rev-check",
+      "requirement": "W-457",
+      "description": "Agent page writes ignore the caller's expectedRev, so a stale write overwrites a person's edit.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/write.ts",
+          "search": "if (expectedRev !== undefined && page.rev !== expectedRev) {",
+          "replace": "if (expectedRev === \"never\") {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-write.test.ts",
+        "-t",
+        "stale expectedRev"
+      ],
+      "expect": "\\(fail\\).*stale expectedRev"
+    },
+    {
+      "id": "W-457/mcp-write-skips-validation",
+      "requirement": "W-457",
+      "description": "Agent writes save layouts without the editor's nesting rules.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/write.ts",
+          "search": "      const layout = checkLayout(next.layout);",
+          "replace": "      const layout = next.layout;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-write.test.ts",
+        "-t",
+        "breaks the layout schema"
+      ],
+      "expect": "\\(fail\\).*breaks the layout schema"
     }
   ]
 }
