@@ -127,3 +127,14 @@ describe("media API requests (W-091, R-007)", () => {
     await expect(uploadImage(fetcher, file)).rejects.toMatchObject({ status: 200 });
   });
 });
+
+describe("library pick drops the old extra sizes (W-422)", () => {
+  test("a different library image removes sources; the same one keeps them", () => {
+    const sources = [{ src: "/old-480.png", width: 480 }];
+    expect(propsFromMedia({ alt: "A", src: "/old.png", sources }, item()).sources).toBeUndefined();
+    expect(
+      propsFromMedia({ alt: "A", src: "/_emdash/api/media/file/01MEDIA.png", sources }, item())
+        .sources,
+    ).toEqual(sources);
+  });
+});

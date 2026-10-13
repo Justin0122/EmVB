@@ -59,6 +59,8 @@ export function propsFromMedia(
   item: MediaLibraryItem,
 ): Record<string, unknown> {
   const next: Record<string, unknown> = { ...current, src: item.url, mediaId: item.id };
+  // W-422: extra sizes belong to the old picture; kept, the browser could still show it.
+  if (current.src !== item.url) delete next.sources;
   if (item.width) next.width = item.width;
   if (item.height) next.height = item.height;
   const alt = current.alt;

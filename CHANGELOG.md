@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Choosing a different image clears the previous image's extra sizes.
 - Low contrast caused by opacity says to raise the opacity instead of offering a colour fix that can't help.
 - Command palette search ignores accents: "cafe" finds "café".
 - CSS ids starting with emvb- are refused in Advanced, since EmVB uses them for headings and fields.

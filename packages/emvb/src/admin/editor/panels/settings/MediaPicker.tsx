@@ -105,6 +105,8 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image" }: Props)
     if (safe === src) return;
     const next: Record<string, unknown> = { ...propsOf(node), src: safe };
     delete next.mediaId;
+    // W-422: a different picture drops the old one's extra sizes.
+    if (propsOf(node).src !== safe) delete next.sources;
     onChange(withProps(node, next));
   };
 

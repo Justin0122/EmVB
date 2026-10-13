@@ -29380,6 +29380,26 @@
         "raise the opacity"
       ],
       "expect": "\\(fail\\).*raise the opacity"
+    },
+    {
+      "id": "W-422/stale-sources-kept",
+      "requirement": "W-422",
+      "description": "A new library image keeps the old srcset.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/media-api.ts",
+          "search": "if (current.src !== item.url) delete next.sources;",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/media-api.test.ts",
+        "-t",
+        "different library image"
+      ],
+      "expect": "\\(fail\\).*different library image"
     }
   ]
 }

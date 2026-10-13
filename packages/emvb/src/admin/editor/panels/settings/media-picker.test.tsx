@@ -163,3 +163,16 @@ describe("media library (W-091)", () => {
     expect(view.host.querySelector("[data-emvb-media-dialog]")?.outerHTML ?? null).toBeNull();
   });
 });
+
+describe("a new picture drops the old extra sizes (W-422)", () => {
+  test("a pasted URL for a different image removes sources", async () => {
+    const view = await picker(
+      image({ src: "/old.png", alt: "A", sources: [{ src: "/old-480.png", width: 480 }] }),
+      ok([]),
+    );
+    await view.typeUrl("https://example.com/new.jpg");
+    expect(view.sent.map((n) => n.props)).toEqual([
+      { src: "https://example.com/new.jpg", alt: "A" },
+    ]);
+  });
+});
