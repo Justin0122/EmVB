@@ -40,3 +40,19 @@ describe("bridge options (W-461)", () => {
     expect(o.endpoint.href).toBe("http://localhost:4321/_emdash/api/mcp");
   });
 });
+
+describe("bridge release identity (W-472)", () => {
+  test("the bridge version, its package version and the EmVB core it bundles match", async () => {
+    const { BRIDGE_VERSION } = await import("../src/bridge.ts");
+    const readPkg = async (path: string) =>
+      (await Bun.file(new URL(path, import.meta.url)).json()) as {
+        version: string;
+        devDependencies: Record<string, string>;
+      };
+    const bridge = await readPkg("../package.json");
+    const core = await readPkg("../../emvb/package.json");
+    expect(bridge.version).toBe(BRIDGE_VERSION);
+    expect(bridge.devDependencies["@perkyzz/emvb"]).toBe(core.version);
+    expect(bridge.version).toBe(core.version);
+  });
+});

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-13
+
 ### Fixed
 
 - Video URLs typed without https://, such as youtube.com/watch?v=…, embed the video.
@@ -67,6 +69,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- `@perkyzz/emvb-mcp` 0.5.0 ships alongside `@perkyzz/emvb` 0.5.0.
 - Docs: the AI agents (MCP) guide.
 - `@perkyzz/emvb-mcp` serves the layout and style schemas, page resources, four workflow prompts and the `emvb-page-builder` skill.
 - Version timeline: Agent badge and a People/Agents filter. The editor tells you when an AI agent changed the page while you were idle.
@@ -388,7 +391,8 @@ The first release, published on npm as [`@perkyzz/emvb`](https://www.npmjs.com/p
 - Video embeds use privacy-friendly domains and never autoplay (W-026).
 - The editor canvas is a sandboxed iframe (W-009), and an XSS test corpus runs against the editor and published pages in a real browser (W-042).
 
-[Unreleased]: https://github.com/PerkyZZ999/EmVB/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/PerkyZZ999/EmVB/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/PerkyZZ999/EmVB/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/PerkyZZ999/EmVB/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/PerkyZZ999/EmVB/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/PerkyZZ999/EmVB/compare/v0.2.0...v0.2.1
