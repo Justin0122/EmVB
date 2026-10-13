@@ -29188,8 +29188,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "const ratio = contrastRatio(over(nextColor, nextBg), nextBg);",
-          "replace": "const ratio = contrastRatio(nextColor, nextBg);"
+          "search": "contrastRatio(over(nextColor, nextBg, fade), nextBg)",
+          "replace": "contrastRatio(nextColor, nextBg)"
         }
       ],
       "command": [
@@ -29240,6 +29240,26 @@
         "selects that tab"
       ],
       "expect": "\\(fail\\).*selects that tab"
+    },
+    {
+      "id": "W-415/opacity-ignored",
+      "requirement": "W-415",
+      "description": "Contrast ignores opacity.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "contrastRatio(over(nextColor, nextBg, fade), nextBg)",
+          "replace": "contrastRatio(over(nextColor, nextBg), nextBg)"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/contrast-opacity.test.ts",
+        "-t",
+        "faded text is flagged"
+      ],
+      "expect": "\\(fail\\).*faded text is flagged"
     }
   ]
 }

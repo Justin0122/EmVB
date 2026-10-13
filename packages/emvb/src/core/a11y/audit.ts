@@ -74,10 +74,11 @@ const lum = (hex: string) => {
  * W-412: `top` painted over opaque `bottom`, as 6-digit hex. A colour's alpha (#rgba,
  * #rrggbbaa) used to be dropped, so faint text counted as full strength.
  */
-function over(top: string, bottom: string): string {
+function over(top: string, bottom: string, fade = 1): string {
   let h = top.slice(1);
   if (h.length <= 4) h = [...h].map((c) => c + c).join("");
-  const alpha = h.length === 8 ? Number.parseInt(h.slice(6, 8), 16) / 255 : 1;
+  // W-415: `fade` is the element's opacity times its ancestors'.
+  const alpha = (h.length === 8 ? Number.parseInt(h.slice(6, 8), 16) / 255 : 1) * fade;
   if (alpha >= 1) return `#${h.slice(0, 6)}`;
   const a = rgb(`#${h.slice(0, 6)}`);
   const b = rgb(bottom);
@@ -136,6 +137,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   // A/B pair each have an H1 doesn't count two.
   const beforeA = new Map<string, [number, number]>();
   const afterA = new Map<string, [number, number]>();
+  let fade = 1;
   const walk = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     // W-413: an element hidden on every device (and what's inside it) is never shown or read.
     if (
@@ -148,7 +150,11 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     if (variant?.arm === "a") beforeA.set(variant.test, [h1s, lastLevel]);
     const before = variant?.arm === "b" ? beforeA.get(variant.test) : undefined;
     if (before) [h1s, lastLevel] = before;
+    const outerFade = fade;
+    const opacity = (node.style as { opacity?: unknown } | undefined)?.opacity;
+    if (typeof opacity === "number" && opacity >= 0 && opacity < 1) fade *= opacity;
     visitNode(node, bg, color);
+    fade = outerFade;
     if (variant?.arm === "a") afterA.set(variant.test, [h1s, lastLevel]);
     const after = variant?.arm === "b" ? afterA.get(variant.test) : undefined;
     if (after) [h1s, lastLevel] = after;
@@ -306,7 +312,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       }
     }
     if (TEXT_TYPES.has(node.type) && nextColor && nextBg && nextBg !== "unknown") {
-      const ratio = contrastRatio(over(nextColor, nextBg), nextBg);
+      const ratio = contrastRatio(over(nextColor, nextBg, fade), nextBg);
       const needed = largeText(node) ? 3 : 4.5;
       if (ratio < needed) {
         const black = contrastRatio("#000000", nextBg);
