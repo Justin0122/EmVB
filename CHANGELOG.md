@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Container-query style rows accept a bare number as px and keywords in any case.
 - Retyping the container-query width no longer deletes the styles set for it.
 - The accessibility check calls a text-less button without a URL a button, not a link.
 - Closing the command palette (Esc or a jump) no longer leaves keyboard focus on the page body.

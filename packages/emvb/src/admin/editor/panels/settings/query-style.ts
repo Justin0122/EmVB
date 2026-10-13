@@ -31,7 +31,13 @@ function candidates(text: string): unknown[] {
   if (length) out.push({ value: Number(length[1]), unit: (length[2] as string).toLowerCase() });
   const variable = /^var\(--([a-z0-9-]{1,40})\)$/.exec(text);
   if (variable) out.push({ var: variable[1] });
-  if (/^-?\d+(?:\.\d+)?$/.test(text)) out.push(Number(text));
+  if (/^-?\d+(?:\.\d+)?$/.test(text)) {
+    out.push(Number(text));
+    // W-404: a bare number on a length property means px, as in the Style tab.
+    out.push({ value: Number(text), unit: "px" });
+  }
+  // W-404: keywords are lowercase in the schema; AUTO or Row should still work.
+  if (/^[A-Za-z-]+$/.test(text) && text !== text.toLowerCase()) out.push(text.toLowerCase());
   if (text === "true" || text === "false") out.push(text === "true");
   if (text.startsWith("{") || text.startsWith("[")) {
     try {

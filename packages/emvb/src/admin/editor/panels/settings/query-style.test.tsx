@@ -154,3 +154,12 @@ describe("copying the style asks before replacing query styles (W-402)", () => {
     expect(sent.length).toBe(1);
   });
 });
+
+describe("query style values are read like the Style tab (W-404)", () => {
+  test("a bare number on a length means px, and keywords ignore case", () => {
+    expect(parseStyleValue("paddingTop", "16")).toEqual({ value: { value: 16, unit: "px" } });
+    expect(parseStyleValue("paddingTop", "0")).toEqual({ value: { value: 0, unit: "px" } });
+    expect(parseStyleValue("zIndex", "10")).toEqual({ value: 10 });
+    expect(parseStyleValue("width", "AUTO")).toEqual({ value: "auto" });
+  });
+});
