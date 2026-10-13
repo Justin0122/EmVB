@@ -29580,6 +29580,26 @@
         "screenshot and chat"
       ],
       "expect": "\\(fail\\).*screenshot and chat"
+    },
+    {
+      "id": "W-432/vague-more",
+      "requirement": "W-432",
+      "description": "See more passes.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "|see more|view more|",
+          "replace": "|"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/vague-more.test.ts",
+        "-t",
+        "common phrasings"
+      ],
+      "expect": "\\(fail\\).*common phrasings"
     }
   ]
 }

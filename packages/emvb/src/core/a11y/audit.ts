@@ -44,8 +44,9 @@ const USELESS_ALT =
   /^(?:image|img|photo|picture|graphic|logo|icon|untitled|\s*)$|\.(?:jpe?g|png|gif|webp|avif|svg)$|^(?:img|dsc|pxl|screen ?shot|whatsapp image)[\s_-]?\d+/i;
 /** Link text that makes no sense out of context. */
 /** W-411: trailing punctuation and arrows ("Read more…", "Learn more →", "Click here!") too. */
+// W-432: the other common "more" phrasings ("See more", "More info", "Continue reading"…).
 const VAGUE =
-  /^(?:click here|here|read more|more|learn more|link|this|go)\s*[.!…:»›→>\u2192\u203a\u00bb-]*$/i;
+  /^(?:click here|here|read more|more|learn more|link|this|go|see more|view more|more info(?:rmation)?|details|find out more|continue reading|read more here|click here to (?:read|learn) more)\s*[.!…:»›→>\u2192\u203a\u00bb-]*$/i;
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
 /** A style colour as hex: literal, or a site colour variable; undefined when unknown. */
