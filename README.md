@@ -6,15 +6,16 @@ A visual page builder plugin for [EmDash CMS](https://github.com/emdash-cms/emda
 
 **Website:** <https://emvb.dev>.
 
-**Status:** 0.4.0 is the current release ([changelog](CHANGELOG.md)). The MVP (implementation slices S1–S6) is complete. Schema 15.
+**Status:** 0.4.0 is the current release; `main` carries unreleased fixes and additions listed under Unreleased in the [changelog](CHANGELOG.md). Layout and design schema 15.
 
 ![The EmVB editor: the element tree, the canvas and the Style panel](site/public/screenshots/editor-1600.webp)
 
 ## Features
 
 - **Editor:** drag, drop and nest elements; edit text on the canvas; copy, paste, undo and redo; preview desktop, tablet and mobile.
-- **Elements:** containers (flexbox or CSS Grid), sections, headings, text, lists, links, buttons, images, video, icons (a library of about 14,400 from Lucide, Font Awesome Free, Tabler and Remix; see [the icon library guide](docs/guides/icon-library.md)), dividers, spacers, tabs, accordions, menus, popups, floating bars, forms, loops, pagination, and post fields for theme templates.
-- **Styling:** Hover, Focus and Active states with transitions, per-device styles and hide on device, backgrounds (image, video, gradient, overlay), entrance animations and scroll motion, custom attributes.
+- **Elements:** containers (flexbox or CSS Grid), sections, headings, text, lists, links, buttons (with an optional icon), images (link, caption, focal point and extra sizes for `srcset`), video, icons (a library of about 14,400 from Lucide, Font Awesome Free, Tabler and Remix, shipped in [`@perkyzz/emvb-icons`](packages/emvb-icons/); see [the icon library guide](docs/guides/icon-library.md)), dividers, spacers, tabs, accordions, a table of contents, menus, popups, floating bars, forms, loops, pagination, and post fields for theme templates.
+- **Styling:** Hover, Focus and Active states with transitions, per-device styles and hide on device, container queries, per-element text direction, backgrounds (image, video, gradient, overlay), entrance animations and scroll motion, custom attributes, print styles.
+- **Accessibility check:** a score and a list of issues in the editor (alt text, headings, link and field names, contrast including opacity, new-tab links, landmarks), most with a one-click fix.
 - **Site styles:** variables (including fluid type and spacing), classes in a clear priority order, tag defaults, text direction, changes staged until **Publish styles**, import and export as JSON.
 - **Theme Builder:** headers, footers, Error 404, Search Results, Single Page, Single Post, Archive, Loop Item, synced sections, page templates, popups and floating bars, with display conditions.
 - **Live data and personalization:** bind text and images to a post, a site setting or a URL parameter; collection Loops; visitor rules (country, device, new or returning, hours, and segments the host passes); edge A/B tests decided on the server.
@@ -42,6 +43,8 @@ The Cloudflare demo runs the same way with `bun run demo:cf` on port 4412.
 ```bash
 npm i @perkyzz/emvb
 ```
+
+This also installs `@perkyzz/emvb-icons` (the icon sets, a regular dependency that only the editor loads). The peers are what an EmDash 1.x site already has; see the [package README](packages/emvb/README.md#install).
 
 Register it next to your other EmDash plugins in `astro.config.mjs`:
 
@@ -75,9 +78,10 @@ Then add the public route and run **Set up EmVB** once, as [docs/guides/install-
 
 ## Docs
 
+- [docs/guides/install-in-a-host-site.md](docs/guides/install-in-a-host-site.md): install, the public route, runtimes and visitor data.
+- [docs/guides/icon-library.md](docs/guides/icon-library.md): the Icon library, uploads and attribution.
 - [docs/system/layout-format.md](docs/system/layout-format.md): how pages and the design system are stored.
 - [docs/system/theme-parts.md](docs/system/theme-parts.md): theme parts, conditions, triggers and dynamic data.
-- [docs/guides/install-in-a-host-site.md](docs/guides/install-in-a-host-site.md): add EmVB to an EmDash site.
 - [CHANGELOG.md](CHANGELOG.md).
 
 ## License

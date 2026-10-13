@@ -17,6 +17,8 @@ npm i @perkyzz/emvb
 
 EmVB ships TypeScript source and has no build step; your site's Vite build compiles it. Its peers are what an EmDash 1.x site already has: `emdash` ^1.0.0, `astro` ^7, `react` and `react-dom` ^19, `@cloudflare/kumo` 2.6.0 (EmDash's exact pin) and `@phosphor-icons/react` ^2.1.10. npm and Bun install missing peers on their own.
 
+It also installs two dependencies: `zod` and `@perkyzz/emvb-icons`, the icon sets for the editor's Icon library (pinned to the exact version EmVB was built with). Only the editor loads the icon sets; a placed icon is saved into the page as SVG, so public pages never fetch them.
+
 Optional (forms on EmVB pages):
 
 ```bash
@@ -146,4 +148,4 @@ bun pm pack --cwd packages/emvb
 bun run pack:smoke
 ```
 
-`pack:smoke` checks that the packed package is `@perkyzz/emvb`, isn't private, exports TypeScript source for `.`, `./astro`, `./astro/forms`, `./admin` and `./core`, ships no tests, and has no `workspace:` or `catalog:` ranges.
+`pack:smoke` checks that the packed package is `@perkyzz/emvb`, isn't private, exports TypeScript source for `.`, `./astro`, `./astro/forms`, `./astro/forms/client`, `./admin` and `./core`, ships no tests, and has no `workspace:` or `catalog:` ranges. The package also exports `./astro/popups`, `./astro/floats`, `./astro/tabs` and `./astro/menu`.

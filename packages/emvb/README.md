@@ -12,7 +12,9 @@ A visual page builder plugin for [EmDash CMS](https://github.com/emdash-cms/emda
 npm i @perkyzz/emvb
 ```
 
-Peers, which an EmDash 1.x site already has: `emdash` ^1.0.0, `astro` ^7, `react` and `react-dom` ^19, `@cloudflare/kumo` 2.6.0 and `@phosphor-icons/react` ^2.1.10. `@emdash-cms/plugin-forms` is optional and enables forms.
+Peers, which an EmDash 1.x site already has: `emdash` ^1.0.0, `astro` ^7, `react` and `react-dom` ^19, `@cloudflare/kumo` 2.6.0 and `@phosphor-icons/react` ^2.1.10. `@emdash-cms/plugin-forms` ^0.2.9 is optional and enables forms.
+
+Dependencies installed with it: `zod` and [`@perkyzz/emvb-icons`](https://www.npmjs.com/package/@perkyzz/emvb-icons), the icon sets for the editor's Icon library. Only the editor loads them; a placed icon is saved into the page as SVG.
 
 ## Register the plugin
 
@@ -39,6 +41,8 @@ import { getEmDashEntry, decodeSlug } from "emdash";
 import { EmVBPage, resolveEmVBPage } from "@perkyzz/emvb/astro";
 // With @emdash-cms/plugin-forms installed and registered:
 import { EmVBFormsRuntime } from "@perkyzz/emvb/astro/forms/client";
+import { EmVBMenuRuntime } from "@perkyzz/emvb/astro/menu";
+import { EmVBTabsRuntime } from "@perkyzz/emvb/astro/tabs";
 
 const emvb = await resolveEmVBPage(Astro);
 if (!emvb && !(await getEmDashEntry("pages", decodeSlug(Astro.params.slug)))) {
@@ -46,12 +50,20 @@ if (!emvb && !(await getEmDashEntry("pages", decodeSlug(Astro.params.slug)))) {
 }
 ---
 
-{emvb && <EmVBPage page={emvb}>{emvb.needsFormsRuntime && <EmVBFormsRuntime />}</EmVBPage>}
+{emvb && (
+  <EmVBPage page={emvb}>
+    {emvb.needsFormsRuntime && <EmVBFormsRuntime />}
+    {emvb.needsTabsRuntime && <EmVBTabsRuntime />}
+    {emvb.needsMenuRuntime && <EmVBMenuRuntime />}
+  </EmVBPage>
+)}
 ```
+
+Each runtime is a small script mounted only on pages that need it; the rest of the page is plain HTML and CSS. Theme parts (`resolveThemeParts`) also report popups and floats, served from `@perkyzz/emvb/astro/popups` and `@perkyzz/emvb/astro/floats`.
 
 Without the forms plugin, import `EmVBFormsRuntime` from `@perkyzz/emvb/astro/forms` (it renders nothing and does not import the plugin) or leave the element out. The `/client` subpath is the one that calls `initForms`.
 
-A fixed route has no slug parameter. Pass the page's slug: `await resolveEmVBPage(Astro, { slug: "home" })`. Visitor rules can use the same call's `visitor` option (`{ segments: ["member"] }`, and country, device or returning when the site knows better); `resolveThemeParts` takes it too. The [install guide](https://github.com/PerkyZZ999/EmVB/blob/main/docs/guides/install-in-a-host-site.md) shows both.
+A fixed route has no slug parameter. Pass the page's slug: `await resolveEmVBPage(Astro, { slug: "home" })`. Visitor rules can use the same call's `visitor` option (`{ segments: ["member"] }`, and country, device or returning when the site knows better); `resolveThemeParts` takes it too. The [install guide](https://github.com/PerkyZZ999/EmVB/blob/main/docs/guides/install-in-a-host-site.md) shows both, and the `canvasStyles` option that loads your site's stylesheets into the editor canvas: `emvb({ canvasStyles: ["/styles/site.css"] })`.
 
 Then sign in as an admin, open **Pages VisualBuilder** and click **Set up EmVB** once.
 

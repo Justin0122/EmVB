@@ -125,7 +125,7 @@ shows them as Lucide icons, and they switch to the new storage only when you ins
 | Tabler Icons (`@tabler/icons`) | 3.49.0 | MIT |
 | Remix Icon (`remixicon`) | 4.8.0 | Apache-2.0 |
 
-The notices and license texts ship with the package in `THIRD_PARTY_NOTICES.md` and `licenses/`.
+The sets themselves are in the `@perkyzz/emvb-icons` package, which `@perkyzz/emvb` installs as a dependency; only the editor loads them. The notices and license texts ship with both packages (`THIRD_PARTY_NOTICES.md` and `licenses/` in `@perkyzz/emvb`, `NOTICE.md` and `licenses/` in `@perkyzz/emvb-icons`).
 Font Awesome's icons are CC BY 4.0, so a site that uses them should credit Font Awesome
 somewhere, for example in the footer or a credits page: "Icons by Font Awesome
 (fontawesome.com), CC BY 4.0". Brand icons are trademarks of their owners; use them only to refer
