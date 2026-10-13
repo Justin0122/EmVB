@@ -134,7 +134,17 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     const ownBg = style?.backgroundImage ? "unknown" : hexOf(style?.backgroundColor, design);
     const nextBg = ownBg ?? bg;
     const nextColor = hexOf(style?.color, design) ?? color;
-    if (node.type === "image" && props["decorative"] !== true) {
+    // W-386: a linked image's alt text is the link's name, so it can't be decorative.
+    const imageLinked =
+      node.type === "image" && typeof props["href"] === "string" && props["href"].trim() !== "";
+    if (node.type === "image" && imageLinked && props["decorative"] === true) {
+      add({
+        nodeId: node.id,
+        rule: "link-name",
+        severity: "error",
+        message: "This image is a link but is marked decorative, so the link has no name.",
+      });
+    } else if (node.type === "image" && props["decorative"] !== true) {
       const alt = typeof props["alt"] === "string" ? props["alt"].trim() : "";
       if (USELESS_ALT.test(alt)) {
         add({
@@ -144,10 +154,23 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
           message: alt
             ? `The alt text "${alt.slice(0, 40)}" doesn't describe the image.`
             : "This image has no alt text.",
-          fix: { kind: "decorative" },
-          fixLabel: "Mark as decorative",
+          ...(imageLinked
+            ? {}
+            : { fix: { kind: "decorative" as const }, fixLabel: "Mark as decorative" }),
         });
       }
+    }
+    if (
+      imageLinked &&
+      props["newTab"] === true &&
+      !/new (tab|window)/i.test(String(props["alt"] ?? ""))
+    ) {
+      add({
+        nodeId: node.id,
+        rule: "new-tab",
+        severity: "warning",
+        message: "This image link opens a new tab without saying so; say so in the alt text.",
+      });
     }
     if (node.type === "heading") {
       const level = typeof props["level"] === "number" ? props["level"] : 2;

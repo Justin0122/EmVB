@@ -28672,6 +28672,26 @@
         "wide screens"
       ],
       "expect": "\\(fail\\).*wide screens"
+    },
+    {
+      "id": "W-386/decorative-image-link",
+      "requirement": "W-386",
+      "description": "A decorative image with a link passes the accessibility check.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "if (node.type === \"image\" && imageLinked && props[\"decorative\"] === true) {",
+          "replace": "if (node.type === \"image\" && imageLinked && props[\"decorative\"] === \"never\") {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/image-link.test.ts",
+        "-t",
+        "decorative image that is a link"
+      ],
+      "expect": "\\(fail\\).*decorative image that is a link"
     }
   ]
 }
