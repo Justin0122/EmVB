@@ -29720,6 +29720,26 @@
         "case fixed"
       ],
       "expect": "\\(fail\\).*case fixed"
+    },
+    {
+      "id": "W-439/post-link-name",
+      "requirement": "W-439",
+      "description": "Read more links all sound the same.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/dynamic-post.ts",
+          "search": "if (label && title && !label.toLowerCase().includes(title.toLowerCase())) {",
+          "replace": "if (false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/theme/dynamic.test.ts",
+        "-t",
+        "adds each post"
+      ],
+      "expect": "\\(fail\\).*adds each post"
     }
   ]
 }

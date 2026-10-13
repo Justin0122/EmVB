@@ -575,7 +575,7 @@
     },
     "post": "post",
     "mode": "public",
-    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\">Read more</a>"
+    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Read more: Welcome\">Read more</a>"
   },
   {
     "type": "post-link",
@@ -585,7 +585,7 @@
     },
     "post": "post",
     "mode": "editor",
-    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\">Read more</a>"
+    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Read more: Welcome\">Read more</a>"
   },
   {
     "type": "post-link",
@@ -595,7 +595,7 @@
     },
     "post": "bare",
     "mode": "public",
-    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\">Read more</a>"
+    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Read more: Welcome\">Read more</a>"
   },
   {
     "type": "post-link",
@@ -605,7 +605,7 @@
     },
     "post": "bare",
     "mode": "editor",
-    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\">Read more</a>"
+    "html": "<a class=\"c\" href=\"/posts/welcome\" target=\"_blank\" rel=\"noopener noreferrer\" aria-label=\"Read more: Welcome\">Read more</a>"
   },
   {
     "type": "post-link",

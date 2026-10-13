@@ -189,3 +189,28 @@ test("portableTextToVNodes over styles, block types and span shapes matches the 
   const inputs: unknown[] = [blocks, "", "  plain  ", 42, null, { _type: "block" }, [], undefined];
   expect(inputs.map((input) => portableTextToVNodes(input))).toMatchSnapshot();
 });
+
+describe("Post link names its post (W-439)", () => {
+  const names = (text: string | undefined) => {
+    const layout = page({
+      id: "loop0001",
+      type: "loop",
+      props: {},
+      children: [{ id: "plink003", type: "post-link", props: text === undefined ? {} : { text } }],
+    });
+    const posts: ThemePostFields[] = [
+      { ...SAMPLE_POST, id: "a", slug: "a", title: "Alpha", permalink: "/posts/a" },
+      { ...SAMPLE_POST, id: "b", slug: "b", title: "Beta", permalink: "/posts/b" },
+    ];
+    const { html } = renderPage(layout, design, { dynamic: { posts } });
+    return [...html.matchAll(/<a [^>]*>/g)].map(
+      (m) => /aria-label="([^"]*)"/.exec(m[0])?.[1] ?? null,
+    );
+  };
+  test("a shared text like Read more adds each post's title to the name", () => {
+    expect(names("Read more")).toEqual(["Read more: Alpha", "Read more: Beta"]);
+  });
+  test("the title as text, or no text, needs nothing more", () => {
+    expect(names(undefined)).toEqual([null, null]);
+  });
+});

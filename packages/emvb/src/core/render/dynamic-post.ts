@@ -118,10 +118,17 @@ const POST_FIELDS = new Map<string, PostField>([
           linkAttrs.target = "_blank";
           linkAttrs.rel = "noopener noreferrer";
         }
+        const label = text?.trim();
+        const title = post.title.trim();
+        // W-439: a Loop repeats the same "Read more" for every post; screen readers listing links
+        // heard it N times. The name keeps the visible text first and adds the post's title.
+        if (label && title && !label.toLowerCase().includes(title.toLowerCase())) {
+          linkAttrs["aria-label"] = `${label}: ${title}`;
+        }
         return {
           tag: "a",
           attrs: linkAttrs,
-          children: [text?.trim() || post.title || post.permalink],
+          children: [label || title || post.permalink],
         };
       },
     },
