@@ -1,5 +1,13 @@
-import { McpServer } from "@modelcontextprotocol/server";
-import { visibleTools, type ToolDef } from "@perkyzz/emvb/mcp";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
+import { z } from "zod";
+import { DOCS, SKILL_FILES } from "./content.ts";
+import {
+  PROMPTS,
+  designJsonSchema,
+  layoutJsonSchema,
+  visibleTools,
+  type ToolDef,
+} from "@perkyzz/emvb/mcp";
 import type { Remote, ToolResult } from "./remote.ts";
 
 export const BRIDGE_VERSION = "0.4.0";
@@ -35,7 +43,7 @@ function explain(error: unknown, tool: string): ToolResult {
 export function createBridgeServer(options: { remote: Remote; allowPublish: boolean }): McpServer {
   const server = new McpServer(
     { name: "emvb", title: "EmVB pages", version: BRIDGE_VERSION },
-    { capabilities: { tools: {} } },
+    { capabilities: { tools: {}, resources: {}, prompts: {} } },
   );
   const tools: ToolDef[] = visibleTools({
     publishPages: options.allowPublish,
@@ -65,5 +73,115 @@ export function createBridgeServer(options: { remote: Remote; allowPublish: bool
       },
     );
   }
+  registerResources(server, options.remote);
+  registerPrompts(server);
   return server;
+}
+
+const json = (uri: URL, value: unknown, mimeType = "application/json") => ({
+  contents: [{ uri: uri.href, mimeType, text: JSON.stringify(value, null, 2) }],
+});
+
+/** Reads a resource through a site tool; a tool error becomes a resource error. */
+async function viaTool(remote: Remote, uri: URL, tool: string, args: Record<string, unknown>) {
+  const result = await remote.call(`emvb__${tool}`, args);
+  if (result.isError) throw new Error(result.content[0]?.text ?? `${tool} failed`);
+  return json(uri, result.structuredContent ?? {});
+}
+
+/** Resources (plan § 3, W-467): schemas, docs and the skill locally; live data via the tools. */
+function registerResources(server: McpServer, remote: Remote) {
+  server.registerResource(
+    "layout-schema",
+    "emvb://schema/layout",
+    { title: "EmVB layout JSON Schema", mimeType: "application/schema+json" },
+    (uri) => json(uri, layoutJsonSchema(), "application/schema+json"),
+  );
+  server.registerResource(
+    "design-schema",
+    "emvb://schema/design",
+    { title: "EmVB site styles JSON Schema", mimeType: "application/schema+json" },
+    (uri) => json(uri, designJsonSchema(), "application/schema+json"),
+  );
+  server.registerResource(
+    "layout-format",
+    "emvb://docs/layout-format",
+    { title: "EmVB layout format", mimeType: "text/markdown" },
+    (uri) => ({
+      contents: [{ uri: uri.href, mimeType: "text/markdown", text: DOCS.layoutFormat }],
+    }),
+  );
+  server.registerResource(
+    "elements",
+    "emvb://elements",
+    { title: "EmVB element types", mimeType: "application/json" },
+    (uri) => viaTool(remote, uri, "list_element_types", {}),
+  );
+  server.registerResource(
+    "site-styles",
+    "emvb://site/styles",
+    { title: "Site styles (draft)", mimeType: "application/json" },
+    (uri) => viaTool(remote, uri, "get_site_styles", {}),
+  );
+  const pages = new ResourceTemplate("emvb://pages/{pageId}/{view}", {
+    list: undefined,
+    complete: {
+      view: () => ["layout", "a11y"],
+      pageId: async (value) => {
+        const result = await remote.call("emvb__list_pages", { limit: 50 });
+        const found = (result.structuredContent?.["pages"] ?? []) as {
+          id: string;
+          title: string;
+        }[];
+        return found
+          .filter(
+            (p) => p.id.startsWith(value) || p.title.toLowerCase().includes(value.toLowerCase()),
+          )
+          .map((p) => p.id);
+      },
+    },
+  });
+  server.registerResource(
+    "page",
+    pages,
+    {
+      title: "An EmVB page's draft layout or accessibility findings",
+      mimeType: "application/json",
+    },
+    (uri, vars) => {
+      const pageId = String(vars["pageId"]);
+      if (vars["view"] === "a11y")
+        return viaTool(remote, uri, "get_accessibility_findings", { pageId });
+      return viaTool(remote, uri, "get_layout", { pageId });
+    },
+  );
+  for (const [path, text] of Object.entries(SKILL_FILES)) {
+    server.registerResource(
+      `skill-${path}`,
+      `skill://emvb-page-builder/${path}`,
+      { title: `emvb-page-builder skill: ${path}`, mimeType: "text/markdown" },
+      (uri) => ({ contents: [{ uri: uri.href, mimeType: "text/markdown", text }] }),
+    );
+  }
+}
+
+/** Prompts (plan § 3): workflows that drive the tools. */
+function registerPrompts(server: McpServer) {
+  for (const prompt of PROMPTS) {
+    const shape = Object.fromEntries(
+      Object.entries(prompt.args).map(([name, arg]) => [
+        name,
+        arg.required
+          ? z.string().describe(arg.description)
+          : z.string().optional().describe(arg.description),
+      ]),
+    );
+    server.registerPrompt(
+      prompt.name,
+      { title: prompt.title, description: prompt.description, argsSchema: z.object(shape) },
+      (args: Record<string, string | undefined>) => ({
+        messages: [{ role: "user", content: { type: "text", text: prompt.text(args) } }],
+      }),
+    );
+  }
 }

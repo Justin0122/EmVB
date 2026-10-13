@@ -39,7 +39,8 @@
     "@modelcontextprotocol/server": "2.3.1"
   },
   "devDependencies": {
-    "@perkyzz/emvb": "0.4.0"
+    "@perkyzz/emvb": "0.4.0",
+    "zod": "~4.5.4"
   },
   "engines": {
     "node": ">=20"

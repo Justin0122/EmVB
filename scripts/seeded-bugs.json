@@ -30202,6 +30202,48 @@
         "an agent saved"
       ],
       "expect": "\\(fail\\).*an agent saved"
+    },
+    {
+      "id": "W-467/resources-hit-site",
+      "requirement": "W-467",
+      "description": "Schema resources go to the site instead of being served locally.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/bridge.ts",
+          "search": "    (uri) => json(uri, layoutJsonSchema(), \"application/schema+json\"),",
+          "replace": "    (uri) => viaTool(remote, uri, \"get_site_styles\", {}),"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb-mcp/test/bridge.test.ts", "-t", "served locally"],
+      "expect": "\\(fail\\).*served locally"
+    },
+    {
+      "id": "W-467/prompt-publishes",
+      "requirement": "W-467",
+      "description": "The landing page prompt no longer tells the agent not to publish.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/prompts.ts",
+          "search": "5. Do not publish. Finish",
+          "replace": "5. Publish, then finish"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb-mcp/test/bridge.test.ts", "-t", "prompts render"],
+      "expect": "\\(fail\\).*prompts render"
+    },
+    {
+      "id": "W-468/skill-name-mismatch",
+      "requirement": "W-468",
+      "description": "The skill's name doesn't match its folder.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/skill/emvb-page-builder/SKILL.md",
+          "search": "name: emvb-page-builder",
+          "replace": "name: emvb-builder"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb-mcp/test/skill.test.ts"],
+      "expect": "\\(fail\\)"
     }
   ]
 }

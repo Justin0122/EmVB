@@ -156,3 +156,44 @@ describe("stdio bridge (W-461, W-462)", () => {
     expect(result.content[0]?.text).toContain("EMVB_TOKEN");
   });
 });
+
+describe("bridge resources, prompts and the skill (W-467, W-468)", () => {
+  test("schemas, docs and the skill are served locally", async () => {
+    await connect();
+    const listed = (await client.listResources()).resources.map((r) => r.uri);
+    expect(listed).toContain("emvb://schema/layout");
+    expect(listed).toContain("skill://emvb-page-builder/SKILL.md");
+    const schema = await client.readResource({ uri: "emvb://schema/layout" });
+    expect(JSON.parse((schema.contents[0] as { text: string }).text)["$schema"]).toContain(
+      "2020-12",
+    );
+    const skill = await client.readResource({ uri: "skill://emvb-page-builder/SKILL.md" });
+    expect((skill.contents[0] as { text: string }).text).toContain("name: emvb-page-builder");
+    expect(calls).toEqual([]);
+  });
+
+  test("page resources read the draft through the site", async () => {
+    const pageId = await newPage();
+    await connect();
+    const page = await client.readResource({ uri: `emvb://pages/${pageId}/layout` });
+    expect(JSON.parse((page.contents[0] as { text: string }).text)["rev"]).toBeTruthy();
+    expect(calls).toEqual(["emvb__get_layout"]);
+  });
+
+  test("prompts render with their arguments", async () => {
+    await connect();
+    const names = (await client.listPrompts()).prompts.map((p) => p.name);
+    expect(names).toEqual([
+      "build_landing_page",
+      "fix_accessibility",
+      "restyle_site",
+      "review_page",
+    ]);
+    const prompt = await client.getPrompt({
+      name: "build_landing_page",
+      arguments: { topic: "Bakery" },
+    });
+    expect(JSON.stringify(prompt.messages)).toContain("Bakery");
+    expect(JSON.stringify(prompt.messages)).toContain("Do not publish");
+  });
+});
