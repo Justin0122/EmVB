@@ -29060,6 +29060,26 @@
         "ArrowLeft moves to the next tab"
       ],
       "expect": "\\(fail\\).*ArrowLeft moves to the next tab"
+    },
+    {
+      "id": "W-406/popup-keys-lost-focus",
+      "requirement": "W-406",
+      "description": "Popup keys only work while focus is inside the dialog.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/popups/runtime.ts",
+          "search": "if (!ctrl.opened || event.defaultPrevented || !ctrl.root.isConnected) return;",
+          "replace": "if (ctrl.opened || event.defaultPrevented || !ctrl.root.isConnected) return;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/popups/runtime.test.ts",
+        "-t",
+        "focus fell to"
+      ],
+      "expect": "\\(fail\\).*focus fell to"
     }
   ]
 }

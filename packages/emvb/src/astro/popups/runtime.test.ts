@@ -584,3 +584,24 @@ describe("public popup runtime details (W-091)", () => {
     }
   });
 });
+
+describe("popup keys after focus is lost (W-406)", () => {
+  test("Escape closes and Tab returns into the dialog when focus fell to <body>", () => {
+    const root = popup("lost1", doc([{ type: "page_load" }]));
+    const dialog = root.querySelector(".emvb-popup__dialog") as HTMLElement;
+    const button = document.createElement("button");
+    button.textContent = "Send";
+    dialog.append(button);
+    expect(root.hidden).toBe(false);
+    (document.activeElement as HTMLElement | null)?.blur();
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Tab", bubbles: true, cancelable: true }),
+    );
+    expect(document.activeElement).toBe(button);
+    button.blur();
+    document.body.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+    );
+    expect(root.hidden).toBe(true);
+  });
+});

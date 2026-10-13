@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- An open popup still closes with Escape, and Tab stays inside it, after the focused control inside it disappears.
 - Tabs arrow keys follow right-to-left text.
 - Container-query style rows accept a bare number as px and keywords in any case.
 - Retyping the container-query width no longer deletes the styles set for it.

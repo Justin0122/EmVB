@@ -177,6 +177,21 @@ function bindA11y(ctrl: Controller): void {
       ctrl.close();
     }
   });
+  // W-406: when the focused control disappears (a form swapped for its thank-you message), focus
+  // falls to <body>; Escape and Tab then never reached the dialog, so the popup couldn't be closed
+  // from the keyboard and Tab walked the page behind it.
+  document.addEventListener("keydown", (event) => {
+    if (!ctrl.opened || event.defaultPrevented || !ctrl.root.isConnected) return;
+    const active = document.activeElement;
+    if (active && active !== document.body && active !== document.documentElement) return;
+    if (event.key === "Tab") {
+      event.preventDefault();
+      (focusables(ctrl.dialog)[0] ?? ctrl.dialog).focus();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      ctrl.close();
+    }
+  });
   ctrl.dialog.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
