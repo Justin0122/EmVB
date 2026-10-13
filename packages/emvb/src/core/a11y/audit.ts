@@ -340,13 +340,22 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         const black = contrastRatio("#000000", nextBg);
         const white = contrastRatio("#ffffff", nextBg);
         const better = black >= white ? "#111111" : "#ffffff";
+        // W-421: when opacity is what fades the text, a new colour can't fix it; say so instead
+        // of offering a fix that leaves the issue in place.
+        const fixable = contrastRatio(over(better, nextBg, fade), nextBg) >= needed;
         add({
           nodeId: node.id,
           rule: "contrast",
           severity: "error",
-          message: `Text contrast is ${ratio.toFixed(1)}:1; it needs ${needed}:1.`,
-          fix: { kind: "text-color", color: better },
-          fixLabel: better === "#ffffff" ? "Use white text" : "Use dark text",
+          message: fixable
+            ? `Text contrast is ${ratio.toFixed(1)}:1; it needs ${needed}:1.`
+            : `Text contrast is ${ratio.toFixed(1)}:1; it needs ${needed}:1. Opacity on this element or a parent fades it; raise the opacity.`,
+          ...(fixable
+            ? {
+                fix: { kind: "text-color" as const, color: better },
+                fixLabel: better === "#ffffff" ? "Use white text" : "Use dark text",
+              }
+            : {}),
         });
       }
     }

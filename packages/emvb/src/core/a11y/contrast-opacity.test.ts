@@ -48,3 +48,31 @@ describe("contrast counts opacity (W-415)", () => {
     expect(flagged(0.9)).toBe(false);
   });
 });
+
+describe("no colour fix when opacity is the cause (W-421)", () => {
+  test("the issue says to raise the opacity and offers no fix", () => {
+    const issue = auditPage(
+      {
+        schemaVersion: 15,
+        root: {
+          id: "root0001",
+          type: "container",
+          props: {},
+          style: { backgroundColor: "#ffffff" },
+          children: [
+            { id: "head0001", type: "heading", props: { text: "T", level: 1 } },
+            {
+              id: "text0001",
+              type: "text",
+              props: { text: "Body" },
+              style: { color: "#000000", opacity: 0.1 },
+            },
+          ],
+        },
+      } as unknown as Layout,
+      emptyDesign(),
+    ).issues.find((i) => i.rule === "contrast");
+    expect(issue?.message).toContain("raise the opacity");
+    expect(issue?.fix).toBeUndefined();
+  });
+});

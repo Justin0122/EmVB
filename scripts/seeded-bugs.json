@@ -29360,6 +29360,26 @@
         "plain letters find"
       ],
       "expect": "\\(fail\\).*plain letters find"
+    },
+    {
+      "id": "W-421/opacity-fix-offered",
+      "requirement": "W-421",
+      "description": "A colour fix is offered when opacity is the cause.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "const fixable = contrastRatio(over(better, nextBg, fade), nextBg) >= needed;",
+          "replace": "const fixable = true;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/contrast-opacity.test.ts",
+        "-t",
+        "raise the opacity"
+      ],
+      "expect": "\\(fail\\).*raise the opacity"
     }
   ]
 }
