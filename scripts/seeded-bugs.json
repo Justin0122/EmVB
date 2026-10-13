@@ -26312,8 +26312,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "        if (h1s > 1) {",
-          "replace": "        if (h1s > 99) {"
+          "search": "        if (h1s.some((count, i) => shownOn[i] && count > 1)) {",
+          "replace": "        if (h1s.some((count, i) => shownOn[i] && count > 99)) {"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/a11y/audit.test.ts"],
@@ -26702,8 +26702,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "    if (before) [h1s, lastLevel] = before;",
-          "replace": "    if (before && false) [h1s, lastLevel] = before;"
+          "search": "    if (before) [h1s, lastLevel] = [[...before[0]], before[1]];",
+          "replace": "    if (before && false) [h1s, lastLevel] = [[...before[0]], before[1]];"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/a11y/audit.test.ts"],
@@ -29808,6 +29808,20 @@
         "hidden with the image"
       ],
       "expect": "\\(fail\\).*hidden with the image"
+    },
+    {
+      "id": "W-444/h1-per-device",
+      "requirement": "W-444",
+      "description": "Swapped H1s warn.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "h1s = h1s.map((count, i) => count + (shownOn[i] ? 1 : 0));",
+          "replace": "h1s = h1s.map((count) => count + 1);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/a11y/h1-devices.test.ts", "-t", "swap"],
+      "expect": "\\(fail\\).*swap"
     }
   ]
 }

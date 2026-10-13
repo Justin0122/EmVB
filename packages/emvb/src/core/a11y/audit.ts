@@ -138,11 +138,14 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   const add = (issue: Omit<A11yIssue, "id">) =>
     issues.push({ ...issue, id: `${issue.rule}:${issue.nodeId}` });
   let lastLevel = 0;
-  let h1s = 0;
+  // W-444: H1s counted per device, so a desktop H1 and a mobile H1 that swap places aren't two.
+  const DEVICES = ["desktop", "tablet", "mobile"] as const;
+  let h1s = [0, 0, 0];
+  let shownOn = [true, true, true];
   // W-312 variants are alternatives: B is judged as if it stood where A does, so a page whose
   // A/B pair each have an H1 doesn't count two.
-  const beforeA = new Map<string, [number, number]>();
-  const afterA = new Map<string, [number, number]>();
+  const beforeA = new Map<string, [number[], number]>();
+  const afterA = new Map<string, [number[], number]>();
   let fade = 1;
   const menuNames = new Set<string>();
   const walk = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
@@ -154,17 +157,20 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       return;
     }
     const variant = node.variant;
-    if (variant?.arm === "a") beforeA.set(variant.test, [h1s, lastLevel]);
+    if (variant?.arm === "a") beforeA.set(variant.test, [[...h1s], lastLevel]);
     const before = variant?.arm === "b" ? beforeA.get(variant.test) : undefined;
-    if (before) [h1s, lastLevel] = before;
+    if (before) [h1s, lastLevel] = [[...before[0]], before[1]];
     const outerFade = fade;
     const opacity = (node.style as { opacity?: unknown } | undefined)?.opacity;
     if (typeof opacity === "number" && opacity >= 0 && opacity < 1) fade *= opacity;
+    const outerShown = shownOn;
+    shownOn = shownOn.map((shown, i) => shown && !node.hiddenOn?.includes(DEVICES[i] ?? "desktop"));
     visitNode(node, bg, color);
     fade = outerFade;
-    if (variant?.arm === "a") afterA.set(variant.test, [h1s, lastLevel]);
+    shownOn = outerShown;
+    if (variant?.arm === "a") afterA.set(variant.test, [[...h1s], lastLevel]);
     const after = variant?.arm === "b" ? afterA.get(variant.test) : undefined;
-    if (after) [h1s, lastLevel] = after;
+    if (after) [h1s, lastLevel] = [[...after[0]], after[1]];
   };
   const visitNode = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     const props = node.props as Record<string, unknown>;
@@ -291,8 +297,8 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     if (node.type === "heading") {
       const level = typeof props["level"] === "number" ? props["level"] : 2;
       if (level === 1) {
-        h1s += 1;
-        if (h1s > 1) {
+        h1s = h1s.map((count, i) => count + (shownOn[i] ? 1 : 0));
+        if (h1s.some((count, i) => shownOn[i] && count > 1)) {
           add({
             nodeId: node.id,
             rule: "multiple-h1",
@@ -395,7 +401,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     if (isParentNode(node)) for (const child of node.children) walk(child, nextBg, nextColor);
   };
   walk(layout.root, undefined, undefined);
-  if (h1s === 0 && layout.root.children.length > 0) {
+  if (h1s.every((count) => count === 0) && layout.root.children.length > 0) {
     issues.unshift({
       id: `no-h1:${layout.root.id}`,
       nodeId: layout.root.id,
