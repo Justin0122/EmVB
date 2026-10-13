@@ -4,11 +4,13 @@ import * as read from "./read.ts";
 import * as write from "./write.ts";
 import * as publish from "./publish.ts";
 import { McpToolError } from "./errors.ts";
+import { rateClassOf } from "./rate-limit.ts";
 
 /**
  * One MCP tool, defined once for every door (D-053). On the site it becomes the plugin route
  * `mcp/<name>` plus an entry in `definePlugin({ mcp })`; the stdio bridge lists the same schemas.
  */
+
 export type ToolDef = {
   name: string;
   title: string;
@@ -254,6 +256,7 @@ export async function runTool(def: ToolDef, ports: EmvbPorts, input: unknown) {
       "AI agent access to EmVB is off on this site. An admin can turn it on in Pages VisualBuilder → Agents.",
     );
   }
+  await ports.rateLimit?.(rateClassOf(def));
   return def.run(ports, input as never);
 }
 

@@ -1,4 +1,5 @@
 import type { AgentSettings } from "./settings.ts";
+import type { RateClass } from "./rate-limit.ts";
 import type { DesignSystem, Layout } from "../core/index.ts";
 
 /** A page as the tool core sees it: the current draft (or published) data and its revision. */
@@ -45,6 +46,8 @@ export type AgentLogEntry = {
  */
 export interface EmvbPorts {
   caller: Caller;
+  /** Counts the call against the caller's rate limit; throws RATE_LIMITED when full (W-478). */
+  rateLimit?(cls: RateClass): Promise<void>;
   listPages(options: { cursor?: string; limit: number }): Promise<{
     pages: PageSummary[];
     nextCursor?: string;

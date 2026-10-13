@@ -2,6 +2,7 @@ import { PluginRouteError, type PluginRoute, type RouteContext } from "emdash";
 import { PAGES_COLLECTION, DESIGN_DRAFT_KEY, DESIGN_KEY } from "../constants.ts";
 import { McpToolError } from "../mcp/errors.ts";
 import type { EmvbPorts, PageRecord, PageSummary } from "../mcp/ports.ts";
+import { callerKey, hitRateLimit, type RateStore } from "../mcp/rate-limit.ts";
 import { runTool, type ToolDef } from "../mcp/tools.ts";
 import { publishDesignDraft, readDesign, writeDesignDraft } from "./design-routes.ts";
 import { readAgentSettings } from "./agent-settings.ts";
@@ -70,6 +71,13 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
     content.getVersioned ? content.getVersioned(PAGES_COLLECTION, id) : Promise.resolve(null);
   return {
     caller: { userId: ctx.user?.id ?? null, role: Number(ctx.user?.role ?? 0) },
+    async rateLimit(cls) {
+      await hitRateLimit(
+        ctx.kv as unknown as RateStore,
+        await callerKey(ctx.request, ctx.user?.id ?? null),
+        cls,
+      );
+    },
     async listPages({ cursor, limit }) {
       let result: Awaited<ReturnType<Content["list"]>>;
       try {
@@ -225,7 +233,7 @@ export function mcpRoutes(tools: readonly ToolDef[]): Record<string, PluginRoute
             return await runTool(tool, pluginPorts(ctx), ctx.input);
           } catch (error) {
             if (error instanceof McpToolError) {
-              throw new PluginRouteError(error.code, error.message, error.status);
+              throw new PluginRouteError(error.code, error.message, error.status, error.details);
             }
             if (isNotSetUp(error)) {
               throw new PluginRouteError("NOT_SET_UP", NOT_SET_UP_MESSAGE, 409);

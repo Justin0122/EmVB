@@ -72,6 +72,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- MCP: each token may make 300 reads and 60 changes a minute and 10 publishes an hour; over the limit a tool returns RATE_LIMITED with how many seconds to wait.
 - `@perkyzz/emvb-mcp` 0.5.0 ships alongside `@perkyzz/emvb` 0.5.0.
 - Docs: the AI agents (MCP) guide.
 - `@perkyzz/emvb-mcp` serves the layout and style schemas, page resources, four workflow prompts and the `emvb-page-builder` skill.

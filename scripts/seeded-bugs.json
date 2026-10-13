@@ -30378,6 +30378,26 @@
         "agent"
       ],
       "expect": "\\(fail\\)"
+    },
+    {
+      "id": "W-478/rate-limit-off",
+      "requirement": "W-478",
+      "description": "The MCP rate limiter never refuses a call.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/rate-limit.ts",
+          "search": "    if (current >= limit) {",
+          "replace": "    if (current >= limit * 1000) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-rate-limit.test.ts",
+        "-t",
+        "61st write"
+      ],
+      "expect": "\\(fail\\).*61st write"
     }
   ]
 }
