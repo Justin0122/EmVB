@@ -28772,6 +28772,26 @@
         "not echoed back"
       ],
       "expect": "\\(fail\\).*not echoed back"
+    },
+    {
+      "id": "W-391/loop-filter-backtracking",
+      "requirement": "W-391",
+      "description": "The Loop filter pattern lets both sides take the spaces, so a padded filter backtracks for seconds.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "  /^\\s*[a-z][a-z0-9_]{0,63}\\s*=\\s*[^;=<>\\s](?:[^;=<>]{0,98}[^;=<>\\s])?(?:\\s*;\\s*[a-z][a-z0-9_]{0,63}\\s*=\\s*[^;=<>\\s](?:[^;=<>]{0,98}[^;=<>\\s])?)*\\s*;?\\s*$/;",
+          "replace": "  /^\\s*[a-z][a-z0-9_]{0,63}\\s*=\\s*[^;=<>]{1,100}?(?:\\s*;\\s*[a-z][a-z0-9_]{0,63}\\s*=\\s*[^;=<>]{1,100}?)*\\s*;?\\s*$/;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/theme/loop-filter-redos.test.ts",
+        "-t",
+        "refused at once"
+      ],
+      "expect": "\\(fail\\).*refused at once"
     }
   ]
 }

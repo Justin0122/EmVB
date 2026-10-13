@@ -254,7 +254,11 @@ const MAX_LOOP_FILTERS = 5;
  */
 export function parseLoopFilter(text: unknown): Record<string, string | string[]> | undefined {
   if (typeof text !== "string" || !LOOP_FILTER.test(text)) return undefined;
-  const where: Record<string, string | string[]> = {};
+  // W-391: a field named like an Object method (`constructor`) starts empty too.
+  const where: Record<string, string | string[]> = Object.create(null) as Record<
+    string,
+    string | string[]
+  >;
   let count = 0;
   for (const pair of text.split(";")) {
     const at = pair.indexOf("=");
@@ -263,10 +267,10 @@ export function parseLoopFilter(text: unknown): Record<string, string | string[]
     const value = pair.slice(at + 1).trim();
     if (!field || !value || count >= MAX_LOOP_FILTERS) continue;
     count += 1;
-    const had = where[field];
+    const had = Object.hasOwn(where, field) ? where[field] : undefined;
     where[field] = had === undefined ? value : [...(Array.isArray(had) ? had : [had]), value];
   }
-  return count > 0 ? where : undefined;
+  return count > 0 ? Object.fromEntries(Object.entries(where)) : undefined;
 }
 
 /** An entry's link from a Loop's pattern (W-330): `{slug}` and `{id}` filled in, URL-encoded. */

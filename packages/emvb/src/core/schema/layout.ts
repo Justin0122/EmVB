@@ -566,9 +566,13 @@ const FIELD_SLUG_HINT = "Use the field's slug, e.g. photo";
 /** A site path with `{slug}` or `{id}`, and no other placeholders (W-330). */
 export const LOOP_PERMALINK =
   /^(?=.*\{(?:slug|id)\})\/(?!\/)(?:[A-Za-z0-9._~/-]|\{slug\}|\{id\})*$/;
-/** `field=value` pairs separated by `;` (W-330). Values have no `;`, `=` or angle brackets. */
+/**
+ * `field=value` pairs separated by `;` (W-330). Values have no `;`, `=` or angle brackets.
+ * W-391: a value starts and ends with a non-space, so the spaces around it can only be matched
+ * one way; the earlier pattern let both sides take them and a 265-character filter took ~50 s.
+ */
 export const LOOP_FILTER =
-  /^\s*[a-z][a-z0-9_]{0,63}\s*=\s*[^;=<>]{1,100}?(?:\s*;\s*[a-z][a-z0-9_]{0,63}\s*=\s*[^;=<>]{1,100}?)*\s*;?\s*$/;
+  /^\s*[a-z][a-z0-9_]{0,63}\s*=\s*[^;=<>\s](?:[^;=<>]{0,98}[^;=<>\s])?(?:\s*;\s*[a-z][a-z0-9_]{0,63}\s*=\s*[^;=<>\s](?:[^;=<>]{0,98}[^;=<>\s])?)*\s*;?\s*$/;
 /** Which entries a collection Loop shows first (W-308). */
 export const LOOP_ORDERS = ["newest", "oldest", "title"] as const;
 
