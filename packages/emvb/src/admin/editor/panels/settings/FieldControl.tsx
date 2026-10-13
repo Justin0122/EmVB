@@ -10,6 +10,7 @@ import { LoopItemBindControl } from "./LoopItemBindControl.tsx";
 import { IconPicker } from "./IconPicker.tsx";
 import { MediaPicker } from "./MediaPicker.tsx";
 import { propsOf, withProp } from "./node-props.ts";
+import { RichTextEditor } from "../../rich-text/RichTextEditor.tsx";
 
 /** Content-tab control driven by a FieldDescriptor (W-021 / W-024). */
 export function FieldControl({
@@ -131,6 +132,19 @@ export function FieldControl({
         node={node}
         device={device}
         onChange={onChange}
+      />
+    );
+  }
+
+  if (field.kind === "rich-text") {
+    return (
+      <RichTextEditor
+        key={`${node.id}:${field.key}`}
+        label={field.label}
+        value={typeof raw === "string" ? raw : ""}
+        fetcher={fetcher}
+        onChange={(html) => onChange(withProp(node, field.key, html))}
+        help={field.message ? <p className="emvb-helper">{field.message}</p> : undefined}
       />
     );
   }
@@ -259,6 +273,7 @@ function DeviceSelectField({
 export const IMPLEMENTED_FIELD_KINDS = [
   "text",
   "textarea",
+  "rich-text",
   "number",
   "int",
   "select",

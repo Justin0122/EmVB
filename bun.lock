@@ -58,6 +58,14 @@
       "name": "@perkyzz/emvb",
       "version": "0.2.1",
       "dependencies": {
+        "@tiptap/core": "3.31.3",
+        "@tiptap/extension-image": "3.31.3",
+        "@tiptap/extension-subscript": "3.31.3",
+        "@tiptap/extension-superscript": "3.31.3",
+        "@tiptap/extension-table": "3.31.3",
+        "@tiptap/pm": "3.31.3",
+        "@tiptap/react": "3.31.3",
+        "@tiptap/starter-kit": "3.31.3",
         "zod": "~4.5.4",
       },
       "devDependencies": {

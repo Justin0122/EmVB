@@ -399,6 +399,36 @@ export const EDITOR_CSS = `${UI_CSS}
 .emvb-var-option-value { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); font-size: 11px; color: var(--text-color-kumo-subtle); }
 [data-emvb-var-option][data-selected="true"] .emvb-var-option-name { font-weight: 600; }
 .emvb-textarea { min-height: 72px; height: auto; padding: 8px; resize: vertical; font: inherit; }
+.emvb-rte { display: flex; flex-direction: column; gap: 6px; }
+.emvb-rte-toolbar { display: flex; flex-direction: column; gap: 4px; }
+.emvb-rte-row { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+.emvb-rte-block { height: 28px; padding: 0 6px; border-radius: 6px; border: 0; font: inherit; font-size: 12px; background: var(--color-kumo-control); color: var(--text-color-kumo-default); box-shadow: 0 0 0 1px var(--color-kumo-line); margin-right: 4px; }
+.emvb-rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding: 0 6px; border: 0; border-radius: 6px; background: transparent; color: var(--text-color-kumo-default); font: inherit; font-size: 12px; cursor: pointer; }
+.emvb-rte-btn:hover:not(:disabled) { background: var(--color-kumo-tint); }
+.emvb-rte-btn[aria-pressed="true"] { background: var(--color-kumo-tint); color: var(--color-kumo-brand); }
+.emvb-rte-btn:disabled { opacity: .4; cursor: default; }
+.emvb-rte-row > .emvb-field { flex: 1; min-width: 0; height: 28px; }
+.emvb-rte-images { flex-direction: column; align-items: stretch; }
+.emvb-rte-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; max-height: 160px; overflow: auto; }
+.emvb-rte-thumb { padding: 0; border: 0; border-radius: 4px; overflow: hidden; aspect-ratio: 1; cursor: pointer; background: var(--color-kumo-tint); }
+.emvb-rte-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.emvb-rte-content { min-height: 120px; max-height: 420px; overflow: auto; padding: 8px 10px; border-radius: 8px; background: var(--color-kumo-control); color: var(--text-color-kumo-default); box-shadow: 0 0 0 1px var(--color-kumo-line); font-size: 13px; line-height: 1.55; outline: none; }
+.emvb-rte-content:focus { box-shadow: 0 0 0 2px var(--color-kumo-brand); }
+.emvb-rte-content > :first-child { margin-top: 0; }
+.emvb-rte-content > :last-child { margin-bottom: 0; }
+.emvb-rte-content :is(h1,h2,h3,h4,h5,h6) { margin: .8em 0 .3em; line-height: 1.25; font-weight: 600; }
+.emvb-rte-content h1 { font-size: 20px; } .emvb-rte-content h2 { font-size: 17px; } .emvb-rte-content h3 { font-size: 15px; } .emvb-rte-content :is(h4,h5,h6) { font-size: 13px; }
+.emvb-rte-content p { margin: 0 0 .6em; }
+.emvb-rte-content :is(ul,ol) { padding-inline-start: 1.4em; margin: 0 0 .6em; }
+.emvb-rte-content blockquote { margin: 0 0 .6em; padding-inline-start: .8em; border-inline-start: 3px solid var(--color-kumo-line); }
+.emvb-rte-content a { color: var(--color-kumo-brand); text-decoration: underline; }
+.emvb-rte-content img { max-width: 100%; height: auto; }
+.emvb-rte-content img.ProseMirror-selectednode { outline: 2px solid var(--color-kumo-brand); }
+.emvb-rte-content table { border-collapse: collapse; width: 100%; margin: 0 0 .6em; }
+.emvb-rte-content :is(th,td) { border: 1px solid var(--color-kumo-line); padding: 4px 6px; vertical-align: top; min-width: 40px; position: relative; }
+.emvb-rte-content :is(th,td) p { margin: 0; }
+.emvb-rte-content .selectedCell::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, var(--color-kumo-brand) 15%, transparent); pointer-events: none; }
+.emvb-rte-source { min-height: 200px; font-family: ui-monospace, monospace; font-size: 12px; }
 .emvb-field-label { font-size: 12px; font-weight: 500; color: var(--text-color-kumo-subtle); }
 .emvb-panel [data-emvb-panel] .emvb-helper { margin-top: -2px; }
 

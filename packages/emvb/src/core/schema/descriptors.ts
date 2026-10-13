@@ -2,6 +2,8 @@
 export type FieldKind =
   | "text"
   | "textarea"
+  /** W-323: formatted text, edited with the rich text editor. */
+  | "rich-text"
   | "number"
   | "int"
   | "select"

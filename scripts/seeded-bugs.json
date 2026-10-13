@@ -26938,6 +26938,78 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/sanitize/background.test.ts"],
       "expect": "\\(fail\\).*W-322"
+    },
+    {
+      "id": "W-323/bold-italic",
+      "requirement": "W-323",
+      "description": "Bold makes text italic.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/rich-text/RichTextEditor.tsx",
+          "search": "onClick={run((c) => c.toggleBold())}",
+          "replace": "onClick={run((c) => c.toggleItalic())}"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/rich-text/RichTextEditor.test.tsx"
+      ],
+      "expect": "\\(fail\\).*W-323"
+    },
+    {
+      "id": "W-323/no-sync",
+      "requirement": "W-323",
+      "description": "A value changed elsewhere doesn't reach the editor.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/rich-text/RichTextEditor.tsx",
+          "search": "    editor.commands.setContent(value, { emitUpdate: false });\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/rich-text/RichTextEditor.test.tsx"
+      ],
+      "expect": "\\(fail\\).*W-323"
+    },
+    {
+      "id": "W-323/trailing-paragraph",
+      "requirement": "W-323",
+      "description": "An empty paragraph is added after headings.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/rich-text/extensions.ts",
+          "search": "      trailingNode: false,\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/rich-text/RichTextEditor.test.tsx"
+      ],
+      "expect": "\\(fail\\).*W-323"
+    },
+    {
+      "id": "W-323/markup-is-change",
+      "requirement": "W-323",
+      "description": "Tiptap's own markup counts as a change.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/rich-text/extensions.ts",
+          "search": "  if (a === b) return true;\n  return strip(a) === strip(b);",
+          "replace": "  return a === b;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/rich-text/RichTextEditor.test.tsx"
+      ],
+      "expect": "\\(fail\\).*W-323"
     }
   ]
 }

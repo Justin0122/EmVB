@@ -232,10 +232,10 @@ const richText: ElementDefinition<RichTextNode> = {
     fields: [
       {
         key: "html",
-        kind: "textarea",
-        label: "Content (HTML)",
+        kind: "rich-text",
+        label: "Content",
         message:
-          "Paragraphs, headings, bold, italic, links, lists, quotes and tables. Other tags, styles and scripts are removed.",
+          "Paragraphs, headings, bold, italic, links, lists, quotes, images and tables. Other tags, styles and scripts are removed.",
       },
     ],
   },

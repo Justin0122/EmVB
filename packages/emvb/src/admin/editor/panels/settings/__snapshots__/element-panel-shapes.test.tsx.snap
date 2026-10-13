@@ -1376,11 +1376,50 @@ exports[`element panel markup (W-021, W-086 M16) rich-text renders the same cont
         "Style"
       div data-orientation="horizontal" data-activation-direction="none" role="presentation"
   div.emvb-panel-body data-emvb-tab="content"
-    div.emvb-field-group data-emvb-field="html"
-      label.emvb-field-label for="id-2"
-        "Content (HTML)"
-      textarea.emvb-field.emvb-textarea id="id-2"
-        "<p>Rich text</p>""
+    div.emvb-field-block.emvb-rte data-emvb-rich-text-editor=""
+      span.emvb-field-label
+        "Content"
+      div.emvb-rte-toolbar role="toolbar" aria-label="Formatting"
+        div.emvb-rte-row
+          select.emvb-rte-block aria-label="Text style"
+            option value="p"
+              "Paragraph"
+            option value="h1"
+              "Heading 1"
+            option value="h2"
+              "Heading 2"
+            option value="h3"
+              "Heading 3"
+            option value="h4"
+              "Heading 4"
+          button.emvb-rte-btn type="button" aria-label="Bold" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Italic" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Underline" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Strikethrough" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Link" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Bulleted list" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Numbered list" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Quote" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Image" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="Table" aria-pressed="false"
+            svg
+          button.emvb-rte-btn type="button" aria-label="HTML" aria-pressed="false"
+            svg
+      div
+        div.emvb-rte-content aria-label="Content" tabindex="0"
+          p
+            "Rich text"
+      p.emvb-helper
+        "Paragraphs, headings, bold, italic, links, lists, quotes, images and tables. Other tags, styles and scripts are removed.""
 ,
   "style": 
 "div.emvb-panel-body data-emvb-panel="element" data-emvb-element="rich-text"

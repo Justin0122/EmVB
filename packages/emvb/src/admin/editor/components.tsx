@@ -16,6 +16,7 @@ import { requestJson, type Fetcher } from "../api.ts";
 import { listThemeParts } from "../theme-api.ts";
 import { BUTTON, FIELD } from "../ui.ts";
 import { MediaPicker } from "./panels/settings/MediaPicker.tsx";
+import { RichTextEditor } from "./rich-text/RichTextEditor.tsx";
 
 /**
  * W-312: the editor's side of Components. The canvas renders each use from its design and the
@@ -202,17 +203,15 @@ function FieldInput({
       );
     case "rich-text":
       return (
-        <label className="emvb-field-block" data-emvb-field-kind="rich-text">
-          <span className="emvb-field-label">{field.label}</span>
-          <textarea
-            className={`${FIELD} emvb-textarea`}
-            rows={6}
+        <div data-emvb-field-kind="rich-text">
+          <RichTextEditor
+            label={field.label}
             value={typeof value === "string" ? value : ""}
-            placeholder={field.default}
-            onChange={(event) => onChange(event.target.value)}
+            fetcher={fetcher}
+            onChange={onChange}
+            help={help}
           />
-          {help}
-        </label>
+        </div>
       );
     case "image": {
       const image = record(value);
