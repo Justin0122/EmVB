@@ -230,6 +230,7 @@ export const submit: ElementDefinition<SubmitNode> = {
       type: "submit",
       class: `${attrs.class ?? ""} ec-form-submit`.trim(),
     },
-    children: [node.props.label ?? "Submit"],
+    // W-447: a blank label left an empty button with no name; it falls back like an unset one.
+    children: [node.props.label?.trim() || "Submit"],
   }),
 };

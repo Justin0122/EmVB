@@ -29862,6 +29862,26 @@
         "without a fix"
       ],
       "expect": "\\(fail\\).*without a fix"
+    },
+    {
+      "id": "W-447/blank-submit",
+      "requirement": "W-447",
+      "description": "Blank submit label renders empty.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/form-elements.ts",
+          "search": "children: [node.props.label?.trim() || \"Submit\"],",
+          "replace": "children: [node.props.label ?? \"Submit\"],"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/submit-label.test.ts",
+        "-t",
+        "falls back"
+      ],
+      "expect": "\\(fail\\).*falls back"
     }
   ]
 }

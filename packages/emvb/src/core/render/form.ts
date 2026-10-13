@@ -40,7 +40,9 @@ const honeypot = (inputId: string): VNode => ({
 /** The text of the form's first Submit button, as the page renders it. */
 function firstSubmitLabel(nodes: readonly LayoutNode[]): string | undefined {
   for (const child of nodes) {
-    if (child.type === "submit") return (child.props as { label?: string }).label ?? "Submit";
+    if (child.type === "submit") {
+      return (child.props as { label?: string }).label?.trim() || "Submit";
+    }
     const found = firstSubmitLabel(nodeChildren(child));
     if (found !== undefined) return found;
   }

@@ -1259,7 +1259,7 @@
           "data-emvb-id": "node0001",
           "type": "submit"
         },
-        "children": [""]
+        "children": ["Submit"]
       },
       "unlabelled, no class": {
         "tag": "button",
@@ -1267,7 +1267,7 @@
           "type": "submit",
           "class": "ec-form-submit"
         },
-        "children": [""]
+        "children": ["Submit"]
       }
     }
   },

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A form's Submit button with a blank label shows "Submit" instead of an empty button.
 - The accessibility check reports links and fields inside an element marked aria-hidden.
 - The same-name menu warning ignores menus that are never shown on the same device.
 - The accessibility check no longer reports two H1s when each is shown on different devices.
