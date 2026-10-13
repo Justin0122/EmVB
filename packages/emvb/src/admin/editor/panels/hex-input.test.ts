@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { hexInput } from "./color-space.ts";
+import { hexInput, parseRgb } from "./color-space.ts";
 import { parseValue } from "./variable-values.ts";
 
 describe("hex without # (W-434)", () => {
@@ -14,5 +14,12 @@ describe("hex without # (W-434)", () => {
     expect(hexInput("12345")).toBeUndefined();
     expect(hexInput("##abc")).toBeUndefined();
     expect(parseValue("color", "red").ok).toBe(false);
+  });
+});
+
+describe("modern rgb() syntax (W-435)", () => {
+  test("a slash before alpha is read", () => {
+    expect(parseRgb("rgb(0 0 0 / 50%)")).toEqual({ r: 0, g: 0, b: 0, a: 0.5 });
+    expect(parseRgb("rgb(10 20 30/0.25)")).toEqual({ r: 10, g: 20, b: 30, a: 0.25 });
   });
 });

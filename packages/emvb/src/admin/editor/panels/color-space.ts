@@ -62,7 +62,8 @@ export function parseRgb(text: string): Rgba | null {
     .trim()
     .replace(/^rgba?\(/i, "")
     .replace(/\)$/, "")
-    .split(/[\s,]+/)
+    // W-435: CSS's own "rgb(0 0 0 / 50%)", as DevTools copies it, puts a slash before alpha.
+    .split(/[\s,/]+/)
     .filter(Boolean);
   if (parts.length !== 3 && parts.length !== 4) return null;
   const nums = parts.slice(0, 3).map((part) => Number(part));

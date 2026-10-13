@@ -29640,6 +29640,26 @@
         "design-tool"
       ],
       "expect": "\\(fail\\).*design-tool"
+    },
+    {
+      "id": "W-435/rgb-slash",
+      "requirement": "W-435",
+      "description": "Slash alpha refused.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/color-space.ts",
+          "search": "before alpha.\n    .split(/[\\s,/]+/)",
+          "replace": "before alpha.\n    .split(/[\\s,]+/)"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/hex-input.test.ts",
+        "-t",
+        "slash before alpha"
+      ],
+      "expect": "\\(fail\\).*slash before alpha"
     }
   ]
 }

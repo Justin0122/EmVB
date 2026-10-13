@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The colour control's RGB field accepts rgb(0 0 0 / 50%).
 - Colour fields accept a hex pasted without "#", as design tools copy it.
 - Pagination's Previous and Next links set to just an arrow are read as "Previous page" and "Next page".
 - The accessibility check flags more vague link texts, such as "See more" and "More info".
