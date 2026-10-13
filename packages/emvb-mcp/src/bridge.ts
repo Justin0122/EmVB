@@ -20,8 +20,10 @@ const failure = (message: string): ToolResult => ({
 /** Turns a transport or auth failure into a tool error the agent and the person can act on. */
 function explain(error: unknown, tool: string): ToolResult {
   const message = error instanceof Error ? error.message : String(error);
-  if (/401|unauthori[sz]ed|invalid token/i.test(message)) {
-    return failure("The site refused the token. Create a new EmDash API token and set EMVB_TOKEN.");
+  if (/401|unauthori[sz]ed|invalid[_ ](or expired )?token|expired token/i.test(message)) {
+    return failure(
+      "The site refused the token: it is wrong, revoked or expired. Create a new EmDash API token (scope mcp:tools:emvb, an editor) and update EMVB_TOKEN or the token file.",
+    );
   }
   if (/403|scope|forbidden/i.test(message)) {
     return failure(
@@ -150,6 +152,11 @@ function registerResources(server: McpServer, remote: Remote) {
     },
     (uri, vars) => {
       const pageId = String(vars["pageId"]);
+      if (vars["view"] !== "layout" && vars["view"] !== "a11y") {
+        throw new Error(
+          `Unknown view ${String(vars["view"])}: use emvb://pages/{pageId}/layout or /a11y.`,
+        );
+      }
       if (vars["view"] === "a11y")
         return viaTool(remote, uri, "get_accessibility_findings", { pageId });
       return viaTool(remote, uri, "get_layout", { pageId });

@@ -30318,6 +30318,26 @@
         "unknown variable or class"
       ],
       "expect": "\\(fail\\).*unknown variable or class"
+    },
+    {
+      "id": "W-475/loose-token-silent",
+      "requirement": "W-475",
+      "description": "The bridge stops warning about a token file other users can read.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/token-file.ts",
+          "search": "(mode & 0o077) !== 0",
+          "replace": "(mode & 0o077) === -1"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb-mcp/test/live-round2.test.ts",
+        "-t",
+        "chmod warning"
+      ],
+      "expect": "\\(fail\\).*chmod warning"
     }
   ]
 }

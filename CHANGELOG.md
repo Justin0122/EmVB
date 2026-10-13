@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- emvb-mcp: warns about a token file other users can read, explains a missing token file, and says a refused token is wrong, revoked or expired instead of "Couldn't reach the site".
 - MCP: references to fonts, sizes and spacings work without "from", typos in variable or class names are refused with the names that exist, tag defaults are merged instead of replaced, a site without EmVB set up says so, and create_page with a hero makes the hero heading the only H1.
 - The AI agents page uses EmVB's admin styles instead of plain browser defaults.
 - Video URLs typed without https://, such as youtube.com/watch?v=…, embed the video.
