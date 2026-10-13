@@ -29520,6 +29520,26 @@
         "spaces are encoded"
       ],
       "expect": "\\(fail\\).*spaces are encoded"
+    },
+    {
+      "id": "W-429/space-hint",
+      "requirement": "W-429",
+      "description": "Spaced URLs get the generic hint.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/link-rules.ts",
+          "search": "if (/^https?:\\/\\/\\S*\\s/i.test(trimmed)) {",
+          "replace": "if (false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/link-rules.test.ts",
+        "-t",
+        "space"
+      ],
+      "expect": "\\(fail\\).*space"
     }
   ]
 }

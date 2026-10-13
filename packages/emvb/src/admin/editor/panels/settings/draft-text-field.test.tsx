@@ -181,7 +181,9 @@ describe("a box Link refuses a bad URL with an inline error (W-176)", () => {
       { type: "https://example.com/plans", end: "blur" },
     ]);
     const message = "Use a full URL such as https://example.com or a path such as /pricing.";
-    expect(seen.map((shown) => shown.includes(message))).toEqual([true, true, false]);
+    expect(seen.map((shown) => shown.includes(message))).toEqual([false, true, false]);
+    // W-429: another scheme gets its own message.
+    expect(seen[0]).toContain("Only web (https://)");
     expect(sent).toEqual(["https://example.com/plans"]);
   });
 });

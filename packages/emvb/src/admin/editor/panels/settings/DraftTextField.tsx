@@ -1,4 +1,5 @@
 import { Input } from "@cloudflare/kumo";
+import { hrefError } from "./link-rules.ts";
 import * as React from "react";
 import {
   MAX_TEXT_LENGTH,
@@ -205,9 +206,7 @@ export function DraftTextField({
       if (commitClearable()) return;
       const safe = sanitizeHref(draft.trim());
       if (!safe) {
-        setError(
-          field.message ?? "Use a full URL such as https://example.com or a path such as /pricing.",
-        );
+        setError(hrefError(draft, field.message));
         return;
       }
       setError(null);

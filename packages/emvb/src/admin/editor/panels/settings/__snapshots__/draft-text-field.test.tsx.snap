@@ -127,7 +127,7 @@ exports[`draft text fields (W-021) href commits and reports errors as before 1`]
   "initial": "/a",
   "label": "Link",
   "seen": [
-    "LinkUse a full URL such as https://example.com or a path such as /pricing.",
+    "LinkOnly web (https://), email (mailto:) and phone (tel:) links are allowed.",
     "Link",
     "LinkUse a full URL such as https://example.com or a path such as /pricing.",
     "LinkUse a full URL such as https://example.com or a path such as /pricing.",
