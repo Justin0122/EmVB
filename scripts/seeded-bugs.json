@@ -29480,6 +29480,26 @@
         "Page N"
       ],
       "expect": "\\(fail\\).*Page N"
+    },
+    {
+      "id": "W-427/www-relative",
+      "requirement": "W-427",
+      "description": "www. links stay relative.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/href.ts",
+          "search": ".replace(/^www\\./i, (w) => `https://${w}`)",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/sanitize/href-typed.test.ts",
+        "-t",
+        "www"
+      ],
+      "expect": "\\(fail\\).*www"
     }
   ]
 }
