@@ -148,7 +148,7 @@ const SCHEMAS = new Map(
 );
 
 const sample = (type: string): LayoutNode =>
-  ({ ...defaultElement(type as ElementType, "sample"), id: "sample" }) as LayoutNode;
+  Object.assign({}, defaultElement(type as ElementType, "sample"), { id: "sample" }) as LayoutNode;
 
 /** Which parent types accept `type`, by the same rule drag-and-drop and save use (W-354). */
 function allowedParents(type: string): string[] {
