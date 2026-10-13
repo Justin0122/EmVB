@@ -29040,6 +29040,26 @@
         "bare number"
       ],
       "expect": "\\(fail\\).*bare number"
+    },
+    {
+      "id": "W-405/tabs-rtl-arrows",
+      "requirement": "W-405",
+      "description": "Tabs arrows ignore right-to-left text.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/tabs/runtime.ts",
+          "search": "?.toLowerCase() === \"rtl\";",
+          "replace": "?.toLowerCase() === \"never\";"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/astro/tabs/runtime.test.ts",
+        "-t",
+        "ArrowLeft moves to the next tab"
+      ],
+      "expect": "\\(fail\\).*ArrowLeft moves to the next tab"
     }
   ]
 }

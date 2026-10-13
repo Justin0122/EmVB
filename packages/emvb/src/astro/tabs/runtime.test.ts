@@ -262,3 +262,29 @@ describe("tabs runtime (W-078)", () => {
     }
   });
 });
+
+describe("tabs in right-to-left text (W-405)", () => {
+  test("ArrowLeft moves to the next tab, ArrowRight back", () => {
+    const root = fixture();
+    root.setAttribute("dir", "rtl");
+    // Three tabs, so wrapping around can't pass for the right direction.
+    root
+      .querySelector(".emvb-tab-list")
+      ?.insertAdjacentHTML("beforebegin", '<input class="emvb-tab-input" type="radio" name="g" />');
+    root
+      .querySelector(".emvb-tab-list")
+      ?.insertAdjacentHTML("beforeend", '<label class="emvb-tab-label" role="tab">Three</label>');
+    root
+      .querySelector(".emvb-tab-panels")
+      ?.insertAdjacentHTML("beforeend", '<div class="emvb-tab-panel" role="tabpanel">C</div>');
+    initTabs(document);
+    const labels = [...root.querySelectorAll<HTMLElement>(".emvb-tab-label")];
+    const list = root.querySelector(".emvb-tab-list") as HTMLElement;
+    const press = (key: string) =>
+      list.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
+    press("ArrowLeft");
+    expect(labels[1]?.getAttribute("aria-selected")).toBe("true");
+    press("ArrowRight");
+    expect(labels[0]?.getAttribute("aria-selected")).toBe("true");
+  });
+});

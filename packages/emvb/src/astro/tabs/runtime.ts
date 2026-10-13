@@ -90,7 +90,15 @@ function enhance(root: HTMLElement): void {
   activate(root, selectedIndex(root));
 
   list.addEventListener("keydown", (event) => {
-    const target = KEY_TARGETS[event.key];
+    // W-405: in right-to-left text the first tab is on the right, so the arrows swap.
+    const rtl = list.closest("[dir]")?.getAttribute("dir")?.toLowerCase() === "rtl";
+    const key =
+      rtl && event.key === "ArrowRight"
+        ? "ArrowLeft"
+        : rtl && event.key === "ArrowLeft"
+          ? "ArrowRight"
+          : event.key;
+    const target = KEY_TARGETS[key];
     if (!target) return;
     event.preventDefault();
     if (labels.length === 0) return;
