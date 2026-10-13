@@ -9,6 +9,7 @@ import {
   savableAttributes,
   type AttributeRow,
 } from "./advanced-rules.ts";
+import { QueryStyleRows } from "./QueryStyleRows.tsx";
 
 /**
  * CSS id: a value the page can't save (bad characters, or another element's id) stays in the
@@ -85,16 +86,19 @@ export function ContainerQueryFields({
   const min = node.query?.min ?? "";
   return (
     <div className="emvb-field-group" data-emvb-container="">
-      <label className="emvb-check">
-        <input
-          type="checkbox"
-          checked={node.container === true}
-          onChange={(event) =>
-            onChange({ ...node, container: event.target.checked ? true : undefined })
-          }
-        />
-        Query container
-      </label>
+      {/* W-398: any element can take container-query styles; only a box can be the container. */}
+      {"children" in node && (
+        <label className="emvb-check">
+          <input
+            type="checkbox"
+            checked={node.container === true}
+            onChange={(event) =>
+              onChange({ ...node, container: event.target.checked ? true : undefined })
+            }
+          />
+          Query container
+        </label>
+      )}
       <Input
         label="Styles from container width (px)"
         className={FIELD}
@@ -125,8 +129,9 @@ export function ContainerQueryFields({
       >
         Use current style at that width
       </Button>
+      <QueryStyleRows node={node} onChange={onChange} />
       <p className="emvb-helper">
-        Query container makes this box the size children measure. The copied style is what applies
+        Query container makes this box the size children measure. The styles listed here apply
         inside @container once the container is at least that wide, not the viewport.
       </p>
     </div>

@@ -28900,6 +28900,26 @@
         "bad lines stay"
       ],
       "expect": "\\(fail\\).*bad lines stay"
+    },
+    {
+      "id": "W-398/query-row-drops-others",
+      "requirement": "W-398",
+      "description": "Editing one container-query property drops the others.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/QueryStyleRows.tsx",
+          "search": "const next = withQueryStyle(node, { ...style, [styleKey]: parsed.value });",
+          "replace": "const next = withQueryStyle(node, { [styleKey]: parsed.value });"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/query-style.test.tsx",
+        "-t",
+        "keeps the others"
+      ],
+      "expect": "\\(fail\\).*keeps the others"
     }
   ]
 }

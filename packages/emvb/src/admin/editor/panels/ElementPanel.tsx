@@ -586,7 +586,7 @@ function KnownElementPanel({
                 <>
                   <HtmlIdField node={node} layout={layout} onChange={onChange} />
                   <DirectionField node={node} onChange={onChange} />
-                  {"children" in node && <ContainerQueryFields node={node} onChange={onChange} />}
+                  <ContainerQueryFields node={node} onChange={onChange} />
                   <AttributesEditor
                     attributes={node.attributes}
                     onChange={(attributes) => onChange({ ...node, attributes })}

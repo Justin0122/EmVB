@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Container query styles can be edited one property at a time in Advanced: change, remove or add a property.
 - Image settings have an Extra sizes (srcset) field: one `URL WIDTH` per line, up to 6.
 
 ## [0.4.0] - 2026-10-11

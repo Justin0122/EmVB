@@ -87,6 +87,10 @@ export const EDITOR_CSS = `${UI_CSS}
 .emvb-panel-title { margin: 0; font-size: 14px; line-height: 18px; font-weight: 600; }
 .emvb-panel-body, .emvb-field-group, .emvb-new-variable, .emvb-section-body { display: flex; flex-direction: column; gap: 10px; }
 .emvb-field-group, .emvb-new-variable { gap: 8px; }
+.emvb-query-style, .emvb-query-add { display: flex; flex-direction: column; gap: 6px; }
+.emvb-query-row { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; }
+.emvb-query-row > label, .emvb-query-row > .emvb-helper { grid-column: 1 / -1; }
+.emvb-query-style { border-left: 2px solid var(--emvb-border, #d4d4d8); padding-left: 8px; }
 .emvb-section-header { display: flex; align-items: center; justify-content: space-between; width: 100%; height: var(--emvb-control); margin-top: 4px; padding: 0; border: 0; border-top: 1px solid var(--color-kumo-hairline); background: none; color: var(--text-color-kumo-strong, var(--text-color-kumo-default)); font: inherit; font-size: 12px; font-weight: 600; letter-spacing: 0.01em; cursor: pointer; }
 .emvb-section-header:focus-visible, .emvb-layer-row:focus-visible, .emvb-empty-prompt:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: 2px; }
 .emvb-count { margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 400; color: var(--text-color-kumo-subtle); }

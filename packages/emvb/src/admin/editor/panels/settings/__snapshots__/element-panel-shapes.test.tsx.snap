@@ -254,6 +254,17 @@ exports[`element panel markup (W-021, W-086 M16) heading renders the same conten
             span aria-hidden="true"
               svg
           input id="id-17" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-18" for="id-19"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -480,6 +491,17 @@ exports[`element panel markup (W-021, W-086 M16) toc renders the same content an
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -670,7 +692,7 @@ exports[`element panel markup (W-021, W-086 M16) container renders the same cont
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -856,7 +878,7 @@ exports[`element panel markup (W-021, W-086 M16) container renders the same cont
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -1139,7 +1161,7 @@ exports[`element panel markup (W-021, W-086 M16) layout-section renders the same
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -1252,6 +1274,17 @@ exports[`element panel markup (W-021, W-086 M16) spacer renders the same content
             span aria-hidden="true"
               svg
           input id="id-15" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-16" for="id-17"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -1359,6 +1392,17 @@ exports[`element panel markup (W-021, W-086 M16) spacer renders the same content
             span aria-hidden="true"
               svg
           input id="id-15" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-16" for="id-17"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -1499,6 +1543,17 @@ exports[`element panel markup (W-021, W-086 M16) divider renders the same conten
             span aria-hidden="true"
               svg
           input id="id-15" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-16" for="id-17"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -1634,6 +1689,17 @@ exports[`element panel markup (W-021, W-086 M16) divider renders the same conten
             span aria-hidden="true"
               svg
           input id="id-15" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-16" for="id-17"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -1874,6 +1940,17 @@ exports[`element panel markup (W-021, W-086 M16) text renders the same content a
             span aria-hidden="true"
               svg
           input id="id-17" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-18" for="id-19"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -2103,6 +2180,17 @@ exports[`element panel markup (W-021, W-086 M16) label renders the same content 
             span aria-hidden="true"
               svg
           input id="id-17" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-18" for="id-19"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -2358,6 +2446,17 @@ exports[`element panel markup (W-021, W-086 M16) link renders the same content a
             span aria-hidden="true"
               svg
           input id="id-17" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-18" for="id-19"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -2670,6 +2769,17 @@ exports[`element panel markup (W-021, W-086 M16) button renders the same content
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -2889,6 +2999,17 @@ exports[`element panel markup (W-021, W-086 M16) list renders the same content a
             span aria-hidden="true"
               svg
           input id="id-17" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-18" for="id-19"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -3188,6 +3309,17 @@ exports[`element panel markup (W-021, W-086 M16) image renders the same content 
             span aria-hidden="true"
               svg
           input id="id-15" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-16" for="id-17"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -3461,6 +3593,17 @@ exports[`element panel markup (W-021, W-086 M16) icon renders the same content a
             span aria-hidden="true"
               svg
           input id="id-16" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-17" for="id-18"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-18" type="number" value="" aria-labelledby="id-17"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -3655,6 +3798,17 @@ exports[`element panel markup (W-021, W-086 M16) video renders the same content 
             span aria-hidden="true"
               svg
           input id="id-15" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-16" for="id-17"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -3890,7 +4044,7 @@ exports[`element panel markup (W-021, W-086 M16) form renders the same content a
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -4133,6 +4287,17 @@ exports[`element panel markup (W-021, W-086 M16) text-input renders the same con
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -4375,6 +4540,17 @@ exports[`element panel markup (W-021, W-086 M16) textarea renders the same conte
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -4612,6 +4788,17 @@ exports[`element panel markup (W-021, W-086 M16) select renders the same content
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -4832,6 +5019,17 @@ exports[`element panel markup (W-021, W-086 M16) checkbox renders the same conte
             span aria-hidden="true"
               svg
           input id="id-16" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-17" for="id-18"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-18" type="number" value="" aria-labelledby="id-17"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -5052,6 +5250,17 @@ exports[`element panel markup (W-021, W-086 M16) radio renders the same content 
             span aria-hidden="true"
               svg
           input id="id-16" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-17" for="id-18"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-18" type="number" value="" aria-labelledby="id-17"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -5284,6 +5493,17 @@ exports[`element panel markup (W-021, W-086 M16) submit renders the same content
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -5511,6 +5731,17 @@ exports[`element panel markup (W-021, W-086 M16) post-title renders the same con
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -5683,6 +5914,17 @@ exports[`element panel markup (W-021, W-086 M16) post-excerpt renders the same c
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -5850,6 +6092,17 @@ exports[`element panel markup (W-021, W-086 M16) post-excerpt renders the same c
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -6022,6 +6275,17 @@ exports[`element panel markup (W-021, W-086 M16) post-content renders the same c
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -6189,6 +6453,17 @@ exports[`element panel markup (W-021, W-086 M16) post-content renders the same c
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -6413,6 +6688,17 @@ exports[`element panel markup (W-021, W-086 M16) post-image renders the same con
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -6642,6 +6928,17 @@ exports[`element panel markup (W-021, W-086 M16) post-link renders the same cont
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -6814,6 +7111,17 @@ exports[`element panel markup (W-021, W-086 M16) post-date renders the same cont
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -6981,6 +7289,17 @@ exports[`element panel markup (W-021, W-086 M16) post-date renders the same cont
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -7153,6 +7472,17 @@ exports[`element panel markup (W-021, W-086 M16) post-author renders the same co
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -7320,6 +7650,17 @@ exports[`element panel markup (W-021, W-086 M16) post-author renders the same co
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -7629,7 +7970,7 @@ exports[`element panel markup (W-021, W-086 M16) loop renders the same content a
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -7820,7 +8161,7 @@ exports[`element panel markup (W-021, W-086 M16) loop-empty renders the same con
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -8006,7 +8347,7 @@ exports[`element panel markup (W-021, W-086 M16) loop-empty renders the same con
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -8253,6 +8594,17 @@ exports[`element panel markup (W-021, W-086 M16) pagination renders the same con
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -8498,7 +8850,7 @@ exports[`element panel markup (W-021, W-086 M16) section renders the same conten
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -8684,7 +9036,7 @@ exports[`element panel markup (W-021, W-086 M16) div-block renders the same cont
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -8865,7 +9217,7 @@ exports[`element panel markup (W-021, W-086 M16) div-block renders the same cont
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -9078,7 +9430,7 @@ exports[`element panel markup (W-021, W-086 M16) flexbox renders the same conten
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -9286,7 +9638,7 @@ exports[`element panel markup (W-021, W-086 M16) flexbox renders the same conten
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -9573,7 +9925,7 @@ exports[`element panel markup (W-021, W-086 M16) grid renders the same content a
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -9818,6 +10170,17 @@ exports[`element panel markup (W-021, W-086 M16) svg renders the same content an
             span aria-hidden="true"
               svg
           input id="id-18" tabindex="-1" aria-hidden="true" value="site"
+        div.emvb-field-group data-emvb-container=""
+          div
+            label id="id-19" for="id-20"
+              span
+                "Styles from container width (px)"
+            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+          button.emvb-btn data-kumo-component="Button" type="button"
+            span
+              "Use current style at that width"
+          p.emvb-helper
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -10090,7 +10453,7 @@ exports[`element panel markup (W-021, W-086 M16) tabs renders the same content a
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -10327,7 +10690,7 @@ exports[`element panel markup (W-021, W-086 M16) tab-panel renders the same cont
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -10615,7 +10978,7 @@ exports[`element panel markup (W-021, W-086 M16) accordion renders the same cont
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -10860,7 +11223,7 @@ exports[`element panel markup (W-021, W-086 M16) accordion-item renders the same
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -11113,7 +11476,7 @@ exports[`element panel markup (W-021, W-086 M16) menu renders the same content a
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
@@ -11402,7 +11765,7 @@ exports[`element panel markup (W-021, W-086 M16) menu-item renders the same cont
             span
               "Use current style at that width"
           p.emvb-helper
-            "Query container makes this box the size children measure. The copied style is what applies inside @container once the container is at least that wide, not the viewport."
+            "Query container makes this box the size children measure. The styles listed here apply inside @container once the container is at least that wide, not the viewport."
         div.emvb-field-group data-emvb-attributes=""
           span.emvb-var-field-label
             "Attributes"
