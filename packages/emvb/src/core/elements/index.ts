@@ -1096,11 +1096,18 @@ const accordionItem: ElementDefinition<AccordionItemNode> = {
     ],
   },
   build: (node, attrs, children) => {
-    const summary: VNode = { tag: "summary", attrs: {}, children: [node.props.summary] };
+    // W-330: the question is its own element, so it can be edited on its own.
+    const { "data-emvb-summary-bound": bound, ...rest } = attrs;
+    const title: VNode = {
+      tag: "span",
+      attrs: { class: "emvb-accordion-title", ...(bound ? { "data-emvb-bound": bound } : {}) },
+      children: [node.props.summary],
+    };
+    const summary: VNode = { tag: "summary", attrs: {}, children: [title] };
     const body: VNode = { tag: "div", attrs: { class: "emvb-accordion-body" }, children };
     return {
       tag: "details",
-      attrs: node.props.open ? { ...attrs, open: "" } : attrs,
+      attrs: node.props.open ? { ...rest, open: "" } : rest,
       children: [summary, body],
     };
   },

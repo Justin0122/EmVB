@@ -153,7 +153,12 @@ type Scope = { values: Record<string, unknown>; fields: ComponentField[]; path: 
  * W-324: where an applied element's text comes from: a text or rich-text field of the use, by
  * its path in the use's values ("title", "buttons.0.label"). The canvas edits that field in place.
  */
-export type BoundField = { path: string; kind: "text" | "rich-text" };
+export type BoundField = {
+  path: string;
+  kind: "text" | "rich-text";
+  /** W-330: the text is an accordion item's question, marked on the question, not the item. */
+  on?: "summary";
+};
 
 const BOUND = new WeakMap<LayoutNode, BoundField>();
 
@@ -292,6 +297,12 @@ function applyNode(
       (found.field.kind === "text" || found.field.kind === "rich-text")
     ) {
       bound = { path: found.path, kind: found.field.kind };
+    } else if (
+      target === "summary" &&
+      node.type === "accordion-item" &&
+      found.field.kind === "text"
+    ) {
+      bound = { path: found.path, kind: "text", on: "summary" };
     }
     if (target === "classes") {
       if (found.field.kind === "select" && typeof found.value === "string") {

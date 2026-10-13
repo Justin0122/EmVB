@@ -328,7 +328,7 @@ describe("texts inside a use name their field in the editor (W-324)", () => {
 });
 
 describe("only texts are marked for editing, not items that hold one (W-327)", () => {
-  test("a FAQ item's question isn't marked, so a click opens it; its answer is", () => {
+  test("a FAQ item is never marked as a whole; its question and answer are (W-330)", () => {
     const faq: ComponentTemplate = {
       fields: [
         {
@@ -388,8 +388,11 @@ describe("only texts are marked for editing, not items that hold one (W-327)", (
       { mode: "editor", dynamic: { componentTemplates: { f1: faq } } },
     );
     expect(html).toContain(">Hoe?<");
-    expect(html.match(/data-emvb-bound="([^"]+)"/g)).toEqual([
-      'data-emvb-bound="use00001|items.0.answer|rich-text"',
-    ]);
+    // W-330: the question is marked on its own text, not on the item, so the item still opens.
+    expect(html).not.toMatch(/<details[^>]*data-emvb-bound/);
+    expect(html).toContain(
+      '<span class="emvb-accordion-title" data-emvb-bound="use00001|items.0.question|text">Hoe?</span>',
+    );
+    expect(html).toContain('data-emvb-bound="use00001|items.0.answer|rich-text"');
   });
 });

@@ -332,7 +332,12 @@ export function renderPage(
     // W-324: a text inside a component use names the use's field it shows.
     const marks = mode === "editor" || inlineEdit;
     const bound = insideComponent && marks ? boundFieldOf(node) : undefined;
-    if (bound && boundUse) attrs["data-emvb-bound"] = `${boundUse}|${bound.path}|${bound.kind}`;
+    if (bound && boundUse) {
+      // W-330: a question is marked on its own text (the item moves it there), so a click beside
+      // it still opens the item.
+      const marker = bound.on === "summary" ? "data-emvb-summary-bound" : "data-emvb-bound";
+      attrs[marker] = `${boundUse}|${bound.path}|${bound.kind}`;
+    }
     // W-325: on the site in edit mode, the layout's own texts name their element.
     if (inlineEdit && ownNode && id) {
       if (node.type === "rich-text") attrs["data-emvb-text"] = `${id}|rich`;

@@ -27382,6 +27382,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
       "expect": "\\(fail\\).*W-329"
+    },
+    {
+      "id": "W-330/item-marked",
+      "requirement": "W-330",
+      "description": "A bound question marks the whole item, so it can't open.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "const marker = bound.on === \"summary\" ? \"data-emvb-summary-bound\" : \"data-emvb-bound\";",
+          "replace": "const marker = \"data-emvb-bound\";"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-330"
+    },
+    {
+      "id": "W-330/question-unmarked",
+      "requirement": "W-330",
+      "description": "A FAQ question can't be edited in place.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "bound = { path: found.path, kind: \"text\", on: \"summary\" };",
+          "replace": "bound = undefined;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-330"
     }
   ]
 }

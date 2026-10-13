@@ -76,7 +76,7 @@ describe("accordion (W-106)", () => {
     const layout = page([{ id: "acco0001", type: "accordion", props: {}, children: [item] }]);
     const html = renderPage(layout, design).html;
     expect(html).toContain("<details");
-    expect(html).toContain("<summary>More</summary>");
+    expect(html).toContain('<summary><span class="emvb-accordion-title">More</span></summary>');
     expect(canDrop(layout, { kind: "existing", id: "item0001" }, "root0001").ok).toBe(false);
   });
 });
