@@ -28812,6 +28812,20 @@
         "several link marks"
       ],
       "expect": "\\(fail\\).*several link marks"
+    },
+    {
+      "id": "W-393/segment-hint-colon",
+      "requirement": "W-393",
+      "description": "The segment refusal message leaves out the colon.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/schema/layout.ts",
+          "search": "const SEGMENT_HINT = \"Segments are lowercase letters, digits, :, - or _, e.g. plan:pro\";",
+          "replace": "const SEGMENT_HINT = \"Segments are lowercase letters, digits, - or _, e.g. member\";"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/audience/segment-hint.test.ts"],
+      "expect": "\\(fail\\).*refusal message says so"
     }
   ]
 }

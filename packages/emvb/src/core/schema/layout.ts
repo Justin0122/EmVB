@@ -104,7 +104,7 @@ export const AUDIENCE_DEVICES = ["mobile", "tablet", "desktop"] as const;
 /** A visitor segment name the host passes and a Visitors rule matches (W-329). */
 /** A host segment name: letters, digits, and `:` `_` `-`, up to 64 characters (`plan:pro`). */
 export const AUDIENCE_SEGMENT = /^[a-z0-9][a-z0-9:_-]{0,63}$/;
-const SEGMENT_HINT = "Segments are lowercase letters, digits, - or _, e.g. member";
+const SEGMENT_HINT = "Segments are lowercase letters, digits, :, - or _, e.g. plan:pro";
 
 /**
  * Who sees an element (W-313): visitors from these countries, on these devices, new or
