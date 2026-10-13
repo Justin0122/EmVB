@@ -83,7 +83,35 @@ export function ContainerQueryFields({
   node: LayoutNode;
   onChange: (node: LayoutNode) => void;
 }) {
-  const min = node.query?.min ?? "";
+  // W-401: a draft committed on blur or Enter. Clearing the field while retyping a width used to
+  // delete the query and every style in it on the first keystroke.
+  const stored = node.query ? String(node.query.min) : "";
+  const [draft, setDraft] = React.useState(stored);
+  const [error, setError] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    setDraft(stored);
+    setError(null);
+  }, [node.id, stored]);
+  const commitMin = () => {
+    const next = draft.trim();
+    if (next === stored) {
+      setError(null);
+      return;
+    }
+    if (next === "") {
+      setError(null);
+      const { query: _query, ...rest } = node;
+      onChange(rest);
+      return;
+    }
+    const width = Number(next);
+    if (!/^\d+$/.test(next) || width < 1 || width > 3840) {
+      setError("Use a whole number of px from 1 to 3840.");
+      return;
+    }
+    setError(null);
+    onChange({ ...node, query: { min: width, style: node.query?.style ?? {} } });
+  };
   return (
     <div className="emvb-field-group" data-emvb-container="">
       {/* W-398: any element can take container-query styles; only a box can be the container. */}
@@ -102,20 +130,14 @@ export function ContainerQueryFields({
       <Input
         label="Styles from container width (px)"
         className={FIELD}
-        type="number"
-        min={1}
-        max={3840}
-        value={min === "" ? "" : String(min)}
-        onChange={(event) => {
-          const next = event.target.value.trim();
-          if (next === "") {
-            const { query: _query, ...rest } = node;
-            onChange(rest);
-            return;
-          }
-          const width = Number(next);
-          if (!Number.isInteger(width) || width < 1 || width > 3840) return;
-          onChange({ ...node, query: { min: width, style: node.query?.style ?? {} } });
+        inputMode="numeric"
+        value={draft}
+        error={error ?? undefined}
+        data-emvb-query-min=""
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={commitMin}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") commitMin();
         }}
       />
       <Button

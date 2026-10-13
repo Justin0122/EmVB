@@ -99,3 +99,32 @@ describe("container-query styles are edited field by field (W-398)", () => {
     expect(host.querySelector('input[type="checkbox"]')).toBeNull();
   });
 });
+
+describe("the container width is a draft (W-401)", () => {
+  test("clearing it to retype keeps the styles until blur", async () => {
+    const { host, sent } = await panel({ min: 480, style: { flexDirection: "row" } });
+    const input = host.querySelector<HTMLInputElement>("[data-emvb-query-min]") as HTMLInputElement;
+    await act(async () => {
+      type(input, "");
+    });
+    await act(async () => {
+      type(input, "720");
+    });
+    expect(sent).toEqual([]);
+    await act(async () => {
+      input.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    });
+    expect(sent.at(-1)?.query).toEqual({ min: 720, style: { flexDirection: "row" } });
+  });
+
+  test("an out-of-range width stays with a hint", async () => {
+    const { host, sent } = await panel({ min: 480, style: {} });
+    const input = host.querySelector<HTMLInputElement>("[data-emvb-query-min]") as HTMLInputElement;
+    await act(async () => {
+      type(input, "5000");
+      input.dispatchEvent(new FocusEvent("focusout", { bubbles: true }));
+    });
+    expect(sent).toEqual([]);
+    expect(host.textContent).toContain("1 to 3840");
+  });
+});

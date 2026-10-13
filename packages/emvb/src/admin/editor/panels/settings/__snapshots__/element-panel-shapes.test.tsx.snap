@@ -259,7 +259,7 @@ exports[`element panel markup (W-021, W-086 M16) heading renders the same conten
             label id="id-18" for="id-19"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+            input.emvb-field id="id-19" data-emvb-query-min="" value="" aria-labelledby="id-18"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -496,7 +496,7 @@ exports[`element panel markup (W-021, W-086 M16) toc renders the same content an
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -687,7 +687,7 @@ exports[`element panel markup (W-021, W-086 M16) container renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -873,7 +873,7 @@ exports[`element panel markup (W-021, W-086 M16) container renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -1156,7 +1156,7 @@ exports[`element panel markup (W-021, W-086 M16) layout-section renders the same
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -1279,7 +1279,7 @@ exports[`element panel markup (W-021, W-086 M16) spacer renders the same content
             label id="id-16" for="id-17"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+            input.emvb-field id="id-17" data-emvb-query-min="" value="" aria-labelledby="id-16"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -1397,7 +1397,7 @@ exports[`element panel markup (W-021, W-086 M16) spacer renders the same content
             label id="id-16" for="id-17"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+            input.emvb-field id="id-17" data-emvb-query-min="" value="" aria-labelledby="id-16"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -1548,7 +1548,7 @@ exports[`element panel markup (W-021, W-086 M16) divider renders the same conten
             label id="id-16" for="id-17"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+            input.emvb-field id="id-17" data-emvb-query-min="" value="" aria-labelledby="id-16"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -1694,7 +1694,7 @@ exports[`element panel markup (W-021, W-086 M16) divider renders the same conten
             label id="id-16" for="id-17"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+            input.emvb-field id="id-17" data-emvb-query-min="" value="" aria-labelledby="id-16"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -1945,7 +1945,7 @@ exports[`element panel markup (W-021, W-086 M16) text renders the same content a
             label id="id-18" for="id-19"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+            input.emvb-field id="id-19" data-emvb-query-min="" value="" aria-labelledby="id-18"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -2185,7 +2185,7 @@ exports[`element panel markup (W-021, W-086 M16) label renders the same content 
             label id="id-18" for="id-19"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+            input.emvb-field id="id-19" data-emvb-query-min="" value="" aria-labelledby="id-18"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -2451,7 +2451,7 @@ exports[`element panel markup (W-021, W-086 M16) link renders the same content a
             label id="id-18" for="id-19"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+            input.emvb-field id="id-19" data-emvb-query-min="" value="" aria-labelledby="id-18"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -2774,7 +2774,7 @@ exports[`element panel markup (W-021, W-086 M16) button renders the same content
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -3004,7 +3004,7 @@ exports[`element panel markup (W-021, W-086 M16) list renders the same content a
             label id="id-18" for="id-19"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+            input.emvb-field id="id-19" data-emvb-query-min="" value="" aria-labelledby="id-18"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -3314,7 +3314,7 @@ exports[`element panel markup (W-021, W-086 M16) image renders the same content 
             label id="id-16" for="id-17"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+            input.emvb-field id="id-17" data-emvb-query-min="" value="" aria-labelledby="id-16"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -3598,7 +3598,7 @@ exports[`element panel markup (W-021, W-086 M16) icon renders the same content a
             label id="id-17" for="id-18"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-18" type="number" value="" aria-labelledby="id-17"
+            input.emvb-field id="id-18" data-emvb-query-min="" value="" aria-labelledby="id-17"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -3803,7 +3803,7 @@ exports[`element panel markup (W-021, W-086 M16) video renders the same content 
             label id="id-16" for="id-17"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-17" type="number" value="" aria-labelledby="id-16"
+            input.emvb-field id="id-17" data-emvb-query-min="" value="" aria-labelledby="id-16"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -4039,7 +4039,7 @@ exports[`element panel markup (W-021, W-086 M16) form renders the same content a
             label id="id-18" for="id-19"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-19" type="number" value="" aria-labelledby="id-18"
+            input.emvb-field id="id-19" data-emvb-query-min="" value="" aria-labelledby="id-18"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -4292,7 +4292,7 @@ exports[`element panel markup (W-021, W-086 M16) text-input renders the same con
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -4545,7 +4545,7 @@ exports[`element panel markup (W-021, W-086 M16) textarea renders the same conte
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -4793,7 +4793,7 @@ exports[`element panel markup (W-021, W-086 M16) select renders the same content
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -5024,7 +5024,7 @@ exports[`element panel markup (W-021, W-086 M16) checkbox renders the same conte
             label id="id-17" for="id-18"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-18" type="number" value="" aria-labelledby="id-17"
+            input.emvb-field id="id-18" data-emvb-query-min="" value="" aria-labelledby="id-17"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -5255,7 +5255,7 @@ exports[`element panel markup (W-021, W-086 M16) radio renders the same content 
             label id="id-17" for="id-18"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-18" type="number" value="" aria-labelledby="id-17"
+            input.emvb-field id="id-18" data-emvb-query-min="" value="" aria-labelledby="id-17"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -5498,7 +5498,7 @@ exports[`element panel markup (W-021, W-086 M16) submit renders the same content
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -5736,7 +5736,7 @@ exports[`element panel markup (W-021, W-086 M16) post-title renders the same con
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -5919,7 +5919,7 @@ exports[`element panel markup (W-021, W-086 M16) post-excerpt renders the same c
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -6097,7 +6097,7 @@ exports[`element panel markup (W-021, W-086 M16) post-excerpt renders the same c
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -6280,7 +6280,7 @@ exports[`element panel markup (W-021, W-086 M16) post-content renders the same c
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -6458,7 +6458,7 @@ exports[`element panel markup (W-021, W-086 M16) post-content renders the same c
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -6693,7 +6693,7 @@ exports[`element panel markup (W-021, W-086 M16) post-image renders the same con
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -6933,7 +6933,7 @@ exports[`element panel markup (W-021, W-086 M16) post-link renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -7116,7 +7116,7 @@ exports[`element panel markup (W-021, W-086 M16) post-date renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -7294,7 +7294,7 @@ exports[`element panel markup (W-021, W-086 M16) post-date renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -7477,7 +7477,7 @@ exports[`element panel markup (W-021, W-086 M16) post-author renders the same co
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -7655,7 +7655,7 @@ exports[`element panel markup (W-021, W-086 M16) post-author renders the same co
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -7965,7 +7965,7 @@ exports[`element panel markup (W-021, W-086 M16) loop renders the same content a
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -8156,7 +8156,7 @@ exports[`element panel markup (W-021, W-086 M16) loop-empty renders the same con
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -8342,7 +8342,7 @@ exports[`element panel markup (W-021, W-086 M16) loop-empty renders the same con
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -8599,7 +8599,7 @@ exports[`element panel markup (W-021, W-086 M16) pagination renders the same con
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -8845,7 +8845,7 @@ exports[`element panel markup (W-021, W-086 M16) section renders the same conten
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -9031,7 +9031,7 @@ exports[`element panel markup (W-021, W-086 M16) div-block renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -9212,7 +9212,7 @@ exports[`element panel markup (W-021, W-086 M16) div-block renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -9425,7 +9425,7 @@ exports[`element panel markup (W-021, W-086 M16) flexbox renders the same conten
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -9633,7 +9633,7 @@ exports[`element panel markup (W-021, W-086 M16) flexbox renders the same conten
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -9920,7 +9920,7 @@ exports[`element panel markup (W-021, W-086 M16) grid renders the same content a
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -10175,7 +10175,7 @@ exports[`element panel markup (W-021, W-086 M16) svg renders the same content an
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -10448,7 +10448,7 @@ exports[`element panel markup (W-021, W-086 M16) tabs renders the same content a
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -10685,7 +10685,7 @@ exports[`element panel markup (W-021, W-086 M16) tab-panel renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -10973,7 +10973,7 @@ exports[`element panel markup (W-021, W-086 M16) accordion renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -11218,7 +11218,7 @@ exports[`element panel markup (W-021, W-086 M16) accordion-item renders the same
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -11471,7 +11471,7 @@ exports[`element panel markup (W-021, W-086 M16) menu renders the same content a
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"
@@ -11760,7 +11760,7 @@ exports[`element panel markup (W-021, W-086 M16) menu-item renders the same cont
             label id="id-19" for="id-20"
               span
                 "Styles from container width (px)"
-            input.emvb-field id="id-20" type="number" value="" aria-labelledby="id-19"
+            input.emvb-field id="id-20" data-emvb-query-min="" value="" aria-labelledby="id-19"
           button.emvb-btn data-kumo-component="Button" type="button"
             span
               "Use current style at that width"

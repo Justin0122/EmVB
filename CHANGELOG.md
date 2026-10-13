@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Retyping the container-query width no longer deletes the styles set for it.
 - The accessibility check calls a text-less button without a URL a button, not a link.
 - Closing the command palette (Esc or a jump) no longer leaves keyboard focus on the page body.
 - **A table of contents links only headings that render (W-384).** A heading in the other A/B arm or for another audience is no longer listed, and a repeated HTML ID is listed once.

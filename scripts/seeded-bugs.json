@@ -28960,6 +28960,26 @@
         "icon-only button"
       ],
       "expect": "\\(fail\\).*icon-only button"
+    },
+    {
+      "id": "W-401/query-min-per-keystroke",
+      "requirement": "W-401",
+      "description": "The container width commits on every keystroke.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/AdvancedFields.tsx",
+          "search": "onChange={(event) => setDraft(event.target.value)}\n        onBlur={commitMin}",
+          "replace": "onChange={(event) => {\n          setDraft(event.target.value);\n          if (event.target.value === \"\") {\n            const { query: _query, ...rest } = node;\n            onChange(rest);\n          }\n        }}\n        onBlur={commitMin}"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/query-style.test.tsx",
+        "-t",
+        "keeps the styles until blur"
+      ],
+      "expect": "\\(fail\\).*keeps the styles until blur"
     }
   ]
 }
