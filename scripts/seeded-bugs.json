@@ -29428,7 +29428,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "if (menuNames.has(name.toLowerCase())) {",
+          "search": "if (menuNames.some((names, i) => shownOn[i] && names.has(key))) {",
           "replace": "if (false) {"
         }
       ],
@@ -29822,6 +29822,26 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/a11y/h1-devices.test.ts", "-t", "swap"],
       "expect": "\\(fail\\).*swap"
+    },
+    {
+      "id": "W-445/menu-devices",
+      "requirement": "W-445",
+      "description": "Device-swapped menus warn.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "        if (shownOn[i]) names.add(key);",
+          "replace": "        names.add(key);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/menu-names.test.ts",
+        "-t",
+        "desktop menu and a mobile"
+      ],
+      "expect": "\\(fail\\).*desktop menu and a mobile"
     }
   ]
 }

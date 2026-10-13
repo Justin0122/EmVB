@@ -147,7 +147,8 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   const beforeA = new Map<string, [number[], number]>();
   const afterA = new Map<string, [number[], number]>();
   let fade = 1;
-  const menuNames = new Set<string>();
+  // W-445: per device, like H1s, so a desktop menu and a mobile menu may share a name.
+  const menuNames = [new Set<string>(), new Set<string>(), new Set<string>()];
   const walk = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     // W-413: an element hidden on every device (and what's inside it) is never shown or read.
     if (
@@ -275,7 +276,8 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     // W-424: two menus with the same name are two "Menu navigation" landmarks nobody can tell apart.
     if (node.type === "menu" && (node.children?.length ?? 0) > 0) {
       const name = String(props["label"] ?? "").trim() || "Menu";
-      if (menuNames.has(name.toLowerCase())) {
+      const key = name.toLowerCase();
+      if (menuNames.some((names, i) => shownOn[i] && names.has(key))) {
         add({
           nodeId: node.id,
           rule: "landmark-name",
@@ -283,7 +285,9 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
           message: `Another menu on this page is also named "${name}"; give each menu its own label.`,
         });
       }
-      menuNames.add(name.toLowerCase());
+      menuNames.forEach((names, i) => {
+        if (shownOn[i]) names.add(key);
+      });
     }
     // W-419: an empty heading still shows up in screen readers' heading list, with nothing to say.
     if (node.type === "heading" && !String(props["text"] ?? "").trim() && !node.bind) {

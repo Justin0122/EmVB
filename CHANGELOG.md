@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The same-name menu warning ignores menus that are never shown on the same device.
 - The accessibility check no longer reports two H1s when each is shown on different devices.
 - Hiding a captioned image on a device hides its caption too.
 - Screen readers announce a radio group's question along with its options.

@@ -43,3 +43,11 @@ describe("menus need different names (W-424)", () => {
     expect(rules(menu("menu0001", "Main"), menu("menb0002", "Footer"))).toEqual([]);
   });
 });
+
+describe("menus on different devices may share a name (W-445)", () => {
+  test("a desktop menu and a mobile menu both called Menu don't warn", () => {
+    const desk = { ...menu("menu0001"), hiddenOn: ["mobile"] } as unknown as LayoutNode;
+    const mob = { ...menu("menb0002"), hiddenOn: ["desktop", "tablet"] } as unknown as LayoutNode;
+    expect(rules(desk, mob)).toEqual([]);
+  });
+});
