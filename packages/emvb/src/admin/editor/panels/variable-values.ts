@@ -1,8 +1,8 @@
 import type { VariableKind } from "../../../core/index.ts";
+import { hexInput } from "./color-space.ts";
 
 export type Length = { value: number; unit: "px" | "rem" | "em" | "%" };
 
-const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 const LENGTH = /^(\d+(?:\.\d+)?|\.\d+)\s*(px|rem|em|%)?$/i;
 const MAX_LENGTH = 10_000;
 
@@ -54,7 +54,9 @@ export function parseValue(
     return length ? { ok: true, value: length } : { ok: false, error: ERRORS[kind] };
   }
   if (kind === "color") {
-    return HEX.test(trimmed) ? { ok: true, value: trimmed } : { ok: false, error: ERRORS.color };
+    // W-434: "1a2b3c" without "#", as design tools copy it, is accepted.
+    const hex = hexInput(trimmed);
+    return hex ? { ok: true, value: hex } : { ok: false, error: ERRORS.color };
   }
   return trimmed && trimmed.length <= 200
     ? { ok: true, value: trimmed }

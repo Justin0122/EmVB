@@ -15,6 +15,7 @@ import {
   formatOklch,
   formatRgb,
   oklchClipped,
+  hexInput,
   parseHex,
   parseOklch,
   parseRgb,
@@ -225,15 +226,22 @@ function CustomColor({
   const [error, setError] = React.useState<{ field: Notation; message: string } | null>(null);
   const picker = React.useRef<HTMLInputElement | null>(null);
   const commit = (next: string) => {
-    const hex = next.trim();
-    if (hex === value || hex === "") {
+    const typed = next.trim();
+    if (typed === value || typed === "") {
       setError(null);
       return;
     }
-    if (!HEX.test(hex)) {
+    const hex = hexInput(typed);
+    if (!hex) {
       setError({ field: "hex", message: BAD_HEX });
       return;
     }
+    if (hex === value) {
+      setError(null);
+      setDraft(hex);
+      return;
+    }
+    setDraft(hex);
     setError(null);
     onCommit(hex);
   };
@@ -379,14 +387,16 @@ function VariableValue({
   const [draft, setDraft] = React.useState(value);
   const [error, setError] = React.useState<string | null>(null);
   const commit = async () => {
-    if (draft === value) return;
-    if (!HEX.test(draft)) {
+    const hex = hexInput(draft);
+    if (hex === value) return;
+    if (!hex) {
       setError(BAD_HEX);
       return;
     }
     setError(null);
+    setDraft(hex);
     try {
-      await onCommit(draft);
+      await onCommit(hex);
     } catch (failure) {
       setError(errorText(failure));
     }
@@ -426,11 +436,12 @@ function NewVariable({
   const [busy, setBusy] = React.useState(false);
   const create = async () => {
     if (!name.trim()) return setError("Enter a name for the variable.");
-    if (!HEX.test(hex)) return setError(BAD_HEX);
+    const typed = hexInput(hex);
+    if (!typed) return setError(BAD_HEX);
     setError(null);
     setBusy(true);
     try {
-      await onCreate(name.trim(), hex);
+      await onCreate(name.trim(), typed);
     } catch (failure) {
       setError(errorText(failure));
       setBusy(false);

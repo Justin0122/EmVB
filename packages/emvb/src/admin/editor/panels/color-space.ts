@@ -30,6 +30,16 @@ export function parseHex(hex: string): Rgba | null {
   return { r, g, b, a };
 }
 
+/**
+ * W-434: a typed or pasted hex as stored, or undefined. Spaces are trimmed and a missing "#" is
+ * added, since design tools (Figma among them) copy "1A2B3C" without it.
+ */
+export function hexInput(text: string): string | undefined {
+  const trimmed = text.trim();
+  const hex = trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+  return HEX.test(hex) ? hex : undefined;
+}
+
 /** 6 digits when opaque, 8 when not. */
 export function toHex({ r, g, b, a }: Rgba): string {
   const hex = [r, g, b].map((n) => channel(n).toString(16).padStart(2, "0")).join("");
