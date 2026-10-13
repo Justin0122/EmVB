@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Hiding a captioned image on a device hides its caption too.
 - Screen readers announce a radio group's question along with its options.
 - A required checkbox's asterisk is no longer read aloud by screen readers.
 - Featured images in a Loop load lazily.

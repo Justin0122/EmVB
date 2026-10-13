@@ -372,6 +372,10 @@ export function renderPage(
         tablet: tablet.declarations,
         mobile: mobile.declarations,
         hiddenOn,
+        ...(node.type === "image" &&
+        String((node.props as { caption?: unknown }).caption ?? "").trim() !== ""
+          ? { figure: true }
+          : {}),
         ...(queryDeclarations.length > 0 && queryMin !== undefined
           ? { query: queryDeclarations, queryMin }
           : {}),

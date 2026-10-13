@@ -32,6 +32,8 @@ export type CssInput = {
     tablet?: Declaration[];
     mobile?: Declaration[];
     hiddenOn?: readonly PopupDevice[];
+    /** W-443: an image with a caption, rendered inside a figure that hides with it. */
+    figure?: boolean;
     /** Container-query overrides (W-346). */
     query?: Declaration[];
     queryMin?: number;
@@ -196,6 +198,7 @@ export function generateCss({
       tablet: rule.tablet ?? [],
       mobile: rule.mobile ?? [],
       hiddenOn: rule.hiddenOn,
+      figure: rule.figure === true,
     })),
   ];
   /** A device block: in its media query, or, for a previewed device, on or off outright. */
@@ -211,9 +214,14 @@ export function generateCss({
       responsive.map((rule) => block(rule.selector, rule[which])).join(""),
     );
   const hide = (device: PopupDevice, query: string) => {
+    // W-443: a captioned image hides its figure too, or the caption stayed on its own.
     const selectors = responsive
       .filter((rule) => rule.hiddenOn?.includes(device))
-      .map((rule) => rule.selector);
+      .flatMap((rule) =>
+        "figure" in rule && rule.figure
+          ? [rule.selector, `.emvb-figure:has(>${rule.selector},>a>${rule.selector})`]
+          : [rule.selector],
+      );
     return forDevices(
       [device],
       query,

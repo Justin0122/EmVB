@@ -29788,6 +29788,26 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements/radio-label.test.ts"],
       "expect": "\\(fail\\).*points at the label"
+    },
+    {
+      "id": "W-443/caption-left",
+      "requirement": "W-443",
+      "description": "Caption stays when image hidden.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/css/generate.ts",
+          "search": "\"figure\" in rule && rule.figure",
+          "replace": "false"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/css/figure-hide.test.ts",
+        "-t",
+        "hidden with the image"
+      ],
+      "expect": "\\(fail\\).*hidden with the image"
     }
   ]
 }
