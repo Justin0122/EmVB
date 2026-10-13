@@ -267,7 +267,7 @@ export function DraftTextField({
 }
 
 /** Whether `node` passes the layout schema on its own (inside a bare container). */
-function savableNode(node: LayoutNode): boolean {
+export function savableNode(node: LayoutNode): boolean {
   return validateLayout({
     schemaVersion: LAYOUT_SCHEMA_VERSION,
     root: { id: "draftroot", type: "container", props: {}, children: [node] },

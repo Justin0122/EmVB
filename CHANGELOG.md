@@ -22,6 +22,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **`@perkyzz/emvb-icons` carries its sets' license texts (W-395).** The icon package now ships `licenses/`, a NOTICE with each set's attribution, and a README. (Not yet published.)
 - **`@perkyzz/emvb-icons` 0.1.1 (W-396).** Ships the sets' license texts, NOTICE and README; `@perkyzz/emvb` depends on it.
 
+### Added
+
+- Image settings have an Extra sizes (srcset) field: one `URL WIDTH` per line, up to 6.
+
 ## [0.4.0] - 2026-10-11
 
 Schema 15. Container queries, per-element text direction, image links and captions, button icons, a table of contents, custom grid tracks, and the security fixes since 0.3.0.

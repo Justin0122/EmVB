@@ -3010,6 +3010,13 @@ exports[`element panel markup (W-021, W-086 M16) image renders the same content 
         span
           "Height (px)"
       input.emvb-field.emvb-mono id="id-23" data-emvb-field="height" value="" aria-labelledby="id-22"
+    div.emvb-field-group data-emvb-field="sources"
+      label.emvb-field-label for="id-24"
+        "Extra sizes (srcset)"
+      textarea.emvb-field.emvb-textarea id="id-24" placeholder="/photo-480.jpg 480
+/photo-1600.jpg 1600" aria-describedby="id-24-help"
+      span.emvb-helper id="id-24-help"
+        "One per line: the URL of a smaller or larger copy, a space, then its width in px. Set Width (px) so the main image is listed too."
     section.emvb-bind data-emvb-bindings="" aria-labelledby="emvb-bind-keys-bi1nwpcq-title"
       h3.emvb-bind-title id="emvb-bind-keys-bi1nwpcq-title"
         "Dynamic data"

@@ -9,7 +9,8 @@ export type FieldKind =
   | "href"
   | "media"
   | "icon"
-  | "list-items";
+  | "list-items"
+  | "image-sources";
 
 export type FieldOption = { value: string | number | boolean; label: string };
 

@@ -8,6 +8,7 @@ import { FieldBindControl } from "./FieldBindControl.tsx";
 import { FormBindControl } from "./FormBindControl.tsx";
 import { LoopItemBindControl } from "./LoopItemBindControl.tsx";
 import { IconPicker } from "./IconPicker.tsx";
+import { ImageSourcesField } from "./ImageSourcesField.tsx";
 import { MediaPicker } from "./MediaPicker.tsx";
 import { propsOf, withProp } from "./node-props.ts";
 
@@ -98,6 +99,10 @@ export function FieldControl({
 
   if (field.kind === "icon") {
     return <IconPicker key={field.key} node={node} fetcher={fetcher} onChange={onChange} />;
+  }
+
+  if (field.kind === "image-sources") {
+    return <ImageSourcesField key={field.key} node={node} onChange={onChange} />;
   }
 
   if (field.kind === "media") {
@@ -267,4 +272,5 @@ export const IMPLEMENTED_FIELD_KINDS = [
   "media",
   "icon",
   "list-items",
+  "image-sources",
 ] as const;

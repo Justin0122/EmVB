@@ -434,6 +434,7 @@ const image: ElementDefinition<ImageNode> = {
         optional: true,
         message: "Height must be a positive whole number.",
       },
+      { key: "sources", kind: "image-sources", label: "Extra sizes (srcset)", optional: true },
     ],
   },
   build: (node, attrs) => {

@@ -28880,6 +28880,26 @@
         "exactly this icons version"
       ],
       "expect": "\\(fail\\).*exactly this icons version"
+    },
+    {
+      "id": "W-397/sources-width-unchecked",
+      "requirement": "W-397",
+      "description": "The sources field accepts a width over 8000.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/ImageSourcesField.tsx",
+          "search": "width < 1 || width > 8000",
+          "replace": "width < 1"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/image-sources-field.test.tsx",
+        "-t",
+        "bad lines stay"
+      ],
+      "expect": "\\(fail\\).*bad lines stay"
     }
   ]
 }
