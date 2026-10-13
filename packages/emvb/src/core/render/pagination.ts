@@ -66,6 +66,8 @@ export function renderPagination(
           attrs: {
             class: "emvb-pagination-page",
             href: href(item.href),
+            // W-426: a bare "2" says nothing out of context; screen readers hear "Page 2".
+            "aria-label": `Page ${item.n}`,
             ...(item.current ? { "aria-current": "page" } : {}),
           },
           children: [String(item.n)],

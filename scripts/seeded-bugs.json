@@ -29460,6 +29460,26 @@
         "drops its width"
       ],
       "expect": "\\(fail\\).*drops its width"
+    },
+    {
+      "id": "W-426/page-label",
+      "requirement": "W-426",
+      "description": "Page links lose their name.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/pagination.ts",
+          "search": "\"aria-label\": `Page ${item.n}`,",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/pagination.test.ts",
+        "-t",
+        "Page N"
+      ],
+      "expect": "\\(fail\\).*Page N"
     }
   ]
 }

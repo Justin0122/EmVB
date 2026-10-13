@@ -544,7 +544,7 @@ describe("archive pagination (W-221)", () => {
     ];
     const html = (await at("/posts/page/2")).content?.html ?? "";
     expect(html).toContain('href="/posts" rel="prev"');
-    expect(html).toContain('href="/posts/page/2" aria-current="page"');
+    expect(html).toContain('href="/posts/page/2" aria-label="Page 2" aria-current="page"');
     expect(html).toContain('href="/posts/page/3" rel="next"');
     const last = (await at("/posts/page/3")).content?.html ?? "";
     expect(last).not.toContain('rel="next"');

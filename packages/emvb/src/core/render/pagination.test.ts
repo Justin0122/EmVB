@@ -94,3 +94,15 @@ describe("Pagination element (W-222)", () => {
     expect(editor).toContain("Put Pagination after the Loop");
   });
 });
+
+describe("page number links are named (W-426)", () => {
+  test('each number link reads as "Page N"', () => {
+    const { html } = renderPage(page(), design, {
+      dynamic: { pagination: { page: 2, hasMore: true, basePath: "/posts" } },
+    });
+    const names = [...parse(html).querySelectorAll("a.emvb-pagination-page")].map((a) =>
+      a.getAttribute("aria-label"),
+    );
+    expect(names).toEqual(["Page 1", "Page 2", "Page 3"]);
+  });
+});
