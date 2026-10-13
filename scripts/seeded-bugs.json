@@ -28732,6 +28732,26 @@
         "focal point of 0"
       ],
       "expect": "\\(fail\\).*focal point of 0"
+    },
+    {
+      "id": "W-389/wrap-ignores-nesting",
+      "requirement": "W-389",
+      "description": "Wrap puts a box inside an accordion, tabs or menu.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "  if (nesting) return refuse(nesting);\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/arrange-wrap.test.ts",
+        "-t",
+        "tab panel or menu item"
+      ],
+      "expect": "\\(fail\\).*tab panel or menu item"
     }
   ]
 }

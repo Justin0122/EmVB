@@ -320,14 +320,22 @@ export function wrapNode(
   if (!found) return refuse(REASONS.missing);
   if (!found.parent) return refuse(REASONS.rootFixed);
   if (size(layout.root) + 1 > MAX_NODES) return refuse(REASONS.tooMany);
-  const { layout: without, removed } = removeNode(layout, id);
-  if (!removed) return refuse(REASONS.missing);
   const wrapper: LayoutNode = {
     id: newNodeId(random),
     type,
     props: type === "grid" ? { columns: 2 } : {},
-    children: [removed.node],
+    children: [found.node],
   } as LayoutNode;
+  // W-389: the same parent/child rules as a drop, so an accordion item, tab panel or menu item
+  // isn't wrapped into a page that can't save, and the extra level stays within the depth cap.
+  const inForm = underForm(layout, found.parent.id);
+  const nesting =
+    parentChildRefusal(found.parent, wrapper, inForm) ??
+    parentChildRefusal(wrapper, found.node, inForm);
+  if (nesting) return refuse(nesting);
+  if (found.depth + height(found.node) > MAX_DEPTH) return refuse(REASONS.tooDeep);
+  const { layout: without, removed } = removeNode(layout, id);
+  if (!removed) return refuse(REASONS.missing);
   return {
     ok: true,
     layout: insertNode(without, found.parent.id, found.index, wrapper),
