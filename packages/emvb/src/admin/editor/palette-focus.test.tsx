@@ -54,7 +54,7 @@ describe("focus after the command palette closes (W-399)", () => {
     const items: PaletteItem[] = [
       {
         id: "find:x",
-        group: "Find",
+        group: "Find text",
         label: "Jump",
         run: () => (document.activeElement as HTMLElement | null)?.blur(),
       },
