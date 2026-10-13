@@ -213,3 +213,48 @@ describe("a video played as background (W-317)", () => {
     );
   });
 });
+
+describe("a video with a poster (W-332)", () => {
+  const videoNode = (props: Record<string, unknown>) =>
+    ({ ...defaultElement("video", "vid00001"), props: { title: "Demo", ...props } }) as LayoutNode;
+
+  test("shows the poster and a play button, and loads nothing from the video host", () => {
+    const el = render(
+      videoNode({ url: "https://vimeo.com/1062404854", poster: "/_emdash/api/media/file/p.jpg" }),
+    );
+    expect(el.getAttribute("data-emvb-video")).toBe("iframe");
+    expect(el.getAttribute("data-emvb-video-src")).toBe(
+      "https://player.vimeo.com/video/1062404854?autoplay=1",
+    );
+    expect(el.querySelector("img.emvb-video-poster")?.getAttribute("src")).toBe(
+      "/_emdash/api/media/file/p.jpg",
+    );
+    expect(el.querySelector("button.emvb-video-play")?.getAttribute("aria-label")).toBe(
+      "Play: Demo",
+    );
+    expect(el.querySelector("iframe")).toBeNull();
+  });
+
+  test("a file plays from the poster too; an unsafe poster is ignored", () => {
+    const file = render(videoNode({ url: "/_emdash/api/media/file/clip.mp4", poster: "/p.jpg" }));
+    expect(file.getAttribute("data-emvb-video")).toBe("video");
+    expect(
+      render(videoNode({ url: "/_emdash/api/media/file/clip.mp4", poster: "javascript:x" }))
+        .tagName,
+    ).toBe("VIDEO");
+  });
+
+  test("the page asks for the video runtime only with a poster", () => {
+    const page = (props: Record<string, unknown>): Layout => ({
+      schemaVersion: 12,
+      root: { id: "root0001", type: "container", props: {}, children: [videoNode(props)] },
+    });
+    expect(
+      renderPage(page({ url: "https://vimeo.com/1062404854", poster: "/p.jpg" }), design)
+        .needsVideoRuntime,
+    ).toBe(true);
+    expect(
+      renderPage(page({ url: "https://vimeo.com/1062404854" }), design).needsVideoRuntime,
+    ).toBe(false);
+  });
+});

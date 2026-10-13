@@ -335,7 +335,10 @@ const BINDABLE: Record<string, { prop: string; label: string; kinds: ComponentFi
     { prop: "href", label: "Link", kinds: ["link"] },
   ],
   image: [{ prop: "src", label: "Image", kinds: ["image"] }],
-  video: [{ prop: "url", label: "Video", kinds: ["text", "link"] }],
+  video: [
+    { prop: "url", label: "Video", kinds: ["text", "link"] },
+    { prop: "poster", label: "Poster image", kinds: ["image"] },
+  ],
   icon: [{ prop: "href", label: "Link", kinds: ["link"] }],
   "accordion-item": [{ prop: "summary", label: "Title", kinds: ["text"] }],
   "menu-item": [
@@ -345,7 +348,14 @@ const BINDABLE: Record<string, { prop: string; label: string; kinds: ComponentFi
   loop: [
     { prop: "collection", label: "Collection", kinds: ["select", "text"] },
     { prop: "terms", label: "Terms", kinds: ["select", "text"] },
+    // W-331: number settings take a choice whose values are numbers.
+    { prop: "slidesInView", label: "Slides in view", kinds: ["select"] },
   ],
+  carousel: [
+    { prop: "perView", label: "Slides in view", kinds: ["select"] },
+    { prop: "perViewTablet", label: "Slides in view (tablet)", kinds: ["select"] },
+  ],
+  accordion: [{ prop: "columns", label: "Columns", kinds: ["select"] }],
   flexbox: [{ prop: "href", label: "Link", kinds: ["link"] }],
   container: [{ prop: "href", label: "Link", kinds: ["link"] }],
   "div-block": [{ prop: "href", label: "Link", kinds: ["link"] }],

@@ -19,6 +19,8 @@ export type RenderedPage = {
   needsMenuRuntime: boolean;
   /** W-314: render `EmVBCarouselRuntime` so carousel arrows work. */
   needsCarouselRuntime: boolean;
+  /** W-332: `EmVBPage` adds the video runtime, so a poster's play button loads the player. */
+  needsVideoRuntime?: boolean;
   /** The site's text direction when set, for the host's `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
   /**
@@ -97,13 +99,20 @@ export function renderStored(
       ...(design.direction ? { dir: design.direction } : {}),
     };
   }
-  const { html, css, needsFormsRuntime, needsTabsRuntime, needsMenuRuntime, needsCarouselRuntime } =
-    renderPage(layout, design, {
-      formDefinitions,
-      dynamic,
-      scope: pageId,
-      inlineEdit,
-    });
+  const {
+    html,
+    css,
+    needsFormsRuntime,
+    needsTabsRuntime,
+    needsMenuRuntime,
+    needsCarouselRuntime,
+    needsVideoRuntime,
+  } = renderPage(layout, design, {
+    formDefinitions,
+    dynamic,
+    scope: pageId,
+    inlineEdit,
+  });
   return {
     html,
     css,
@@ -111,6 +120,7 @@ export function renderStored(
     needsTabsRuntime,
     needsMenuRuntime,
     needsCarouselRuntime,
+    ...(needsVideoRuntime ? { needsVideoRuntime } : {}),
     ...(design.direction ? { dir: design.direction } : {}),
   };
 }

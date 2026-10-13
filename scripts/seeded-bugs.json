@@ -985,8 +985,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/EmVBPage.astro",
-          "search": "        <Fragment set:html={page.html} />\n      )}\n      {inline && <EmVBInlineEdit />}\n      <slot />\n    </>",
-          "replace": "        <Fragment>{page.html}</Fragment>\n      )}\n      {inline && <EmVBInlineEdit />}\n      <slot />\n    </>"
+          "search": "        <Fragment set:html={page.html} />\n      )}\n      {inline && <EmVBInlineEdit />}\n      {page.needsVideoRuntime && <EmVBVideoRuntime />}\n      <slot />\n    </>",
+          "replace": "        <Fragment>{page.html}</Fragment>\n      )}\n      {inline && <EmVBInlineEdit />}\n      {page.needsVideoRuntime && <EmVBVideoRuntime />}\n      <slot />\n    </>"
         }
       ],
       "command": ["bun", "run", "test:astro"],
@@ -22467,8 +22467,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/render.ts",
-          "search": "    needsCarouselRuntime,\n    ...(design.direction ? { dir: design.direction } : {}),\n  };",
-          "replace": "    needsCarouselRuntime,\n  };"
+          "search": "    ...(needsVideoRuntime ? { needsVideoRuntime } : {}),\n    ...(design.direction ? { dir: design.direction } : {}),\n  };",
+          "replace": "    ...(needsVideoRuntime ? { needsVideoRuntime } : {}),\n  };"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/render.test.ts"],
@@ -27410,6 +27410,62 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
       "expect": "\\(fail\\).*W-330"
+    },
+    {
+      "id": "W-331/string-number",
+      "requirement": "W-331",
+      "description": "A choice bound to a number setting stores text.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "if (typeof props[target] === \"number\" && typeof value === \"string\") {",
+          "replace": "if (false) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-331"
+    },
+    {
+      "id": "W-332/unsafe-poster",
+      "requirement": "W-332",
+      "description": "A poster's address isn't checked.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "!background && node.props.poster ? sanitizeMediaUrl(node.props.poster) : undefined;",
+          "replace": "!background && node.props.poster ? node.props.poster : undefined;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/media-elements.test.ts"],
+      "expect": "\\(fail\\).*W-332"
+    },
+    {
+      "id": "W-332/no-autoplay",
+      "requirement": "W-332",
+      "description": "Playing from the poster loads a paused player.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/embed-url.ts",
+          "search": "return `${base}${sep}autoplay=1${fragment ? `#${fragment}` : \"\"}`;",
+          "replace": "return target.src;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/media-elements.test.ts"],
+      "expect": "\\(fail\\).*W-332"
+    },
+    {
+      "id": "W-332/poster-stays",
+      "requirement": "W-332",
+      "description": "The poster stays after a click.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/video/runtime.ts",
+          "search": "      facade.replaceChildren(player);\n",
+          "replace": "      facade.append(player);\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/video/runtime.test.ts"],
+      "expect": "\\(fail\\).*W-332"
     }
   ]
 }

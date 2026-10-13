@@ -1,6 +1,7 @@
 ---
 import type { RenderedPage } from "./render.ts";
 import EmVBInlineEdit from "./inline-edit/EmVBInlineEdit.astro";
+import EmVBVideoRuntime from "./video/EmVBVideoRuntime.astro";
 
 /** The resolved meta of the page (EmDash's `getSeoMeta` result fits), for blank canvas mode. */
 interface PageMeta {
@@ -61,6 +62,7 @@ const inlineRef = inline ? `${inline.collection}|${inline.id}|${inline.field}` :
           <Fragment set:html={page.html} />
         )}
         {inline && <EmVBInlineEdit />}
+        {page.needsVideoRuntime && <EmVBVideoRuntime />}
         <slot />
       </body>
     </html>
@@ -75,6 +77,7 @@ const inlineRef = inline ? `${inline.collection}|${inline.id}|${inline.field}` :
         <Fragment set:html={page.html} />
       )}
       {inline && <EmVBInlineEdit />}
+      {page.needsVideoRuntime && <EmVBVideoRuntime />}
       <slot />
     </>
   )

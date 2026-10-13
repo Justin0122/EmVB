@@ -158,6 +158,13 @@ export function resolveEmbedUrl(value: string): EmbedTarget | undefined {
   return { kind: "video", src: media };
 }
 
+/** W-332: a player embed that starts playing as it loads, for a click on a poster. */
+export function autoplayEmbedSrc(target: Extract<EmbedTarget, { kind: "iframe" }>): string {
+  const [base = "", fragment] = target.src.split("#");
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}autoplay=1${fragment ? `#${fragment}` : ""}`;
+}
+
 /**
  * W-317: a player embed that plays as a backdrop (muted, looping, no controls). Vimeo has a
  * background mode for that; YouTube needs its id again as the playlist to loop.

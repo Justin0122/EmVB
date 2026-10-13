@@ -189,6 +189,11 @@ export const VideoNode = leafNode(
     mediaId: z.string().min(1).max(128).optional(),
     /** W-317: plays muted, looping and without controls, as a backdrop. */
     background: z.boolean().optional(),
+    /**
+     * W-332: an image shown with a play button until the visitor plays the video; the player
+     * loads only then (the video runtime swaps it in).
+     */
+    poster: z.string().max(2000).optional(),
   }),
 );
 

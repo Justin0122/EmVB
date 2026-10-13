@@ -200,6 +200,10 @@ function bindProp(
   if (value === undefined) return;
   if (field.kind === "image" && isRecord(value)) {
     const image = value as ImageValue;
+    if (target === "poster") {
+      props[target] = image.src;
+      return;
+    }
     if (target === "src" || target === "url") {
       props[target] = image.src;
       if (image.alt !== undefined) props["alt"] = image.alt;
@@ -212,6 +216,12 @@ function bindProp(
     const link = value as LinkValue;
     props[target] = link.href;
     if (link.newTab) props["newTab"] = true;
+    return;
+  }
+  // W-331: a choice bound to a number setting (columns, slides in view) sets it as a number.
+  if (typeof props[target] === "number" && typeof value === "string") {
+    const n = Number(value);
+    if (value.trim() !== "" && Number.isFinite(n)) props[target] = n;
     return;
   }
   if (typeof value === "string" || typeof value === "boolean") props[target] = value;

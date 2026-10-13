@@ -67,6 +67,8 @@ export type RenderResult = {
   needsTabsRuntime: boolean;
   /** A Carousel is on the page: hosts load `EmVBCarouselRuntime` for its arrows (W-314). */
   needsCarouselRuntime: boolean;
+  /** W-332: render the video runtime, so a poster's play button loads the player. */
+  needsVideoRuntime: boolean;
   /** A Menu has a dropdown: hosts load `EmVBMenuRuntime` (W-197). */
   needsMenuRuntime: boolean;
   /** The site's text direction when set in Site styles, for the host's `<html dir>` (W-230). */
@@ -197,7 +199,7 @@ export function renderPage(
   const domIds = new Map<string, number>();
   // W-253: runtimes follow what renders, including synced section and loop item contents,
   // which the page's own layout doesn't hold.
-  const rendered = { form: false, tabs: false, menuDropdown: false, carousel: false };
+  const rendered = { form: false, tabs: false, menuDropdown: false, carousel: false, video: false };
   const ctx: RenderContext = {
     mode,
     definitions: opts.formDefinitions ?? new Map(),
@@ -371,6 +373,7 @@ export function renderPage(
     usedTypes.add(type);
     if (isFormNode(node) && node.props.formId.trim()) rendered.form = true;
     if (isTabsNode(node)) rendered.tabs = true;
+    if (node.type === "video" && (node.props as { poster?: string }).poster) rendered.video = true;
     if (type === "menu-item" && hasChildren(node)) rendered.menuDropdown = true;
     const ruleId = id === undefined ? undefined : ruleIdFor(id, dynamic?.idOrigin ?? "");
     const attrs = nodeAttrs(
@@ -462,6 +465,7 @@ export function renderPage(
     needsFormsRuntime: rendered.form || layoutHasForm(layout),
     needsTabsRuntime: rendered.tabs || layoutHasTabs(layout),
     needsCarouselRuntime: rendered.carousel,
+    needsVideoRuntime: rendered.video,
     needsMenuRuntime: rendered.menuDropdown || layoutHasMenuDropdown(layout),
     ...(design.direction ? { dir: design.direction } : {}),
     warnings,

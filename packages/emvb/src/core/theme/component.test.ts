@@ -396,3 +396,43 @@ describe("only texts are marked for editing, not items that hold one (W-327)", (
     expect(html).toContain('data-emvb-bound="use00001|items.0.answer|rich-text"');
   });
 });
+
+describe("a choice can set a number setting (W-331)", () => {
+  const columns: ComponentTemplate = {
+    fields: [
+      {
+        key: "cols",
+        label: "Kolommen",
+        kind: "select",
+        options: [
+          { value: "1", label: "1" },
+          { value: "2", label: "2" },
+        ],
+        default: "1",
+      },
+    ],
+    nodes: [
+      n({
+        id: "acco0001",
+        type: "accordion",
+        props: { columns: 1 },
+        bind: { columns: "cols" },
+        children: [],
+      }),
+    ],
+  };
+
+  test("the chosen value becomes a number where the design has one", () => {
+    const [node] = applyComponent(columns, { cols: "2" });
+    expect((node?.props as { columns?: unknown } | undefined)?.columns).toBe(2);
+  });
+
+  test("a value that isn't a number leaves the design's number", () => {
+    const words: ComponentTemplate = {
+      ...columns,
+      fields: [{ key: "cols", label: "K", kind: "text" }],
+    };
+    const [node] = applyComponent(words, { cols: "veel" });
+    expect((node?.props as { columns?: unknown } | undefined)?.columns).toBe(1);
+  });
+});

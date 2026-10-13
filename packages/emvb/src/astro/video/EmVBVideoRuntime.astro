@@ -1,0 +1,9 @@
+---
+// W-332: plays videos shown as a poster. `EmVBPage` renders this only for pages with one, so
+// other pages stay free of EmVB JS (R-031).
+---
+
+<script>
+  import { initVideos } from "./runtime.ts";
+  initVideos();
+</script>

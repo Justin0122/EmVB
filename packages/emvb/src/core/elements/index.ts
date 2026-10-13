@@ -31,7 +31,7 @@ import { sanitizeSvgMarkup } from "../sanitize/svg.ts";
 import { parseRichText } from "../sanitize/rich-text.ts";
 import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { getBundledIcon } from "../icons/catalog.ts";
-import { backgroundEmbedSrc, resolveEmbedUrl } from "../sanitize/embed-url.ts";
+import { autoplayEmbedSrc, backgroundEmbedSrc, resolveEmbedUrl } from "../sanitize/embed-url.ts";
 import type { VNode } from "../render/vnode.ts";
 
 import type { ElementDefinition } from "./definition.ts";
@@ -632,7 +632,7 @@ const video: ElementDefinition<VideoNode> = {
   baseCss:
     // W-266: the iframe or <video> is the .emvb-video element itself, so the 16:9 size sits on it
     // (the old descendant rule matched nothing: players were 300×150). :where() lets styles win.
-    ".emvb-video{display:block;max-width:100%;border:0}:where(.emvb-video){box-sizing:border-box;width:100%;aspect-ratio:16/9;background:#000}.emvb-video-missing,.emvb-video-preview{display:flex;align-items:center;justify-content:center;min-height:120px;padding:12px;text-align:center;color:var(--text-color-kumo-subtle,#666);background:var(--color-kumo-tint,#eee)}",
+    ".emvb-video{display:block;max-width:100%;border:0}:where(.emvb-video){box-sizing:border-box;width:100%;aspect-ratio:16/9;background:#000}.emvb-video-facade{position:relative;display:block;overflow:hidden;background:#000}.emvb-video-player{position:absolute;inset:0;width:100%;height:100%;border:0}.emvb-video-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.emvb-video-play{position:absolute;top:50%;left:50%;width:72px;height:72px;margin:-36px 0 0 -36px;padding:0;border:0;border-radius:50%;background:var(--emvb-video-play-color,rgba(0,0,0,.6));cursor:pointer}.emvb-video-play::before{content:'';position:absolute;top:50%;left:50%;margin:-12px 0 0 -7px;border-style:solid;border-width:12px 0 12px 20px;border-color:transparent transparent transparent #fff}.emvb-video-play:focus-visible{outline:3px solid #fff;outline-offset:3px}.emvb-video-missing,.emvb-video-preview{display:flex;align-items:center;justify-content:center;min-height:120px;padding:12px;text-align:center;color:var(--text-color-kumo-subtle,#666);background:var(--color-kumo-tint,#eee)}",
   defaults: () => ({
     type: "video",
     props: { url: "", title: "Video" },
@@ -652,6 +652,13 @@ const video: ElementDefinition<VideoNode> = {
       },
       { key: "title", kind: "text", label: "Title" },
       {
+        key: "poster",
+        kind: "href",
+        label: "Poster image",
+        optional: true,
+        message: "Shown with a play button until the video is played; the player loads only then.",
+      },
+      {
         key: "background",
         kind: "boolean",
         label: "Play as background",
@@ -663,6 +670,39 @@ const video: ElementDefinition<VideoNode> = {
   build: (node, attrs) => {
     const target = resolveEmbedUrl(node.props.url);
     const background = node.props.background === true;
+    // W-332: a poster with a play button; the video runtime loads the player on a click.
+    const poster =
+      !background && node.props.poster ? sanitizeMediaUrl(node.props.poster) : undefined;
+    if (poster && target) {
+      const src = target.kind === "iframe" ? autoplayEmbedSrc(target) : target.src;
+      const facade: VNode = {
+        tag: "div",
+        attrs: {
+          ...attrs,
+          class: `${attrs.class ?? ""} emvb-video-facade`.trim(),
+          "data-emvb-video": target.kind,
+          "data-emvb-video-src": src,
+          "data-emvb-video-title": node.props.title,
+        },
+        children: [
+          {
+            tag: "img",
+            attrs: { class: "emvb-video-poster", src: poster, alt: "", loading: "lazy" },
+            children: [],
+          },
+          {
+            tag: "button",
+            attrs: {
+              type: "button",
+              class: "emvb-video-play",
+              "aria-label": `Play: ${node.props.title}`,
+            },
+            children: [],
+          },
+        ],
+      };
+      return facade;
+    }
     if (!target) {
       return {
         tag: "span",
