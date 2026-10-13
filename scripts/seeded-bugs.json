@@ -27844,8 +27844,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/index.ts",
-          "search": "    if (!url || /[\\s,]/.test(url) || url === sanitizeMediaUrl(src) || seen.has(url)) continue;\n",
-          "replace": "    if (!url || /\\s/.test(url) || url === sanitizeMediaUrl(src) || seen.has(url)) continue;\n"
+          "search": "    if (!url || /[\\s,]/.test(url) || seen.has(url)) continue;\n",
+          "replace": "    if (!url || /\\s/.test(url) || seen.has(url)) continue;\n"
         }
       ],
       "command": [
@@ -28652,6 +28652,26 @@
         "hidden A/B arm"
       ],
       "expect": "\\(fail\\).*hidden A/B arm"
+    },
+    {
+      "id": "W-385/srcset-drops-main-image",
+      "requirement": "W-385",
+      "description": "srcset lists only the extra sources, so a wide screen loads the small file.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "parts.push(`${src} ${srcWidth}w`)",
+          "replace": "void srcWidth"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/elements/image-srcset.test.ts",
+        "-t",
+        "wide screens"
+      ],
+      "expect": "\\(fail\\).*wide screens"
     }
   ]
 }

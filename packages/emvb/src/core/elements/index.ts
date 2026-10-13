@@ -457,7 +457,7 @@ const image: ElementDefinition<ImageNode> = {
     if (decorative) imgAttrs.role = "presentation";
     if (node.props.width !== undefined) imgAttrs.width = String(node.props.width);
     if (node.props.height !== undefined) imgAttrs.height = String(node.props.height);
-    const sources = imageSources(node.props.src, node.props.sources);
+    const sources = imageSources(src, node.props.sources, node.props.width);
     if (sources) {
       imgAttrs.srcset = sources;
       imgAttrs.sizes = "100vw";
@@ -484,22 +484,38 @@ const image: ElementDefinition<ImageNode> = {
   },
 };
 
+const validSourceWidth = (width: unknown): width is number =>
+  Number.isInteger(width) && (width as number) >= 1 && (width as number) <= 8000;
+
+/**
+ * W-385: with `w` descriptors the browser picks only from srcset and ignores `src`, so the main
+ * image is listed too when its width is known (its own source entry, else the Width field).
+ */
 function imageSources(
   src: string,
   sources: { src: string; width: number }[] | undefined,
+  width: number | undefined,
 ): string | undefined {
   if (!sources || sources.length === 0) return undefined;
   const parts: string[] = [];
   const seen = new Set<string>();
+  let srcWidth: number | undefined;
   for (const source of sources) {
     const url = sanitizeMediaUrl(source.src);
+    if (!validSourceWidth(source.width)) continue;
+    if (url === src) {
+      srcWidth ??= source.width;
+      continue;
+    }
     // A comma or space is another srcset candidate, so one field would request a second host.
-    if (!url || /[\s,]/.test(url) || url === sanitizeMediaUrl(src) || seen.has(url)) continue;
-    if (!Number.isInteger(source.width) || source.width < 1 || source.width > 8000) continue;
+    if (!url || /[\s,]/.test(url) || seen.has(url)) continue;
     seen.add(url);
     parts.push(`${url} ${source.width}w`);
   }
-  return parts.length > 0 ? parts.join(", ") : undefined;
+  if (parts.length === 0) return undefined;
+  srcWidth ??= validSourceWidth(width) ? width : undefined;
+  if (srcWidth !== undefined && !/[\s,]/.test(src)) parts.push(`${src} ${srcWidth}w`);
+  return parts.join(", ");
 }
 
 /** Root stroke widths the Stroke width control can override (W-237); Lucide and Tabler use 2. */
