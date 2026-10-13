@@ -29882,6 +29882,26 @@
         "falls back"
       ],
       "expect": "\\(fail\\).*falls back"
+    },
+    {
+      "id": "W-448/bare-youtube",
+      "requirement": "W-448",
+      "description": "Bare youtube.com is a file path.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/embed-url.ts",
+          "search": "const trimmed = BARE_VIDEO_HOST.test(typed) ? `https://${typed}` : typed;",
+          "replace": "const trimmed = typed;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/sanitize/embed-bare-host.test.ts",
+        "-t",
+        "known video hosts"
+      ],
+      "expect": "\\(fail\\).*known video hosts"
     }
   ]
 }

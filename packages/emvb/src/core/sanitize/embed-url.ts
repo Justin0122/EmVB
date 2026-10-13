@@ -114,8 +114,14 @@ const PROVIDERS = [
  * Resolves an editor-supplied URL to a safe embed target, or undefined if refused.
  * YouTube always becomes `youtube-nocookie.com`; Vimeo becomes `player.vimeo.com`.
  */
+// W-448: "youtube.com/watch?v=…" typed without https:// was taken for a video file path on this
+// site, so the page showed a broken player. Known video hosts get their scheme.
+const BARE_VIDEO_HOST =
+  /^(?:(?:www\.|m\.)?youtube\.com|youtu\.be|(?:www\.|player\.)?vimeo\.com)\//i;
+
 export function resolveEmbedUrl(value: string): EmbedTarget | undefined {
-  const trimmed = value.trim();
+  const typed = value.trim();
+  const trimmed = BARE_VIDEO_HOST.test(typed) ? `https://${typed}` : typed;
   if (trimmed.length === 0 || trimmed.length > 2000) return undefined;
 
   const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed);
