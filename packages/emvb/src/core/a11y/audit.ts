@@ -39,7 +39,9 @@ const WEIGHT = { error: 12, warning: 4 } as const;
 const USELESS_ALT =
   /^(?:image|img|photo|picture|graphic|logo|icon|untitled|\s*)$|\.(?:jpe?g|png|gif|webp|avif|svg)$|^(?:img|dsc|pxl|screenshot)[_-]?\d+/i;
 /** Link text that makes no sense out of context. */
-const VAGUE = /^(?:click here|here|read more|more|learn more|link|this|go)\.?$/i;
+/** W-411: trailing punctuation and arrows ("Read more…", "Learn more →", "Click here!") too. */
+const VAGUE =
+  /^(?:click here|here|read more|more|learn more|link|this|go)\s*[.!…:»›→>\u2192\u203a\u00bb-]*$/i;
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 
 /** A style colour as hex: literal, or a site colour variable; undefined when unknown. */

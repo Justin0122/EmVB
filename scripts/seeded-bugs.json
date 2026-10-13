@@ -29160,6 +29160,26 @@
         "blank title is an error"
       ],
       "expect": "\\(fail\\).*blank title is an error"
+    },
+    {
+      "id": "W-411/vague-arrow-missed",
+      "requirement": "W-411",
+      "description": "Vague link text with an arrow isn't flagged.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "\\s*[.!…:»›→>\\u2192\\u203a\\u00bb-]*$/i;",
+          "replace": "\\.?$/i;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/vague-link.test.ts",
+        "-t",
+        "punctuation and arrows"
+      ],
+      "expect": "\\(fail\\).*punctuation and arrows"
     }
   ]
 }

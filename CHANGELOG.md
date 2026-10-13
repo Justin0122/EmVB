@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The vague-link warning also catches "Read more…", "Learn more →" and similar.
 - The accessibility check flags a video with a blank title.
 - The table of contents leaves out headings hidden on every device.
 - The accessibility check flags a blank tab label or accordion title.
