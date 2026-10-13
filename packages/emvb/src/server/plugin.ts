@@ -8,7 +8,12 @@ import {
 } from "./design-routes.ts";
 import { iconDeleteRoute, iconRenameRoute, iconUploadRoute, iconsRoute } from "./icon-routes.ts";
 import { beforeSave } from "./hooks.ts";
-import { agentsRoute, agentsSaveRoute, beforePublish } from "./agent-settings.ts";
+import {
+  agentsRoute,
+  agentsSaveRoute,
+  beforePublish,
+  pageAgentVersionsRoute,
+} from "./agent-settings.ts";
 import { canvasStyleUrls } from "../core/canvas-styles.ts";
 import { TOOLS } from "../mcp/tools.ts";
 import { mcpRoutes, mcpToolConfig } from "./mcp-routes.ts";
@@ -65,6 +70,7 @@ export function createPlugin(options: { canvasStyles?: unknown } = {}) {
       // W-463: the Agents tab (admins only).
       agents: agentsRoute,
       "agents/save": agentsSaveRoute,
+      "agents/page": pageAgentVersionsRoute,
       // R1 D-054: EmDash's /_emdash/api/mcp lists these as emvb__<tool> (EmDash 1.2+, mcp: true).
       ...mcpRoutes(TOOLS),
     },

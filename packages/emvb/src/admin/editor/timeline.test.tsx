@@ -67,7 +67,11 @@ describe("version timeline dialog (W-315)", () => {
       />,
     );
     await settle();
-    expect(calls).toEqual(["/_emdash/api/content/emvb_pages/01PAGE/revisions?limit=50"]);
+    expect(calls).toEqual([
+      "/_emdash/api/content/emvb_pages/01PAGE/revisions?limit=50",
+      "/_emdash/api/plugins/emvb/agents/page",
+    ]);
+    expect(document.querySelector("[data-emvb-timeline-who]")).toBeNull();
     const versions = [...document.querySelectorAll("[data-emvb-version]")].map((el) =>
       el.getAttribute("data-emvb-version"),
     );
@@ -83,6 +87,55 @@ describe("version timeline dialog (W-315)", () => {
     expect(applied[0]?.[1]).toBe("Section restored");
     expect(JSON.stringify(applied[0]?.[0])).toContain("Second");
     expect(JSON.stringify(applied[0]?.[0])).toContain("More");
+  });
+
+  test("W-460 agent versions get a badge and the People/Agents filter", async () => {
+    const fetcher = async (path: string) => {
+      const data = path.endsWith("/agents/page")
+        ? { versions: [{ revisionId: "r2", tool: "add_element", summary: "Added heading" }] }
+        : {
+            items: [
+              {
+                id: "r1",
+                createdAt: "2026-10-01T10:00:00Z",
+                data: { layout: layoutWith("First") },
+              },
+              {
+                id: "r2",
+                createdAt: "2026-10-05T10:00:00Z",
+                data: { layout: layoutWith("Second") },
+              },
+            ],
+          };
+      return Response.json({ data });
+    };
+    await mount(
+      <TimelineDialog
+        open
+        onOpenChange={() => undefined}
+        fetcher={fetcher}
+        collection="emvb_pages"
+        entryId="01PAGE"
+        current={layoutWith("Now", true)}
+        design={emptyDesign()}
+        onApply={() => undefined}
+      />,
+    );
+    await settle();
+    const ids = () =>
+      [...document.querySelectorAll("[data-emvb-version]")].map((el) =>
+        el.getAttribute("data-emvb-version"),
+      );
+    expect(
+      document.querySelector('[data-emvb-version="r2"] [data-emvb-agent-version]'),
+    ).not.toBeNull();
+    expect(document.querySelector('[data-emvb-version="r1"] [data-emvb-agent-version]')).toBeNull();
+    const pick = (who: string) =>
+      document.querySelector(`[data-emvb-timeline-who="${who}"]`) as HTMLButtonElement;
+    await act(async () => pick("agents").click());
+    expect(ids()).toEqual(["r2"]);
+    await act(async () => pick("people").click());
+    expect(ids()).toEqual(["r1"]);
   });
 
   test("W-315 a host without revisions says so plainly, not a raw Not found", async () => {

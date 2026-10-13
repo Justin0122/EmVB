@@ -129,3 +129,27 @@ describe("Agent settings and the publish gate (W-463, W-464, D-055)", () => {
     expect(person.success).toBe(true);
   });
 });
+
+describe("Agent versions in the Timeline (W-460)", () => {
+  test("each agent save is listed with the revision it created, for editors", async () => {
+    await t.agentSettings();
+    const pageId = await newPage();
+    const { layout } = (await run("get_layout", { pageId })).data as {
+      layout: { root: { id: string } };
+    };
+    await run("add_element", { pageId, parentId: layout.root.id, element: { type: "heading" } });
+    const res = await t.route("agents/page", {
+      user: userWithRole(ROLES.editor),
+      body: { pageId },
+    });
+    expect(res.status).toBe(200);
+    const versions = (res.body["data"] as { versions: { revisionId: string; tool: string }[] })
+      .versions;
+    expect(versions).toHaveLength(1);
+    expect(versions[0]?.tool).toBe("add_element");
+    const listed = (await run("list_versions", { pageId })).data as {
+      versions: { revisionId: string }[];
+    };
+    expect(listed.versions.map((v) => v.revisionId)).toContain(versions[0]?.revisionId);
+  });
+});

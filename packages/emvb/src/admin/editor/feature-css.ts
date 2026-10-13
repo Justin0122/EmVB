@@ -57,6 +57,10 @@ export const FEATURE_CSS = `
 .emvb-timeline-list { margin: 0; padding: 0; list-style: none; max-height: 60vh; overflow-y: auto; }
 .emvb-timeline-version { width: 100%; padding: 6px 8px; border: 0; border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 12px; text-align: start; cursor: pointer; }
 .emvb-timeline-version[aria-current="true"] { background: var(--color-kumo-tint); font-weight: 600; }
+.emvb-timeline-agent { margin-inline-start: 6px; padding: 0 6px; border-radius: 999px; background: var(--color-kumo-tint); font-size: 11px; font-weight: 600; }
+.emvb-remote-change { position: fixed; inset-block-start: 56px; inset-inline-end: 16px; z-index: 50; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: var(--color-kumo-elevated); box-shadow: var(--shadow-lg); font-size: 13px; }
+.emvb-timeline-who { display: flex; gap: 12px; margin-block: 8px; }
+.emvb-timeline-who [aria-pressed="true"] { font-weight: 700; text-decoration: underline; }
 .emvb-timeline-frames { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .emvb-timeline-frames figure { margin: 0; }
 .emvb-timeline-frames figcaption { font-size: 12px; color: var(--text-color-kumo-subtle); margin-bottom: 4px; }

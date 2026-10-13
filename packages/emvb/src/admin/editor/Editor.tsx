@@ -50,6 +50,7 @@ import {
 import { EDITOR_MIN_WIDTH_QUERY, useMediaQuery } from "./useMediaQuery.ts";
 import { useSectionTemplates } from "./section-templates.ts";
 import { useCollectionPreviews } from "./collection-previews.ts";
+import { useRemoteChange } from "./remote-change.ts";
 import { A11yScoreButton } from "./A11yCopilot.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
 import { useEditorCommands } from "./useEditorCommands.ts";
@@ -123,6 +124,8 @@ function EditorApp({
   const canvasStyles = useCanvasStyles(fetcher);
   const { exit } = host;
   const saver = useSave(fetcher, state, dispatch, collection);
+  // W-466: tell the person when an agent (or anyone) changed the page while they were idle.
+  const remoteChange = useRemoteChange(fetcher, collection, entry.id, state.rev, !dirty);
   const toasts = React.useMemo(() => createKumoToastManager(), []);
   const chrome = useChromeFlags();
   const [device, setDevice] = React.useState<PopupDevice>("desktop");
@@ -328,6 +331,16 @@ function EditorApp({
       onPalette={() => chrome.open("palette")}
     >
       <Toasty toastManager={toasts}>
+        {remoteChange && (
+          <div className="emvb-remote-change" role="status" data-emvb-remote-change={remoteChange}>
+            {remoteChange === "agent"
+              ? "An AI agent changed this page."
+              : "This page was changed somewhere else."}{" "}
+            <Button size="sm" variant="secondary" onClick={() => window.location.reload()}>
+              Reload
+            </Button>
+          </div>
+        )}
         {wideEnough ? (
           <>
             <TopBar

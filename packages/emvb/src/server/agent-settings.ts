@@ -26,7 +26,11 @@ export async function readAgentSettings(
 }
 
 type LogQuery = {
-  query(o: { orderBy: Record<string, "asc" | "desc">; limit: number }): Promise<{
+  query(o: {
+    where?: Record<string, unknown>;
+    orderBy: Record<string, "asc" | "desc">;
+    limit: number;
+  }): Promise<{
     items: { id: string; data: unknown }[];
   }>;
   put(id: string, data: unknown): Promise<void>;
@@ -45,6 +49,36 @@ export const agentsRoute: PluginRoute = {
       endpoint: new URL("/_emdash/api/mcp", ctx.request.url).toString(),
       activity: log.items.map((item) => Object.assign({ id: item.id }, item.data as object)),
     };
+  },
+};
+
+const PageAgentsInput = z.object({ pageId: z.string().min(1).max(128) });
+
+/**
+ * W-460: the page's versions an agent saved, for the Timeline's Agent badge and filter. Editors
+ * can read this (it carries no settings); the full activity list stays admin-only.
+ */
+export const pageAgentVersionsRoute: PluginRoute<z.infer<typeof PageAgentsInput>> = {
+  permission: "content:edit_any",
+  input: PageAgentsInput,
+  handler: async (ctx) => {
+    const log = await agentLog(ctx).query({
+      where: { pageId: ctx.input.pageId },
+      orderBy: { at: "desc" },
+      limit: 100,
+    });
+    const versions = log.items
+      .map(
+        (item) => item.data as { revisionId?: string; tool: string; summary: string; at: string },
+      )
+      .filter((entry) => entry.revisionId)
+      .map((entry) => ({
+        revisionId: entry.revisionId as string,
+        tool: entry.tool,
+        summary: entry.summary,
+        at: entry.at,
+      }));
+    return { versions };
   },
 };
 

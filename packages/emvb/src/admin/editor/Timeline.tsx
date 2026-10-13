@@ -13,6 +13,7 @@ import {
   type SectionChange,
 } from "../../core/index.ts";
 import { ApiError, requestJson, type Fetcher } from "../api.ts";
+import { PLUGIN_ID } from "../../constants.ts";
 import { ELEMENT_NAMES } from "./element-chrome.ts";
 
 type RevisionItem = {
@@ -22,7 +23,32 @@ type RevisionItem = {
   data?: Record<string, unknown>;
 };
 
-type TimelineVersion = { id: string; at: string; layout: Layout | null };
+type TimelineVersion = {
+  id: string;
+  at: string;
+  layout: Layout | null;
+  /** Set when an AI agent saved this version (W-460). */
+  agent?: { tool: string; summary: string };
+};
+
+type AgentVersion = { revisionId: string; tool: string; summary: string };
+
+/** Which versions an agent saved; none when the site has no agent log (older EmVB). */
+const agentVersions = (fetcher: Fetcher, entryId: string) =>
+  requestJson<{ versions: AgentVersion[] }>(
+    fetcher,
+    `/_emdash/api/plugins/${PLUGIN_ID}/agents/page`,
+    {
+      method: "POST",
+      body: { pageId: entryId },
+    },
+  ).then(
+    (body) => new Map((body.versions ?? []).map((v) => [v.revisionId, v])),
+    () => new Map<string, AgentVersion>(),
+  );
+
+type Who = "all" | "people" | "agents";
+const WHO_LABELS: Record<Who, string> = { all: "All", people: "People", agents: "Agents" };
 
 /** A revision's layout, or null when it has none or it doesn't validate (W-315). */
 export function revisionLayout(data: Record<string, unknown> | undefined): Layout | null {
@@ -57,10 +83,20 @@ function useRevisions(fetcher: Fetcher, collection: string, entryId: string, ope
       fetcher,
       `/_emdash/api/content/${encodeURIComponent(collection)}/${encodeURIComponent(entryId)}/revisions?limit=50`,
     )
-      .then((body) => {
+      .then(async (body) => ({ body, agents: await agentVersions(fetcher, entryId) }))
+      .then(({ body, agents }) => {
         if (cancelled) return;
         const versions = (body?.items ?? [])
-          .map((item) => ({ id: item.id, at: item.createdAt, layout: revisionLayout(item.data) }))
+          .map((item): TimelineVersion => {
+            const agent = agents.get(item.id);
+            const version: TimelineVersion = {
+              id: item.id,
+              at: item.createdAt,
+              layout: revisionLayout(item.data),
+            };
+            if (agent) version.agent = { tool: agent.tool, summary: agent.summary };
+            return version;
+          })
           .toSorted((a, b) => (a.at < b.at ? 1 : -1));
         setState({ kind: "ready", versions });
       })
@@ -159,7 +195,12 @@ export function TimelineDialog({
   const revisions = useRevisions(fetcher, collection, entryId, open);
   const [pickedId, setPickedId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
-  const versions = revisions.kind === "ready" ? revisions.versions : [];
+  const [who, setWho] = React.useState<Who>("all");
+  const all = revisions.kind === "ready" ? revisions.versions : [];
+  const hasAgents = all.some((v) => v.agent);
+  const versions = all.filter((v) =>
+    who === "all" ? true : who === "agents" ? Boolean(v.agent) : !v.agent,
+  );
   const picked = versions.find((v) => v.id === pickedId) ?? versions[0];
   const changes = React.useMemo(
     () => (picked?.layout && current ? diffSections(picked.layout, current) : []),
@@ -181,6 +222,25 @@ export function TimelineDialog({
             No saved versions yet. Each save adds one.
           </p>
         )}
+        {hasAgents && (
+          <div className="emvb-timeline-who" role="group" aria-label="Show versions by">
+            {(Object.keys(WHO_LABELS) as Who[]).map((key) => (
+              <button
+                key={key}
+                type="button"
+                className="emvb-link-button"
+                aria-pressed={who === key}
+                data-emvb-timeline-who={key}
+                onClick={() => {
+                  setWho(key);
+                  setPickedId(null);
+                }}
+              >
+                {WHO_LABELS[key]}
+              </button>
+            ))}
+          </div>
+        )}
         {picked && current && (
           <div className="emvb-timeline-body">
             <ol className="emvb-timeline-list" aria-label="Saved versions">
@@ -195,6 +255,15 @@ export function TimelineDialog({
                   >
                     {when(v.at)}
                     {!v.layout && " (no layout)"}
+                    {v.agent && (
+                      <span
+                        className="emvb-timeline-agent"
+                        data-emvb-agent-version=""
+                        title={v.agent.summary}
+                      >
+                        Agent
+                      </span>
+                    )}
                   </button>
                 </li>
               ))}

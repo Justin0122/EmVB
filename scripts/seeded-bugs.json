@@ -30162,6 +30162,46 @@
         "refuses a token"
       ],
       "expect": "\\(fail\\).*refuses a token"
+    },
+    {
+      "id": "W-460/agent-badge-missing",
+      "requirement": "W-460",
+      "description": "Agent versions show no badge in the timeline.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/Timeline.tsx",
+          "search": "            if (agent) version.agent = { tool: agent.tool, summary: agent.summary };",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/timeline.test.tsx",
+        "-t",
+        "W-460"
+      ],
+      "expect": "\\(fail\\).*W-460"
+    },
+    {
+      "id": "W-466/agent-change-unnoticed",
+      "requirement": "W-466",
+      "description": "An agent's change is reported as someone else's.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/remote-change.ts",
+          "search": "  return (agents.versions ?? []).some((v) => v.revisionId === draft) ? \"agent\" : \"other\";",
+          "replace": "  return agents.versions ? \"other\" : \"other\";"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/remote-change.test.ts",
+        "-t",
+        "an agent saved"
+      ],
+      "expect": "\\(fail\\).*an agent saved"
     }
   ]
 }
