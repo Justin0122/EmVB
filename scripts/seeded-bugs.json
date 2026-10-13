@@ -29740,6 +29740,26 @@
         "adds each post"
       ],
       "expect": "\\(fail\\).*adds each post"
+    },
+    {
+      "id": "W-440/loop-image-eager",
+      "requirement": "W-440",
+      "description": "Loop images load eagerly.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/dynamic-post.ts",
+          "search": "const lazy: Attrs = inLoop ?",
+          "replace": "const lazy: Attrs = false ?"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/theme/dynamic.test.ts",
+        "-t",
+        "loop images wait"
+      ],
+      "expect": "\\(fail\\).*loop images wait"
     }
   ]
 }

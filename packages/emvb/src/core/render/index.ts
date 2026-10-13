@@ -433,7 +433,13 @@ export function renderPage(
     if (isDynamicPostNode(node)) {
       return finish(
         node,
-        renderDynamicPost(node, attrs, resolvePostForRender(dynamic, mode), mode),
+        renderDynamicPost(
+          node,
+          attrs,
+          resolvePostForRender(dynamic, mode),
+          mode,
+          dynamic?.inLoopItem === true,
+        ),
       );
     }
     if (isTabsNode(node)) return finish(node, renderTabs(node, id, attrs, ctx, dynamic));

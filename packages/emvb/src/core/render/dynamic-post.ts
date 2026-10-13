@@ -29,7 +29,12 @@ type PostField = {
   /** Whether the post has this field; the placeholder stands in when it doesn't. */
   has?: (post: ThemePostFields) => boolean;
   /** The field's markup, or nothing when the post's value is empty or unsafe. */
-  render: (node: LayoutNode, attrs: Attrs, post: ThemePostFields) => VNode | undefined;
+  render: (
+    node: LayoutNode,
+    attrs: Attrs,
+    post: ThemePostFields,
+    inLoop: boolean,
+  ) => VNode | undefined;
 };
 
 type PostDateFormat = (typeof POST_DATE_FORMATS)[number];
@@ -91,13 +96,16 @@ const POST_FIELDS = new Map<string, PostField>([
         children: ["Featured image"],
       }),
       has: (post) => !!post.featuredImageUrl,
-      render: (node, attrs, post) => {
+      render: (node, attrs, post, inLoop) => {
         const src = sanitizeMediaUrl(post.featuredImageUrl ?? "");
         if (!src) return undefined;
         const alt = props<{ decorative?: boolean }>(node).decorative
           ? ""
           : post.featuredImageAlt?.trim() || post.title || "Featured image";
-        return { tag: "img", attrs: { ...attrs, src, alt }, children: [] };
+        // W-440: a Loop's images below the fold loaded all at once; like Image, they wait.
+        // A single post's featured image is usually the hero, so it isn't delayed.
+        const lazy: Attrs = inLoop ? { loading: "lazy", decoding: "async" } : {};
+        return { tag: "img", attrs: { ...attrs, src, alt, ...lazy }, children: [] };
       },
     },
   ],
@@ -171,11 +179,12 @@ export function renderDynamicPost(
   attrs: Attrs,
   post: ThemePostFields | undefined,
   mode: RenderMode,
+  inLoop = false,
 ): VNode | undefined {
   const field = POST_FIELDS.get(node.type);
   if (!field) return undefined;
   if (!post || field.has?.(post) === false) {
     return mode === "editor" ? field.placeholder(attrs) : undefined;
   }
-  return field.render(node, attrs, post);
+  return field.render(node, attrs, post, inLoop);
 }

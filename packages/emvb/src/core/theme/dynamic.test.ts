@@ -214,3 +214,24 @@ describe("Post link names its post (W-439)", () => {
     expect(names(undefined)).toEqual([null, null]);
   });
 });
+
+describe("Post image in a Loop loads lazily (W-440)", () => {
+  test("loop images wait; a single post's featured image doesn't", () => {
+    const image = {
+      id: "pimage09",
+      type: "post-image",
+      props: {},
+    } as Layout["root"]["children"][number];
+    const looped = renderPage(
+      page({ id: "loop0001", type: "loop", props: {}, children: [image] }),
+      design,
+      { dynamic: { posts: [{ ...SAMPLE_POST, featuredImageUrl: "/a.jpg" }] } },
+    ).html;
+    expect(looped).toContain('loading="lazy"');
+    const single = renderPage(page(image), design, {
+      dynamic: { post: { ...SAMPLE_POST, featuredImageUrl: "/a.jpg" } },
+    }).html;
+    expect(single).toContain('src="/a.jpg"');
+    expect(single).not.toContain('loading="lazy"');
+  });
+});
