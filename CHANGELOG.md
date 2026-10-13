@@ -67,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- MCP read tools for AI agents on EmDash 1.2+ (with `mcp: true`): list pages, get a layout or its outline, element types with their settings schema, site styles, section recipes, a page description, accessibility findings and versions. Agents need a token with the `mcp:tools:emvb` scope and an editor role.
 - The accessibility check warns when two menus on a page have the same name.
 - The accessibility check warns about empty headings.
 - The accessibility check flags form fields with no label, or only a placeholder.

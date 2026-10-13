@@ -1,0 +1,44 @@
+import type { DesignSystem } from "../core/index.ts";
+
+/** A page as the tool core sees it: the current draft (or published) data and its revision. */
+export type PageRecord = {
+  id: string;
+  title: string;
+  slug: string;
+  status: string;
+  /** True when a saved draft differs from what is live. */
+  hasDraft: boolean;
+  layout: unknown;
+  /** EmDash `_rev`; writes check it (D-058). */
+  rev: string;
+  updatedAt: string;
+};
+
+export type PageSummary = Omit<PageRecord, "layout" | "rev">;
+
+export type RevisionSummary = { id: string; createdAt: string; authorId: string | null };
+
+export type DesignState = {
+  design: DesignSystem;
+  revision: string | null;
+  publishedRevision: string | null;
+  unpublished: boolean;
+};
+
+/** Who is calling. EmDash has already checked the token scope and the editor role (D-056). */
+export type Caller = { userId: string | null; role: number };
+
+/**
+ * Everything the tool core reads or writes goes through these ports (D-053). The plugin builds
+ * them on `ctx.content` and plugin storage; tests build them in memory.
+ */
+export interface EmvbPorts {
+  caller: Caller;
+  listPages(options: { cursor?: string; limit: number }): Promise<{
+    pages: PageSummary[];
+    nextCursor?: string;
+  }>;
+  getPage(id: string): Promise<PageRecord | null>;
+  listRevisions(id: string, limit: number): Promise<RevisionSummary[]>;
+  getDesign(): Promise<DesignState>;
+}

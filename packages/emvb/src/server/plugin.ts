@@ -9,13 +9,15 @@ import {
 import { iconDeleteRoute, iconRenameRoute, iconUploadRoute, iconsRoute } from "./icon-routes.ts";
 import { beforeSave } from "./hooks.ts";
 import { canvasStyleUrls } from "../core/canvas-styles.ts";
+import { TOOLS } from "../mcp/tools.ts";
+import { mcpRoutes, mcpToolConfig } from "./mcp-routes.ts";
 
 export function createPlugin(options: { canvasStyles?: unknown } = {}) {
   const canvasStyles = canvasStyleUrls(options.canvasStyles);
   return definePlugin({
     id: PLUGIN_ID,
     version: PLUGIN_VERSION,
-    capabilities: ["content:read", "content:write"],
+    capabilities: ["content:read", "content:write", "content:publish", "content:revisions:read"],
     // W-239: uploaded SVG icons (EmDash's media library refuses SVG by default).
     storage: { design: { indexes: [] }, icons: { indexes: ["uploadedAt"] } },
     hooks: {
@@ -44,6 +46,9 @@ export function createPlugin(options: { canvasStyles?: unknown } = {}) {
       "icons/upload": iconUploadRoute,
       "icons/rename": iconRenameRoute,
       "icons/delete": iconDeleteRoute,
+      // R1 D-054: EmDash's /_emdash/api/mcp lists these as emvb__<tool> (EmDash 1.2+, mcp: true).
+      ...mcpRoutes(TOOLS),
     },
+    mcp: mcpToolConfig(TOOLS),
   });
 }

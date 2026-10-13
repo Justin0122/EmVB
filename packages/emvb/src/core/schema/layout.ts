@@ -773,6 +773,9 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   MenuItemNode,
 ]);
 
+/** One strict schema per known element type, for the MCP element catalogue (W-453). */
+export const KNOWN_NODE_SCHEMAS = KnownLayoutNode.options;
+
 export type HeadingNode = z.infer<typeof HeadingNode>;
 export type TocNode = z.infer<typeof TocNode>;
 export type SpacerNode = z.infer<typeof SpacerNode>;

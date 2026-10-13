@@ -27,7 +27,10 @@ type DesignResponse = {
   status: "ok" | "empty" | "unreadable";
 };
 
-const readDesign = async (ctx: RouteContext<unknown>, key: string): Promise<DesignResponse> => {
+export const readDesign = async (
+  ctx: RouteContext<unknown>,
+  key: string,
+): Promise<DesignResponse> => {
   const current = await store(ctx).getVersioned(key);
   if (!current) return { design: emptyDesign(), revision: null, status: "empty" };
   const result = validateDesign(current.value);

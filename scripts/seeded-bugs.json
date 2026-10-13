@@ -29902,6 +29902,46 @@
         "known video hosts"
       ],
       "expect": "\\(fail\\).*known video hosts"
+    },
+    {
+      "id": "W-453/mcp-permission-read",
+      "requirement": "W-453",
+      "description": "MCP tool routes open to any reader instead of editors.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/mcp-routes.ts",
+          "search": "        permission: \"content:edit_any\",",
+          "replace": "        permission: \"content:read\","
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-read.test.ts",
+        "-t",
+        "declared to EmDash"
+      ],
+      "expect": "\\(fail\\).*declared to EmDash"
+    },
+    {
+      "id": "W-453/parents-ignore-form",
+      "requirement": "W-453",
+      "description": "Element catalogue ignores the form rule for allowed parents.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/read.ts",
+          "search": "parentChildRefusal(parent, child, parentType === \"form\")",
+          "replace": "parentChildRefusal(parent, child, false)"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-read.test.ts",
+        "-t",
+        "allowed parents"
+      ],
+      "expect": "\\(fail\\).*allowed parents"
     }
   ]
 }

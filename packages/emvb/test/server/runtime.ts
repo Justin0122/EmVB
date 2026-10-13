@@ -80,5 +80,30 @@ export async function createTestRuntime() {
       ...(role === undefined ? {} : { actor: { id: `user-${role}`, role } }),
     });
 
-  return { runtime, route, savePage, dispose: () => runtime.shutdown() };
+  /** Calls an EmVB MCP tool as EmDash's /_emdash/api/mcp does after its scope and role checks. */
+  const mcp = async (tool: string, input: unknown, user: UserInfo = userWithRole(ROLES.editor)) => {
+    const request = new Request("http://localhost/_emdash/api/mcp", {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: "Bearer ec_pat_test" },
+    });
+    const run = runtime as unknown as {
+      handlePluginMcpTool(
+        pluginId: string,
+        name: string,
+        route: string,
+        input: unknown,
+        userId: string,
+        request: Request,
+        user: UserInfo,
+      ): Promise<{
+        success: boolean;
+        data?: unknown;
+        error?: { code: string; message: string };
+        status?: number;
+      }>;
+    };
+    return run.handlePluginMcpTool(PLUGIN_ID, tool, `mcp/${tool}`, input, user.id, request, user);
+  };
+
+  return { runtime, route, savePage, mcp, dispose: () => runtime.shutdown() };
 }
