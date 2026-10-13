@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- The accessibility check warns when an image has extra sizes but no Width (px).
 - Container query styles can be edited one property at a time in Advanced: change, remove or add a property.
 - Image settings have an Extra sizes (srcset) field: one `URL WIDTH` per line, up to 6.
 

@@ -29000,6 +29000,26 @@
         "need a confirm"
       ],
       "expect": "\\(fail\\).*need a confirm"
+    },
+    {
+      "id": "W-403/image-sizes-silent",
+      "requirement": "W-403",
+      "description": "Extra sizes without a Width aren't flagged.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "if (!widthSet && !mainListed) {",
+          "replace": "if (!widthSet && mainListed) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/image-sizes.test.ts",
+        "-t",
+        "no width warn"
+      ],
+      "expect": "\\(fail\\).*no width warn"
     }
   ]
 }

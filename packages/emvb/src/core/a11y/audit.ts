@@ -21,7 +21,8 @@ export type A11yIssue = {
     | "vague-link"
     | "contrast"
     | "hidden-focusable"
-    | "new-tab";
+    | "new-tab"
+    | "image-sizes";
   severity: "error" | "warning";
   message: string;
   /** The one-click fix, when there is a safe one. */
@@ -157,6 +158,24 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
           ...(imageLinked
             ? {}
             : { fix: { kind: "decorative" as const }, fixLabel: "Mark as decorative" }),
+        });
+      }
+    }
+    // W-403: with extra sizes but no Width, the main image is left out of srcset, so wide screens
+    // can only get the listed copies.
+    if (node.type === "image" && Array.isArray(props["sources"]) && props["sources"].length > 0) {
+      const width = props["width"];
+      const widthSet = typeof width === "number" && Number.isInteger(width) && width >= 1;
+      const mainListed = (props["sources"] as { src?: unknown }[]).some(
+        (s) => typeof s?.src === "string" && s.src === props["src"],
+      );
+      if (!widthSet && !mainListed) {
+        add({
+          nodeId: node.id,
+          rule: "image-sizes",
+          severity: "warning",
+          message:
+            "This image has extra sizes but no Width (px), so the main image is left out of the list the browser picks from.",
         });
       }
     }
