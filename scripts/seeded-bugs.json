@@ -29320,6 +29320,26 @@
         "can't be chosen"
       ],
       "expect": "\\(fail\\).*can't be chosen"
+    },
+    {
+      "id": "W-419/empty-heading-silent",
+      "requirement": "W-419",
+      "description": "Empty headings aren't flagged.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "if (node.type === \"heading\" && !String(props[\"text\"] ?? \"\").trim() && !node.bind) {",
+          "replace": "if (false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/empty-heading.test.ts",
+        "-t",
+        "blank text warns"
+      ],
+      "expect": "\\(fail\\).*blank text warns"
     }
   ]
 }

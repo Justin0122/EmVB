@@ -23,7 +23,8 @@ export type A11yIssue = {
     | "hidden-focusable"
     | "new-tab"
     | "image-sizes"
-    | "control-name";
+    | "control-name"
+    | "empty-heading";
   severity: "error" | "warning";
   message: string;
   /** The one-click fix, when there is a safe one. */
@@ -259,6 +260,15 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
                 : "This accordion item's title is blank, so it has no name.",
         });
       }
+    }
+    // W-419: an empty heading still shows up in screen readers' heading list, with nothing to say.
+    if (node.type === "heading" && !String(props["text"] ?? "").trim() && !node.bind) {
+      add({
+        nodeId: node.id,
+        rule: "empty-heading",
+        severity: "warning",
+        message: "This heading is empty; screen readers list it as a heading with no words.",
+      });
     }
     if (node.type === "heading") {
       const level = typeof props["level"] === "number" ? props["level"] : 2;
