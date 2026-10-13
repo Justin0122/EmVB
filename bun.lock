@@ -88,7 +88,7 @@
     },
     "packages/emvb-icons": {
       "name": "@perkyzz/emvb-icons",
-      "version": "0.1.0",
+      "version": "0.1.1",
     },
     "site": {
       "name": "@emvb/site",

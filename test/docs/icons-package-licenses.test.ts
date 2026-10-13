@@ -27,4 +27,14 @@ describe("the icons package carries its licenses (W-395)", () => {
     const notice = readFileSync(join(icons, "NOTICE.md"), "utf8");
     for (const name of names) expect(notice).toContain(`licenses/${name}`);
   });
+
+  test("@perkyzz/emvb depends on exactly this icons version (W-396)", () => {
+    const own = JSON.parse(readFileSync(join(icons, "package.json"), "utf8")) as {
+      version: string;
+    };
+    const main = JSON.parse(readFileSync(join(emvb, "package.json"), "utf8")) as {
+      dependencies: Record<string, string>;
+    };
+    expect(main.dependencies["@perkyzz/emvb-icons"]).toBe(own.version);
+  });
 });

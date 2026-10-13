@@ -28860,6 +28860,26 @@
       ],
       "command": ["bun", "test", "./test/docs/icons-package-licenses.test.ts"],
       "expect": "\\(fail\\).*publishes licenses"
+    },
+    {
+      "id": "W-396/icons-dependency-stale",
+      "requirement": "W-396",
+      "description": "@perkyzz/emvb still depends on the old icons version.",
+      "edits": [
+        {
+          "file": "packages/emvb/package.json",
+          "search": "\"@perkyzz/emvb-icons\": \"0.1.1\"",
+          "replace": "\"@perkyzz/emvb-icons\": \"0.1.0\""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./test/docs/icons-package-licenses.test.ts",
+        "-t",
+        "exactly this icons version"
+      ],
+      "expect": "\\(fail\\).*exactly this icons version"
     }
   ]
 }

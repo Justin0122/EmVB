@@ -20,6 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **The save message for a bad segment name mentions `:` (W-393).** It matches the rule since 0.4.0.
 - **Custom grid tracks are checked as you type them (W-394).** A track like `4fr`, or a 13th track, stays in the field with the allowed values instead of making the page fail to save.
 - **`@perkyzz/emvb-icons` carries its sets' license texts (W-395).** The icon package now ships `licenses/`, a NOTICE with each set's attribution, and a README. (Not yet published.)
+- **`@perkyzz/emvb-icons` 0.1.1 (W-396).** Ships the sets' license texts, NOTICE and README; `@perkyzz/emvb` depends on it.
 
 ## [0.4.0] - 2026-10-11
 
