@@ -7,10 +7,12 @@ import {
   typeScale,
   type DesignSystem,
 } from "../../../core/index.ts";
+import { fieldNumber } from "./settings/number-input.ts";
 
+// W-436: the fields are labelled "(px)", so "18px" is 18.
 const num = (text: string): number | undefined => {
-  const n = Number(text);
-  return text.trim() !== "" && Number.isFinite(n) ? n : undefined;
+  const n = fieldNumber(text, "px");
+  return Number.isFinite(n) ? n : undefined;
 };
 
 /**

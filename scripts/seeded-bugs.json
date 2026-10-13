@@ -29660,6 +29660,26 @@
         "slash before alpha"
       ],
       "expect": "\\(fail\\).*slash before alpha"
+    },
+    {
+      "id": "W-436/unit-refused",
+      "requirement": "W-436",
+      "description": "16px is refused.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/number-input.ts",
+          "search": "if (unit && trimmed.toLowerCase().endsWith(unit.toLowerCase())) {",
+          "replace": "if (false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/number-input.test.ts",
+        "-t",
+        "own unit"
+      ],
+      "expect": "\\(fail\\).*own unit"
     }
   ]
 }

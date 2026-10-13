@@ -1,5 +1,6 @@
 import { Input } from "@cloudflare/kumo";
 import { hrefError } from "./link-rules.ts";
+import { fieldNumber } from "./number-input.ts";
 import * as React from "react";
 import {
   MAX_TEXT_LENGTH,
@@ -151,7 +152,7 @@ export function DraftTextField({
         : "px";
     const commit = () => {
       if (commitClearable()) return;
-      const value = Number(draft);
+      const value = fieldNumber(draft, integer ? undefined : unit);
       // W-388: a field may start at 0 (a focal point, a gap); others start at 1.
       const min = integer ? (field.min ?? 1) : 0;
       const range =
