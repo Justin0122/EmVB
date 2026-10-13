@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { OptionsError, parseOptions } from "../src/options.ts";
+import { parseOptions } from "../src/options.ts";
 
 const read = (path: string) => (path === "/tok" ? "ec_pat_file\n" : "");
 
@@ -27,7 +27,7 @@ describe("bridge options (W-461)", () => {
 
   test("refuses a token on the command line, plain http and a missing token", () => {
     expect(() => parseOptions(["--site", "https://a.dev", "--token", "x"], {}, read)).toThrow(
-      OptionsError,
+      "never on the command line",
     );
     expect(() => parseOptions(["--site", "http://a.dev"], { EMVB_TOKEN: "x" }, read)).toThrow(
       "https",
