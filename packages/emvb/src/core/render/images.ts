@@ -30,14 +30,9 @@ function responsiveImg(node: VNode, resize: ImageResizer) {
   const urls = widths.map((w) => resize(src, w));
   if (urls.some((url) => !url)) return;
   node.attrs["srcset"] = urls.map((url, i) => `${url} ${widths[i]}w`).join(", ");
-  // A lazy image is laid out before it loads, so the browser can pick by its real size; others
-  // (the first big image) take the window's width, or their own when they say it.
-  node.attrs["sizes"] =
-    node.attrs["loading"] === "lazy"
-      ? `auto, ${width ? `(max-width: ${width}px) 100vw, ${width}px` : "100vw"}`
-      : width
-        ? `(max-width: ${width}px) 100vw, ${width}px`
-        : "100vw";
+  // The window's width, or the image's own when it says it. Not `sizes="auto"`: browsers give
+  // such images `contain: size` and a 300×150 box, which squashes any image sized `height: auto`.
+  node.attrs["sizes"] = width ? `(max-width: ${width}px) 100vw, ${width}px` : "100vw";
   node.attrs["src"] = resize(src, Math.min(FALLBACK_WIDTH, widths.at(-1) ?? FALLBACK_WIDTH)) ?? src;
 }
 

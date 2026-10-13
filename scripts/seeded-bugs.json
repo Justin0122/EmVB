@@ -27536,6 +27536,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/images.test.ts"],
       "expect": "\\(fail\\).*W-333"
+    },
+    {
+      "id": "W-333/sizes-auto",
+      "requirement": "W-333",
+      "description": "Lazy images get sizes=\"auto\", which squashes height: auto images.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/images.ts",
+          "search": "  node.attrs[\"sizes\"] = width ? `(max-width: ${width}px) 100vw, ${width}px` : \"100vw\";",
+          "replace": "  node.attrs[\"sizes\"] = `auto, ${width ? `(max-width: ${width}px) 100vw, ${width}px` : \"100vw\"}`;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/images.test.ts"],
+      "expect": "\\(fail\\).*W-333"
     }
   ]
 }

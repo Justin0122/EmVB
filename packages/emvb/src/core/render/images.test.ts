@@ -17,7 +17,8 @@ describe("responsive images (W-333)", () => {
     expect(node.attrs["srcset"]).toBe(
       "/img?u=/media/a.png&w=480 480w, /img?u=/media/a.png&w=768 768w, /img?u=/media/a.png&w=1080 1080w, /img?u=/media/a.png&w=1440 1440w, /img?u=/media/a.png&w=1920 1920w",
     );
-    expect(node.attrs["sizes"]).toBe("auto, 100vw");
+    // Never "auto": browsers would squash an image sized `height: auto` into 300×150.
+    expect(node.attrs["sizes"]).toBe("100vw");
     expect(node.attrs["src"]).toBe("/img?u=/media/a.png&w=1080");
   });
 
