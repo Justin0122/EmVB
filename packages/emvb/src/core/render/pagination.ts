@@ -9,6 +9,13 @@ const EDITOR_SAMPLE: ArchivePagination = { page: 2, hasMore: true, basePath: "/p
 const label = (text: string | undefined, fallback: string) => text?.trim() || fallback;
 
 /**
+ * W-433: Previous/Next set to just an arrow ("←", "»") was read as "left arrow" or nothing; such
+ * texts get the plain name as an aria-label.
+ */
+const nameIfSymbols = (text: string, name: string): Record<string, string> =>
+  /[\p{L}\p{N}]/u.test(text) ? {} : { "aria-label": name };
+
+/**
  * Previous, page numbers and Next as plain links in a `nav` (W-222). No JS. Nothing on the page
  * when there is no archive page data or only one page; the editor shows a sample.
  */
@@ -45,13 +52,23 @@ export function renderPagination(
       case "prev":
         return {
           tag: "a",
-          attrs: { class: "emvb-pagination-prev", href: href(item.href), rel: "prev" },
+          attrs: {
+            class: "emvb-pagination-prev",
+            href: href(item.href),
+            rel: "prev",
+            ...nameIfSymbols(label(node.props.prevText, "Previous"), "Previous page"),
+          },
           children: [label(node.props.prevText, "Previous")],
         };
       case "next":
         return {
           tag: "a",
-          attrs: { class: "emvb-pagination-next", href: href(item.href), rel: "next" },
+          attrs: {
+            class: "emvb-pagination-next",
+            href: href(item.href),
+            rel: "next",
+            ...nameIfSymbols(label(node.props.nextText, "Next"), "Next page"),
+          },
           children: [label(node.props.nextText, "Next")],
         };
       case "gap":

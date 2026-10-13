@@ -106,3 +106,20 @@ describe("page number links are named (W-426)", () => {
     expect(names).toEqual(["Page 1", "Page 2", "Page 3"]);
   });
 });
+
+describe("arrow-only Previous and Next are named (W-433)", () => {
+  test("symbols get a plain name; words keep theirs", () => {
+    const named = (props: Record<string, unknown>) => {
+      const { html } = renderPage(page(props), design, {
+        dynamic: { pagination: { page: 2, hasMore: true, basePath: "/posts" } },
+      });
+      const host = parse(html);
+      return ["prev", "next"].map((k) =>
+        host.querySelector(`.emvb-pagination-${k}`)?.getAttribute("aria-label"),
+      );
+    };
+    expect(named({ prevText: "←", nextText: "»" })).toEqual(["Previous page", "Next page"]);
+    expect(named({ prevText: "Newer", nextText: "Older →" })).toEqual([null, null]);
+    expect(named({})).toEqual([null, null]);
+  });
+});

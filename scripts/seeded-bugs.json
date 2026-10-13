@@ -22124,8 +22124,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/pagination.ts",
-          "search": "attrs: { class: \"emvb-pagination-next\", href: href(item.href), rel: \"next\" },",
-          "replace": "attrs: { class: \"emvb-pagination-next\", href: href(item.href) },"
+          "search": "rel: \"next\",\n            ...nameIfSymbols(label(node.props.nextText, \"Next\"), \"Next page\"),",
+          "replace": "...nameIfSymbols(label(node.props.nextText, \"Next\"), \"Next page\"),"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/pagination.test.ts"],
@@ -29600,6 +29600,26 @@
         "common phrasings"
       ],
       "expect": "\\(fail\\).*common phrasings"
+    },
+    {
+      "id": "W-433/arrow-name",
+      "requirement": "W-433",
+      "description": "Arrow-only links are unnamed.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/pagination.ts",
+          "search": "/[\\p{L}\\p{N}]/u.test(text) ? {} :",
+          "replace": "true ? {} :"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/pagination.test.ts",
+        "-t",
+        "symbols get"
+      ],
+      "expect": "\\(fail\\).*symbols get"
     }
   ]
 }

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Pagination's Previous and Next links set to just an arrow are read as "Previous page" and "Next page".
 - The accessibility check flags more vague link texts, such as "See more" and "More info".
 - The accessibility check flags screenshot and chat-app file names used as alt text.
 - A table of contents with no headings no longer adds an empty navigation region to the page.
