@@ -103,6 +103,7 @@ const TEXT_TYPES = new Set([
   "post-title",
   "post-excerpt",
 ]);
+const FIELD_TYPES = new Set(["text-input", "textarea", "select", "checkbox", "radio"]);
 const LINKISH = new Set(["link", "button", "menu-item"]);
 
 function px(value: unknown): number | undefined {
@@ -226,6 +227,17 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       });
     }
     // W-408: a blank tab label or accordion title renders a tab or summary with no name.
+    // W-416: a form field with no label (a placeholder is not one: it goes once you type).
+    if (FIELD_TYPES.has(node.type) && !String(props["label"] ?? "").trim() && !node.bind) {
+      add({
+        nodeId: node.id,
+        rule: "control-name",
+        severity: "error",
+        message: String(props["placeholder"] ?? "").trim()
+          ? "This field has only a placeholder, which disappears once you type; give it a label."
+          : "This field has no label, so screen readers can't say what it's for.",
+      });
+    }
     const NAME_PROP = {
       "tab-panel": "label",
       "accordion-item": "summary",

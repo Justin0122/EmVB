@@ -29260,6 +29260,26 @@
         "faded text is flagged"
       ],
       "expect": "\\(fail\\).*faded text is flagged"
+    },
+    {
+      "id": "W-416/field-label-silent",
+      "requirement": "W-416",
+      "description": "Unlabelled form fields aren't flagged.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "if (FIELD_TYPES.has(node.type) && !String",
+          "replace": "if (false && FIELD_TYPES.has(node.type) && !String"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/field-label.test.ts",
+        "-t",
+        "only a placeholder"
+      ],
+      "expect": "\\(fail\\).*only a placeholder"
     }
   ]
 }
