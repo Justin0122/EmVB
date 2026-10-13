@@ -18,6 +18,44 @@ export function CommandPalette({
   const [query, setQuery] = React.useState("");
   const [active, setActive] = React.useState(0);
   const listRef = React.useRef<HTMLUListElement>(null);
+  // W-399: opened from a shortcut there is no trigger to return to, so focus fell to <body> on
+  // close. Remember what had focus and go back to it when nothing else took focus.
+  const wasOpen = React.useRef(false);
+  const returnTo = React.useRef<HTMLElement | null>(null);
+  if (open && !wasOpen.current && typeof document !== "undefined") {
+    const focused = document.activeElement;
+    returnTo.current = focused instanceof HTMLElement && focused !== document.body ? focused : null;
+  }
+  wasOpen.current = open;
+  /** After a command, the selected layer first (it may have changed); after Esc, where we were. */
+  const restoreFocus = (afterCommand = false) => {
+    // The dialog lets go of focus only once its close animation ends, so wait for that.
+    const started = Date.now();
+    const settle = () => {
+      const now = document.activeElement;
+      // Kumo's Dialog doesn't pass data attributes through; find the palette by its input.
+      const stillOpen = document.querySelector("[data-emvb-palette-input]") !== null;
+      const inPalette = now?.closest('[role="dialog"]')?.querySelector("[data-emvb-palette-input]");
+      if (now && now !== document.body && !inPalette) return;
+      if (stillOpen && Date.now() - started < 2000) {
+        setTimeout(settle, 30);
+        return;
+      }
+      const selected = document.querySelector<HTMLElement>(
+        '.emvb-layer-select[aria-current="true"]',
+      );
+      const back = returnTo.current?.isConnected ? returnTo.current : null;
+      const target =
+        (afterCommand ? (selected ?? back) : (back ?? selected)) ??
+        document.querySelector<HTMLElement>("iframe[data-emvb-canvas]");
+      target?.focus({ preventScroll: true });
+    };
+    setTimeout(settle, 30);
+  };
+  const close = (next: boolean) => {
+    onOpenChange(next);
+    if (!next) restoreFocus();
+  };
   React.useEffect(() => {
     if (open) {
       setQuery("");
@@ -35,7 +73,10 @@ export function CommandPalette({
     if (!item) return;
     onOpenChange(false);
     // After the dialog closes, so focus moves where the command wants it.
-    setTimeout(item.run, 0);
+    setTimeout(() => {
+      item.run();
+      restoreFocus(true);
+    }, 0);
   };
   const onKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -51,7 +92,7 @@ export function CommandPalette({
   };
   let lastGroup = "";
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+    <Dialog.Root open={open} onOpenChange={close}>
       <Dialog size="base" className="emvb-palette" data-emvb-palette="">
         <Dialog.Title className="sr-only">Command palette</Dialog.Title>
         <input

@@ -28920,6 +28920,26 @@
         "keeps the others"
       ],
       "expect": "\\(fail\\).*keeps the others"
+    },
+    {
+      "id": "W-399/palette-focus-lost",
+      "requirement": "W-399",
+      "description": "Closing the palette leaves focus on <body>.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/CommandPalette.tsx",
+          "search": "if (!next) restoreFocus();",
+          "replace": "if (!next) void 0;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/palette-focus.test.tsx",
+        "-t",
+        "Esc goes back"
+      ],
+      "expect": "\\(fail\\).*Esc goes back"
     }
   ]
 }

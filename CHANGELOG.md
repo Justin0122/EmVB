@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Closing the command palette (Esc or a jump) no longer leaves keyboard focus on the page body.
 - **A table of contents links only headings that render (W-384).** A heading in the other A/B arm or for another audience is no longer listed, and a repeated HTML ID is listed once.
 - **Extra image sources keep the main image in `srcset` (W-385).** The browser ignores `src` once `srcset` has widths, so a wide screen got only the smallest extra file. The main image is listed with its width when that is known.
 - **The accessibility check covers image links (W-386).** A decorative image that is a link is reported as a link with no name, a linked image isn't offered "Mark as decorative", and an image link that opens a new tab is noted like other links.
