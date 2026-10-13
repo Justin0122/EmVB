@@ -132,3 +132,18 @@ describe("W-321 shareable playground links", () => {
     expect(await decodeSharedPage(bomb)).toMatchObject({ ok: false, reason: "unreadable" });
   });
 });
+
+describe("share links as mail and chat apps pass them on (W-437)", () => {
+  test("a wrapped link and trailing punctuation still open the page", async () => {
+    const encoded = await encodeSharedPage({ title: "Landing", layout });
+    const wrapped = `${encoded.slice(0, 20)}\n  ${encoded.slice(20)}`;
+    const reads = await Promise.all(
+      [wrapped, `${encoded}).`, `${encoded},`].map((text) => decodeSharedPage(text)),
+    );
+    expect(reads.map((read) => read.ok)).toEqual([true, true, true]);
+  });
+  test("other damage is still unreadable", async () => {
+    const encoded = await encodeSharedPage({ title: "Landing", layout });
+    expect((await decodeSharedPage(`${encoded.slice(0, 20)}!${encoded.slice(20)}`)).ok).toBe(false);
+  });
+});

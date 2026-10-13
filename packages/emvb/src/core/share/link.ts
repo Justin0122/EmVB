@@ -151,7 +151,10 @@ export async function decodeSharedPage(encoded: string): Promise<ShareRead> {
   const text = encoded.trim();
   if (!text) return { ok: false, reason: "empty" };
   if (text.length > MAX_LINK_CHARS) return { ok: false, reason: "too-long" };
-  const [version, body] = text.split(".", 2);
+  const [version, raw] = text.split(".", 2);
+  // W-437: mail clients wrap long links and chat apps take a closing ")" or "." into them; none
+  // of those characters is base64url, so line breaks inside and trailing punctuation are dropped.
+  const body = raw?.replace(/\s+/g, "").replace(/[^A-Za-z0-9_-]+$/, "");
   if (version !== VERSION || !body || !/^[A-Za-z0-9_-]+$/.test(body)) {
     return { ok: false, reason: "unreadable" };
   }

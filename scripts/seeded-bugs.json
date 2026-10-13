@@ -29680,6 +29680,26 @@
         "own unit"
       ],
       "expect": "\\(fail\\).*own unit"
+    },
+    {
+      "id": "W-437/share-trailing",
+      "requirement": "W-437",
+      "description": "Trailing ) breaks the link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/share/link.ts",
+          "search": ".replace(/[^A-Za-z0-9_-]+$/, \"\");",
+          "replace": ";"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/share/link.test.ts",
+        "-t",
+        "wrapped link"
+      ],
+      "expect": "\\(fail\\).*wrapped link"
     }
   ]
 }

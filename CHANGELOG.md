@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Shared playground links open even when a mail or chat app wrapped them or added a trailing bracket or full stop.
 - Number fields accept their unit after the number, such as 16px in a px field.
 - The colour control's RGB field accepts rgb(0 0 0 / 50%).
 - Colour fields accept a hex pasted without "#", as design tools copy it.
