@@ -22,7 +22,8 @@ export type A11yIssue = {
     | "contrast"
     | "hidden-focusable"
     | "new-tab"
-    | "image-sizes";
+    | "image-sizes"
+    | "control-name";
   severity: "error" | "warning";
   message: string;
   /** The one-click fix, when there is a safe one. */
@@ -190,6 +191,21 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         severity: "warning",
         message: "This image link opens a new tab without saying so; say so in the alt text.",
       });
+    }
+    // W-408: a blank tab label or accordion title renders a tab or summary with no name.
+    if (node.type === "tab-panel" || node.type === "accordion-item") {
+      const name = String(props[node.type === "tab-panel" ? "label" : "summary"] ?? "").trim();
+      if (!name && !node.bind) {
+        add({
+          nodeId: node.id,
+          rule: "control-name",
+          severity: "error",
+          message:
+            node.type === "tab-panel"
+              ? "This tab's label is blank, so the tab has no name."
+              : "This accordion item's title is blank, so it has no name.",
+        });
+      }
     }
     if (node.type === "heading") {
       const level = typeof props["level"] === "number" ? props["level"] : 2;

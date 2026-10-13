@@ -29100,6 +29100,26 @@
         "grows without a window resize"
       ],
       "expect": "\\(fail\\).*grows without a window resize"
+    },
+    {
+      "id": "W-408/blank-control-silent",
+      "requirement": "W-408",
+      "description": "Blank tab labels aren't flagged.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "if (node.type === \"tab-panel\" || node.type === \"accordion-item\") {",
+          "replace": "if (node.type === \"accordion-item\") {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/control-name.test.ts",
+        "-t",
+        "blank ones are errors"
+      ],
+      "expect": "\\(fail\\).*blank ones are errors"
     }
   ]
 }
