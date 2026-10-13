@@ -30278,6 +30278,26 @@
         "release identity"
       ],
       "expect": "\\(fail\\).*release identity"
+    },
+    {
+      "id": "W-473/agents-page-unstyled",
+      "requirement": "W-473",
+      "description": "The AI agents page stops injecting EmVB's admin styles.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/pages/AgentsPage.tsx",
+          "search": "      <style>{UI_CSS}</style>\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/pages/agents.test.tsx",
+        "-t",
+        "admins see the switches"
+      ],
+      "expect": "\\(fail\\).*admins see the switches"
     }
   ]
 }

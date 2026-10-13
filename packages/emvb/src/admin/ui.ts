@@ -91,6 +91,11 @@ export const UI_CSS = `
   backdrop-filter: blur(var(--emvb-glass-blur, 6px));
   box-shadow: var(--emvb-elevation-s);
 }
+/* Live MCP test: the AI agents page reads as cards with clear headings, not bare browser defaults. */
+.emvb-agents-section h2 { margin: 0; font-size: 16px; line-height: 24px; font-weight: 600; color: var(--text-color-kumo-default); }
+.emvb-agents-section h3 { margin: 8px 0 0; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--text-color-kumo-default); }
+.emvb-agents-section p { margin: 0; font-size: 14px; line-height: 20px; color: var(--text-color-kumo-subtle); }
+.emvb-agents-section pre { margin: 0; padding: 12px; overflow-x: auto; border-radius: 8px; background: var(--color-kumo-elevated, rgba(127,127,127,.08)); font-family: var(--font-mono); font-size: 12px; line-height: 18px; }
 .emvb-surface-card[data-emvb-list] { gap: 0; padding: 0; overflow: hidden; }
 .emvb-surface-card[data-emvb-list] table { width: 100%; }
 .emvb-surface-card .emvb-empty-shell,
