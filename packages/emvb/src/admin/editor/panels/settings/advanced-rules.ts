@@ -26,6 +26,9 @@ export function htmlIdError(value: string, layout: Layout | null, nodeId: string
   if (!HTML_ID.test(value)) {
     return "Start with a letter; use letters, digits, - and _ only (up to 64).";
   }
+  // W-418: EmVB names headings (emvb-h-…), form fields and tabs with emvb- ids; reusing one
+  // made two elements share an id, so a contents link or a label could point at the wrong one.
+  if (/^emvb-/i.test(value)) return "Ids starting with emvb- are reserved; choose another.";
   if (otherHtmlIds(layout, nodeId).has(value)) return "Another element already uses this CSS id.";
   return null;
 }

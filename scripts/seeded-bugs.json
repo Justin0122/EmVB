@@ -29300,6 +29300,26 @@
         "spaces are dropped"
       ],
       "expect": "\\(fail\\).*spaces are dropped"
+    },
+    {
+      "id": "W-418/emvb-id-allowed",
+      "requirement": "W-418",
+      "description": "emvb- ids can be chosen.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/advanced-rules.ts",
+          "search": "if (/^emvb-/i.test(value)) return",
+          "replace": "if (/^never-/i.test(value)) return"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/reserved-html-id.test.ts",
+        "-t",
+        "can't be chosen"
+      ],
+      "expect": "\\(fail\\).*can't be chosen"
     }
   ]
 }
