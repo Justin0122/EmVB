@@ -29200,6 +29200,26 @@
         "faint black"
       ],
       "expect": "\\(fail\\).*faint black"
+    },
+    {
+      "id": "W-413/hidden-everywhere-audited",
+      "requirement": "W-413",
+      "description": "Elements hidden on every device are audited.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "(d) => node.hiddenOn?.includes(d))",
+          "replace": "(d) => node.hiddenOn?.includes(d) && false)"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/hidden-everywhere.test.ts",
+        "-t",
+        "no H1, order"
+      ],
+      "expect": "\\(fail\\).*no H1, order"
     }
   ]
 }

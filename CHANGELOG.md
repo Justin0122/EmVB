@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The accessibility check ignores elements hidden on every device.
 - The contrast check accounts for semi-transparent text and background colours.
 - The vague-link warning also catches "Read more…", "Learn more →" and similar.
 - The accessibility check flags a video with a blank title.

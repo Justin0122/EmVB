@@ -137,6 +137,13 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   const beforeA = new Map<string, [number, number]>();
   const afterA = new Map<string, [number, number]>();
   const walk = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
+    // W-413: an element hidden on every device (and what's inside it) is never shown or read.
+    if (
+      node !== layout.root &&
+      (["desktop", "tablet", "mobile"] as const).every((d) => node.hiddenOn?.includes(d))
+    ) {
+      return;
+    }
     const variant = node.variant;
     if (variant?.arm === "a") beforeA.set(variant.test, [h1s, lastLevel]);
     const before = variant?.arm === "b" ? beforeA.get(variant.test) : undefined;
