@@ -74,3 +74,20 @@ describe("image extra sources are editable (W-397)", () => {
     }
   });
 });
+
+describe("pasted srcset and width spellings (W-423)", () => {
+  test("a pasted srcset line and 400W / 400px / 400 w are read", () => {
+    expect(parseSources("/a-480.jpg 480w, /a-960.jpg 960w")).toEqual({
+      sources: [
+        { src: "/a-480.jpg", width: 480 },
+        { src: "/a-960.jpg", width: 960 },
+      ],
+    });
+    for (const line of ["/a.jpg 400W", "/a.jpg 400px", "/a.jpg 400 w"]) {
+      expect(parseSources(line)).toEqual({ sources: [{ src: "/a.jpg", width: 400 }] });
+    }
+  });
+  test("density descriptors are still refused", () => {
+    expect("error" in parseSources("/a.jpg 2x")).toBe(true);
+  });
+});

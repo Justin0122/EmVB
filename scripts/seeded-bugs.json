@@ -29400,6 +29400,26 @@
         "different library image"
       ],
       "expect": "\\(fail\\).*different library image"
+    },
+    {
+      "id": "W-423/srcset-paste-refused",
+      "requirement": "W-423",
+      "description": "A pasted srcset line is refused.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/ImageSourcesField.tsx",
+          "search": ".split(/\\n|,\\s+/)",
+          "replace": ".split(\"\\n\")"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/image-sources-field.test.tsx",
+        "-t",
+        "pasted srcset line"
+      ],
+      "expect": "\\(fail\\).*pasted srcset line"
     }
   ]
 }

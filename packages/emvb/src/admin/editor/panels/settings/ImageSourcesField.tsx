@@ -25,14 +25,15 @@ const sourcesText = (value: unknown): string =>
  * text can't be stored (W-397).
  */
 export function parseSources(text: string): { sources: Source[] } | { error: string } {
+  // W-423: a srcset pasted from elsewhere ("a.jpg 480w, b.jpg 960w") splits into lines too.
   const lines = text
-    .split("\n")
+    .split(/\n|,\s+/)
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
   if (lines.length > MAX_SOURCES) return { error: `Up to ${MAX_SOURCES} extra sources.` };
   const sources: Source[] = [];
   for (const line of lines) {
-    const match = /^(\S+)\s+(\d{1,4})w?$/.exec(line);
+    const match = /^(\S+)\s+(\d{1,4})\s*(?:w|px)?$/i.exec(line);
     const width = match ? Number(match[2]) : Number.NaN;
     if (!match || !Number.isInteger(width) || width < 1 || width > 8000) {
       return {
