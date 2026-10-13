@@ -48,7 +48,9 @@ describe("AI agents page (W-463)", () => {
     expect(host.querySelector("[data-emvb-agents=ready]")).not.toBeNull();
     // Live MCP test: the page uses the shared title and card styles, not browser defaults.
     expect(host.querySelector("h1.emvb-page-title")?.textContent).toBe("AI agents");
-    expect(host.querySelector("[data-emvb-agents=ready] style")?.textContent).toContain(".emvb-agents-section");
+    expect(host.querySelector("[data-emvb-agents=ready] style")?.textContent).toContain(
+      ".emvb-agents-section",
+    );
     expect(host.querySelectorAll("section.emvb-surface-card.emvb-agents-section")).toHaveLength(4);
     expect(host.textContent).toContain("Let AI agents edit EmVB pages");
     expect(host.textContent).toContain("Added heading h1");

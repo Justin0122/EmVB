@@ -87,7 +87,10 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
     <div className="emvb-pages emvb-agents" data-emvb-agents="ready">
       <style>{UI_CSS}</style>
       <h1 className="emvb-page-title">AI agents</h1>
-      <section className="emvb-surface-card emvb-agents-section" aria-labelledby="emvb-agents-access">
+      <section
+        className="emvb-surface-card emvb-agents-section"
+        aria-labelledby="emvb-agents-access"
+      >
         <h2 id="emvb-agents-access">Access</h2>
         <Switch
           label="Let AI agents edit EmVB pages"
@@ -101,7 +104,10 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
         </p>
         <ClipboardText text={state.endpoint} />
       </section>
-      <section className="emvb-surface-card emvb-agents-section" aria-labelledby="emvb-agents-publish">
+      <section
+        className="emvb-surface-card emvb-agents-section"
+        aria-labelledby="emvb-agents-publish"
+      >
         <h2 id="emvb-agents-publish">Publishing</h2>
         <Switch
           label="Agents may publish pages"
@@ -117,7 +123,10 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
         />
         <p>Published changes go live immediately. Each one is still in the version timeline.</p>
       </section>
-      <section className="emvb-surface-card emvb-agents-section" aria-labelledby="emvb-agents-connect">
+      <section
+        className="emvb-surface-card emvb-agents-section"
+        aria-labelledby="emvb-agents-connect"
+      >
         <h2 id="emvb-agents-connect">How to connect</h2>
         <p>
           Create a token in EmDash → API tokens with the scope <code>mcp:tools:emvb</code> for a
@@ -128,7 +137,10 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
         <h3>Local (stdio)</h3>
         <pre data-emvb-snippet="stdio">{stdioSnippet(site)}</pre>
       </section>
-      <section className="emvb-surface-card emvb-agents-section" aria-labelledby="emvb-agents-activity">
+      <section
+        className="emvb-surface-card emvb-agents-section"
+        aria-labelledby="emvb-agents-activity"
+      >
         <h2 id="emvb-agents-activity">Recent agent activity</h2>
         {state.activity.length === 0 ? (
           <p>No agent changes yet.</p>
