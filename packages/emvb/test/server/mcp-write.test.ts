@@ -10,7 +10,7 @@ afterEach(async () => {
   await t.dispose();
 });
 
-const editor = () => userWithRole(ROLES.EDITOR);
+const editor = () => userWithRole(ROLES.editor);
 const call = async <T = Record<string, unknown>>(tool: string, input: unknown) => {
   const result = (await t.mcp(tool, input, editor())) as {
     success: boolean;
@@ -148,7 +148,7 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     const result = (await t.mcp(
       "add_element",
       { pageId, parentId: "x", element: { type: "heading" } },
-      userWithRole(ROLES.CONTRIBUTOR),
+      userWithRole(ROLES.contributor),
     )) as { success: boolean };
     expect(result.success).toBe(false);
   });
