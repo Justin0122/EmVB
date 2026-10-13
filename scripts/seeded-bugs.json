@@ -30082,6 +30082,86 @@
         "still uses"
       ],
       "expect": "\\(fail\\).*still uses"
+    },
+    {
+      "id": "W-461/bridge-forwards-unprefixed",
+      "requirement": "W-461",
+      "description": "The bridge calls the site's tools without the emvb__ prefix, so EmDash finds no tool.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/bridge.ts",
+          "search": "options.remote.call(`emvb__${def.name}`,",
+          "replace": "options.remote.call(def.name,"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb-mcp/test/bridge.test.ts",
+        "-t",
+        "parity: every read tool"
+      ],
+      "expect": "\\(fail\\).*parity: every read tool"
+    },
+    {
+      "id": "W-461/bridge-lists-publish",
+      "requirement": "W-461",
+      "description": "The bridge lists publish tools without --allow-publish.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/bridge.ts",
+          "search": "    publishPages: options.allowPublish,",
+          "replace": "    publishPages: true,"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb-mcp/test/bridge.test.ts",
+        "-t",
+        "lists the shared tools"
+      ],
+      "expect": "\\(fail\\).*lists the shared tools"
+    },
+    {
+      "id": "W-461/token-on-argv",
+      "requirement": "W-461",
+      "description": "The bridge accepts --token on the command line, where ps can read it.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/options.ts",
+          "search": "    else if (arg === \"--token\" || arg?.startsWith(\"--token=\")) {",
+          "replace": "    else if (arg === \"--token-on-argv\") {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb-mcp/test/options.test.ts",
+        "-t",
+        "refuses a token"
+      ],
+      "expect": "\\(fail\\).*refuses a token"
+    },
+    {
+      "id": "W-461/plain-http-site",
+      "requirement": "W-461",
+      "description": "The bridge sends the token to a plain http:// site.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/options.ts",
+          "search": "  if (url.protocol !== \"https:\" && !(url.protocol === \"http:\" && isLocal(url.hostname))) {",
+          "replace": "  if (url.protocol !== \"https:\" && url.protocol !== \"http:\") {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb-mcp/test/options.test.ts",
+        "-t",
+        "refuses a token"
+      ],
+      "expect": "\\(fail\\).*refuses a token"
     }
   ]
 }

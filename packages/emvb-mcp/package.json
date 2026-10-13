@@ -1,0 +1,47 @@
+{
+  "name": "@perkyzz/emvb-mcp",
+  "version": "0.4.0",
+  "description": "Local (stdio) MCP server for EmVB pages: lets AI agents build EmDash pages through your site's EmDash MCP endpoint.",
+  "keywords": [
+    "emdash",
+    "emvb",
+    "mcp",
+    "model-context-protocol",
+    "page-builder"
+  ],
+  "homepage": "https://emvb.dev",
+  "bugs": {
+    "url": "https://github.com/PerkyZZ999/EmVB/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PerkyZZ999/EmVB.git",
+    "directory": "packages/emvb-mcp"
+  },
+  "bin": {
+    "emvb-mcp": "dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --target=node --format=esm --outfile dist/cli.mjs --external @modelcontextprotocol/server --external @modelcontextprotocol/client",
+    "prepack": "bun run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "2.3.1",
+    "@modelcontextprotocol/server": "2.3.1"
+  },
+  "devDependencies": {
+    "@perkyzz/emvb": "0.4.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
