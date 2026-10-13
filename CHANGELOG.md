@@ -67,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Docs: the AI agents (MCP) guide.
 - `@perkyzz/emvb-mcp` serves the layout and style schemas, page resources, four workflow prompts and the `emvb-page-builder` skill.
 - Version timeline: Agent badge and a People/Agents filter. The editor tells you when an AI agent changed the page while you were idle.
 - `@perkyzz/emvb-mcp`: run `npx @perkyzz/emvb-mcp --site https://your.site` with `EMVB_TOKEN` to give a local AI agent the EmVB tools through your site's EmDash MCP.

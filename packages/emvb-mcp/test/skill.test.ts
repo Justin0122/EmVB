@@ -35,3 +35,12 @@ describe("emvb-page-builder skill (W-468)", () => {
     }
   });
 });
+
+describe("bridge package files (W-471)", () => {
+  test("the skill, README and license are shipped", () => {
+    const pkg = JSON.parse(readFileSync(join(import.meta.dirname, "../package.json"), "utf8")) as {
+      files: string[];
+    };
+    expect(pkg.files).toEqual(expect.arrayContaining(["dist", "skill", "README.md", "LICENSE"]));
+  });
+});

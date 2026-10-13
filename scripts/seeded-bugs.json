@@ -30244,6 +30244,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb-mcp/test/skill.test.ts"],
       "expect": "\\(fail\\)"
+    },
+    {
+      "id": "W-471/bridge-ships-no-skill",
+      "requirement": "W-471",
+      "description": "The bridge package stops shipping its skill folder.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/package.json",
+          "search": "    \"skill\",\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb-mcp/test/skill.test.ts", "-t", "shipped"],
+      "expect": "\\(fail\\).*shipped"
     }
   ]
 }

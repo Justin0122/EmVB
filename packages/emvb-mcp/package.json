@@ -24,7 +24,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "skill",
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
   "publishConfig": {
