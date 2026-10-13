@@ -177,7 +177,11 @@ export const CreatePageOutput = z.object({ pageId: z.string(), slug: z.string(),
 function promoteHeroHeading(layout: Layout, title: string): Layout {
   const hero = layout.root.children?.[0];
   const find = (node: LayoutNode): LayoutNode | undefined =>
-    node.type === "heading" ? node : (node.children ?? []).map(find).find(Boolean);
+    node.type === "heading"
+      ? node
+      : ("children" in node && Array.isArray(node.children) ? node.children : [])
+          .map(find)
+          .find(Boolean);
   const heading = hero ? find(hero) : undefined;
   if (!heading) return layout;
   return updateNode(
