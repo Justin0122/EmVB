@@ -31,8 +31,9 @@ export function renderComponent(
   const next: ThemeDynamicData = {
     ...dynamic,
     componentStack: [...stack, partId],
-    // W-324: only a use on the page itself is edited in place; a component inside a design isn't.
-    componentUse: stack.length === 0 ? node.id : undefined,
+    // W-324: only a use in the layout itself is edited in place; one inside a design, a synced
+    // section or a loop item part isn't.
+    componentUse: stack.length === 0 && !dynamic?.idOrigin ? node.id : undefined,
     // Each use is its own copy, so its element ids get their own CSS rules (W-250).
     idOrigin: `${dynamic?.idOrigin ?? ""}/c:${node.id}`,
   };

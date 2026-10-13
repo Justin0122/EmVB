@@ -985,8 +985,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/EmVBPage.astro",
-          "search": "    <>\n      <style is:inline set:html={page.css} />\n      <Fragment set:html={page.html} />",
-          "replace": "    <>\n      <style is:inline set:html={page.css} />\n      {page.html}"
+          "search": "        <Fragment set:html={page.html} />\n      )}\n      {inline && <EmVBInlineEdit />}\n      <slot />\n    </>",
+          "replace": "        <Fragment>{page.html}</Fragment>\n      )}\n      {inline && <EmVBInlineEdit />}\n      <slot />\n    </>"
         }
       ],
       "command": ["bun", "run", "test:astro"],
@@ -27046,8 +27046,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "const bound = insideComponent && mode === \"editor\" ? boundFieldOf(node) : undefined;",
-          "replace": "const bound = insideComponent ? boundFieldOf(node) : undefined;"
+          "search": "const marks = mode === \"editor\" || inlineEdit;",
+          "replace": "const marks = true;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
@@ -27060,7 +27060,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/component.ts",
-          "search": "componentUse: stack.length === 0 ? node.id : undefined,",
+          "search": "componentUse: stack.length === 0 && !dynamic?.idOrigin ? node.id : undefined,",
           "replace": "componentUse: node.id,"
         }
       ],
@@ -27130,6 +27130,118 @@
         "./packages/emvb/src/admin/editor/canvas/CanvasRichTextEdit.test.tsx"
       ],
       "expect": "\\(fail\\).*W-324"
+    },
+    {
+      "id": "W-325/any-path",
+      "requirement": "W-325",
+      "description": "A marker's field path isn't checked.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/inline-edit.ts",
+          "search": "const PATH = /^[a-z][a-z0-9_]{0,39}(?:\\.\\d{1,3}\\.[a-z][a-z0-9_]{0,39})*$/;",
+          "replace": "const PATH = /^.+$/;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/inline-edit.test.ts"],
+      "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-325/field-on-element",
+      "requirement": "W-325",
+      "description": "A field edit is applied to an element that isn't a component use.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/inline-edit.ts",
+          "search": "    if (node.type !== \"component\") return null;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/inline-edit.test.ts"],
+      "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-325/always-marked",
+      "requirement": "W-325",
+      "description": "The site marks its texts outside edit mode.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "const inlineEdit = mode === \"public\" && opts.inlineEdit === true;",
+          "replace": "const inlineEdit = mode === \"public\";"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/inline-edit.test.ts"],
+      "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-325/section-marked",
+      "requirement": "W-325",
+      "description": "A synced section's texts are marked as the page's.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "      !dynamic?.idOrigin,\n",
+          "replace": "      true,\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/inline-edit.test.ts"],
+      "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-325/no-edit-mode",
+      "requirement": "W-325",
+      "description": "Pages are marked for editing without EmDash's edit mode.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve.ts",
+          "search": "const inlineEdit = getRequestContext()?.editMode === true;",
+          "replace": "const inlineEdit = true;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-325/link-followed",
+      "requirement": "W-325",
+      "description": "A marked text inside a link follows the link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/inline-edit/runtime.ts",
+          "search": "    event.preventDefault();\n    if (busy",
+          "replace": "    if (busy"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/inline-edit/runtime.test.ts"],
+      "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-325/escape-keeps",
+      "requirement": "W-325",
+      "description": "Escape keeps the typed text on the page.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/inline-edit/runtime.ts",
+          "search": "      if (!keep) element.innerHTML = original;\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/inline-edit/runtime.test.ts"],
+      "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-325/no-revision",
+      "requirement": "W-325",
+      "description": "A save is sent without the draft's revision.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/inline-edit/runtime.ts",
+          "search": "[entry.field]: next }, _rev: body.data?.[\"_rev\"] }),",
+          "replace": "[entry.field]: next }, _rev: undefined }),"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/inline-edit/runtime.test.ts"],
+      "expect": "\\(fail\\).*W-325"
     }
   ]
 }

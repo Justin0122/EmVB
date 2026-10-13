@@ -1,5 +1,6 @@
 ---
 import type { RenderedPage } from "./render.ts";
+import EmVBInlineEdit from "./inline-edit/EmVBInlineEdit.astro";
 
 /** The resolved meta of the page (EmDash's `getSeoMeta` result fits), for blank canvas mode. */
 interface PageMeta {
@@ -26,6 +27,9 @@ interface Props {
 const { page, standalone = false, title = "", description, seo } = Astro.props;
 const ogTitle = seo?.ogTitle || title;
 const ogDescription = seo?.ogDescription ?? description;
+// W-325: in EmDash's edit mode the page names its entry, and the inline-edit runtime comes along.
+const inline = page.inlineEdit;
+const inlineRef = inline ? `${inline.collection}|${inline.id}|${inline.field}` : undefined;
 ---
 
 {
@@ -49,14 +53,28 @@ const ogDescription = seo?.ogDescription ?? description;
         <style is:inline set:html={page.css} />
       </head>
       <body>
-        <Fragment set:html={page.html} />
+        {inlineRef ? (
+          <div data-emvb-inline={inlineRef} style="display:contents">
+            <Fragment set:html={page.html} />
+          </div>
+        ) : (
+          <Fragment set:html={page.html} />
+        )}
+        {inline && <EmVBInlineEdit />}
         <slot />
       </body>
     </html>
   ) : (
     <>
       <style is:inline set:html={page.css} />
-      <Fragment set:html={page.html} />
+      {inlineRef ? (
+        <div data-emvb-inline={inlineRef} style="display:contents">
+          <Fragment set:html={page.html} />
+        </div>
+      ) : (
+        <Fragment set:html={page.html} />
+      )}
+      {inline && <EmVBInlineEdit />}
       <slot />
     </>
   )

@@ -13,6 +13,8 @@ import { defaultElement, type Layout, type LayoutNode } from "../core/index.ts";
 const realGetEmDashEntry = realEmDash.getEmDashEntry;
 const realGetEmDashCollection = realEmDash.getEmDashCollection;
 const realGetCollectionInfo = realEmDash.getCollectionInfo;
+const realGetRequestContext = realEmDash.getRequestContext;
+let editMode = false;
 let listed: { id: string; data: Record<string, unknown> }[] = [];
 const realRouteHandler = realPluginUtils.getPublicPluginApiRouteHandler;
 let active = true;
@@ -33,6 +35,8 @@ mock.module("emdash", () => ({
     active ? Promise.resolve({ entries: listed }) : realGetEmDashCollection(...args),
   getCollectionInfo: (...args: Parameters<typeof realEmDash.getCollectionInfo>) =>
     active ? Promise.resolve({ urlPattern: "/nieuws/{slug}" }) : realGetCollectionInfo(...args),
+  getRequestContext: () =>
+    active ? ({ editMode } as ReturnType<typeof realGetRequestContext>) : realGetRequestContext(),
 }));
 mock.module("emdash/plugin-utils", () => ({
   ...realPluginUtils,
@@ -240,5 +244,27 @@ describe("components on a page (W-312)", () => {
     const resolved = await resolveEmVBPage(astro({ slug: "home" }));
     expect(resolved?.html).toContain("Wat wij doen</h2>");
     listed = [];
+  });
+});
+
+describe("the site in EmDash's edit mode (W-325)", () => {
+  beforeEach(() => {
+    editMode = false;
+  });
+
+  test("names the entry and marks its texts for editing", async () => {
+    editMode = true;
+    lookup = async () => page({ title: "About", layout: layout(heading) });
+    const resolved = await resolveEmVBPage(astro({ slug: "about" }));
+    expect(resolved?.inlineEdit).toEqual({ collection: "emvb_pages", id: "p1", field: "layout" });
+    expect(resolved?.html).toContain('data-emvb-text="head0001|plain|0"');
+    editMode = false;
+  });
+
+  test("outside edit mode there are no markers and no target", async () => {
+    lookup = async () => page({ title: "About", layout: layout(heading) });
+    const resolved = await resolveEmVBPage(astro({ slug: "about" }));
+    expect(resolved?.inlineEdit).toBeUndefined();
+    expect(resolved?.html).not.toContain("data-emvb-text");
   });
 });

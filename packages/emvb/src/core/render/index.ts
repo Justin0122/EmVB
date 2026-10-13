@@ -4,6 +4,7 @@ import { generateCss } from "../css/generate.ts";
 import { cssScopeToken, scopeAttribute, scopeCss, scopeWrapperCss } from "../css/scope.ts";
 import { ELEMENTS } from "../elements/index.ts";
 import { controlId } from "../elements/field-id.ts";
+import { isMultilineText, isPlainTextNode, plainTextOf } from "../elements/plain-text.ts";
 import { layoutHasForm } from "../forms/binding.ts";
 import { layoutHasMenuDropdown, layoutHasTabs } from "../tabs/presence.ts";
 import type { DesignSystem } from "../schema/design.ts";
@@ -168,9 +169,15 @@ export function renderPage(
     scope?: string;
     /** Editor canvas: device rules follow this device, not the frame width (W-116). */
     previewDevice?: PopupDevice;
+    /**
+     * W-325: the site in EmDash's edit mode. The layout's own texts and its component uses'
+     * texts carry markers, so the inline-edit runtime can edit them on the page.
+     */
+    inlineEdit?: boolean;
   } = {},
 ): RenderResult {
   const mode = opts.mode ?? "public";
+  const inlineEdit = mode === "public" && opts.inlineEdit === true;
   const baseDynamic = opts.dynamic;
   const warnings: RenderWarning[] = [];
   const usedTypes = new Set<string>();
@@ -224,6 +231,7 @@ export function renderPage(
     ruleId: string | undefined,
     insideComponent = false,
     boundUse?: string,
+    ownNode = false,
   ): Record<string, string> => {
     const classes = [...(isRoot ? ["emvb-root"] : []), `emvb-${node.type}`];
     for (const classId of node.classes ?? []) {
@@ -320,8 +328,16 @@ export function renderPage(
     // W-312: elements inside a component aren't editable on their own; the component is.
     if (mode === "editor" && id && !insideComponent) attrs["data-emvb-id"] = id;
     // W-324: a text inside a component use names the use's field it shows.
-    const bound = insideComponent && mode === "editor" ? boundFieldOf(node) : undefined;
+    const marks = mode === "editor" || inlineEdit;
+    const bound = insideComponent && marks ? boundFieldOf(node) : undefined;
     if (bound && boundUse) attrs["data-emvb-bound"] = `${boundUse}|${bound.path}|${bound.kind}`;
+    // W-325: on the site in edit mode, the layout's own texts name their element.
+    if (inlineEdit && ownNode && id) {
+      if (node.type === "rich-text") attrs["data-emvb-text"] = `${id}|rich`;
+      else if (isPlainTextNode(node) && plainTextOf(node) !== null) {
+        attrs["data-emvb-text"] = `${id}|plain|${isMultilineText(node) ? "1" : "0"}`;
+      }
+    }
     if (node.htmlId && HTML_ID.test(node.htmlId)) attrs.id = node.htmlId;
     // W-230: the site's text direction on the root, also a fallback when the host's <html> has none.
     if (isRoot && design.direction) attrs.dir = design.direction;
@@ -358,6 +374,8 @@ export function renderPage(
       ruleId,
       (dynamic?.componentStack?.length ?? 0) > 0,
       dynamic?.componentUse,
+      // The layout's own elements; synced sections, loop item parts and components have an origin.
+      !dynamic?.idOrigin,
     );
     const def = ELEMENTS[type as keyof typeof ELEMENTS];
     if (isFormNode(node)) return finish(node, renderForm(node, attrs, ctx, dynamic));

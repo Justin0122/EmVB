@@ -21,6 +21,11 @@ export type RenderedPage = {
   needsCarouselRuntime: boolean;
   /** The site's text direction when set, for the host's `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
+  /**
+   * W-325: set in EmDash's edit mode, for an editor: the entry whose layout field holds this
+   * page, so `EmVBPage` adds the inline-edit runtime and its texts can be edited on the page.
+   */
+  inlineEdit?: { collection: string; id: string; field: string };
 };
 
 /** The design document through the in-process public route (no HTTP round trip, D-013). */
@@ -72,6 +77,7 @@ export function renderStored(
   pageId: string,
   formDefinitions?: FormDefinitions,
   dynamic?: ThemeDynamicData,
+  inlineEdit = false,
 ): RenderedPage {
   const { layout, problem } = inspectLayout(raw);
   if (!layout) {
@@ -96,6 +102,7 @@ export function renderStored(
       formDefinitions,
       dynamic,
       scope: pageId,
+      inlineEdit,
     });
   return {
     html,

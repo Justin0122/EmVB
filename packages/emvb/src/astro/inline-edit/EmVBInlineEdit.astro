@@ -1,0 +1,9 @@
+---
+// W-325: inline editing on the site, for editors in EmDash's edit mode. `EmVBPage` renders this
+// only then, so visitors never load it (R-031); the rich text editor loads on first use.
+---
+
+<script>
+  import { initInlineEdit } from "./runtime.ts";
+  initInlineEdit();
+</script>

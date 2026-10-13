@@ -1,4 +1,4 @@
-import { decodeSlug, getEmDashEntry } from "emdash";
+import { decodeSlug, getEmDashEntry, getRequestContext } from "emdash";
 import { getPublicPluginApiRouteHandler } from "emdash/plugin-utils";
 import { ENTRY_LAYOUT_FIELD, PAGES_COLLECTION } from "../constants.ts";
 import { loadCollectionLoops } from "./collection-loops.ts";
@@ -93,14 +93,19 @@ async function renderEntry(
     ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),
     ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
   };
+  // W-325: EmDash's edit mode (its cookie, for a signed-in editor) marks the texts for editing.
+  const inlineEdit = getRequestContext()?.editMode === true;
+  const id = String(data["id"] ?? slug);
   return {
     ...renderStored(
       stored,
       design,
-      String(data["id"] ?? slug),
+      id,
       formDefinitions,
       Object.keys(dynamic).length > 0 ? dynamic : undefined,
+      inlineEdit,
     ),
+    ...(inlineEdit ? { inlineEdit: { collection, id, field: layoutField } } : {}),
     entry,
     title: typeof data["title"] === "string" ? data["title"] : "",
     canvasMode: data["canvas_mode"] === "blank" ? "blank" : "site-layout",
