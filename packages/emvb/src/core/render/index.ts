@@ -42,6 +42,7 @@ import { renderPagination } from "./pagination.ts";
 import { renderBreadcrumbs } from "./breadcrumbs.ts";
 import { renderSection } from "./section.ts";
 import { renderTabs } from "./tabs.ts";
+import { responsiveBackgrounds, responsiveImages, type ImageResizer } from "./images.ts";
 import { serialize, type VNode } from "./vnode.ts";
 import { classStylesInListOrder } from "../design/cascade.ts";
 import {
@@ -178,6 +179,8 @@ export function renderPage(
      * texts carry markers, so the inline-edit runtime can edit them on the page.
      */
     inlineEdit?: boolean;
+    /** W-333: resizes images, so they get a `srcset` and smaller background copies. */
+    resizeImage?: ImageResizer;
   } = {},
 ): RenderResult {
   const mode = opts.mode ?? "public";
@@ -447,8 +450,10 @@ export function renderPage(
     children: [],
   };
   const baseCss = new Map(Object.entries(ELEMENTS).map(([type, def]) => [type, def.baseCss]));
+  const resize = mode === "public" ? opts.resizeImage : undefined;
+  if (resize) responsiveImages(vnode, resize);
   const html = serialize(vnode);
-  const css = generateCss({
+  const generated = generateCss({
     design,
     usedTypes,
     baseCss,
@@ -457,6 +462,7 @@ export function renderPage(
     backgroundVideo,
     ...(mode === "editor" && opts.previewDevice ? { previewDevice: opts.previewDevice } : {}),
   });
+  const css = resize ? responsiveBackgrounds(generated, resize) : generated;
   const scope = opts.scope === undefined ? undefined : cssScopeToken(opts.scope);
   return {
     vnode,

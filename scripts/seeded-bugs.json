@@ -27466,6 +27466,76 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/video/runtime.test.ts"],
       "expect": "\\(fail\\).*W-332"
+    },
+    {
+      "id": "W-333/no-srcset",
+      "requirement": "W-333",
+      "description": "The published page's images get no srcset.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "  if (resize) responsiveImages(vnode, resize);\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/images.test.ts"],
+      "expect": "\\(fail\\).*W-333"
+    },
+    {
+      "id": "W-333/srcset-uncapped",
+      "requirement": "W-333",
+      "description": "An image that says its width still gets copies up to the widest width.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/images.ts",
+          "search": "  if (!width) return [...IMAGE_WIDTHS];",
+          "replace": "  return [...IMAGE_WIDTHS];"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/images.test.ts"],
+      "expect": "\\(fail\\).*W-333"
+    },
+    {
+      "id": "W-333/editor-resized",
+      "requirement": "W-333",
+      "description": "The editor canvas resizes images too.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "  const resize = mode === \"public\" ? opts.resizeImage : undefined;",
+          "replace": "  const resize = opts.resizeImage;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/images.test.ts"],
+      "expect": "\\(fail\\).*W-333"
+    },
+    {
+      "id": "W-333/background-unchecked",
+      "requirement": "W-333",
+      "description": "A resized background copy that would break out of url(\"…\") is used.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/images.ts",
+          "search": "    return resized && !/[\"()\\\\\\s]/.test(resized) ? `url(\"${resized}\")` : whole;",
+          "replace": "    return resized ? `url(\"${resized}\")` : whole;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/images.test.ts"],
+      "expect": "\\(fail\\).*W-333"
+    },
+    {
+      "id": "W-333/any-key",
+      "requirement": "W-333",
+      "description": "Any path under the media prefix goes to the image endpoint.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/images.ts",
+          "search": "  if (!MEDIA_KEY.test(key) || !RESIZABLE.test(key)) return null;",
+          "replace": "  if (!RESIZABLE.test(key)) return null;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/images.test.ts"],
+      "expect": "\\(fail\\).*W-333"
     }
   ]
 }

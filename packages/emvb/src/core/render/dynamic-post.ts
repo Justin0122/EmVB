@@ -98,7 +98,11 @@ const POST_FIELDS = new Map<string, PostField>([
         const alt = props<{ decorative?: boolean }>(node).decorative
           ? ""
           : post.featuredImageAlt?.trim() || post.title || "Featured image";
-        return { tag: "img", attrs: { ...attrs, src, alt }, children: [] };
+        return {
+          tag: "img",
+          attrs: { ...attrs, src, alt, loading: "lazy", decoding: "async" },
+          children: [],
+        };
       },
     },
   ],

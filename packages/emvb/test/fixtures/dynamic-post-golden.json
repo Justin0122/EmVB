@@ -388,14 +388,14 @@
     "props": {},
     "post": "post",
     "mode": "public",
-    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"Hero\">"
+    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"Hero\" loading=\"lazy\" decoding=\"async\">"
   },
   {
     "type": "post-image",
     "props": {},
     "post": "post",
     "mode": "editor",
-    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"Hero\">"
+    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"Hero\" loading=\"lazy\" decoding=\"async\">"
   },
   {
     "type": "post-image",
@@ -446,7 +446,7 @@
     },
     "post": "post",
     "mode": "public",
-    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"\">"
+    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"\" loading=\"lazy\" decoding=\"async\">"
   },
   {
     "type": "post-image",
@@ -455,7 +455,7 @@
     },
     "post": "post",
     "mode": "editor",
-    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"\">"
+    "html": "<img class=\"c\" src=\"https://example.com/hero.jpg\" alt=\"\" loading=\"lazy\" decoding=\"async\">"
   },
   {
     "type": "post-image",

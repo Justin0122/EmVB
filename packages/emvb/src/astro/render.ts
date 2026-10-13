@@ -10,6 +10,7 @@ import {
   type ThemeDynamicData,
 } from "../core/index.ts";
 import { PLUGIN_ID } from "../constants.ts";
+import { resizeEmDashImage } from "./images.ts";
 
 export type RenderedPage = {
   html: string;
@@ -112,6 +113,7 @@ export function renderStored(
     dynamic,
     scope: pageId,
     inlineEdit,
+    resizeImage: resizeEmDashImage,
   });
   return {
     html,
