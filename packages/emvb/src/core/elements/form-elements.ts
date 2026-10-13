@@ -187,7 +187,9 @@ export const radio: ElementDefinition<RadioNode> = {
     const id = controlId(node.id);
     // W-442: a fieldset can't be the target of <label for>, so the question named nothing and
     // the group was read without it. The label names the group through aria-labelledby.
-    const labelled = node.props.label ? { "aria-labelledby": `${id}-label` } : {};
+    const labelled: Record<string, string> = node.props.label
+      ? { "aria-labelledby": `${id}-label` }
+      : {};
     const control: VNode = {
       tag: "fieldset",
       attrs: { class: "emvb-radio-group", ...labelled },

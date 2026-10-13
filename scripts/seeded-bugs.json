@@ -29782,8 +29782,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/form-elements.ts",
-          "search": "const labelled = node.props.label ? { \"aria-labelledby\": `${id}-label` } : {};",
-          "replace": "const labelled = {};"
+          "search": "      ? { \"aria-labelledby\": `${id}-label` }\n      : {};",
+          "replace": "      ? {}\n      : {};"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements/radio-label.test.ts"],
