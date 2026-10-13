@@ -29340,6 +29340,26 @@
         "blank text warns"
       ],
       "expect": "\\(fail\\).*blank text warns"
+    },
+    {
+      "id": "W-420/palette-accents",
+      "requirement": "W-420",
+      "description": "Palette search is accent-sensitive.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/palette.ts",
+          "search": "value.normalize(\"NFD\").replace(/\\p{M}/gu, \"\").toLowerCase()",
+          "replace": "value.toLowerCase()"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/palette-accents.test.ts",
+        "-t",
+        "plain letters find"
+      ],
+      "expect": "\\(fail\\).*plain letters find"
     }
   ]
 }

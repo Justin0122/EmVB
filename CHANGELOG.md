@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Command palette search ignores accents: "cafe" finds "café".
 - CSS ids starting with emvb- are refused in Advanced, since EmVB uses them for headings and fields.
 - Phone links written with spaces (tel:+1 555 010 0199) work instead of going to #.
 - The accessibility check ignores elements hidden on every device.

@@ -22,13 +22,17 @@ const PREFIXES: Record<string, PaletteGroup> = {
   ".": "Apply class",
 };
 
+/** W-420: accents and case don't matter, so "cafe" finds "Café" and "strasse" finds "Straße". */
+const fold = (value: string) =>
+  value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/ß/g, "ss");
+
 /**
  * How well `query` matches `text` (W-314): null when its letters don't all appear in order.
  * Higher is better: a prefix beats a word start, which beats a scattered match.
  */
 export function fuzzyScore(query: string, text: string): number | null {
-  const q = query.trim().toLowerCase();
-  const t = text.toLowerCase();
+  const q = fold(query.trim());
+  const t = fold(text);
   if (!q) return 0;
   if (t.startsWith(q)) return 1000 - t.length;
   const at = t.indexOf(q);
