@@ -184,9 +184,13 @@ export const radio: ElementDefinition<RadioNode> = {
   build: (node, attrs) => {
     const name = node.props.field;
     // Options filled from definition in W-035; placeholder single option for schema/render smoke.
+    const id = controlId(node.id);
+    // W-442: a fieldset can't be the target of <label for>, so the question named nothing and
+    // the group was read without it. The label names the group through aria-labelledby.
+    const labelled = node.props.label ? { "aria-labelledby": `${id}-label` } : {};
     const control: VNode = {
       tag: "fieldset",
-      attrs: { class: "emvb-radio-group" },
+      attrs: { class: "emvb-radio-group", ...labelled },
       children: [
         {
           tag: "label",
@@ -198,7 +202,16 @@ export const radio: ElementDefinition<RadioNode> = {
         },
       ],
     };
-    return fieldWrap(controlId(node.id), name, node.props.label, control, attrs);
+    const label: VNode[] = node.props.label
+      ? [
+          {
+            tag: "label",
+            attrs: { class: "emvb-form-label", id: `${id}-label` },
+            children: [node.props.label],
+          },
+        ]
+      : [];
+    return fieldBox(attrs, [...label, control, errorSlot(name)]);
   },
 };
 

@@ -29774,6 +29774,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/form-options.test.ts"],
       "expect": "\\(fail\\)"
+    },
+    {
+      "id": "W-442/radio-unnamed",
+      "requirement": "W-442",
+      "description": "Radio group has no name.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/form-elements.ts",
+          "search": "const labelled = node.props.label ? { \"aria-labelledby\": `${id}-label` } : {};",
+          "replace": "const labelled = {};"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/radio-label.test.ts"],
+      "expect": "\\(fail\\).*points at the label"
     }
   ]
 }

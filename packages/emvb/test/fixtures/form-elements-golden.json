@@ -464,14 +464,15 @@
             "tag": "label",
             "attrs": {
               "class": "emvb-form-label",
-              "for": "emvb-field-node0001"
+              "id": "emvb-field-node0001-label"
             },
             "children": ["Option"]
           },
           {
             "tag": "fieldset",
             "attrs": {
-              "class": "emvb-radio-group"
+              "class": "emvb-radio-group",
+              "aria-labelledby": "emvb-field-node0001-label"
             },
             "children": [
               {
@@ -515,14 +516,15 @@
             "tag": "label",
             "attrs": {
               "class": "emvb-form-label",
-              "for": "emvb-field-node0001"
+              "id": "emvb-field-node0001-label"
             },
             "children": ["Option"]
           },
           {
             "tag": "fieldset",
             "attrs": {
-              "class": "emvb-radio-group"
+              "class": "emvb-radio-group",
+              "aria-labelledby": "emvb-field-node0001-label"
             },
             "children": [
               {
@@ -654,14 +656,15 @@
             "tag": "label",
             "attrs": {
               "class": "emvb-form-label",
-              "for": "emvb-field-node0001"
+              "id": "emvb-field-node0001-label"
             },
             "children": ["Option"]
           },
           {
             "tag": "fieldset",
             "attrs": {
-              "class": "emvb-radio-group"
+              "class": "emvb-radio-group",
+              "aria-labelledby": "emvb-field-node0001-label"
             },
             "children": [
               {
@@ -705,14 +708,15 @@
             "tag": "label",
             "attrs": {
               "class": "emvb-form-label",
-              "for": "emvb-field-node0001"
+              "id": "emvb-field-node0001-label"
             },
             "children": ["Option"]
           },
           {
             "tag": "fieldset",
             "attrs": {
-              "class": "emvb-radio-group"
+              "class": "emvb-radio-group",
+              "aria-labelledby": "emvb-field-node0001-label"
             },
             "children": [
               {
