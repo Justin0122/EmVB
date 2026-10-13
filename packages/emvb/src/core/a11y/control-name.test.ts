@@ -46,3 +46,16 @@ describe("blank tab labels and accordion titles are flagged (W-408)", () => {
     expect(rules(tabs("Plans"), accordion("Shipping"))).toEqual([]);
   });
 });
+
+describe("a blank video title is flagged (W-410)", () => {
+  const video = (title: string) =>
+    ({
+      id: "vide0001",
+      type: "video",
+      props: { url: "https://vimeo.com/76979871", title },
+    }) as LayoutNode;
+  test("blank title is an error, a real one is fine", () => {
+    expect(rules(video("  "))).toEqual(["control-name:vide0001"]);
+    expect(rules(video("Product tour"))).toEqual([]);
+  });
+});

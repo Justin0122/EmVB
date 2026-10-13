@@ -29108,8 +29108,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "if (node.type === \"tab-panel\" || node.type === \"accordion-item\") {",
-          "replace": "if (node.type === \"accordion-item\") {"
+          "search": "if (node.type === \"tab-panel\" || node.type === \"accordion-item\" || node.type === \"video\") {",
+          "replace": "if (node.type === \"accordion-item\" || node.type === \"video\") {"
         }
       ],
       "command": [
@@ -29140,6 +29140,26 @@
         "hidden everywhere is left out"
       ],
       "expect": "\\(fail\\).*hidden everywhere is left out"
+    },
+    {
+      "id": "W-410/video-title-silent",
+      "requirement": "W-410",
+      "description": "A blank video title isn't flagged.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "node.type === \"accordion-item\" || node.type === \"video\") {",
+          "replace": "node.type === \"accordion-item\") {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/control-name.test.ts",
+        "-t",
+        "blank title is an error"
+      ],
+      "expect": "\\(fail\\).*blank title is an error"
     }
   ]
 }

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The accessibility check flags a video with a blank title.
 - The table of contents leaves out headings hidden on every device.
 - The accessibility check flags a blank tab label or accordion title.
 - Floating bars keep the page clear when their height changes after load.

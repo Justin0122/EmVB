@@ -193,8 +193,13 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       });
     }
     // W-408: a blank tab label or accordion title renders a tab or summary with no name.
-    if (node.type === "tab-panel" || node.type === "accordion-item") {
-      const name = String(props[node.type === "tab-panel" ? "label" : "summary"] ?? "").trim();
+    const NAME_PROP = {
+      "tab-panel": "label",
+      "accordion-item": "summary",
+      video: "title",
+    } as const;
+    if (node.type === "tab-panel" || node.type === "accordion-item" || node.type === "video") {
+      const name = String(props[NAME_PROP[node.type]] ?? "").trim();
       if (!name && !node.bind) {
         add({
           nodeId: node.id,
@@ -203,7 +208,10 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
           message:
             node.type === "tab-panel"
               ? "This tab's label is blank, so the tab has no name."
-              : "This accordion item's title is blank, so it has no name.",
+              : node.type === "video"
+                ? // W-410: the title names the player for screen readers.
+                  "This video's title is blank, so the player has no name."
+                : "This accordion item's title is blank, so it has no name.",
         });
       }
     }
