@@ -27326,6 +27326,62 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements/accordion.test.ts"],
       "expect": "\\(fail\\).*W-328"
+    },
+    {
+      "id": "W-329/no-home",
+      "requirement": "W-329",
+      "description": "The trail doesn't start at Home.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/breadcrumbs.ts",
+          "search": "[home, ...data.trail]",
+          "replace": "[...data.trail]"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/breadcrumbs.test.ts"],
+      "expect": "\\(fail\\).*W-329"
+    },
+    {
+      "id": "W-329/unsafe-link",
+      "requirement": "W-329",
+      "description": "A trail link isn't checked.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/breadcrumbs.ts",
+          "search": "href: sanitizeHref(crumb.href) }))",
+          "replace": "href: crumb.href }))"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/breadcrumbs.test.ts"],
+      "expect": "\\(fail\\).*W-329"
+    },
+    {
+      "id": "W-329/current-linked",
+      "requirement": "W-329",
+      "description": "The current page is missing from the trail.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/breadcrumbs.ts",
+          "search": "  items.push({\n    tag: \"li\",",
+          "replace": "  void items.push;\n  ({\n    tag: \"li\","
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/breadcrumbs.test.ts"],
+      "expect": "\\(fail\\).*W-329"
+    },
+    {
+      "id": "W-329/trail-dropped",
+      "requirement": "W-329",
+      "description": "The route's trail never reaches the page.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve.ts",
+          "search": "breadcrumbs: { trail: breadcrumbs, current: title }",
+          "replace": "breadcrumbs: { trail: [], current: title }"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/resolve.test.ts"],
+      "expect": "\\(fail\\).*W-329"
     }
   ]
 }

@@ -17,6 +17,7 @@ import {
   type Layout,
   type LayoutNode,
   type PaginationNode,
+  type BreadcrumbsNode,
 } from "../schema/layout.ts";
 import {
   cssLength,
@@ -38,6 +39,7 @@ import { isDynamicPostNode, renderDynamicPost } from "./dynamic-post.ts";
 import { renderForm, withFieldOptions } from "./form.ts";
 import { renderLoop } from "./loop.ts";
 import { renderPagination } from "./pagination.ts";
+import { renderBreadcrumbs } from "./breadcrumbs.ts";
 import { renderSection } from "./section.ts";
 import { renderTabs } from "./tabs.ts";
 import { serialize, type VNode } from "./vnode.ts";
@@ -380,6 +382,9 @@ export function renderPage(
     const def = ELEMENTS[type as keyof typeof ELEMENTS];
     if (isFormNode(node)) return finish(node, renderForm(node, attrs, ctx, dynamic));
     if (isLoopNode(node)) return finish(node, renderLoop(node, attrs, ctx, dynamic));
+    if (node.type === "breadcrumbs") {
+      return finish(node, renderBreadcrumbs(node as BreadcrumbsNode, attrs, dynamic, mode));
+    }
     if (node.type === "pagination") {
       return finish(node, renderPagination(node as PaginationNode, attrs, dynamic, mode));
     }

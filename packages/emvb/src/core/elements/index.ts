@@ -40,6 +40,7 @@ import { checkbox, form, radio, selectEl, submit, textInput, textareaEl } from "
 import {
   loop,
   pagination,
+  breadcrumbs,
   section,
   postContent,
   postExcerpt,
@@ -1137,6 +1138,7 @@ export const ELEMENTS = {
   "post-author": postAuthor,
   loop,
   pagination,
+  breadcrumbs,
   section,
   "div-block": divBlock,
   flexbox,

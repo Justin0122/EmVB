@@ -268,3 +268,16 @@ describe("the site in EmDash's edit mode (W-325)", () => {
     expect(resolved?.html).not.toContain("data-emvb-text");
   });
 });
+
+describe("breadcrumbs from the host's trail (W-329)", () => {
+  test("Home, the trail the route passes, then the entry's own title", async () => {
+    const crumbs: LayoutNode = { id: "crum0001", type: "breadcrumbs", props: {} } as LayoutNode;
+    lookup = async () => page({ title: "Mitsubishi GX", emvb_layout: layout(crumbs) });
+    const resolved = await resolveEmVBEntry(astro({ slug: "mitsubishi-gx" }), "machines", {
+      breadcrumbs: [{ label: "Machines", href: "/machines" }],
+    });
+    expect(resolved?.html).toContain('<a href="/">Home</a>');
+    expect(resolved?.html).toContain('<a href="/machines">Machines</a>');
+    expect(resolved?.html).toContain("Mitsubishi GX</li>");
+  });
+});

@@ -517,6 +517,19 @@ export const PaginationNode = leafNode(
 );
 
 /**
+ * W-329: where the page sits in the site: Home, the pages above it, and the page itself. The host
+ * supplies the trail (`ThemeDynamicData.breadcrumbs`); `mobile: "back"` shows only a link back to
+ * the page above on small screens, with the page's own name.
+ */
+export const BreadcrumbsNode = leafNode(
+  "breadcrumbs",
+  z.strictObject({
+    homeLabel: z.string().min(1).max(60).optional(),
+    mobile: z.enum(["trail", "back"]).optional(),
+  }),
+);
+
+/**
  * A reusable block. When `partId` is set, the host supplies that Section theme part in
  * `sectionTemplates` and the part's children render in place of `children`.
  */
@@ -557,6 +570,7 @@ export const KNOWN_ELEMENT_TYPES = [
   "post-author",
   "loop",
   "pagination",
+  "breadcrumbs",
   "section",
   "div-block",
   "flexbox",
@@ -638,6 +652,7 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   PostAuthorNode,
   LoopNode,
   PaginationNode,
+  BreadcrumbsNode,
   SectionNode,
   AccordionNode,
   AccordionItemNode,
@@ -670,6 +685,7 @@ export type PostContentNode = z.infer<typeof PostContentNode>;
 export type PostImageNode = z.infer<typeof PostImageNode>;
 export type PostLinkNode = z.infer<typeof PostLinkNode>;
 export type PaginationNode = z.infer<typeof PaginationNode>;
+export type BreadcrumbsNode = z.infer<typeof BreadcrumbsNode>;
 export type PostDateNode = z.infer<typeof PostDateNode>;
 export type PostAuthorNode = z.infer<typeof PostAuthorNode>;
 
@@ -1028,6 +1044,7 @@ export type LayoutNode =
   | PostDateNode
   | PostAuthorNode
   | PaginationNode
+  | BreadcrumbsNode
   | AccordionNode
   | AccordionItemNode
   | MenuNode

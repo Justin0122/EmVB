@@ -27,14 +27,20 @@ type AstroLike = {
  * Looks up the published EmVB page for this request's slug (or its draft under a preview token),
  * so a host route can try EmVB first and fall through to its own content (R-030, R-052).
  */
+/**
+ * W-329: the pages above this one, after Home, for the Breadcrumbs element; the page's own title
+ * ends the trail. Leave it out for a page right under Home.
+ */
+export type BreadcrumbTrail = { label: string; href: string }[];
+
 export async function resolveEmVBPage(
   astro: AstroLike,
-  options: { param?: string } = {},
+  options: { param?: string; breadcrumbs?: BreadcrumbTrail } = {},
 ): Promise<ResolvedEmVBPage | null> {
   const slug = decodeSlug(astro.params[options.param ?? "slug"]);
   if (!slug) return null;
   // No emvb_pages collection yet (EmVB not set up): not an EmVB page.
-  return renderEntry(astro, PAGES_COLLECTION, slug, "layout", true);
+  return renderEntry(astro, PAGES_COLLECTION, slug, "layout", true, options.breadcrumbs);
 }
 
 /**
@@ -45,11 +51,11 @@ export async function resolveEmVBPage(
 export async function resolveEmVBEntry(
   astro: AstroLike,
   collection: string,
-  options: { slug?: string; param?: string } = {},
+  options: { slug?: string; param?: string; breadcrumbs?: BreadcrumbTrail } = {},
 ): Promise<ResolvedEmVBPage | null> {
   const slug = options.slug ?? decodeSlug(astro.params[options.param ?? "slug"]);
   if (!slug) return null;
-  return renderEntry(astro, collection, slug, ENTRY_LAYOUT_FIELD, false);
+  return renderEntry(astro, collection, slug, ENTRY_LAYOUT_FIELD, false, options.breadcrumbs);
 }
 
 async function renderEntry(
@@ -58,6 +64,7 @@ async function renderEntry(
   slug: string,
   layoutField: string,
   emptyIsPage: boolean,
+  breadcrumbs: BreadcrumbTrail = [],
 ): Promise<ResolvedEmVBPage | null> {
   let found: Awaited<ReturnType<typeof getEmDashEntry>>;
   try {
@@ -88,7 +95,10 @@ async function renderEntry(
     [layout, ...Object.values(sectionTemplates), ...componentLayouts(componentTemplates)],
     componentTemplates,
   );
+  const title = typeof data["title"] === "string" ? data["title"] : "";
   const dynamic = {
+    // W-329: Home, the host's trail, then this page.
+    ...(title ? { breadcrumbs: { trail: breadcrumbs, current: title } } : {}),
     ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
     ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),
     ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
@@ -107,7 +117,7 @@ async function renderEntry(
     ),
     ...(inlineEdit ? { inlineEdit: { collection, id, field: layoutField } } : {}),
     entry,
-    title: typeof data["title"] === "string" ? data["title"] : "",
+    title,
     canvasMode: data["canvas_mode"] === "blank" ? "blank" : "site-layout",
     isPreview: Boolean(found.isPreview),
   };

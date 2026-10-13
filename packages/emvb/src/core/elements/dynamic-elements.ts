@@ -9,6 +9,7 @@ import type {
   PostLinkNode,
   PostTitleNode,
   PaginationNode,
+  BreadcrumbsNode,
 } from "../schema/layout.ts";
 import type { ElementDefinition } from "./definition.ts";
 
@@ -249,6 +250,33 @@ export const pagination: ElementDefinition<PaginationNode> = {
     ],
   },
   // Rendered by core/render/pagination.ts from the archive's page data (W-222).
+  build: (_node, attrs) => ({ tag: "nav", attrs, children: [] }),
+};
+
+export const breadcrumbs: ElementDefinition<BreadcrumbsNode> = {
+  baseCss:
+    ".emvb-breadcrumbs{display:block;min-width:0}.emvb-breadcrumbs-trail{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:0;padding:0;list-style:none}.emvb-breadcrumbs-trail>li{display:inline-flex;align-items:center;gap:8px;min-width:0}.emvb-breadcrumbs a{color:color-mix(in srgb,currentColor 60%,transparent);text-decoration:none}.emvb-breadcrumbs a:hover{color:inherit}.emvb-breadcrumbs-sep{flex:0 0 auto;width:1em;height:1em;background:color-mix(in srgb,currentColor 60%,transparent);-webkit-mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8.25 4.5 7.5 7.5-7.5 7.5'/%3E%3C/svg%3E\") center/contain no-repeat;mask:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8.25 4.5 7.5 7.5-7.5 7.5'/%3E%3C/svg%3E\") center/contain no-repeat}.emvb-breadcrumbs-back-icon{transform:scaleX(-1)}.emvb-breadcrumbs [aria-current=page]{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.emvb-breadcrumbs-back{display:none;align-items:center;justify-content:space-between;gap:16px}.emvb-breadcrumbs-back>a{display:inline-flex;align-items:center;gap:6px;min-width:0}@media (max-width:1024px){.emvb-breadcrumbs[data-emvb-mobile=back] .emvb-breadcrumbs-trail{display:none}.emvb-breadcrumbs[data-emvb-mobile=back] .emvb-breadcrumbs-back{display:flex}}",
+  defaults: () => ({ type: "breadcrumbs", props: {} }),
+  descriptor: {
+    type: "breadcrumbs",
+    name: "Breadcrumbs",
+    group: "dynamic",
+    defaultTab: "content",
+    fields: [
+      { key: "homeLabel", kind: "text", label: "Home text", optional: true },
+      {
+        key: "mobile",
+        kind: "select",
+        label: "On small screens",
+        optional: true,
+        options: [
+          { value: "trail", label: "The whole trail" },
+          { value: "back", label: "A link back, and this page" },
+        ],
+      },
+    ],
+  },
+  // Rendered by core/render/breadcrumbs.ts from the page's trail (W-329).
   build: (_node, attrs) => ({ tag: "nav", attrs, children: [] }),
 };
 

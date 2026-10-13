@@ -37,6 +37,11 @@ export type ThemeDynamicData = {
    */
   idOrigin?: string;
   archiveTitle?: string;
+  /**
+   * W-329: the page's place in the site, for the Breadcrumbs element: the pages above it (after
+   * Home) and its own name.
+   */
+  breadcrumbs?: { trail: { label: string; href: string }[]; current: string };
   /** Which archive page is showing, for the Pagination element (W-221). */
   pagination?: ArchivePagination;
   /** Set inside a Loop's item, where a Pagination would repeat once per post (W-228). */
