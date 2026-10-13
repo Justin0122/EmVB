@@ -204,7 +204,7 @@ export function listElementTypes(input: z.infer<typeof ListElementTypesInput>) {
     elements: descriptors.map((d) => {
       const props = SCHEMAS.get(d.type);
       const example = sample(d.type);
-      return {
+      const entry: Record<string, unknown> = {
         type: d.type,
         name: d.name,
         group: d.group,
@@ -212,8 +212,9 @@ export function listElementTypes(input: z.infer<typeof ListElementTypesInput>) {
         allowedParents: allowedParents(d.type),
         props: props ? z.toJSONSchema(props, { unrepresentable: "any" }) : {},
         example: { type: example.type, props: (example as { props?: unknown }).props ?? {} },
-        ...(ELEMENT_NOTES[d.type] ? { notes: ELEMENT_NOTES[d.type] } : {}),
       };
+      if (ELEMENT_NOTES[d.type]) entry["notes"] = ELEMENT_NOTES[d.type];
+      return entry;
     }),
   };
 }

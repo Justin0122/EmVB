@@ -141,6 +141,7 @@ describe("errors an agent can recover from (W-474)", () => {
     };
     let code = "";
     for (let i = 0; i < 4 && !code; i++) {
+      // oxlint-disable-next-line no-await-in-loop -- each write grows the same page in turn
       const r = await run("add_element", { pageId, parentId: root.id, element: big });
       if (!r.success) code = r.error?.code ?? "";
     }

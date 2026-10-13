@@ -173,16 +173,18 @@ export const CreatePageInput = z.strictObject({
 });
 export const CreatePageOutput = z.object({ pageId: z.string(), slug: z.string(), rev: z.string() });
 
+/** The first heading inside `node`, depth first. */
+const firstHeading = (node: LayoutNode): LayoutNode | undefined =>
+  node.type === "heading"
+    ? node
+    : ("children" in node && Array.isArray(node.children) ? node.children : [])
+        .map(firstHeading)
+        .find(Boolean);
+
 /** The hero's first heading becomes the page's h1 with the page title as its text. */
 function promoteHeroHeading(layout: Layout, title: string): Layout {
   const hero = layout.root.children?.[0];
-  const find = (node: LayoutNode): LayoutNode | undefined =>
-    node.type === "heading"
-      ? node
-      : ("children" in node && Array.isArray(node.children) ? node.children : [])
-          .map(find)
-          .find(Boolean);
-  const heading = hero ? find(hero) : undefined;
+  const heading = hero ? firstHeading(hero) : undefined;
   if (!heading) return layout;
   return updateNode(
     layout,
