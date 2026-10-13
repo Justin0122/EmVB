@@ -297,7 +297,7 @@ const button: ElementDefinition<ButtonNode> = {
           { value: "lg", label: "Large" },
         ],
       },
-      { key: "iconGap", kind: "int", label: "Gap (px)", optional: true },
+      { key: "iconGap", kind: "int", label: "Gap (px)", optional: true, min: 0, max: 64 },
     ],
   },
   build: (node, attrs) => {
@@ -418,8 +418,8 @@ const image: ElementDefinition<ImageNode> = {
       },
       { key: "newTab", kind: "boolean", label: "Open link in a new tab", optional: true },
       { key: "caption", kind: "text", label: "Caption", optional: true },
-      { key: "focalX", kind: "int", label: "Focal point X (%)", optional: true },
-      { key: "focalY", kind: "int", label: "Focal point Y (%)", optional: true },
+      { key: "focalX", kind: "int", label: "Focal point X (%)", optional: true, min: 0, max: 100 },
+      { key: "focalY", kind: "int", label: "Focal point Y (%)", optional: true, min: 0, max: 100 },
       {
         key: "width",
         kind: "int",

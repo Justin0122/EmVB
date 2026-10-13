@@ -28712,6 +28712,26 @@
         "adds no title"
       ],
       "expect": "\\(fail\\).*adds no title"
+    },
+    {
+      "id": "W-388/zero-min-fields",
+      "requirement": "W-388",
+      "description": "Whole-number fields ignore the descriptor's min, so a 0 % focal point is refused.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/DraftTextField.tsx",
+          "search": "const min = integer ? (field.min ?? 1) : 0;",
+          "replace": "const min = integer ? 1 : 0;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/zero-min-fields.test.tsx",
+        "-t",
+        "focal point of 0"
+      ],
+      "expect": "\\(fail\\).*focal point of 0"
     }
   ]
 }

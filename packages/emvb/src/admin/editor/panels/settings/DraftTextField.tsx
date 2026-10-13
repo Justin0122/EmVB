@@ -135,19 +135,32 @@ export function DraftTextField({
     const commit = () => {
       if (commitClearable()) return;
       const value = Number(draft);
+      // W-388: a field may start at 0 (a focal point, a gap); others start at 1.
+      const min = integer ? (field.min ?? 1) : 0;
+      const range =
+        integer && field.max !== undefined
+          ? `Enter a whole number from ${min} to ${field.max}.`
+          : undefined;
       if (
+        draft.trim() === "" ||
         !Number.isFinite(value) ||
         (integer && !Number.isInteger(value)) ||
-        value < (integer ? 1 : 0)
+        value < min
       ) {
         setError(
-          field.message ?? (integer ? "Enter a positive whole number." : "Enter 0 or more."),
+          field.message ??
+            range ??
+            (integer
+              ? min === 0
+                ? "Enter 0 or a positive whole number."
+                : "Enter a positive whole number."
+              : "Enter 0 or more."),
         );
         return;
       }
       // A whole-number field past its schema's maximum would fail the save (W-223).
       if (integer && field.max !== undefined && value > field.max) {
-        setError(field.message ?? `Enter a whole number from 1 to ${field.max}.`);
+        setError(field.message ?? range ?? `Enter a whole number from ${min} to ${field.max}.`);
         return;
       }
       if (value > MAX_FIELD_NUMBER) {

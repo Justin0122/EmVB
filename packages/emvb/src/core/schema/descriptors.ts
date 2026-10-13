@@ -23,6 +23,8 @@ export type FieldDescriptor = {
   optional?: boolean;
   /** Highest value a whole-number field accepts, matching its schema (W-223). */
   max?: number;
+  /** Lowest value a whole-number field accepts; unset is 1 (W-388). */
+  min?: number;
   /** Props that hold this field's tablet and mobile values (W-139); unset follows the wider device. */
   devices?: { tablet: string; mobile: string };
 };
