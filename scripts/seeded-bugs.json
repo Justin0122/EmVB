@@ -27242,6 +27242,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/inline-edit/runtime.test.ts"],
       "expect": "\\(fail\\).*W-325"
+    },
+    {
+      "id": "W-326/vertical-scroll",
+      "requirement": "W-326",
+      "description": "A carousel track can scroll vertically.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": "overflow-x:auto;overflow-y:hidden;",
+          "replace": "overflow-x:auto;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-326"
+    },
+    {
+      "id": "W-326/slides-shrink",
+      "requirement": "W-326",
+      "description": "A slide's content keeps its own height.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/index.ts",
+          "search": ".emvb-carousel-slide>*{flex:1 0 auto}",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
+      "expect": "\\(fail\\).*W-326"
     }
   ]
 }

@@ -112,3 +112,12 @@ describe("a Loop shown as a carousel (W-315)", () => {
     expect(needsCarouselRuntime).toBe(false);
   });
 });
+
+describe("slides fill their height (W-326)", () => {
+  test("a slide stretches its content, and the track only scrolls sideways", () => {
+    const { css } = renderPage(page(carousel({ perView: 2 })), emptyDesign());
+    expect(css).toMatch(/\.emvb-carousel-slide\{display:flex;flex-direction:column;/);
+    expect(css).toContain(".emvb-carousel-slide>*{flex:1 0 auto}");
+    expect(css).toMatch(/\.emvb-carousel-track\{[^}]*overflow-x:auto;overflow-y:hidden/);
+  });
+});
