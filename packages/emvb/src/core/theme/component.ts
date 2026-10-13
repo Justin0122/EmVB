@@ -160,8 +160,11 @@ const BOUND = new WeakMap<LayoutNode, BoundField>();
 /** The field an element made by `applyComponent` shows as its text, if any (W-324). */
 export const boundFieldOf = (node: LayoutNode): BoundField | undefined => BOUND.get(node);
 
-/** Props that hold an element's visible text. */
-const TEXT_TARGETS = new Set(["text", "html", "summary", "label"]);
+/**
+ * Props that are an element's whole text. A FAQ item's question (`summary`) or a tab's `label`
+ * belongs to the item around it, where a click opens it, so those aren't edited in place (W-327).
+ */
+const TEXT_TARGETS = new Set(["text", "html"]);
 
 /** The resolved value of `key`: the list item's own field first, then the component's. */
 function lookup(

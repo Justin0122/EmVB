@@ -326,3 +326,70 @@ describe("texts inside a use name their field in the editor (W-324)", () => {
     expect(withComponentValue(values, "buttons.9.label", "x")).toBe(values);
   });
 });
+
+describe("only texts are marked for editing, not items that hold one (W-327)", () => {
+  test("a FAQ item's question isn't marked, so a click opens it; its answer is", () => {
+    const faq: ComponentTemplate = {
+      fields: [
+        {
+          key: "items",
+          label: "Vragen",
+          kind: "list",
+          fields: [
+            { key: "question", label: "Vraag", kind: "text" },
+            { key: "answer", label: "Antwoord", kind: "rich-text" },
+          ],
+        },
+      ],
+      nodes: [
+        n({
+          id: "acco0001",
+          type: "accordion",
+          props: {},
+          children: [
+            n({
+              id: "item0001",
+              type: "accordion-item",
+              props: { summary: "Vraag" },
+              bind: { repeat: "items", summary: "question" },
+              children: [
+                n({
+                  id: "answ0001",
+                  type: "rich-text",
+                  props: { html: "" },
+                  bind: { html: "answer" },
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    };
+    const { html } = renderPage(
+      {
+        schemaVersion: 12,
+        root: {
+          id: "root0001",
+          type: "container",
+          props: {},
+          children: [
+            n({
+              id: "use00001",
+              type: "component",
+              props: {
+                partId: "f1",
+                values: { items: [{ question: "Hoe?", answer: "<p>Zo.</p>" }] },
+              },
+            }),
+          ],
+        },
+      } as Layout,
+      emptyDesign(),
+      { mode: "editor", dynamic: { componentTemplates: { f1: faq } } },
+    );
+    expect(html).toContain(">Hoe?<");
+    expect(html.match(/data-emvb-bound="([^"]+)"/g)).toEqual([
+      'data-emvb-bound="use00001|items.0.answer|rich-text"',
+    ]);
+  });
+});

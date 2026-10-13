@@ -27270,6 +27270,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/carousel.test.ts"],
       "expect": "\\(fail\\).*W-326"
+    },
+    {
+      "id": "W-327/item-marked",
+      "requirement": "W-327",
+      "description": "A FAQ item's question marks the whole item for editing, so it can't open.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "const TEXT_TARGETS = new Set([\"text\", \"html\"]);",
+          "replace": "const TEXT_TARGETS = new Set([\"text\", \"html\", \"summary\", \"label\"]);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-327"
     }
   ]
 }
