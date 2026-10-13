@@ -211,7 +211,12 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
           message:
             node.type === "icon"
               ? "This icon link has no title, so it has no name."
-              : "This link has no text.",
+              : node.type === "button" && !hasHref
+                ? // W-400: without a URL this is a <button>, not a link.
+                  props["iconId"]
+                  ? "This icon-only button has no text or title, so it has no name."
+                  : "This button has no text."
+                : "This link has no text.",
         });
       } else if (hasHref && VAGUE.test(text)) {
         add({

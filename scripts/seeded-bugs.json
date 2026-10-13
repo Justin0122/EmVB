@@ -28940,6 +28940,26 @@
         "Esc goes back"
       ],
       "expect": "\\(fail\\).*Esc goes back"
+    },
+    {
+      "id": "W-400/button-called-link",
+      "requirement": "W-400",
+      "description": "A nameless button without a URL is reported as a link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/a11y/audit.ts",
+          "search": "node.type === \"button\" && !hasHref",
+          "replace": "node.type === \"button\" && hasHref"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/a11y/button-name.test.ts",
+        "-t",
+        "icon-only button"
+      ],
+      "expect": "\\(fail\\).*icon-only button"
     }
   ]
 }
