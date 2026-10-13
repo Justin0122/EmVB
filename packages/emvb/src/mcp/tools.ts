@@ -2,6 +2,8 @@ import type { z } from "zod";
 import type { EmvbPorts } from "./ports.ts";
 import * as read from "./read.ts";
 import * as write from "./write.ts";
+import * as publish from "./publish.ts";
+import { McpToolError } from "./errors.ts";
 
 /**
  * One MCP tool, defined once for every door (D-053). On the site it becomes the plugin route
@@ -17,6 +19,8 @@ export type ToolDef = {
   readOnly: boolean;
   /** Removes or publishes something (`destructiveHint`). */
   destructive: boolean;
+  /** Publish tools: the setting that must be on for the tool to be listed and to run. */
+  publish?: "publishPages" | "publishStyles";
   run(ports: EmvbPorts, input: never): Promise<Record<string, unknown>> | Record<string, unknown>;
 };
 
@@ -209,4 +213,50 @@ const WRITE_TOOLS: ToolDef[] = [
   }),
 ];
 
-export const TOOLS: ToolDef[] = [...READ_TOOLS, ...WRITE_TOOLS];
+/** Publish tools (W-464). They refuse unless the admin allowed agent publishing (D-055). */
+const PUBLISH_TOOLS: ToolDef[] = [
+  tool({
+    name: "publish_page",
+    title: "Publish a page",
+    description:
+      "Publishes a page's draft so it goes live. Only works when the site lets agents publish; otherwise leave the draft for review. Pass the rev you last read and confirm: true.",
+    input: publish.PublishPageInput,
+    output: publish.PublishPageOutput,
+    readOnly: false,
+    destructive: true,
+    publish: "publishPages",
+    run: (ports, input) => publish.publishPage(ports, input),
+  }),
+  tool({
+    name: "publish_site_styles",
+    title: "Publish the site styles",
+    description:
+      "Publishes the site styles draft to every page. Only works when the site lets agents publish styles. Pass publishedRevision from get_site_styles and confirm: true.",
+    input: publish.PublishSiteStylesInput,
+    output: publish.PublishSiteStylesOutput,
+    readOnly: false,
+    destructive: true,
+    publish: "publishStyles",
+    run: (ports, input) => publish.publishSiteStyles(ports, input),
+  }),
+];
+
+export const TOOLS: ToolDef[] = [...READ_TOOLS, ...WRITE_TOOLS, ...PUBLISH_TOOLS];
+
+/**
+ * Runs a tool for any door: refuses everything while the admin's master switch is off (D-055),
+ * then validates nothing else here; each door has already parsed the input with `tool.input`.
+ */
+export async function runTool(def: ToolDef, ports: EmvbPorts, input: unknown) {
+  if (!(await ports.settings()).mcpEnabled) {
+    throw new McpToolError(
+      "FORBIDDEN",
+      "AI agent access to EmVB is off on this site. An admin can turn it on in Pages VisualBuilder → Agents.",
+    );
+  }
+  return def.run(ports, input as never);
+}
+
+/** The tools a client should see now: publish tools only while their setting is on (D-055). */
+export const visibleTools = (settings: { publishPages: boolean; publishStyles: boolean }) =>
+  TOOLS.filter((def) => !def.publish || settings[def.publish]);

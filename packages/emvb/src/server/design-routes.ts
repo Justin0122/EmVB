@@ -154,21 +154,29 @@ export const designPublishRoute: PluginRoute<z.infer<typeof PublishInput>> = {
   permission: "content:edit_any",
   input: PublishInput,
   handler: async (ctx) => {
-    const draft = await readDesign(ctx, DESIGN_DRAFT_KEY);
-    if (draft.status !== "ok") {
+    const result = await publishDesignDraft(ctx, ctx.input.publishedRevision, "editor");
+    if (result === "no-draft") {
       throw new PluginRouteError("NO_STYLE_DRAFT", "There are no style changes to publish.", 409);
     }
-    const write = await store(ctx).compareAndSet(
-      DESIGN_KEY,
-      ctx.input.publishedRevision,
-      draft.design,
-    );
-    if (!write.applied) {
+    if (result === "conflict") {
       throw PluginRouteError.conflict(
         "Site styles were published somewhere else. Reload the editor and try again.",
       );
     }
-    await recordDesign(ctx, draft.design, "publish", "editor");
-    return { revision: write.revision };
+    return { revision: result.revision };
   },
 };
+
+/** Copies the style draft onto the published design (compare-and-set) and records it. */
+export async function publishDesignDraft(
+  ctx: RouteContext<unknown>,
+  expectedPublishedRevision: string | null,
+  by: "editor" | "agent",
+): Promise<"no-draft" | "conflict" | { revision: string }> {
+  const draft = await readDesign(ctx, DESIGN_DRAFT_KEY);
+  if (draft.status !== "ok") return "no-draft";
+  const write = await store(ctx).compareAndSet(DESIGN_KEY, expectedPublishedRevision, draft.design);
+  if (!write.applied) return "conflict";
+  await recordDesign(ctx, draft.design, "publish", by);
+  return { revision: write.revision };
+}

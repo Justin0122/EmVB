@@ -105,5 +105,21 @@ export async function createTestRuntime() {
     return run.handlePluginMcpTool(PLUGIN_ID, tool, `mcp/${tool}`, input, user.id, request, user);
   };
 
-  return { runtime, route, savePage, mcp, dispose: () => runtime.shutdown() };
+  /** Sets the admin's agent settings (D-055) through the admin-only route. */
+  let settingsRevision: string | null = null;
+  const agentSettings = async (
+    settings: Partial<{ mcpEnabled: boolean; publishPages: boolean; publishStyles: boolean }> = {},
+  ) => {
+    const saved = await route("agents/save", {
+      user: userWithRole(ROLES.admin),
+      body: {
+        settings: { mcpEnabled: true, publishPages: false, publishStyles: false, ...settings },
+        revision: settingsRevision,
+      },
+    });
+    if (saved.status !== 200) throw new Error(JSON.stringify(saved.body));
+    settingsRevision = (saved.body["data"] as { revision: string }).revision;
+  };
+
+  return { runtime, route, savePage, mcp, agentSettings, dispose: () => runtime.shutdown() };
 }

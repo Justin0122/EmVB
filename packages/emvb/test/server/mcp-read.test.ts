@@ -6,6 +6,7 @@ import { createTestRuntime, ROLES, userWithRole } from "./runtime.ts";
 let t: Awaited<ReturnType<typeof createTestRuntime>>;
 beforeEach(async () => {
   t = await createTestRuntime();
+  await t.agentSettings();
 });
 afterEach(async () => {
   await t.dispose();

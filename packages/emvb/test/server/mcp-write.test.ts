@@ -5,6 +5,7 @@ import { createTestRuntime, ROLES, userWithRole } from "./runtime.ts";
 let t: Awaited<ReturnType<typeof createTestRuntime>>;
 beforeEach(async () => {
   t = await createTestRuntime();
+  await t.agentSettings();
 });
 afterEach(async () => {
   await t.dispose();
@@ -141,6 +142,23 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(out.revision).toBeTruthy();
     const styles = await call<{ draft: unknown }>("get_site_styles", {});
     expect(JSON.stringify(styles)).toContain("agent-accent");
+  });
+
+  test("removing a variable a page still uses is refused unless forced (W-458)", async () => {
+    await newPage();
+    await call("update_site_styles", {
+      variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },
+    });
+    const error = await fail("update_site_styles", {
+      removeVariables: [{ kind: "colors", id: "brand" }],
+    });
+    expect(error.code).toBe("REFUSED");
+    expect(error.message).toContain('page "Home"');
+    await call("update_site_styles", {
+      removeVariables: [{ kind: "colors", id: "brand" }],
+      force: true,
+    });
+    expect(JSON.stringify(await call("get_site_styles", {}))).not.toContain('"brand"');
   });
 
   test("viewers can't call write tools", async () => {

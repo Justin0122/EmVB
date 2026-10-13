@@ -21,6 +21,11 @@ import { removeNode, slugify, starterLayout, updateNode } from "../core/tree-ops
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts } from "./ports.ts";
 import { queued } from "./queue.ts";
+import {
+  findVariableUsages,
+  findVariableUsagesInDesign,
+  type VariableKind,
+} from "../core/design/variables.ts";
 
 const PageId = z.string().min(1).max(128);
 const NodeIdInput = z.string().min(1).max(64);
@@ -383,9 +388,45 @@ export const UpdateSiteStylesInput = z.strictObject({
   removeClasses: z.array(z.string().min(1).max(64)).max(100).optional(),
   defaults: z.record(z.string(), z.unknown()).optional(),
   direction: z.enum(["ltr", "rtl", "auto"]).optional(),
+  /** Remove variables even when pages or classes still use them (their references fall back). */
+  force: z.boolean().optional(),
   expectedRevision: z.string().max(256).nullable().optional(),
 });
 export const UpdateSiteStylesOutput = z.object({ revision: z.string(), summary: z.string() });
+
+const KIND_OF: Record<(typeof VARIABLE_KINDS)[number], VariableKind> = {
+  colors: "color",
+  fonts: "font",
+  fontSizes: "fontSize",
+  spacings: "spacing",
+};
+
+/** Where a variable is still used: class ids and page titles (W-458 in-use guard). */
+async function variableUses(
+  ports: EmvbPorts,
+  design: DesignSystem,
+  id: string,
+  kind: VariableKind,
+): Promise<string[]> {
+  const where = findVariableUsagesInDesign(design, id, kind).map((u) => `class ${u.classId}`);
+  const pages: { id: string; title: string }[] = [];
+  let cursor: string | undefined;
+  for (let i = 0; i < 20; i++) {
+    // oxlint-disable-next-line no-await-in-loop -- cursor paging is sequential
+    const batch = await ports.listPages({ limit: 50, ...(cursor ? { cursor } : {}) });
+    pages.push(...batch.pages);
+    if (!batch.nextCursor) break;
+    cursor = batch.nextCursor;
+  }
+  const records = await Promise.all(pages.map((page) => ports.getPage(page.id)));
+  records.forEach((record, i) => {
+    const layout = record ? validateLayout(record.layout) : null;
+    if (layout?.ok && findVariableUsages(layout.layout, id, kind).length > 0) {
+      where.push(`page "${pages[i]?.title ?? ""}"`);
+    }
+  });
+  return where;
+}
 
 const upsert = (list: Item[] | undefined, items: Item[]): Item[] => {
   const next = [...(list ?? [])];
@@ -421,6 +462,21 @@ export async function updateSiteStyles(
       if (items?.length) {
         draft.variables[kind] = upsert(draft.variables[kind], items);
         changes.push(`${items.length} ${kind}`);
+      }
+    }
+    if (!input.force) {
+      const inUse = await Promise.all(
+        (input.removeVariables ?? []).map(async ({ kind, id }) => ({
+          id,
+          where: await variableUses(ports, state.design, id, KIND_OF[kind]),
+        })),
+      );
+      const blocked = inUse.filter((u) => u.where.length > 0);
+      if (blocked.length > 0) {
+        throw new McpToolError(
+          "REFUSED",
+          `Still in use: ${blocked.map((u) => `${u.id} (${u.where.slice(0, 5).join(", ")})`).join("; ")}. Replace those references first, or pass force: true.`,
+        );
       }
     }
     for (const { kind, id } of input.removeVariables ?? []) {

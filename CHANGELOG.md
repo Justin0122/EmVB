@@ -67,6 +67,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- AI agents admin page with an off-by-default master switch and separate publish permissions; gated `publish_page` and `publish_site_styles` tools; EmDash's own MCP can't publish EmVB pages unless allowed; removing an in-use variable through MCP is refused.
 - MCP write tools (draft only): create, add, move, update, remove elements, section recipes, restore versions and site style drafts, validated like the editor, `_rev`-checked and logged per user. Site styles keep a 50-entry history.
 - MCP read tools for AI agents on EmDash 1.2+ (with `mcp: true`): list pages, get a layout or its outline, element types with their settings schema, site styles, section recipes, a page description, accessibility findings and versions. Agents need a token with the `mcp:tools:emvb` scope and an editor role.
 - The accessibility check warns when two menus on a page have the same name.

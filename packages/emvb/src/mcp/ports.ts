@@ -1,3 +1,4 @@
+import type { AgentSettings } from "./settings.ts";
 import type { DesignSystem, Layout } from "../core/index.ts";
 
 /** A page as the tool core sees it: the current draft (or published) data and its revision. */
@@ -65,4 +66,10 @@ export interface EmvbPorts {
   /** Saves the style draft with compare-and-set; McpToolError CONFLICT when it moved. */
   saveDesign(design: DesignSystem, expectedRevision: string | null): Promise<{ revision: string }>;
   log(entry: AgentLogEntry): Promise<void>;
+  /** The admin's agent settings (D-055). Read-only for tools. */
+  settings(): Promise<AgentSettings>;
+  /** Publishes the page when its `_rev` is still `expectedRev`; else McpToolError CONFLICT. */
+  publishPage(id: string, expectedRev: string): Promise<{ rev: string }>;
+  /** Publishes the style draft when the published revision is still `expectedPublishedRevision`. */
+  publishDesign(expectedPublishedRevision: string | null): Promise<{ revision: string }>;
 }

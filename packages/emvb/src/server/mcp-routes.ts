@@ -2,9 +2,9 @@ import { PluginRouteError, type PluginRoute, type RouteContext } from "emdash";
 import { PAGES_COLLECTION, DESIGN_DRAFT_KEY, DESIGN_KEY } from "../constants.ts";
 import { McpToolError } from "../mcp/errors.ts";
 import type { EmvbPorts, PageRecord, PageSummary } from "../mcp/ports.ts";
-import type { ToolDef } from "../mcp/tools.ts";
-import { readDesign, writeDesignDraft } from "./design-routes.ts";
-import { McpToolError as ToolError } from "../mcp/errors.ts";
+import { runTool, type ToolDef } from "../mcp/tools.ts";
+import { publishDesignDraft, readDesign, writeDesignDraft } from "./design-routes.ts";
+import { readAgentSettings } from "./agent-settings.ts";
 
 type Item = {
   id: string;
@@ -39,6 +39,7 @@ type Content = {
   ): Promise<{ data: Record<string, unknown> } | null>;
   update(c: string, id: string, data: Record<string, unknown>): Promise<Item>;
   create(c: string, data: Record<string, unknown>): Promise<Item>;
+  publish?(c: string, id: string, o: { _rev: string }): Promise<unknown>;
 };
 
 type LogStore = { put(id: string, data: unknown): Promise<void> };
@@ -64,7 +65,7 @@ const summary = (item: Item): PageSummary => ({
 /** The tool core's ports on a plugin route (D-053, R1 save path). */
 function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   const content = ctx.content as unknown as Content | undefined;
-  if (!content) throw new McpToolError("FORBIDDEN", "EmVB has no content access on this site.");
+  if (!content) throw new McpMcpToolError("FORBIDDEN", "EmVB has no content access on this site.");
   const versioned = (id: string) =>
     content.getVersioned ? content.getVersioned(PAGES_COLLECTION, id) : Promise.resolve(null);
   return {
@@ -99,9 +100,9 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
     },
     async savePage(id, patch, expectedRev) {
       const current = await versioned(id);
-      if (!current) throw new ToolError("NOT_FOUND", `No EmVB page with id ${id}.`);
+      if (!current) throw new McpToolError("NOT_FOUND", `No EmVB page with id ${id}.`);
       if (current["_rev"] !== expectedRev) {
-        throw new ToolError("CONFLICT", "The page changed since it was read.", {
+        throw new McpToolError("CONFLICT", "The page changed since it was read.", {
           rev: current["_rev"],
         });
       }
@@ -123,7 +124,7 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
     },
     async saveDesign(design, expectedRevision) {
       const written = await writeDesignDraft(ctx, design, expectedRevision, "agent");
-      if (!written) throw new ToolError("CONFLICT", "Site styles changed since they were read.");
+      if (!written) throw new McpToolError("CONFLICT", "Site styles changed since they were read.");
       return { revision: written };
     },
     async log(entry) {
@@ -135,6 +136,39 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
         userId: ctx.user?.id ?? null,
         client: (ctx.request.headers.get("user-agent") ?? "").slice(0, 120),
       });
+    },
+    settings: async () => (await readAgentSettings(ctx)).settings,
+    async publishPage(id, expectedRev) {
+      if (!content.publish)
+        throw new McpToolError("FORBIDDEN", "This site can't publish from plugins.");
+      try {
+        await content.publish(PAGES_COLLECTION, id, { _rev: expectedRev });
+      } catch (error) {
+        const code = (error as { code?: string }).code ?? "";
+        if (/CONFLICT|REV/i.test(code)) {
+          throw new McpToolError(
+            "CONFLICT",
+            "The page changed since you read it. Call get_layout again.",
+          );
+        }
+        if (/NOT_FOUND/i.test(code))
+          throw new McpToolError("NOT_FOUND", `No EmVB page with id ${id}.`);
+        throw error;
+      }
+      const after = await versioned(id);
+      return { rev: after?.["_rev"] ?? "" };
+    },
+    async publishDesign(expectedPublishedRevision) {
+      const result = await publishDesignDraft(ctx, expectedPublishedRevision, "agent");
+      if (result === "no-draft")
+        throw new McpToolError("REFUSED", "There are no style changes to publish.");
+      if (result === "conflict") {
+        throw new McpToolError(
+          "CONFLICT",
+          "Site styles were published somewhere else. Call get_site_styles again.",
+        );
+      }
+      return { revision: result.revision };
     },
     async getDesign() {
       const published = await readDesign(ctx, DESIGN_KEY);
@@ -167,7 +201,7 @@ export function mcpRoutes(tools: readonly ToolDef[]): Record<string, PluginRoute
         input: tool.input,
         handler: async (ctx: RouteContext<unknown>) => {
           try {
-            return await tool.run(pluginPorts(ctx), ctx.input as never);
+            return await runTool(tool, pluginPorts(ctx), ctx.input);
           } catch (error) {
             if (error instanceof McpToolError) {
               throw new PluginRouteError(error.code, error.message, error.status);

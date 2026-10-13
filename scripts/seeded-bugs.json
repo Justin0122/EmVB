@@ -16436,8 +16436,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/design-routes.ts",
-          "search": "    const write = await store(ctx).compareAndSet(\n      DESIGN_KEY,\n      ctx.input.publishedRevision,",
-          "replace": "    const write = await store(ctx).compareAndSet(\n      DESIGN_DRAFT_KEY,\n      ctx.input.publishedRevision,"
+          "search": "  const write = await store(ctx).compareAndSet(DESIGN_KEY, expectedPublishedRevision, draft.design);",
+          "replace": "  const write = await store(ctx).compareAndSet(DESIGN_DRAFT_KEY, expectedPublishedRevision, draft.design);"
         }
       ],
       "command": [
@@ -17455,8 +17455,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/server/design-routes.ts",
-          "search": "      ctx.input.publishedRevision,\n      draft.design,\n",
-          "replace": "      ctx.input.publishedRevision,\n      (await readDesign(ctx, DESIGN_KEY)).design,\n"
+          "search": "  const write = await store(ctx).compareAndSet(DESIGN_KEY, expectedPublishedRevision, draft.design);",
+          "replace": "  const write = await store(ctx).compareAndSet(DESIGN_KEY, expectedPublishedRevision, (await readDesign(ctx, DESIGN_KEY)).design);"
         }
       ],
       "command": [
@@ -29982,6 +29982,106 @@
         "breaks the layout schema"
       ],
       "expect": "\\(fail\\).*breaks the layout schema"
+    },
+    {
+      "id": "W-463/master-switch-ignored",
+      "requirement": "W-463",
+      "description": "Tools run even while the admin's 'Let AI agents edit EmVB pages' switch is off.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/tools.ts",
+          "search": "  if (!(await ports.settings()).mcpEnabled) {",
+          "replace": "  if ((await ports.settings()).mcpEnabled === undefined) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-publish.test.ts",
+        "-t",
+        "master switch is off"
+      ],
+      "expect": "\\(fail\\).*master switch is off"
+    },
+    {
+      "id": "W-464/publish-page-ungated",
+      "requirement": "W-464",
+      "description": "publish_page publishes even when agents may not publish pages.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/publish.ts",
+          "search": "  if (!(await ports.settings()).publishPages) throw off(\"pages\");",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-publish.test.ts",
+        "-t",
+        "refused until publishing is allowed"
+      ],
+      "expect": "\\(fail\\).*refused until publishing is allowed"
+    },
+    {
+      "id": "W-464/before-publish-open",
+      "requirement": "W-464",
+      "description": "EmDash's own MCP content_publish can publish EmVB pages behind the admin's back.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/agent-settings.ts",
+          "search": "  if (settings.mcpEnabled && settings.publishPages) return undefined;",
+          "replace": "  if (settings.mcpEnabled || !settings.publishPages) return undefined;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-publish.test.ts",
+        "-t",
+        "own MCP publish"
+      ],
+      "expect": "\\(fail\\).*own MCP publish"
+    },
+    {
+      "id": "W-464/settings-editor-writable",
+      "requirement": "W-463",
+      "description": "Editors (and so agents' users) can change the agent settings.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/agent-settings.ts",
+          "search": "export const agentsSaveRoute: PluginRoute<z.infer<typeof SaveInput>> = {\n  permission: \"plugins:manage\",",
+          "replace": "export const agentsSaveRoute: PluginRoute<z.infer<typeof SaveInput>> = {\n  permission: \"content:edit_any\","
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-publish.test.ts",
+        "-t",
+        "only admins"
+      ],
+      "expect": "\\(fail\\).*only admins"
+    },
+    {
+      "id": "W-458/variable-in-use-removed",
+      "requirement": "W-458",
+      "description": "update_site_styles deletes a colour variable a page still uses.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/write.ts",
+          "search": "    if (!input.force) {",
+          "replace": "    if (input.force === false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/mcp-write.test.ts",
+        "-t",
+        "still uses"
+      ],
+      "expect": "\\(fail\\).*still uses"
     }
   ]
 }

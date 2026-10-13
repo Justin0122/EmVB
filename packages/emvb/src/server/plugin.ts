@@ -8,6 +8,7 @@ import {
 } from "./design-routes.ts";
 import { iconDeleteRoute, iconRenameRoute, iconUploadRoute, iconsRoute } from "./icon-routes.ts";
 import { beforeSave } from "./hooks.ts";
+import { agentsRoute, agentsSaveRoute, beforePublish } from "./agent-settings.ts";
 import { canvasStyleUrls } from "../core/canvas-styles.ts";
 import { TOOLS } from "../mcp/tools.ts";
 import { mcpRoutes, mcpToolConfig } from "./mcp-routes.ts";
@@ -17,7 +18,13 @@ export function createPlugin(options: { canvasStyles?: unknown } = {}) {
   return definePlugin({
     id: PLUGIN_ID,
     version: PLUGIN_VERSION,
-    capabilities: ["content:read", "content:write", "content:publish", "content:revisions:read"],
+    capabilities: [
+      "content:read",
+      "content:write",
+      "content:publish",
+      "content:revisions:read",
+      "hooks.content-policy:register",
+    ],
     // W-239: uploaded SVG icons (EmDash's media library refuses SVG by default).
     storage: {
       design: { indexes: [] },
@@ -28,12 +35,15 @@ export function createPlugin(options: { canvasStyles?: unknown } = {}) {
     },
     hooks: {
       "content:beforeSave": { handler: beforeSave, errorPolicy: "abort" },
+      // D-055: EmDash's own MCP tools can't publish EmVB pages unless the admin allowed it.
+      "content:beforePublish": { handler: beforePublish },
     },
     admin: {
       entry: ADMIN_ENTRY,
       pages: [
         { path: "/pages", label: "Pages VisualBuilder", icon: "layout" },
         { path: "/theme", label: "Theme Builder", icon: "layout" },
+        { path: "/agents", label: "AI agents", icon: "layout" },
       ],
       fieldWidgets: [{ name: "layout", label: "EmVB page (read-only)", fieldTypes: ["json"] }],
     },
@@ -52,6 +62,9 @@ export function createPlugin(options: { canvasStyles?: unknown } = {}) {
       "icons/upload": iconUploadRoute,
       "icons/rename": iconRenameRoute,
       "icons/delete": iconDeleteRoute,
+      // W-463: the Agents tab (admins only).
+      agents: agentsRoute,
+      "agents/save": agentsSaveRoute,
       // R1 D-054: EmDash's /_emdash/api/mcp lists these as emvb__<tool> (EmDash 1.2+, mcp: true).
       ...mcpRoutes(TOOLS),
     },
