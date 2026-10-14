@@ -166,7 +166,7 @@ export const loop: ElementDefinition<LoopNode> = {
     ".emvb-loop-grid,.emvb-loop-cards{display:grid;grid-template-columns:repeat(var(--emvb-loop-columns,3),minmax(0,1fr))}" +
     ".emvb-loop-cards>.emvb-loop-item{padding:1rem;border:1px solid color-mix(in srgb,currentColor 15%,transparent);border-radius:12px;background:color-mix(in srgb,currentColor 3%,transparent)}" +
     ".emvb-loop-grid>.emvb-loop-empty,.emvb-loop-cards>.emvb-loop-empty{grid-column:1/-1}" +
-    "@media (max-width: 767px){.emvb-loop-grid,.emvb-loop-cards{grid-template-columns:minmax(0,1fr)}}",
+    "@media (max-width: 767.98px){.emvb-loop-grid,.emvb-loop-cards{grid-template-columns:minmax(0,1fr)}}",
   defaults: () => ({ type: "loop", props: {}, children: [] }),
   descriptor: {
     type: "loop",

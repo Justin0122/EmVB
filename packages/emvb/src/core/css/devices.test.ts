@@ -14,8 +14,28 @@ describe("per-device styles (W-096)", () => {
     expect(deviceForWidth(768)).toBe("tablet");
     expect(deviceForWidth(1024)).toBe("tablet");
     expect(deviceForWidth(1025)).toBe("desktop");
-    expect(DEVICE_MEDIA.mobile).toBe("(max-width: 767px)");
-    expect(DEVICE_MEDIA.tablet).toBe("(max-width: 1024px)");
+    expect(DEVICE_MEDIA.mobile).toBe("(max-width: 767.98px)");
+    expect(DEVICE_MEDIA.tablet).toBe("(max-width: 1024.98px)");
+  });
+
+  test("hide queries leave no gap at fractional widths from zoom (W-506)", () => {
+    // [min, max] of each hide query; adjacent devices must meet within 0.02 px.
+    const bound = (q: string, side: "min" | "max") =>
+      Number(new RegExp(`${side}-width: ([0-9.]+)px`).exec(q)?.[1] ?? Number.NaN);
+    expect(
+      bound(DEVICE_MEDIA.hideTablet, "min") - bound(DEVICE_MEDIA.hideMobile, "max"),
+    ).toBeLessThanOrEqual(0.02);
+    expect(
+      bound(DEVICE_MEDIA.hideDesktop, "min") - bound(DEVICE_MEDIA.hideTablet, "max"),
+    ).toBeLessThanOrEqual(0.02);
+    for (const width of [767.5, 1024.5]) {
+      const device = deviceForWidth(width);
+      const max =
+        device === "mobile"
+          ? bound(DEVICE_MEDIA.hideMobile, "max")
+          : bound(DEVICE_MEDIA.hideTablet, "max");
+      expect(width <= max, String(width)).toBe(true);
+    }
   });
 
   test("tablet overrides come first, mobile overrides win, and hide uses its own query", () => {

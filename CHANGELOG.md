@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Devices:** an element hidden on two adjacent devices no longer shows at fractional window widths from browser zoom or display scaling (1024.5 px, for example); the device media queries end at `.98px` (W-506).
 - **Loops:** the editor's Loop preview no longer shows entries whose list field holds the filtered value, matching the published page, where EmDash compares fields as plain values (W-505).
 - **MCP:** `update_site_styles` refuses to remove a class a page still uses, naming the pages, unless `force: true`, as it already did for variables (W-504).
 - **Playground:** the image editor's Reset to original and re-opening an edit work in the playground; its mock media library now answers a lookup by id (W-503).

@@ -16142,7 +16142,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/theme/popup-rules.ts",
-          "search": "tablet: \"(max-width: 1024px)\",",
+          "search": "tablet: \"(max-width: 1024.98px)\",",
           "replace": "tablet: \"(max-width: 10px)\","
         }
       ],
@@ -30927,6 +30927,20 @@
         "./packages/emvb/src/admin/editor/collection-preview-filter.test.ts"
       ],
       "expect": "\\(fail\\).*one-item list"
+    },
+    {
+      "id": "W-506/fractional-width-gap",
+      "requirement": "W-506",
+      "description": "Hide queries leave a gap at 1024.5 px.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/popup-rules.ts",
+          "search": "  hideTablet: \"(min-width: 768px) and (max-width: 1024.98px)\",",
+          "replace": "  hideTablet: \"(min-width: 768px) and (max-width: 1024px)\","
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/css/devices.test.ts"],
+      "expect": "\\(fail\\).*W-506"
     }
   ]
 }

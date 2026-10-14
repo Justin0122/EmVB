@@ -158,8 +158,8 @@ Lengths are `{ "value": 0–10000, "unit": "px" | "rem" | "em" | "%" | "vw" | "v
 
 `node.devices` and `design.classes[].devices` are `{ "tablet"?, "mobile"? }`. Each is a style object with the same keys as `style`. Only keys that differ from desktop are stored. `node.hiddenOn` and `design.classes[].hiddenOn` are arrays of `"desktop"`, `"tablet"` and `"mobile"` (at most one of each). Desktop itself stays in `style`.
 
-- **Queries.** Tablet is `@media (max-width: 1024px)`, then mobile `@media (max-width: 767px)`. A phone matches both, so mobile wins on a shared key, and a tablet-only key still applies on mobile. The bounds match `deviceForWidth` (under 768 mobile, under 1025 tablet).
-- **Hide.** Each device has its own query, so `display: none` does not leak: desktop `(min-width: 1025px)`, tablet `(min-width: 768px) and (max-width: 1024px)`, mobile `(max-width: 767px)`.
+- **Queries.** Tablet is `@media (max-width: 1024.98px)`, then mobile `@media (max-width: 767.98px)`. A phone matches both, so mobile wins on a shared key, and a tablet-only key still applies on mobile. The bounds match `deviceForWidth` (under 768 mobile, under 1025 tablet).
+- **Hide.** Each device has its own query, so `display: none` does not leak: desktop `(min-width: 1025px)`, tablet `(min-width: 768px) and (max-width: 1024.98px)`, mobile `(max-width: 767.98px)`. The `.98` keeps fractional widths from zoom or display scaling (1024.5, say) inside one device, so nothing slips between two hide queries (W-506).
 - **States.** Hover, focus and active stay all-viewport. Device overrides edit Normal only.
 - **Version.** Adding these fields moved the version to 5 (D-036) with a v4 → v5 step that changes nothing.
 

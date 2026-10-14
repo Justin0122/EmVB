@@ -35,5 +35,5 @@ export const sample = {
   Walk the wild edges of the North.
 </h1>`,
   css: `.emvb-e-page-headin002{max-width:860px;color:var(--emvb-c-white)}
-@media (max-width: 767px){.emvb-e-page-headin002{font-size:46px}}`,
+@media (max-width: 767.98px){.emvb-e-page-headin002{font-size:46px}}`,
 } as const;

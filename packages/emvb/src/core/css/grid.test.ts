@@ -50,14 +50,14 @@ describe("CSS grid", () => {
   test("tablet and mobile columns go in their media queries; unset follows the wider device (W-139)", () => {
     const both = renderPage(page(3, [], { columnsTablet: 2, columnsMobile: 1 }), emptyDesign()).css;
     expect(both).toMatch(
-      /@media[^{]*max-width: ?1024px[^{]*\{\.emvb-e-grid0001\{grid-template-columns:repeat\(2, minmax\(0, 1fr\)\)\}/,
+      /@media[^{]*max-width: ?1024(\.98)?px[^{]*\{\.emvb-e-grid0001\{grid-template-columns:repeat\(2, minmax\(0, 1fr\)\)\}/,
     );
     expect(both).toMatch(
-      /@media[^{]*max-width: ?767px[^{]*\{\.emvb-e-grid0001\{grid-template-columns:repeat\(1, minmax\(0, 1fr\)\)\}/,
+      /@media[^{]*max-width: ?767(\.98)?px[^{]*\{\.emvb-e-grid0001\{grid-template-columns:repeat\(1, minmax\(0, 1fr\)\)\}/,
     );
     const tabletOnly = renderPage(page(4, [], { columnsTablet: 2 }), emptyDesign()).css;
     expect(tabletOnly).toContain("repeat(2, minmax(0, 1fr))");
-    expect(tabletOnly).not.toMatch(/max-width: ?767px[^{]*\{\.emvb-e-grid0001/);
+    expect(tabletOnly).not.toMatch(/max-width: ?767(\.98)?px[^{]*\{\.emvb-e-grid0001/);
     const none = renderPage(page(4, []), emptyDesign()).css;
     expect(none).not.toMatch(/@media[^{]*\{\.emvb-e-grid0001/);
   });

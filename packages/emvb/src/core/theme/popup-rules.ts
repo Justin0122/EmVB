@@ -18,13 +18,18 @@ export type PopupDevice = (typeof POPUP_DEVICES)[number];
  */
 export const DEVICE_PREVIEW_PX = { desktop: 1280, tablet: 768, mobile: 390 } as const;
 
-/** Public CSS queries. Bounds match `deviceForWidth`: 767 mobile, 1024 tablet, 1025 desktop. */
+/**
+ * Public CSS queries. Bounds match `deviceForWidth`: below 768 mobile, below 1025 tablet.
+ * W-506: zoom and display scaling give fractional viewport widths; with whole-pixel bounds a
+ * width such as 1024.5 matched neither the tablet nor the desktop "hide" query, so an element
+ * hidden on both showed. The max bounds sit just under the next device's min (as Bootstrap does).
+ */
 export const DEVICE_MEDIA = {
-  tablet: "(max-width: 1024px)",
-  mobile: "(max-width: 767px)",
+  tablet: "(max-width: 1024.98px)",
+  mobile: "(max-width: 767.98px)",
   hideDesktop: "(min-width: 1025px)",
-  hideTablet: "(min-width: 768px) and (max-width: 1024px)",
-  hideMobile: "(max-width: 767px)",
+  hideTablet: "(min-width: 768px) and (max-width: 1024.98px)",
+  hideMobile: "(max-width: 767.98px)",
 } as const;
 
 /** A scroll percent as a number from 0 to 100; anything unreadable is 0. */

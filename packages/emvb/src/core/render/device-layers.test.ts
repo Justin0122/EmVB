@@ -22,7 +22,7 @@ const page = (extra: Record<string, unknown>): Layout =>
     },
   }) as Layout;
 const media = (css: string, width: number) =>
-  css.slice(css.indexOf(`@media (max-width: ${width}px)`)).split("}")[0] ?? "";
+  css.slice(css.indexOf(`@media (max-width: ${width}.98px)`)).split("}")[0] ?? "";
 
 describe("device background layers keep what they inherit (W-210)", () => {
   test("a tablet overlay keeps the desktop gradient; a tablet gradient keeps the image", () => {
