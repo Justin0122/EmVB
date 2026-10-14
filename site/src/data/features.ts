@@ -29,6 +29,10 @@ export const featureGroups: FeatureGroup[] = [
         body: "Copy elements and styles between pages, and step back through up to 100 edits with Ctrl or Cmd + Z.",
       },
       {
+        title: "An image editor",
+        body: "Crop, adjust, filter, curves and blur a media-library picture without leaving the admin, saved as a new copy.",
+      },
+      {
         title: "An icon library",
         body: "Over 14,000 icons from Lucide, Font Awesome Free, Tabler and Remix, or upload your own SVG.",
       },

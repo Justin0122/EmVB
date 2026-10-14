@@ -32,7 +32,8 @@ instructions.
 6. **Check accessibility** with `get_accessibility_findings` after building and fix every
    error. Contrast findings that share one colour: change that colour variable once.
 7. **Don't publish** unless the person asked and `publish_page` is available. End with
-   `describe_page` and a short summary so they can review the draft.
+   `describe_page` and a short summary so they can review the draft. Fix its warnings too (an
+   element hidden on every device, a form's required field with no field on the form).
 
 ## What the tools can't do
 
@@ -52,7 +53,10 @@ instructions.
   value; `list_element_types` with the type shows its props, allowed parents and notes.
 - `NESTING` / `REFUSED`: the element can't go there, or the id doesn't exist; re-read the outline.
 - `TOO_LARGE`: the page is over 512 KB; split it.
-- `REFUSED` on removing a variable: it's still used; replace those references first.
+- `REFUSED` on removing a variable or class: a page still uses it (the message names the pages);
+  replace those references first. Pass `force: true` only if the person asked.
+- An image `src` must be an http(s) URL or a path on the site; `javascript:`, `data:` and
+  `//host` sources are refused.
 - `PUBLISH_DISABLED`: leave the draft for review.
 - `FORBIDDEN`: agent access is off on the site, or the token can't use EmVB; tell the person.
 - `NOT_SET_UP`: an admin must click "Set up EmVB" in the EmDash admin first; tell the person.
