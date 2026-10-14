@@ -31051,6 +31051,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/toc.test.ts"],
       "expect": "\\(fail\\).*W-512"
+    },
+    {
+      "id": "W-513/audience-limited-required-not-reported",
+      "requirement": "W-513",
+      "description": "A required field shown only to some visitors is not reported.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/forms/binding.ts",
+          "search": "bound.every((control) => control.who !== undefined)",
+          "replace": "bound.length === 0"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/forms/required-issues.test.ts"],
+      "expect": "\\(fail\\).*W-513"
     }
   ]
 }

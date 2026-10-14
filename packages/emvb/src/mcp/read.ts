@@ -356,11 +356,13 @@ async function requiredFieldWarnings(ports: EmvbPorts, root: LayoutNode) {
     if (!defined) continue;
     for (const issue of requiredFieldIssues(form, defined)) {
       warnings.push({
-        nodeId: issue.kind === "hidden" ? issue.nodeId : issue.formNodeId,
+        nodeId: issue.kind === "missing" ? issue.formNodeId : issue.nodeId,
         message:
           issue.kind === "hidden"
             ? `${requiredFieldIssueText(issue)} (Unset hiddenOn on ${issue.nodeId} or the box around it.)`
-            : `${requiredFieldIssueText(issue)} (Form ${issue.formNodeId}, field name ${issue.field}.)`,
+            : issue.kind === "audience"
+              ? `${requiredFieldIssueText(issue)} (Unset audience or variant on ${issue.nodeId} or the box around it.)`
+              : `${requiredFieldIssueText(issue)} (Form ${issue.formNodeId}, field name ${issue.field}.)`,
       });
     }
   }

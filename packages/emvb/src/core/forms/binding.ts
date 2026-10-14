@@ -1,4 +1,5 @@
 import { isFormNode, type Layout, type LayoutNode } from "../schema/layout.ts";
+import { audienceSummary } from "../audience/rules.ts";
 import { forEachNode, nodeChildren, someNode } from "../tree-ops.ts";
 import { fieldsOf, type FormDefinitions } from "./definition.ts";
 
@@ -69,31 +70,75 @@ export type RequiredFieldIssue =
       /** The bound control (the first one, when the field is bound more than once). */
       nodeId: string;
       devices: string[];
+    }
+  | {
+      kind: "audience";
+      formNodeId: string;
+      field: string;
+      label: string;
+      nodeId: string;
+      /** Who sees it, e.g. "Only CA · returning", or "Variant B of A/B test hero". */
+      who: string;
     };
 
 const FIELD_TYPES = new Set(["text-input", "textarea", "select", "checkbox", "radio"]);
 const DEVICE_ORDER = ["desktop", "tablet", "mobile"];
 
 /** Each bound field's controls, with the devices each is hidden on (itself or an ancestor). */
-function boundControls(form: LayoutNode): Map<string, { nodeId: string; hidden: Set<string> }[]> {
-  const found = new Map<string, { nodeId: string; hidden: Set<string> }[]>();
-  const walk = (node: LayoutNode, inherited: ReadonlySet<string>) => {
+type Control = { nodeId: string; hidden: Set<string>; who?: string };
+
+/**
+ * W-513: who an element is limited to, by a Visitors rule or as one arm of an A/B test, or
+ * undefined when everyone sees it.
+ */
+function restriction(node: LayoutNode): string | undefined {
+  const audience = node.audience;
+  if (audience) {
+    const { hide, timeZone: _zone, ...rules } = audience;
+    if (hide || Object.values(rules).some((rule) => rule !== undefined)) {
+      return audienceSummary(audience);
+    }
+  }
+  if (node.variant) {
+    return `Variant ${node.variant.arm.toUpperCase()} of A/B test ${node.variant.test}`;
+  }
+  return undefined;
+}
+
+function boundControls(form: LayoutNode): Map<string, Control[]> {
+  const found = new Map<string, Control[]>();
+  const walk = (node: LayoutNode, inherited: ReadonlySet<string>, limited: string | undefined) => {
     const own = (node as { hiddenOn?: readonly string[] }).hiddenOn ?? [];
     const hidden = own.length ? new Set([...inherited, ...own]) : inherited;
+    const who = limited ?? restriction(node);
     if (FIELD_TYPES.has(node.type)) {
       const field = (node.props as { field?: unknown }).field;
       if (typeof field === "string" && field) {
-        found.set(field, [
-          ...(found.get(field) ?? []),
-          { nodeId: node.id, hidden: new Set(hidden) },
-        ]);
+        const control: Control = { nodeId: node.id, hidden: new Set(hidden) };
+        if (who) control.who = who;
+        found.set(field, [...(found.get(field) ?? []), control]);
       }
     }
-    for (const child of nodeChildren(node)) walk(child, hidden);
+    for (const child of nodeChildren(node)) walk(child, hidden, who);
   };
-  // The form's own hiddenOn hides the whole form there, which loses no answers: not counted.
-  for (const child of nodeChildren(form)) walk(child, new Set());
+  // The form's own hiddenOn or audience hides the whole form, which loses no answers: not counted.
+  for (const child of nodeChildren(form)) walk(child, new Set(), undefined);
   return found;
+}
+
+/**
+ * Two controls that split the visitors between them (A and B of one test, or "Only X" and
+ * "Hidden for X") still reach everyone.
+ */
+function coversEveryone(controls: readonly Control[]): boolean {
+  const who = new Set(controls.map((control) => control.who));
+  for (const label of who) {
+    if (!label) continue;
+    const ab = /^Variant ([AB]) of (A\/B test .+)$/.exec(label);
+    if (ab && who.has(`Variant ${ab[1] === "A" ? "B" : "A"} of ${ab[2]}`)) return true;
+    if (label.startsWith("Only ") && who.has(`Hidden for ${label.slice(5)}`)) return true;
+  }
+  return false;
 }
 
 /** W-511: required fields of the form element's definition that visitors can't fill. */
@@ -122,6 +167,19 @@ export function requiredFieldIssues(
         nodeId: (bound[0] as { nodeId: string }).nodeId,
         devices,
       });
+      continue;
+    }
+    // W-513: only some visitors see every control for the field; the rest can't send the form.
+    const first = bound[0] as Control;
+    if (bound.every((control) => control.who !== undefined) && !coversEveryone(bound)) {
+      issues.push({
+        kind: "audience",
+        formNodeId: form.id,
+        field: field.name,
+        label,
+        nodeId: first.nodeId,
+        who: first.who as string,
+      });
     }
   }
   return issues;
@@ -131,6 +189,9 @@ export function requiredFieldIssues(
 export function requiredFieldIssueText(issue: RequiredFieldIssue): string {
   if (issue.kind === "missing") {
     return `“${issue.label}” is required by the form but has no field here, so the form can't be sent. Add a field bound to ${issue.field}, or make it optional in Forms.`;
+  }
+  if (issue.kind === "audience") {
+    return `“${issue.label}” is required but shown only to some visitors (${issue.who}), so everyone else can't send the form. Remove the rule from the field, or make it optional in Forms.`;
   }
   const where =
     issue.devices.length === 3 ? "on every device" : `on ${issue.devices.join(" and ")}`;

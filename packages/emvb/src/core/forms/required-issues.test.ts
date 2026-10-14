@@ -69,3 +69,48 @@ describe("required fields visitors can't fill (W-511)", () => {
     expect(issues).toEqual([]);
   });
 });
+
+describe("required fields shown only to some visitors (W-513)", () => {
+  const limited = (id: string, field: string, extra: Record<string, unknown>) =>
+    ({ ...input(id, field), ...extra }) as LayoutNode;
+
+  test("a Visitors rule or one A/B arm on the field, or on a box around it, is reported", () => {
+    const box = {
+      id: "box00001",
+      type: "container",
+      props: {},
+      audience: { countries: ["CA"], visitor: "returning" },
+      children: [input("inp00002", "phone")],
+    } as LayoutNode;
+    const issues = requiredFieldIssues(
+      form([limited("inp00001", "email", { variant: { test: "hero", arm: "b" } }), box]),
+      fields,
+    );
+    expect(issues.map((i) => i.kind === "audience" && [i.field, i.nodeId, i.who])).toEqual([
+      ["email", "inp00001", "Variant B of A/B test hero"],
+      ["phone", "inp00002", "Only CA · returning"],
+    ]);
+    expect(requiredFieldIssueText(issues[1] as never)).toContain(
+      "shown only to some visitors (Only CA · returning)",
+    );
+  });
+
+  test("both arms, a rule and its opposite, an empty rule, or a limited form are fine", () => {
+    const issues = requiredFieldIssues(
+      form([
+        limited("inp00001", "email", { variant: { test: "hero", arm: "a" } }),
+        limited("inp00002", "email", { variant: { test: "hero", arm: "b" } }),
+        limited("inp00003", "phone", { audience: { countries: ["CA"] } }),
+        limited("inp00004", "phone", { audience: { countries: ["CA"], hide: true } }),
+        limited("inp00005", "note", { audience: { timeZone: "UTC" } }),
+      ]),
+      fields,
+    );
+    expect(issues).toEqual([]);
+    const whole = {
+      ...form([input("inp00001", "email"), input("inp00002", "phone")]),
+      audience: { countries: ["CA"] },
+    } as LayoutNode;
+    expect(requiredFieldIssues(whole, fields)).toEqual([]);
+  });
+});

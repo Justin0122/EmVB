@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Forms:** the required-field warning (W-511) also covers a required field shown only to some visitors, by a Visitors rule or as one arm of an A/B test, on the field or a box around it (W-513).
 - **Table of contents:** a heading inside a box hidden on every device is no longer listed as a link that goes nowhere (W-512).
 - **Forms:** a Form element now warns, in its settings and in MCP `describe_page`, when a required field has no field on the form or is hidden on a device. Either way visitors can't send the form, and they see no reason why (W-511).
 - **MCP:** `update_element` giving an image a new `src` now drops the old picture's extra sizes, media id, size and image-editor record, so the page shows the new picture instead of the old one from srcset (W-510).
