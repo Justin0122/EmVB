@@ -154,3 +154,17 @@ describe("propsFromUrl (W-425)", () => {
     });
   });
 });
+
+describe("a picture change drops the image-editor record (W-482)", () => {
+  const edit = { v: 1, engine: "photocn", originalSrc: "/a.jpg" };
+  test("a different library image clears edit; the same one keeps it", () => {
+    const current = { src: "/a.webp", alt: "Shop", mediaId: "01OLD", edit };
+    expect(propsFromMedia(current, item({ id: "01NEW", url: "/b.png" })).edit).toBeUndefined();
+    expect(propsFromMedia(current, item({ id: "01OLD", url: "/a.webp" })).edit).toEqual(edit);
+  });
+  test("a different pasted URL clears edit; the same URL keeps it", () => {
+    const current = { src: "/a.webp", alt: "Shop", edit };
+    expect(propsFromUrl(current, "https://example.com/x.jpg").edit).toBeUndefined();
+    expect(propsFromUrl(current, "/a.webp").edit).toEqual(edit);
+  });
+});

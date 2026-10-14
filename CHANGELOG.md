@@ -10,6 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - **Layout schema 16.** Images can carry an optional `edit` record for the upcoming image editor (the edit settings and a link back to the original picture). Pages saved by this version can't be opened by EmVB 0.5 or older; older pages open unchanged (W-481).
 
+### Added
+
+- **Image editor (preview).** Image settings have an **Edit image** button that opens a full-screen editor for a media-library picture: undo, redo, reset, hold `\` to compare with the original, and a tool rail (crop, adjust, filters, curves, blur) whose tools arrive in the next updates. The editor loads only when it is opened and renders in a background thread where the browser allows it. Saving a copy comes in a later update.
+
+### Fixed
+
+- Choosing a different picture for an Image element drops the old picture's edit record.
+
 ## [0.5.0] - 2026-10-13
 
 ### Fixed

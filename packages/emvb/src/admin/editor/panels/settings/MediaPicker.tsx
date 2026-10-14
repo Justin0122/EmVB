@@ -9,6 +9,7 @@ import {
   uploadImage,
   type MediaLibraryItem,
 } from "../../../media-api.ts";
+import { ImageEditButton } from "../../../image-editor/ImageEditButton.tsx";
 import { BUTTON, FIELD } from "../../../ui.ts";
 
 const propsOf = (node: LayoutNode): Record<string, unknown> =>
@@ -23,13 +24,15 @@ type Props = {
   onChange: (node: LayoutNode) => void;
   /** Field label; Page settings uses "Social image" (W-287). */
   label?: string;
+  /** Offer "Edit image" (Image elements only, W-482). */
+  editable?: boolean;
 };
 
 /**
  * Image source control (W-024 / R-007): pick from EmDash media library, upload a file,
  * or paste a URL. Upload uses the same POST /_emdash/api/media path on both demos.
  */
-export function MediaPicker({ node, fetcher, onChange, label = "Image" }: Props) {
+export function MediaPicker({ node, fetcher, onChange, label = "Image", editable = false }: Props) {
   const props = propsOf(node);
   const src = typeof props.src === "string" ? props.src : "";
   const [open, setOpen] = React.useState(false);
@@ -138,6 +141,7 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image" }: Props)
         >
           Upload
         </Button>
+        {editable && src ? <ImageEditButton imageProps={props} /> : null}
         <input
           ref={fileRef}
           type="file"

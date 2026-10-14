@@ -29388,8 +29388,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/media-api.ts",
-          "search": "if (current.src !== item.url) delete next.sources;",
-          "replace": ""
+          "search": "    delete next.sources;\n    // W-482: the image-editor record belongs to the old picture.",
+          "replace": "    // W-482: the image-editor record belongs to the old picture."
         }
       ],
       "command": [
@@ -30438,6 +30438,40 @@
         "unknown key"
       ],
       "expect": "\\(fail\\).*unknown key"
+    },
+    {
+      "id": "W-482/editor-static-import",
+      "requirement": "W-482",
+      "description": "The Edit image button imports the editor dialog statically, pulling photocn into the main admin chunk.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/ImageEditButton.tsx",
+          "search": "const loadDialog = () => import(\"./ImageEditorDialog.tsx\");",
+          "replace": "import * as StaticDialog from \"./ImageEditorDialog.tsx\";\nconst loadDialog = () => Promise.resolve(StaticDialog);"
+        }
+      ],
+      "command": ["bun", "test", "./scripts/image-editor-budget.test.ts"],
+      "expect": "\\(fail\\).*photocn is only in one lazy chunk"
+    },
+    {
+      "id": "W-482/stale-edit-kept",
+      "requirement": "W-482",
+      "description": "Choosing a different library picture keeps the old picture's edit record.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/media-api.ts",
+          "search": "    // W-482: the image-editor record belongs to the old picture.\n    delete next.edit;\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/media-api.test.ts",
+        "-t",
+        "a different library image clears edit"
+      ],
+      "expect": "\\(fail\\).*a different library image clears edit"
     }
   ]
 }

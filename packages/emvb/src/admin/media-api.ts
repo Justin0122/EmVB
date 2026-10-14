@@ -63,6 +63,8 @@ export function propsFromUrl(
   if (current.src === src) return next;
   // W-422: a different picture drops the old one's extra sizes.
   delete next.sources;
+  // W-482: an image-editor record describes the old picture; kept, re-opening would edit it.
+  delete next.edit;
   // W-425: a library image's width and height describe that file, not the pasted one.
   if (current.mediaId) {
     delete next.width;
@@ -78,7 +80,11 @@ export function propsFromMedia(
 ): Record<string, unknown> {
   const next: Record<string, unknown> = { ...current, src: item.url, mediaId: item.id };
   // W-422: extra sizes belong to the old picture; kept, the browser could still show it.
-  if (current.src !== item.url) delete next.sources;
+  if (current.src !== item.url) {
+    delete next.sources;
+    // W-482: the image-editor record belongs to the old picture.
+    delete next.edit;
+  }
   if (item.width) next.width = item.width;
   if (item.height) next.height = item.height;
   const alt = current.alt;

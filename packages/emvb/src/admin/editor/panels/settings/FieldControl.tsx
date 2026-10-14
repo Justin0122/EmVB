@@ -113,7 +113,15 @@ export function FieldControl({
         </p>
       );
     }
-    return <MediaPicker key={field.key} node={node} fetcher={fetcher} onChange={onChange} />;
+    return (
+      <MediaPicker
+        key={field.key}
+        node={node}
+        fetcher={fetcher}
+        onChange={onChange}
+        editable={node.type === "image"}
+      />
+    );
   }
 
   if (field.kind === "boolean") {
