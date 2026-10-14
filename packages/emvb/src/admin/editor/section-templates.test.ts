@@ -4,7 +4,7 @@ import type { Fetcher } from "../api.ts";
 import { loadSectionTemplates } from "./section-templates.ts";
 
 const layout = {
-  schemaVersion: 15,
+  schemaVersion: 16,
   root: { id: "root0001", type: "container", props: {}, children: [] },
 } as Layout;
 

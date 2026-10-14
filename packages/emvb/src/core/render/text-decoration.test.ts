@@ -6,7 +6,7 @@ import { StyleProps } from "../schema/style.ts";
 import { renderPage } from "./index.ts";
 
 const page = (children: LayoutNode[]): Layout => ({
-  schemaVersion: 15,
+  schemaVersion: 16,
   root: container("root0001", children) as Layout["root"],
 });
 

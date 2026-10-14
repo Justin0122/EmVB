@@ -11,7 +11,7 @@ const design: DesignSystem = {
   variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },
 };
 const page = (...children: LayoutNode[]): Layout => ({
-  schemaVersion: 15,
+  schemaVersion: 16,
   root: container("root0001", children) as Layout["root"],
 });
 const parse = (html: string) => {

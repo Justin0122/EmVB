@@ -35,7 +35,7 @@ export function benchLayout(nodes = 300): Layout {
 }
 
 const design: DesignSystem = {
-  schemaVersion: 16,
+  schemaVersion: 15,
   variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },
 };
 

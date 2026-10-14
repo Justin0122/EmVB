@@ -9,7 +9,7 @@ const field = (type: "select" | "radio", id: string, name: string): LayoutNode =
   ({ id, type, props: { field: name, label: name } }) as LayoutNode;
 
 const layout: Layout = {
-  schemaVersion: 15,
+  schemaVersion: 16,
   root: {
     id: "root0001",
     type: "container",
@@ -117,7 +117,7 @@ describe("form fields take the definition's type and limits (W-297)", () => {
     ],
   };
   const typedLayout: Layout = {
-    schemaVersion: 15,
+    schemaVersion: 16,
     root: {
       id: "root0001",
       type: "container",
@@ -252,7 +252,7 @@ describe("a field uses the form it sits in", () => {
         children: [select(fieldId)],
       }) as LayoutNode;
     const page: Layout = {
-      schemaVersion: 15,
+      schemaVersion: 16,
       root: {
         id: "root0001",
         type: "container",
@@ -294,7 +294,7 @@ describe("a field uses the form it sits in", () => {
 
   test("a form inside a synced section uses that section's definition", () => {
     const sectionForm: Layout = {
-      schemaVersion: 15,
+      schemaVersion: 16,
       root: {
         id: "rootsec1",
         type: "container",
@@ -312,7 +312,7 @@ describe("a field uses the form it sits in", () => {
       },
     };
     const page: Layout = {
-      schemaVersion: 15,
+      schemaVersion: 16,
       root: {
         id: "root0001",
         type: "container",

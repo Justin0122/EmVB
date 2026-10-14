@@ -3,7 +3,7 @@ import { emptyDesign, renderPage, type Layout, type LayoutNode } from "../index.
 
 const design = emptyDesign();
 const page = (child: LayoutNode): Layout => ({
-  schemaVersion: 15,
+  schemaVersion: 16,
   root: { id: "root0001", type: "container", props: {}, children: [child] },
 });
 const image = (props: Record<string, unknown>): LayoutNode =>

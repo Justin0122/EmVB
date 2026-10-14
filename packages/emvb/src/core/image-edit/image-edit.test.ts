@@ -45,7 +45,7 @@ const page = (props: Record<string, unknown>, schemaVersion = 16) => ({
 describe("image edit record (W-481)", () => {
   test("a full record is valid and survives a layout round trip", () => {
     const layout = page({ mediaId: "01EDITED", width: 1920, height: 1920, edit: sampleEdit() });
-    expect(validateLayout(layout)).toEqual({ ok: true, layout, upgradedFrom: 16 });
+    expect<unknown>(validateLayout(layout)).toEqual({ ok: true, layout, upgradedFrom: 16 });
   });
 
   test("originalMediaId and the recipe's optional parts may be left out", () => {

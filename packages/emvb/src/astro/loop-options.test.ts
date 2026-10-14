@@ -34,7 +34,7 @@ const content = {
 
 const loop = (props: Record<string, unknown>): Layout =>
   ({
-    schemaVersion: 15,
+    schemaVersion: 16,
     root: {
       id: "root0001",
       type: "container",

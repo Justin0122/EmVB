@@ -9,7 +9,7 @@ const box = (id: string, children: LayoutNode[], label?: string) =>
   ({ id, type: "container", props: {}, children, ...(label ? { label } : {}) }) as LayoutNode;
 const page = (...children: LayoutNode[]): Layout =>
   ({
-    schemaVersion: 15,
+    schemaVersion: 16,
     root: { id: "root0001", type: "container", props: {}, children },
   }) as Layout;
 

@@ -8,7 +8,7 @@ import { renderPage } from "./index.ts";
 
 const design: DesignSystem = emptyDesign();
 const page = (children: LayoutNode[], root: Partial<LayoutNode> = {}): Layout => ({
-  schemaVersion: 15,
+  schemaVersion: 16,
   root: { ...container("root0001", children), ...root } as Layout["root"],
 });
 

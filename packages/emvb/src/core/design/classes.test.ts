@@ -50,7 +50,7 @@ describe("moveDesignClass", () => {
 describe("findClassUsages / clearClassRefs (W-032)", () => {
   test("finds and clears class ids across the tree", () => {
     const layout: Layout = {
-      schemaVersion: 15,
+      schemaVersion: 16,
       root: {
         id: "root0001",
         type: "container",

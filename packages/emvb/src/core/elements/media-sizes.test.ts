@@ -6,7 +6,7 @@ const design = emptyDesign();
 
 const page = (children: unknown[]): Layout =>
   ({
-    schemaVersion: 15,
+    schemaVersion: 16,
     root: { id: "root0001", type: "container", props: {}, children },
   }) as Layout;
 

@@ -6,7 +6,7 @@ import { auditPage } from "./audit.ts";
 const vague = (text: string) =>
   auditPage(
     {
-      schemaVersion: 15,
+      schemaVersion: 16,
       root: {
         id: "root0001",
         type: "container",
