@@ -30983,6 +30983,26 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements/plain-text.test.ts"],
       "expect": "\\(fail\\).*W-509"
+    },
+    {
+      "id": "W-510/mcp-src-keeps-old-sources",
+      "requirement": "W-510",
+      "description": "update_element with a new image src keeps the old srcset.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/write.ts",
+          "search": "if (typeof setProps.src !== \"string\" || setProps.src === before.src) return;",
+          "replace": "if (typeof setProps.src === \"string\") return;"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "--timeout",
+        "30000",
+        "./packages/emvb/test/server/mcp-write.test.ts"
+      ],
+      "expect": "\\(fail\\).*W-510"
     }
   ]
 }

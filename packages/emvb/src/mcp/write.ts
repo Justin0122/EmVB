@@ -363,6 +363,29 @@ export const UpdateElementInput = z.strictObject({
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
+/**
+ * W-510: a new `src` merged into an image's props kept the old picture's extra sizes (the
+ * browser went on showing the old picture from srcset), its image-editor record and its media
+ * id and size. As the editor's picker does (W-422, W-425, W-482), they go unless the same
+ * write sets them.
+ */
+function dropOldPictureProps(
+  before: Record<string, unknown>,
+  setProps: Record<string, unknown>,
+  copy: Record<string, unknown>,
+) {
+  if (typeof setProps.src !== "string" || setProps.src === before.src) return;
+  const props = copy.props;
+  if (!isRecord(props)) return;
+  for (const key of ["sources", "edit", "mediaId"]) {
+    if (!(key in setProps)) delete props[key];
+  }
+  if (before.mediaId !== undefined && !("mediaId" in setProps)) {
+    if (!("width" in setProps)) delete props.width;
+    if (!("height" in setProps)) delete props.height;
+  }
+}
+
 export async function updateElement(ports: EmvbPorts, input: z.infer<typeof UpdateElementInput>) {
   const set = resolveDesignRefs(input.set ?? {}, (await ports.getDesign()).design);
   return mutatePage(ports, "update_element", input.pageId, input.expectedRev, (layout) => {
@@ -374,6 +397,9 @@ export async function updateElement(ports: EmvbPorts, input: z.infer<typeof Upda
         if (value === undefined) continue;
         // Objects merge one level deep, like the editor's panels; anything else replaces.
         copy[key] = isRecord(value) && isRecord(copy[key]) ? { ...copy[key], ...value } : value;
+      }
+      if (node.type === "image" && isRecord(set.props)) {
+        dropOldPictureProps(node.props as Record<string, unknown>, set.props, copy);
       }
       for (const path of input.unset ?? []) {
         const [top, sub] = path.split(".") as [string, string | undefined];

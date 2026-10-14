@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **MCP:** `update_element` giving an image a new `src` now drops the old picture's extra sizes, media id, size and image-editor record, so the page shows the new picture instead of the old one from srcset (W-510).
 - **Text limits:** canvas text at the 2,000-character limit, class names, class and variable copies, layer names, uploaded icon names and the post author no longer end in half an emoji (W-509).
 - **Performance meter:** a media-library video, or a Video element with no valid URL, is no longer counted as a 500 KB third-party player embed with a warning (W-508).
 - **Share links:** a page title cut at the 120-character limit no longer ends in half an emoji (W-507).

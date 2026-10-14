@@ -184,6 +184,37 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(styles).not.toContain('"card"');
   });
 
+  test("a new image src drops the old picture's sizes, media id and edit record (W-510)", async () => {
+    const pageId = await newPage();
+    const { layout } = await layoutOf(pageId);
+    const added = await call<{ changed: string[] }>("add_element", {
+      pageId,
+      parentId: layout.root.id,
+      element: {
+        type: "image",
+        props: {
+          src: "/_emdash/api/media/file/old.jpg",
+          alt: "Old",
+          mediaId: "old1",
+          width: 1600,
+          height: 900,
+          sources: [{ src: "/_emdash/api/media/file/old-800.jpg", width: 800 }],
+        },
+      },
+    });
+    const nodeId = added.changed[0] as string;
+    await call("update_element", {
+      pageId,
+      nodeId,
+      set: { props: { src: "https://example.com/new.jpg" } },
+    });
+    const after = JSON.stringify((await layoutOf(pageId)).layout);
+    expect(after).toContain("https://example.com/new.jpg");
+    expect(after).not.toContain("old-800.jpg");
+    expect(after).not.toContain('"old1"');
+    expect(after).not.toContain("1600");
+  });
+
   test("viewers can't call write tools", async () => {
     const pageId = await newPage();
     const result = (await t.mcp(
