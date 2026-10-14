@@ -1,6 +1,6 @@
 /**
  * The sidebar panels: the crop tool's controls (W-483), the tone tools (W-484, in tone-panels.tsx
- * and CurvesPanel.tsx), and placeholders for the blender and metadata tools.
+ * CurvesPanel.tsx and MetadataPanel.tsx), and a placeholder for the blender tool.
  *
  * The crop panel follows photocn's `crop-panel.tsx` (https://github.com/rbbydotdev/photocn,
  * apps/www/src/registry/image-editor), MIT License, Copyright (c) 2026 rbbydotdev, rebuilt with
@@ -27,6 +27,7 @@ import {
 } from "./parts.tsx";
 import { CurvesPanel } from "./CurvesPanel.tsx";
 import { AdjustPanel, BlurPanel, FiltersPanel } from "./tone-panels.tsx";
+import { MetadataPanel } from "./MetadataPanel.tsx";
 import { COMING_SOON, IMAGE_EDITOR_TOOLS, type ImageEditorToolId } from "./tools.ts";
 
 /** Keys handled by photocn while the crop tool is active (its `handleCropKey`). */
@@ -276,8 +277,9 @@ export function ToolPanel() {
       return <CurvesPanel />;
     case "blur":
       return <BlurPanel />;
-    case "blender":
     case "metadata":
+      return <MetadataPanel />;
+    case "blender":
       return <ComingSoonPanel tool={tool} />;
     default:
       return null;

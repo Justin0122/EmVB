@@ -154,3 +154,26 @@ export function propsFromOriginal(
   }
   return next;
 }
+
+/**
+ * Uploads an edited copy and returns the element's new props (W-485/W-486): shared by Image
+ * settings, the media picker's Edit… and the command palette.
+ */
+export async function saveEditedCopy(
+  fetcher: Fetcher,
+  current: Record<string, unknown>,
+  file: File,
+  copy: { width: number; height: number; edit: unknown },
+): Promise<Record<string, unknown>> {
+  const alt = typeof current.alt === "string" && current.alt !== "Image" ? current.alt : undefined;
+  const item = await uploadImage(fetcher, file, {
+    width: copy.width,
+    height: copy.height,
+    ...(alt ? { alt } : {}),
+  });
+  return propsFromEdited(
+    current,
+    { ...item, width: item.width ?? copy.width, height: item.height ?? copy.height },
+    copy.edit,
+  );
+}

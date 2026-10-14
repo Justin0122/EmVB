@@ -148,6 +148,23 @@ function fakeApi() {
       reset: record("resetCurves"),
     },
     histogram: { data: { pixels: 38400 }, canvasRef: ref<HTMLCanvasElement>() },
+    engine: {
+      imageInput: {
+        fileInfo: { name: "01M4X9JVR25AERTZ0000000000.jpg", type: "image/jpeg", size: 52_224 },
+        image: { naturalWidth: 640, naturalHeight: 480 },
+        blob: null,
+      },
+      exif: {
+        status: "loaded",
+        error: null,
+        metadata: {
+          format: "JPEG",
+          tiff: { Make: { value: "Canon" }, Model: { value: "EOS 40D" } },
+          exif: { DateTimeOriginal: { hvalue: "2008:05:30 15:56:01" } },
+          gps: { GPSLatitude: { hvalue: "43.4675" }, GPSLongitude: { hvalue: "11.8851" } },
+        },
+      },
+    },
     rootRef: fakeApi.rootRef,
     stageRef: ref<HTMLDivElement>(),
     canvasRef: ref<HTMLCanvasElement>(),
@@ -691,5 +708,31 @@ describe("save a copy (W-485)", () => {
     serveImage();
     await open({ src: "/a.jpg", alt: "A" });
     expect(q<HTMLButtonElement>("[data-emvb-image-save]")?.disabled).toBe(true);
+  });
+});
+
+describe("the Metadata tool (W-486)", () => {
+  test("shows photocn's rows, the EXIF badge and what a saved copy keeps", async () => {
+    serveImage();
+    change({ tool: "metadata" });
+    await open({ src: "/_emdash/api/media/file/01M4X9JVR25AERTZ0000000000.jpg", alt: "Garden" });
+    const panel = q("[data-emvb-image-panel=metadata]");
+    expect(panel).not.toBeNull();
+    expect(q("[data-emvb-image-exif]")?.textContent).toBe("EXIF ready");
+    const rows = [...document.querySelectorAll("[data-emvb-image-meta]")].map((r) => [
+      r.querySelector("th")?.textContent,
+      r.querySelector("td")?.textContent,
+    ]);
+    expect(rows).toEqual([
+      ["Name", "Garden"],
+      ["Type", "image/jpeg"],
+      ["Size", "51.0 KB"],
+      ["Dimensions", "640 x 480"],
+      ["Format", "JPEG"],
+      ["Captured", "2008:05:30 15:56:01"],
+      ["Camera", "Canon EOS 40D"],
+      ["GPS", "43.4675, 11.8851"],
+    ]);
+    expect(q("[data-emvb-image-meta-gps]")?.textContent).toContain("A JPEG copy has it removed");
   });
 });

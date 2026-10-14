@@ -20,8 +20,8 @@ describe("image editor tools (W-482, W-483)", () => {
       "metadata",
     ]);
     expect(IMAGE_EDITOR_TOOLS.find((t) => t.id === "compose")?.label).toBe("Crop");
-    // After W-484 only the blender and metadata tools say what's coming.
-    expect(Object.keys(COMING_SOON).toSorted()).toEqual(["blender", "metadata"]);
+    // After W-486 only the blender tool says what's coming.
+    expect(Object.keys(COMING_SOON)).toEqual(["blender"]);
   });
 
   test("size labels and display names", () => {

@@ -56,6 +56,7 @@ import { useRemoteChange } from "./remote-change.ts";
 import { A11yScoreButton } from "./A11yCopilot.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
 import { useEditorCommands } from "./useEditorCommands.ts";
+import { editableSource } from "../image-editor/load.ts";
 import { useSave } from "./useSave.ts";
 import { type ShortcutHandlers, useEditorShortcuts } from "./useEditorShortcuts.ts";
 import { useNodeActions } from "./useNodeActions.ts";
@@ -303,6 +304,11 @@ function EditorApp({
     setDevice,
     openShortcuts: () => chrome.open("shortcuts"),
     toggleHidden: () => hideSelectedOnDevice(state, device, dispatch),
+    // W-486: "Edit image" in the palette, for an Image element the editor can open.
+    ...(selectedNode?.type === "image" &&
+    editableSource(selectedNode.props as Record<string, unknown>, window.location.origin).ok
+      ? { editImage: () => chrome.open("imageEditor") }
+      : {}),
   };
   const paletteActions = editorCommands({
     surface: "palette",

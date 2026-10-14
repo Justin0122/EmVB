@@ -1,4 +1,5 @@
-import { Badge, Button, Input } from "@cloudflare/kumo";
+import { Badge, Button, DropdownMenu, Input } from "@cloudflare/kumo";
+import { DotsThreeIcon, MagicWandIcon } from "@phosphor-icons/react";
 import * as React from "react";
 import {
   ImageEdit,
@@ -10,14 +11,19 @@ import type { Fetcher } from "../../../api.ts";
 import {
   getMedia,
   listImages,
-  propsFromEdited,
   propsFromMedia,
   propsFromOriginal,
+  saveEditedCopy,
   propsFromUrl,
   uploadImage,
   type MediaLibraryItem,
 } from "../../../media-api.ts";
-import { ImageEditButton } from "../../../image-editor/ImageEditButton.tsx";
+import {
+  ImageEditButton,
+  ImageEditorLauncher,
+  prefetchImageEditor,
+} from "../../../image-editor/ImageEditButton.tsx";
+import { editableSource } from "../../../image-editor/load.ts";
 import { BUTTON, FIELD } from "../../../ui.ts";
 
 const propsOf = (node: LayoutNode): Record<string, unknown> =>
@@ -49,6 +55,9 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
   const [error, setError] = React.useState<string | null>(null);
   const [urlDraft, setUrlDraft] = React.useState(src);
   const fileRef = React.useRef<HTMLInputElement>(null);
+  // W-486: a library picture opened from its card's Edit… (null when the editor is closed).
+  const [editing, setEditing] = React.useState<MediaLibraryItem | null>(null);
+  const [editorOpen, setEditorOpen] = React.useState(false);
 
   React.useEffect(() => {
     setUrlDraft(src);
@@ -75,26 +84,25 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
   const editSummary = edit.success ? summarizeImageEdit(edit.data.recipe) || "Edited" : null;
 
   /** W-485: upload the edited copy as a new item; the original stays in the library. */
-  const saveEditedCopy = async (
+  const saveCopy = async (file: File, copy: { width: number; height: number; edit: unknown }) => {
+    onChange(withProps(node, await saveEditedCopy(fetcher, props, file, copy)));
+  };
+
+  /** The props the element would have with this library picture (stable while editing). */
+  const editingProps = React.useMemo(
+    () => (editing ? propsFromMedia(props, editing) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only a new card opens a new edit.
+    [editing],
+  );
+
+  /** W-486: Edit… saves a copy of the card's picture and selects it for this element. */
+  const saveLibraryCopy = async (
     file: File,
     copy: { width: number; height: number; edit: unknown },
   ) => {
-    const alt = typeof props.alt === "string" && props.alt !== "Image" ? props.alt : undefined;
-    const item = await uploadImage(fetcher, file, {
-      width: copy.width,
-      height: copy.height,
-      ...(alt ? { alt } : {}),
-    });
-    onChange(
-      withProps(
-        node,
-        propsFromEdited(
-          props,
-          { ...item, width: item.width ?? copy.width, height: item.height ?? copy.height },
-          copy.edit,
-        ),
-      ),
-    );
+    if (!editingProps) return;
+    onChange(withProps(node, await saveEditedCopy(fetcher, editingProps, file, copy)));
+    setOpen(false);
   };
 
   /** W-485: back to the untouched original; the edited copy is not deleted. */
@@ -196,7 +204,7 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
         >
           Upload
         </Button>
-        {editable && src ? <ImageEditButton imageProps={props} onSave={saveEditedCopy} /> : null}
+        {editable && src ? <ImageEditButton imageProps={props} onSave={saveCopy} /> : null}
         {editable && edit.success ? (
           <Button
             type="button"
@@ -254,7 +262,7 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
           )}
           <ul className="emvb-media-grid">
             {items.map((item) => (
-              <li key={item.id}>
+              <li key={item.id} className="emvb-media-cell">
                 <button
                   type="button"
                   className="emvb-media-card"
@@ -264,11 +272,50 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
                   <img src={item.url} alt={item.alt ?? item.filename} />
                   <span>{item.filename}</span>
                 </button>
+                {editable && canEdit(item) ? (
+                  <DropdownMenu onOpenChange={(next) => next && prefetchImageEditor()}>
+                    <DropdownMenu.Trigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          shape="square"
+                          className="emvb-media-card-menu"
+                          aria-label={`More for ${item.alt || item.filename}`}
+                          icon={<DotsThreeIcon aria-hidden="true" weight="bold" />}
+                          data-emvb-media-menu={item.id}
+                        />
+                      }
+                    />
+                    <DropdownMenu.Content align="end">
+                      <DropdownMenu.Item
+                        icon={MagicWandIcon}
+                        onClick={() => {
+                          setEditing(item);
+                          setEditorOpen(true);
+                        }}
+                        data-emvb-media-edit={item.id}
+                      >
+                        Edit…
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu>
+                ) : null}
               </li>
             ))}
           </ul>
         </div>
       )}
+      {editingProps ? (
+        <ImageEditorLauncher
+          open={editorOpen}
+          onOpenChange={setEditorOpen}
+          imageProps={editingProps}
+          onSave={saveLibraryCopy}
+          onClosed={() => setEditing(null)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -287,4 +334,10 @@ function readImageSize(file: File): Promise<{ width: number; height: number }> {
     });
     img.src = url;
   });
+}
+
+/** Library pictures the editor can open: same-site JPEG, PNG, WebP or AVIF (not SVG or GIF). */
+function canEdit(item: MediaLibraryItem): boolean {
+  if (/svg|gif/i.test(item.mimeType)) return false;
+  return editableSource({ src: item.url }, window.location.origin).ok;
 }

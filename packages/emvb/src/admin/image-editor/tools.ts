@@ -15,10 +15,9 @@ export const IMAGE_EDITOR_TOOLS = [
 
 export type ImageEditorToolId = (typeof IMAGE_EDITOR_TOOLS)[number]["id"];
 
-/** Tools whose panels land in later work items (W-485, W-486); they show what's coming. */
-export const COMING_SOON: Record<"blender" | "metadata", readonly string[]> = {
+/** Tools whose panels land in a later work item; they show what's coming. */
+export const COMING_SOON: Record<"blender", readonly string[]> = {
   blender: ["Blend a picture from your media library", "A mix slider"],
-  metadata: ["File name, size and type", "Camera details, with GPS removed when saving"],
 };
 
 /** "4032 × 3024 px". */

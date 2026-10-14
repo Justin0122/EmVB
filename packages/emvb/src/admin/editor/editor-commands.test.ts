@@ -132,3 +132,19 @@ describe("editor command catalog (W-362)", () => {
     ]);
   });
 });
+
+describe("Edit image in the palette (W-486)", () => {
+  test("shows only when the selection is an editable Image, after Redo, and opens the editor", () => {
+    expect(ids(base({ surface: "palette" })).includes("edit-image")).toBe(false);
+    let opened = 0;
+    const runners: CommandRunners = { editImage: () => opened++ };
+    const list = editorCommands(base({ surface: "palette", runners }));
+    const at = list.findIndex((c) => c.id === "edit-image");
+    expect(list[at - 1]?.id).toBe("redo");
+    expect(list[at]?.label).toBe("Edit image");
+    expect(list[at]?.keywords).toContain("crop");
+    list[at]?.run();
+    expect(opened).toBe(1);
+    expect(ids(base({ surface: "layers", runners })).includes("edit-image")).toBe(false);
+  });
+});

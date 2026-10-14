@@ -10,6 +10,8 @@ import {
 } from "../../core/index.ts";
 import type { Fetcher } from "../api.ts";
 import { discardDraft } from "../content-api.ts";
+import { ImageEditorLauncher } from "../image-editor/ImageEditButton.tsx";
+import { saveEditedCopy } from "../media-api.ts";
 import { A11yDialog } from "./A11yCopilot.tsx";
 import { CommandPalette } from "./CommandPalette.tsx";
 import { ConflictDialog, DeleteSubtreeDialog, LeaveDialog, RevertDialog } from "./dialogs.tsx";
@@ -64,6 +66,7 @@ const CLOSED = {
   a11y: false,
   leave: false,
   revert: false,
+  imageEditor: false,
 };
 
 type ChromeKey = keyof typeof CLOSED;
@@ -222,6 +225,13 @@ export function EditorDialogs({
         count={deleteAsk?.count ?? 0}
         onConfirm={() => deleteAsk && finishDelete(deleteAsk.id)}
       />
+      <PaletteImageEditor
+        open={chrome.flags.imageEditor}
+        onOpenChange={chrome.setOpen("imageEditor")}
+        selectedNode={selectedNode}
+        fetcher={fetcher}
+        dispatch={dispatch}
+      />
       <ShortcutsDialog open={chrome.flags.shortcuts} onOpenChange={chrome.setOpen("shortcuts")} />
       <CommandPalette
         open={chrome.flags.palette}
@@ -342,5 +352,44 @@ export function EditorDialogs({
         }
       />
     </>
+  );
+}
+
+/**
+ * The image editor opened from the command palette's "Edit image" (W-486). It edits the Image
+ * element that was selected when it opened, and saves the copy onto that element.
+ */
+function PaletteImageEditor({
+  open,
+  onOpenChange,
+  selectedNode,
+  fetcher,
+  dispatch,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedNode: LayoutNode | null;
+  fetcher: Fetcher;
+  dispatch: React.Dispatch<EditorAction>;
+}) {
+  const [target, setTarget] = React.useState<LayoutNode | null>(null);
+  if (open && !target && selectedNode?.type === "image") setTarget(selectedNode);
+  if (!target) return null;
+  const props = target.props as Record<string, unknown>;
+  return (
+    <ImageEditorLauncher
+      open={open}
+      onOpenChange={onOpenChange}
+      imageProps={props}
+      onSave={async (file, copy) => {
+        const next = await saveEditedCopy(fetcher, props, file, copy);
+        dispatch({
+          type: "update-node",
+          id: target.id,
+          update: (node) => ({ ...node, props: next }) as LayoutNode,
+        });
+      }}
+      onClosed={() => setTarget(null)}
+    />
   );
 }

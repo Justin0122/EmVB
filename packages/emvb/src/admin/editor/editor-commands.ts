@@ -42,6 +42,8 @@ export type CommandRunners = {
   setDevice?: (device: PopupDevice) => void;
   openShortcuts?: () => void;
   rename?: () => void;
+  /** Set when the selection is an Image element the image editor can open (W-486). */
+  editImage?: () => void;
 };
 
 export type CommandInput = {
@@ -177,6 +179,12 @@ const SPECS: readonly Spec[] = [
   { id: "device-desktop", labels: { palette: "View on desktop" }, surfaces: ["palette"] },
   { id: "device-tablet", labels: { palette: "View on tablet" }, surfaces: ["palette"] },
   { id: "device-mobile", labels: { palette: "View on mobile" }, surfaces: ["palette"] },
+  {
+    id: "edit-image",
+    labels: { palette: "Edit image" },
+    keywords: "photo picture crop rotate adjust filter curves blur",
+    surfaces: ["palette"],
+  },
   { id: "shortcuts", labels: { palette: "Keyboard shortcuts" }, surfaces: ["palette"] },
   { id: "hide-on-device", labels: {}, surfaces: ["device"] },
 ];
@@ -204,6 +212,7 @@ const ORDER: Record<CommandSurface, readonly string[]> = {
     "preview",
     "undo",
     "redo",
+    "edit-image",
     "duplicate",
     "delete",
     "deselect",
@@ -227,6 +236,7 @@ const MOVE_IDS = new Set(["move-up", "move-down", "delete"]);
 function shown(id: string, input: CommandInput): boolean {
   const clip = !!input.runners.copy;
   if (id === "rename") return !!input.runners.rename;
+  if (id === "edit-image") return !!input.runners.editImage;
   if (id === "paste-inside") return clip && input.isParent;
   if (id === "paste") return clip && (input.surface !== "layers" || !input.isRoot);
   if (CLIP_IDS.has(id)) return clip;
@@ -269,6 +279,9 @@ export function runCommand(runners: CommandRunners, id: string, targetId: string
   switch (id) {
     case "rename":
       runners.rename?.();
+      return;
+    case "edit-image":
+      runners.editImage?.();
       return;
     case "copy":
       if (targetId) runners.copy?.(targetId);

@@ -30616,6 +30616,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/save.test.ts"],
       "expect": "\\(fail\\).*capped at 2560"
+    },
+    {
+      "id": "W-486/palette-edit-always",
+      "requirement": "W-486",
+      "description": "Edit image shows in the command palette even when nothing editable is selected.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/editor-commands.ts",
+          "search": "  if (id === \"edit-image\") return !!input.runners.editImage;",
+          "replace": "  if (id === \"edit-image\") return true;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/editor-commands.test.ts"],
+      "expect": "\\(fail\\).*editable Image"
+    },
+    {
+      "id": "W-486/metadata-dimensions-dropped",
+      "requirement": "W-486",
+      "description": "The Metadata panel drops the picture's dimensions.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/MetadataPanel.tsx",
+          "search": "  add(rows, \"Dimensions\", image ? `${image.naturalWidth} x ${image.naturalHeight}` : undefined);",
+          "replace": "  add(rows, \"Dimensions\", undefined);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/MetadataPanel.test.ts"],
+      "expect": "\\(fail\\).*photocn's order"
     }
   ]
 }

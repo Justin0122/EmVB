@@ -32,6 +32,7 @@ import { IMAGE_EDITOR_CSS } from "./image-editor-css.ts";
 import { withDataUrlFetch } from "./data-url-fetch.ts";
 import { ExportDialog, type ExportResult, type ExportSettings } from "./ExportDialog.tsx";
 import { loadEditableSource, type LoadedSource } from "./load.ts";
+import { ImageNameContext } from "./MetadataPanel.tsx";
 import { ToolPanel } from "./panels.tsx";
 import {
   CompactToolBar,
@@ -444,7 +445,8 @@ function CompactLayout({ name }: { name: string }) {
             onClick={() => setPanelOpen(false)}
           />
         </div>
-        <div className="emvb-ie-sheet-body">
+        {/* Focusable so the keyboard can scroll a panel with no controls (Metadata, W-486). */}
+        <div className="emvb-ie-sheet-body" tabIndex={0} role="region" aria-label={label}>
           <ToolPanel />
         </div>
       </PanelSheet>
@@ -534,33 +536,35 @@ function EditorView({
   return (
     <ImageEditorProvider editor={editor}>
       <SaveContext.Provider value={save}>
-        <div
-          className="emvb-ie"
-          ref={editor.rootRef}
-          data-emvb-dialog="image-editor"
-          data-emvb-image-editor={
-            editor.status === "error" ? "error" : editor.isReady ? "ready" : "loading"
-          }
-          data-emvb-render-mode={ready.renderMode}
-          data-layout={compact ? "compact" : "desktop"}
-          data-emvb-image-tool-active={editor.tool}
-        >
-          {width === null ? null : compact ? (
-            <CompactLayout name={name} />
-          ) : (
-            <DesktopLayout ready={ready} name={name} />
-          )}
-        </div>
-        {exportOpen ? <div className="emvb-ie-scrim" aria-hidden="true" /> : null}
-        {onSave ? (
-          <ExportDialog
-            open={exportOpen}
-            onOpenChange={setExportOpen}
-            mainThread={mainThread}
-            sourceHasGps={gps}
-            onSave={saveCopy}
-          />
-        ) : null}
+        <ImageNameContext.Provider value={name}>
+          <div
+            className="emvb-ie"
+            ref={editor.rootRef}
+            data-emvb-dialog="image-editor"
+            data-emvb-image-editor={
+              editor.status === "error" ? "error" : editor.isReady ? "ready" : "loading"
+            }
+            data-emvb-render-mode={ready.renderMode}
+            data-layout={compact ? "compact" : "desktop"}
+            data-emvb-image-tool-active={editor.tool}
+          >
+            {width === null ? null : compact ? (
+              <CompactLayout name={name} />
+            ) : (
+              <DesktopLayout ready={ready} name={name} />
+            )}
+          </div>
+          {exportOpen ? <div className="emvb-ie-scrim" aria-hidden="true" /> : null}
+          {onSave ? (
+            <ExportDialog
+              open={exportOpen}
+              onOpenChange={setExportOpen}
+              mainThread={mainThread}
+              sourceHasGps={gps}
+              onSave={saveCopy}
+            />
+          ) : null}
+        </ImageNameContext.Provider>
       </SaveContext.Provider>
     </ImageEditorProvider>
   );

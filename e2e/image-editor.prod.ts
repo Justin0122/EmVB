@@ -759,3 +759,138 @@ test("the export step in dark mode and on a phone (W-485)", async ({ page }) => 
   await page.waitForTimeout(300);
   await shot(page, "mobile-export-dark");
 });
+
+/** Opens the page editor with the Image element selected, without opening the image editor. */
+async function selectImage(page: Page, id: string) {
+  await page.goto(`${EDITOR}?entry=${id}`);
+  await expect(overlay(page).locator(".emvb-topbar-title")).toBeVisible({ timeout: 30_000 });
+  await openLayers(page);
+  await overlay(page).locator(".emvb-layer-select", { hasText: "Image" }).click();
+}
+
+const quickSave = async (page: Page) => {
+  await setValue(page, "Exposure", "0.2");
+  await page.locator("[data-emvb-image-save]").click();
+  await expect(exportDialog(page)).toBeVisible();
+  await page.locator("[data-emvb-image-export-save]").click();
+  await expect(editor(page)).toHaveCount(0, { timeout: 20_000 });
+};
+
+test("the media picker's Edit… saves a copy of a library picture and selects it (W-486)", async ({
+  page,
+}) => {
+  const seen = watch(page);
+  // The element shows a picture from another website: Edit… works from the library alone.
+  const id = await createPage(
+    author,
+    "Image editor picker",
+    imagePage({ src: "https://images.example.com/old.jpg" }),
+    `ie-pick-${unique()}`,
+  );
+  await selectImage(page, id);
+  await overlay(page).locator("[data-emvb-media-library]").click();
+  const menu = overlay(page).locator(`[data-emvb-media-menu="${media.id}"]`).first();
+  await expect(menu).toBeVisible();
+  await menu.click();
+  const edit = page.getByRole("menuitem", { name: "Edit…" });
+  await expect(edit).toBeVisible();
+  await shot(page, "picker-menu");
+  await edit.click();
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await expect(file(page)).toContainText("640 × 480 px");
+  await quickSave(page);
+  await expect(overlay(page).locator("[data-emvb-media-dialog]")).toHaveCount(0);
+  await expect(overlay(page).locator("[data-emvb-image-edited]")).toBeVisible();
+  await saveDraft(page);
+  const props = await storedImage(id);
+  expect(props["src"]).not.toBe(media.url);
+  expect(props["edit"]).toMatchObject({ originalMediaId: media.id, originalSrc: media.url });
+  expect(props["alt"]).toBe("A garden in autumn");
+  expect((await fileBytes(String(props["src"]))).type).toBe("image/webp");
+  expect(seen.csp).toEqual([]);
+});
+
+test("the command palette's Edit image opens the selected Image and saves onto it (W-486)", async ({
+  page,
+}) => {
+  const seen = watch(page);
+  const id = await createPage(author, "Image editor palette", libraryPage(), `ie-pal-${unique()}`);
+  await page.goto(`${EDITOR}?entry=${id}`);
+  await expect(overlay(page).locator(".emvb-topbar-title")).toBeVisible({ timeout: 30_000 });
+  // Nothing selected: no Edit image in the palette.
+  await page.keyboard.press("Control+k");
+  const palette = page.getByRole("dialog", { name: "Command palette" });
+  await expect(palette).toBeVisible();
+  await page.keyboard.type("Edit image");
+  await expect(palette.getByRole("option", { name: /Edit image/ })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await openLayers(page);
+  await overlay(page).locator(".emvb-layer-select", { hasText: "Image" }).click();
+  await page.keyboard.press("Control+k");
+  await expect(palette).toBeVisible();
+  await page.keyboard.type("edit image");
+  const option = palette.getByRole("option", { name: /Edit image/ });
+  await expect(option).toHaveCount(1);
+  await shot(page, "palette-edit-image");
+  await page.keyboard.press("Enter");
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await quickSave(page);
+  await expect(overlay(page).locator("[data-emvb-image-edited]")).toBeVisible();
+  await saveDraft(page);
+  const props = await storedImage(id);
+  expect(props["edit"]).toMatchObject({ originalMediaId: media.id });
+  expect(props["mediaId"]).not.toBe(media.id);
+  expect(seen.csp).toEqual([]);
+});
+
+test("the Metadata tool lists the file and camera data, and warns about the location (W-486)", async ({
+  page,
+}) => {
+  const id = await createPage(author, "Image editor meta", libraryPage(), `ie-meta-${unique()}`);
+  await keepPageEditorMounted(page);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.locator('[data-emvb-image-tool="metadata"]').first().click();
+  const panel = page.locator("[data-emvb-image-panel=metadata]");
+  await expect(panel).toBeVisible();
+  await expect(page.locator("[data-emvb-image-exif]")).toHaveText("EXIF ready");
+  const row = (label: string) => panel.locator(`[data-emvb-image-meta="${label}"] td`);
+  await expect(row("Name")).toHaveText("A garden in autumn");
+  await expect(row("Dimensions")).toHaveText("640 x 480");
+  await expect(row("Camera")).toHaveText(/NIKON COOLPIX P6000/);
+  await expect(row("GPS")).toBeVisible();
+  await expect(page.locator("[data-emvb-image-meta-gps]")).toContainText(
+    "A JPEG copy has it removed",
+  );
+  expect(await axeProblems(page)).toEqual([]);
+  await page.waitForTimeout(300);
+  await shot(page, "metadata");
+  // The phone sheet, light then dark (dark last: Chromium keeps some tokens after a switch back).
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(editor(page)).toHaveAttribute("data-layout", "compact");
+  await page
+    .locator(
+      '.emvb-ie-compact-tools:not(.emvb-ie-compact-tools-inline) [data-emvb-image-tool="metadata"]',
+    )
+    .click();
+  await expect(
+    page.locator("[data-emvb-image-sheet] [data-emvb-image-panel=metadata]"),
+  ).toBeVisible();
+  await page.waitForTimeout(500);
+  await shot(page, "mobile-metadata");
+  expect(await axeProblems(page)).toEqual([]);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.waitForTimeout(300);
+  await shot(page, "mobile-metadata-dark");
+  expect(await axeProblems(page)).toEqual([]);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(editor(page)).toHaveAttribute("data-layout", "desktop");
+  await page.waitForTimeout(400);
+  await shot(page, "metadata-dark");
+});

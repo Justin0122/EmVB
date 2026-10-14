@@ -266,7 +266,7 @@ export const IMAGE_EDITOR_CSS = `
 .emvb-ie-sheet {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; display: flex; flex-direction: column;
   border-radius: 14px 14px 0 0; border-top: 1px solid var(--color-kumo-line);
-  background: var(--color-kumo-recessed); box-shadow: 0 -8px 24px var(--color-kumo-shadow-drop, rgb(0 0 0 / 0.15));
+  background: var(--color-kumo-elevated); box-shadow: 0 -8px 24px var(--color-kumo-shadow-drop, rgb(0 0 0 / 0.15));
   transition: height 300ms ease-out, transform 300ms ease-out; transform: translateY(100%); pointer-events: none;
 }
 .emvb-ie-sheet[data-open] { transform: none; pointer-events: auto; }
@@ -375,4 +375,17 @@ export const IMAGE_EDITOR_CSS = `
   .emvb-ie-export-actions { flex-direction: column-reverse; border-top: 0; background: transparent; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
   .emvb-ie-export-actions > * { width: 100%; height: 40px; }
 }
+/* W-486 Metadata panel (photocn metadata-panel.tsx: p-3, gap-3, a w-28 label column, text-xs). */
+.emvb-ie-meta { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.emvb-ie-meta-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.emvb-ie-meta-head h2 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.emvb-ie-rule { margin: 0; height: 1px; border: 0; background: var(--color-kumo-hairline); }
+.emvb-ie-meta-table { width: 100%; border-collapse: collapse; font-size: 12px; line-height: 16px; }
+.emvb-ie-meta-table tr { border-bottom: 1px solid var(--color-kumo-hairline); }
+.emvb-ie-meta-table tr:last-child { border-bottom: 0; }
+.emvb-ie-meta-table th { width: 112px; padding: 8px; text-align: left; vertical-align: top; font-weight: 400; color: var(--text-color-kumo-subtle); }
+.emvb-ie-meta-table td { padding: 8px; overflow-wrap: anywhere; color: var(--text-color-kumo-default); }
+.emvb-ie-alert.emvb-ie-alert-neutral { color: var(--text-color-kumo-default); background: var(--color-kumo-recessed); }
+.emvb-ie-meta-gps { display: flex; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 16px; color: var(--text-color-kumo-default); background: var(--color-kumo-recessed); }
+.emvb-ie-meta-gps svg { width: 16px; height: 16px; flex: none; color: var(--text-color-kumo-default); }
 `;
