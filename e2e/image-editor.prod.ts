@@ -711,6 +711,99 @@ test("a JPEG copy of a photo with a location has it removed by default (W-485)",
   expect(seen.csp).toEqual([]);
 });
 
+const uploadFixture = async (name: string, width: number, height: number) => {
+  const res = await author.post("/_emdash/api/media", {
+    headers: { "X-EmDash-Request": "1" },
+    multipart: {
+      file: {
+        name,
+        mimeType: "image/png",
+        buffer: readFileSync(path.join(process.cwd(), "e2e/fixtures", name)),
+      },
+      width: String(width),
+      height: String(height),
+    },
+  });
+  expect(res.status()).toBeLessThan(300);
+  return ((await res.json()) as { data: { item: { id: string; url: string } } }).data.item;
+};
+
+/** The RGB of one pixel of an image file, decoded by the browser. */
+const pixel = (page: Page, url: string, x: number, y: number) =>
+  page.evaluate(
+    async ([u, px, py]) => {
+      const bitmap = await createImageBitmap(await (await fetch(u)).blob());
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("no 2d");
+      ctx.drawImage(bitmap, 0, 0);
+      return Array.from(ctx.getImageData(px, py, 1, 1).data.subarray(0, 3));
+    },
+    [url, x, y] as const,
+  );
+
+test("a JPEG copy of a transparent PNG is put on white, not black (W-495)", async ({ page }) => {
+  const seen = watch(page);
+  const png = await uploadFixture("transparent-half.png", 64, 48);
+  const props0 = { src: png.url, mediaId: png.id, width: 64, height: 48 };
+  const id = await createPage(author, "Image editor png", imagePage(props0), `ie-png-${unique()}`);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.locator("[data-emvb-image-save]").click();
+  await expect(exportDialog(page)).toBeVisible();
+  await exportDialog(page).getByRole("combobox").click();
+  await page.getByRole("option", { name: "JPEG" }).click();
+  await page.locator("[data-emvb-image-export-save]").click();
+  await expect(editor(page)).toHaveCount(0);
+  await saveDraft(page);
+  const props = await storedImage(id);
+  const copy = await fileBytes(String(props["src"]));
+  expect(copy.type).toBe("image/jpeg");
+  // Left half was transparent: white now. Right half keeps its blue.
+  const [r, g, b] = await pixel(page, String(props["src"]), 4, 24);
+  expect(Math.min(r ?? 0, g ?? 0, b ?? 0)).toBeGreaterThan(235);
+  const [r2, , b2] = await pixel(page, String(props["src"]), 56, 24);
+  expect(b2 ?? 0).toBeGreaterThan(150);
+  expect(r2 ?? 255).toBeLessThan(80);
+  expect(seen.csp).toEqual([]);
+});
+
+test("a picture past the GPU limit opens reduced to fit and saves inside the layout limit (W-496)", async ({
+  page,
+}) => {
+  const strip = await uploadFixture("wide-strip.png", 16400, 16);
+  const id = await createPage(
+    author,
+    "Image editor strip",
+    imagePage({ src: strip.url, mediaId: strip.id, width: 10000, height: 10 }),
+    `ie-strip-${unique()}`,
+  );
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 60_000,
+  });
+  const max = await page.evaluate(() => {
+    const gl = document.createElement("canvas").getContext("webgl");
+    return gl ? (gl.getParameter(gl.MAX_TEXTURE_SIZE) as number) : 0;
+  });
+  if (max && max < 16400) {
+    await expect(page.locator("[data-emvb-image-reduced]")).toBeVisible();
+  }
+  await page.locator("[data-emvb-image-save]").click();
+  await expect(exportDialog(page)).toBeVisible();
+  await page.locator("[data-emvb-image-export-save]").click();
+  await expect(editor(page)).toHaveCount(0);
+  await saveDraft(page);
+  const props = await storedImage(id);
+  expect(Number(props["width"])).toBeLessThanOrEqual(10000);
+  // Not the flat grey a too-large WebGL texture used to give: the strip's green survives.
+  // (The 2560 px export cap leaves a strip only a few pixels tall: sample its first row.)
+  const [r, g] = await pixel(page, String(props["src"]), 10, 0);
+  expect(g ?? 0).toBeGreaterThan((r ?? 0) + 60);
+});
+
 test("saving from the main-thread renderer works under the admin CSP (W-485)", async ({ page }) => {
   // No OffscreenCanvas: the editor renders on the main thread, whose export fetches data: URLs.
   await page.addInitScript(() => {
