@@ -110,4 +110,15 @@ describe("performance meter (W-310)", () => {
     expect(report.scripts.map((s) => s.script)).toEqual(["forms"]);
     expect(report.bytes.js).toBeGreaterThan(0);
   });
+
+  test("a library video or a video with no URL is not a third-party embed (W-508)", () => {
+    const video = (id: string, url: string) =>
+      ({ id, type: "video", props: { url, title: "V" } }) as LayoutNode;
+    const report = measurePage(
+      page(video("vid00001", "/_emdash/api/media/file/clip.mp4"), video("vid00002", "")),
+      emptyDesign(),
+    );
+    expect(report.embeds).toBe(0);
+    expect(report.warnings.some((w) => w.includes("video embed"))).toBe(false);
+  });
 });

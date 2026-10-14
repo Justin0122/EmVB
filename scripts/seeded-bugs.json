@@ -30955,6 +30955,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/share/link.test.ts"],
       "expect": "\\(fail\\).*never splits an emoji"
+    },
+    {
+      "id": "W-508/library-video-counted-as-embed",
+      "requirement": "W-508",
+      "description": "The perf meter counts every Video element as a third-party embed.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/perf/meter.ts",
+          "search": "if (n.type === \"video\" && isPlayerEmbed(n)) {",
+          "replace": "if (n.type === \"video\" && (isPlayerEmbed(n) || n.type === \"video\")) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/perf/perf.test.ts"],
+      "expect": "\\(fail\\).*W-508"
     }
   ]
 }

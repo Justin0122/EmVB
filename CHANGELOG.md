@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Performance meter:** a media-library video, or a Video element with no valid URL, is no longer counted as a 500 KB third-party player embed with a warning (W-508).
 - **Share links:** a page title cut at the 120-character limit no longer ends in half an emoji (W-507).
 - **Devices:** an element hidden on two adjacent devices no longer shows at fractional window widths from browser zoom or display scaling (1024.5 px, for example); the device media queries end at `.98px` (W-506).
 - **Loops:** the editor's Loop preview no longer shows entries whose list field holds the filtered value, matching the published page, where EmDash compares fields as plain values (W-505).

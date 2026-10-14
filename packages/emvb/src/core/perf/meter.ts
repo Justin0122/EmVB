@@ -2,6 +2,7 @@ import type { DesignSystem } from "../schema/design.ts";
 import { isParentNode, type Layout, type LayoutNode } from "../schema/layout.ts";
 import { renderPage } from "../render/index.ts";
 import type { ThemeDynamicData } from "../theme/dynamic.ts";
+import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
 import { layoutScripts, SCRIPT_BYTES, type PageScript } from "./scripts.ts";
 
 /** Budgets per page (W-310), in bytes over the wire. Generous for a marketing page. */
@@ -58,6 +59,11 @@ const hasBackgroundImage = (node: LayoutNode): boolean => {
   });
 };
 
+const isPlayerEmbed = (node: LayoutNode): boolean => {
+  const url = (node.props as { url?: unknown }).url;
+  return typeof url === "string" && resolveEmbedUrl(url)?.kind === "iframe";
+};
+
 /** Images and embeds under a node, with their estimated weight. */
 function media(node: LayoutNode): { images: number; bytes: number; embeds: number } {
   let images = 0;
@@ -75,7 +81,9 @@ function media(node: LayoutNode): { images: number; bytes: number; embeds: numbe
       images += 1;
       bytes += IMAGE_GUESS;
     }
-    if (n.type === "video") {
+    // W-508: only a YouTube or Vimeo player is a third-party embed; a media-library video loads
+    // its metadata only, and a missing or refused URL renders nothing.
+    if (n.type === "video" && isPlayerEmbed(n)) {
       embeds += 1;
       bytes += EMBED_BYTES;
     }
