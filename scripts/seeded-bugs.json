@@ -16734,7 +16734,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/dynamic-post.ts",
-          "search": "return name ? { tag: \"span\", attrs, children: [name.slice(0, 200)] } : undefined;",
+          "search": "return name ? { tag: \"span\", attrs, children: [clipText(name, 200)] } : undefined;",
           "replace": "return name ? { tag: \"span\", attrs, children: [\"Author\"] } : undefined;"
         }
       ],
@@ -21910,7 +21910,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/classes.ts",
-          "search": "${source.name.slice(0, 52).trim()} copy",
+          "search": "${clipText(source.name, 52).trim()} copy",
           "replace": "${source.name} copy"
         }
       ],
@@ -21952,7 +21952,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/variables.ts",
-          "search": "${source.name.slice(0, 52).trim()} copy",
+          "search": "${clipText(source.name, 52).trim()} copy",
           "replace": "${source.name} copy"
         }
       ],
@@ -30969,6 +30969,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/perf/perf.test.ts"],
       "expect": "\\(fail\\).*W-508"
+    },
+    {
+      "id": "W-509/clip-text-splits-emoji",
+      "requirement": "W-509",
+      "description": "clipText cuts an emoji in half at the limit.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/limits.ts",
+          "search": "code >= 0xd800 && code <= 0xdbff ? max - 1 : max",
+          "replace": "max"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/plain-text.test.ts"],
+      "expect": "\\(fail\\).*W-509"
     }
   ]
 }

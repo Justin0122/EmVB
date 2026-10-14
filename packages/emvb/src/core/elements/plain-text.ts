@@ -1,4 +1,4 @@
-import { MAX_TEXT_LENGTH } from "../limits.ts";
+import { clipText, MAX_TEXT_LENGTH } from "../limits.ts";
 import type { LayoutNode } from "../schema/layout.ts";
 
 /** Elements whose visible words are one `props.text` string (W-097). */
@@ -23,7 +23,7 @@ export function isMultilineText(node: LayoutNode): boolean {
 /** The string a canvas edit may store. Over-long text is cut to the schema limit. */
 export function commitPlainText(text: string, multiline: boolean): string {
   const flat = multiline ? text : text.replaceAll("\n", "");
-  return flat.slice(0, MAX_TEXT_LENGTH);
+  return clipText(flat, MAX_TEXT_LENGTH);
 }
 
 export function withPlainText(node: LayoutNode, text: string): LayoutNode {

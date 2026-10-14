@@ -1,3 +1,4 @@
+import { clipText } from "../limits.ts";
 import type { DesignSystem } from "../schema/design.ts";
 import type { Layout } from "../schema/layout.ts";
 import { cleanClassName } from "./classes.ts";
@@ -279,7 +280,7 @@ export function duplicateVariable(
   // A copy past the cap, or a name past 60 characters, would fail to save (W-219).
   if (!source || variableListFull(design, kind)) return design;
   // W-278: "Brand copy", then "Brand copy 2"…, so the copy's name is free too.
-  const stem = `${source.name.slice(0, 52).trim()} copy`;
+  const stem = `${clipText(source.name, 52).trim()} copy`;
   let name = stem;
   for (let n = 2; n <= MAX_VARIABLES[kind] && variableNameTaken(design, kind, name); n++) {
     name = `${stem} ${n}`;

@@ -1,3 +1,4 @@
+import { clipText } from "../limits.ts";
 import { HEADING_TAGS } from "../elements/index.ts";
 import type { LayoutNode, POST_DATE_FORMATS } from "../schema/layout.ts";
 import { sanitizeHref } from "../sanitize/href.ts";
@@ -165,7 +166,7 @@ const POST_FIELDS = new Map<string, PostField>([
       has: (post) => !!post.authorName?.trim(),
       render: (_node, attrs, post) => {
         const name = post.authorName?.trim();
-        return name ? { tag: "span", attrs, children: [name.slice(0, 200)] } : undefined;
+        return name ? { tag: "span", attrs, children: [clipText(name, 200)] } : undefined;
       },
     },
   ],

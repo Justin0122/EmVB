@@ -14,6 +14,7 @@ import {
   SCRIPT_LABELS,
   type PageScript,
 } from "../../../core/index.ts";
+import { clipText } from "../../../core/limits.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import { EXISTING_ELEMENT_MIME } from "../dnd/drop-target.ts";
 import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
@@ -394,7 +395,7 @@ const LayerRow = React.memo(function LayerRow({
     refocus.current = byKey;
     setRenaming(false);
     if (text === null || !actions.onRename) return;
-    const next = text.trim().slice(0, 80) || undefined;
+    const next = clipText(text.trim(), 80).trim() || undefined;
     if (next !== node.label) actions.onRename(node.id, next);
   };
   return (

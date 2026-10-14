@@ -1,3 +1,4 @@
+import { clipText } from "../core/limits.ts";
 import { PluginRouteError, type PluginRoute, type RouteContext } from "emdash";
 import { z } from "zod";
 import {
@@ -33,11 +34,13 @@ const UPLOAD_LIST_LIMIT = 100;
 
 /** A file name without its folder or extension, as the icon's label. */
 export const uploadName = (name: string) =>
-  name
-    .replace(/^.*[\\/]/, "")
-    .replace(/\.svg$/i, "")
-    .trim()
-    .slice(0, 80) || "Uploaded icon";
+  clipText(
+    name
+      .replace(/^.*[\\/]/, "")
+      .replace(/\.svg$/i, "")
+      .trim(),
+    80,
+  ).trim() || "Uploaded icon";
 
 /**
  * One stored upload safe to send to the editor. Markup that no longer passes the SVG allowlist

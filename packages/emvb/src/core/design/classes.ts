@@ -1,3 +1,4 @@
+import { clipText } from "../limits.ts";
 import type { DesignSystem } from "../schema/design.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
 import type { StyleProps } from "../schema/style.ts";
@@ -99,7 +100,8 @@ export function cleanClassName(name: string): string {
     const code = ch.charCodeAt(0);
     return code < 32 || code === 127 ? " " : ch;
   }).join("");
-  return spaced.replace(/ {2,}/g, " ").trim().slice(0, 60).trim();
+  const spacedTrim = spaced.replace(/ {2,}/g, " ").trim();
+  return clipText(spacedTrim, 60).trim();
 }
 
 export function localToClassRefusal(design: DesignSystem, node: LayoutNode): string | null {
@@ -120,7 +122,7 @@ export function localStylesToClass(
   node: LayoutNode,
   name: string,
 ): { design: DesignSystem; node: LayoutNode; classId: string } | null {
-  const trimmed = name.trim().slice(0, 60);
+  const trimmed = clipText(name.trim(), 60);
   if (!trimmed || localToClassRefusal(design, node)) return null;
   const classes = design.classes ?? [];
   const base = slugify(trimmed).slice(0, 34) || "class";
@@ -154,7 +156,7 @@ export function duplicateClass(
   // At the cap the copy would make the design invalid and the save fail (W-218).
   if (!source || classes.length >= MAX_CLASSES) return design;
   // W-277: "Card copy", then "Card copy 2"…, so the copy's name is free too.
-  const stem = `${source.name.slice(0, 52).trim()} copy`;
+  const stem = `${clipText(source.name, 52).trim()} copy`;
   let baseName = stem;
   for (let n = 2; n <= MAX_CLASSES && classNameTaken(design, baseName); n++) {
     baseName = `${stem} ${n}`;

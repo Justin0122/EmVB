@@ -1,4 +1,6 @@
-import { expect, test } from "bun:test";
+import { cleanClassName } from "../design/classes.ts";
+import { clipText, MAX_TEXT_LENGTH } from "../limits.ts";
+import { describe, expect, test } from "bun:test";
 import { defaultElement } from "./index.ts";
 import { commitPlainText, isMultilineText, plainTextOf, withPlainText } from "./plain-text.ts";
 
@@ -19,4 +21,13 @@ test("a heading commit drops line breaks and stops at the length limit", () => {
   const heading = withPlainText(defaultElement("heading", "h0000001"), "Welcome");
   expect(heading.type === "heading" ? heading.props.text : "").toBe("Welcome");
   expect(withPlainText(defaultElement("image", "i0000001"), "nope").type).toBe("image");
+});
+
+describe("text caps keep whole emoji (W-509)", () => {
+  test("canvas text, and class names never end in half an emoji", () => {
+    const text = commitPlainText(`${"a".repeat(MAX_TEXT_LENGTH - 1)}😀`, false);
+    expect(text).toBe("a".repeat(MAX_TEXT_LENGTH - 1));
+    expect(cleanClassName(`${"b".repeat(59)}😀`)).toBe("b".repeat(59));
+    expect(clipText("ab😀", 4)).toBe("ab😀");
+  });
 });
