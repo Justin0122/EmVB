@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Post Content keeps a line break inside bold, italic or linked text instead of turning it into a space (W-525).
 - The Radio field names its group with a real `<legend>` inside the `<fieldset>` instead of a separate label and `aria-labelledby`; it looks the same (W-524).
 - A box marked Query container no longer collapses to zero width (hiding its content) in a row or a non-stretched column: it is full width unless it has a width of its own (W-523).
 - The agent activity log now keeps 90 days: each new entry drops older ones, so a busy agent token no longer grows it without end (W-522).

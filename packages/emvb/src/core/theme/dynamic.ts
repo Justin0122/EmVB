@@ -99,27 +99,37 @@ function linkDefs(block: Record<string, unknown>): Map<string, string> {
   return links;
 }
 
-/** A span's text wrapped in its marks; unknown marks and unsafe links leave plain text. */
-function spanNode(
-  span: Record<string, unknown>,
-  links: Map<string, string>,
-): VNode | string | null {
+/** Text with its line breaks as `<br>`. */
+function withBreaks(text: string): (VNode | string)[] {
+  const out: (VNode | string)[] = [];
+  text.split("\n").forEach((part, i) => {
+    if (i > 0) out.push({ tag: "br", attrs: {}, children: [] });
+    if (part) out.push(part);
+  });
+  return out;
+}
+
+/**
+ * A span's text wrapped in its marks; unknown marks and unsafe links leave plain text. Line
+ * breaks become `<br>` inside the marks too: a bold or linked line break was lost (W-525).
+ */
+function spanNodes(span: Record<string, unknown>, links: Map<string, string>): (VNode | string)[] {
   const text = typeof span["text"] === "string" ? span["text"] : "";
-  if (!text) return null;
+  if (!text) return [];
   const marks = Array.isArray(span["marks"])
     ? span["marks"].filter((m) => typeof m === "string")
     : [];
-  let node: VNode | string = text;
+  let nodes = withBreaks(text);
   // W-392: a link can't hold a link, so only the span's first (outermost) link mark is kept.
   const link = marks.find((mark) => !DECORATORS[mark] && links.has(mark));
   for (const mark of new Set(marks.toReversed())) {
     const tag = DECORATORS[mark];
-    if (tag) node = { tag, attrs: {}, children: [node] };
+    if (tag) nodes = [{ tag, attrs: {}, children: nodes }];
     else if (mark === link) {
-      node = { tag: "a", attrs: { href: links.get(mark) as string }, children: [node] };
+      nodes = [{ tag: "a", attrs: { href: links.get(mark) as string }, children: nodes }];
     }
   }
-  return node;
+  return nodes;
 }
 
 /** A block's spans, with line breaks kept as `<br>`. */
@@ -129,14 +139,7 @@ function inlineNodes(block: Record<string, unknown>): (VNode | string)[] {
   const out: (VNode | string)[] = [];
   for (const child of children) {
     if (!isRecord(child) || (child["_type"] !== undefined && child["_type"] !== "span")) continue;
-    const node = spanNode(child, links);
-    if (node === null) continue;
-    if (typeof node === "string" && node.includes("\n")) {
-      node.split("\n").forEach((part, i) => {
-        if (i > 0) out.push({ tag: "br", attrs: {}, children: [] });
-        if (part) out.push(part);
-      });
-    } else out.push(node);
+    out.push(...spanNodes(child, links));
   }
   return out;
 }

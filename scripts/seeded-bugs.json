@@ -27195,8 +27195,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/theme/dynamic.ts",
-          "search": "    if (tag) node = { tag, attrs: {}, children: [node] };",
-          "replace": "    if (tag) node = String(node);"
+          "search": "    if (tag) nodes = [{ tag, attrs: {}, children: nodes }];",
+          "replace": "    if (tag) nodes = [text];"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/post-content-format.test.ts"],
@@ -31237,6 +31237,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/form-options.test.ts"],
       "expect": "\\(fail\\).*W-524"
+    },
+    {
+      "id": "W-525/marked-break-lost",
+      "requirement": "W-525",
+      "description": "A line break inside a marked span is lost.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/dynamic.ts",
+          "search": "  let nodes = withBreaks(text);",
+          "replace": "  let nodes: (VNode | string)[] = marks.length > 0 ? [text] : withBreaks(text);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/post-content-format.test.ts"],
+      "expect": "\\(fail\\).*W-525"
     }
   ]
 }

@@ -117,3 +117,18 @@ describe("Post Content keeps safe formatting (W-328)", () => {
     );
   });
 });
+
+describe("Line breaks inside formatted text (W-525)", () => {
+  test("a bold span with a line break keeps the break inside the bold", () => {
+    expect(html([block([span("One\nTwo", ["strong"])])])).toBe(
+      "<p><strong>One<br>Two</strong></p>",
+    );
+  });
+
+  test("a linked span with a line break keeps it inside the link", () => {
+    const linked = block([span("Go\nnow", ["l1"])], {
+      markDefs: [{ _type: "link", _key: "l1", href: "https://example.com" }],
+    });
+    expect(html([linked])).toBe('<p><a href="https://example.com">Go<br>now</a></p>');
+  });
+});
