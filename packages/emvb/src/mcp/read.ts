@@ -18,7 +18,9 @@ import {
 } from "../core/index.ts";
 import { parentChildRefusal } from "../core/arrange.ts";
 import { KNOWN_NODE_SCHEMAS } from "../core/schema/layout.ts";
-import { nodeChildren } from "../core/tree-ops.ts";
+import { requiredFieldIssues, requiredFieldIssueText } from "../core/forms/binding.ts";
+import { isFormNode } from "../core/schema/layout.ts";
+import { forEachNode, nodeChildren } from "../core/tree-ops.ts";
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts, PageRecord } from "./ports.ts";
 
@@ -330,6 +332,41 @@ function hiddenEverywhere(root: LayoutNode) {
   return warnings.slice(0, 50);
 }
 
+/**
+ * W-511: required form fields visitors can't fill (missing from the form, or hidden on a device),
+ * so the form can't be sent there. Needs the forms plugin's definitions; none without them.
+ */
+async function requiredFieldWarnings(ports: EmvbPorts, root: LayoutNode) {
+  const forms: LayoutNode[] = [];
+  forEachNode(root, (node) => {
+    if (isFormNode(node) && node.props.formId.trim() && forms.length < 20) forms.push(node);
+  });
+  if (forms.length === 0 || !ports.formFields) return [];
+  let fields: ReadonlyMap<string, readonly { name: string; label: string; required: boolean }[]>;
+  try {
+    fields = await ports.formFields([
+      ...new Set(forms.map((form) => (form.props as { formId: string }).formId.trim())),
+    ]);
+  } catch {
+    return [];
+  }
+  const warnings: { nodeId: string; message: string }[] = [];
+  for (const form of forms) {
+    const defined = fields.get((form.props as { formId: string }).formId.trim());
+    if (!defined) continue;
+    for (const issue of requiredFieldIssues(form, defined)) {
+      warnings.push({
+        nodeId: issue.kind === "hidden" ? issue.nodeId : issue.formNodeId,
+        message:
+          issue.kind === "hidden"
+            ? `${requiredFieldIssueText(issue)} (Unset hiddenOn on ${issue.nodeId} or the box around it.)`
+            : `${requiredFieldIssueText(issue)} (Form ${issue.formNodeId}, field name ${issue.field}.)`,
+      });
+    }
+  }
+  return warnings;
+}
+
 const clip = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max - 1)}…` : text;
 
@@ -359,7 +396,10 @@ export async function describePage(ports: EmvbPorts, input: z.infer<typeof Descr
     return section;
   });
   const wordCount = all.text.join(" ").split(/\s+/).filter(Boolean).length;
-  const warnings = hiddenEverywhere(layout.root);
+  const warnings = [
+    ...hiddenEverywhere(layout.root),
+    ...(await requiredFieldWarnings(ports, layout.root)),
+  ].slice(0, 50);
   const summary = clip(
     `"${page.title}" (/${page.slug}, ${page.status}${page.hasDraft ? ", unpublished changes" : ""}): ` +
       `${sections.length} top-level section${sections.length === 1 ? "" : "s"}, ` +

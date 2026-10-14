@@ -30847,8 +30847,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/mcp/read.ts",
-          "search": "  const warnings = hiddenEverywhere(layout.root);",
-          "replace": "  const warnings: unknown[] = [];"
+          "search": "    ...hiddenEverywhere(layout.root),\n",
+          "replace": ""
         }
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/mcp-live-round2.test.ts"],
@@ -31003,6 +31003,40 @@
         "./packages/emvb/test/server/mcp-write.test.ts"
       ],
       "expect": "\\(fail\\).*W-510"
+    },
+    {
+      "id": "W-511/hidden-required-not-reported",
+      "requirement": "W-511",
+      "description": "A required field hidden on a device is not reported.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/forms/binding.ts",
+          "search": "const devices = DEVICE_ORDER.filter((device) => bound.every((c) => c.hidden.has(device)));",
+          "replace": "const devices = DEVICE_ORDER.filter(() => bound.length === 0);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/forms/required-issues.test.ts"],
+      "expect": "\\(fail\\).*W-511"
+    },
+    {
+      "id": "W-511/describe-page-no-form-warnings",
+      "requirement": "W-511",
+      "description": "describe_page leaves out required-field warnings.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/read.ts",
+          "search": "    ...(await requiredFieldWarnings(ports, layout.root)),\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "--timeout",
+        "30000",
+        "./packages/emvb/test/server/mcp-live-round2.test.ts"
+      ],
+      "expect": "\\(fail\\).*W-511"
     }
   ]
 }

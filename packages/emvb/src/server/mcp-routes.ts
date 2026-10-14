@@ -1,6 +1,7 @@
 import { PluginRouteError, type PluginRoute, type RouteContext } from "emdash";
 import { PAGES_COLLECTION, DESIGN_DRAFT_KEY, DESIGN_KEY } from "../constants.ts";
 import { McpToolError } from "../mcp/errors.ts";
+import type { RequiredFieldInfo } from "../core/index.ts";
 import type { EmvbPorts, PageRecord, PageSummary } from "../mcp/ports.ts";
 import { callerKey, hitRateLimit, type RateStore } from "../mcp/rate-limit.ts";
 import { runTool, type ToolDef } from "../mcp/tools.ts";
@@ -63,6 +64,52 @@ const summary = (item: Item): PageSummary => ({
   updatedAt: item.updatedAt,
 });
 
+const FORMS_DEFINITION = "/_emdash/api/plugins/emdash-forms/definition";
+
+/**
+ * W-511: form fields for describe_page's required-field warnings, from the forms plugin's public
+ * definition route on this site. A plugin route has no in-process handle on another plugin, so
+ * this is a same-origin request with a short timeout; a form it can't read is left out.
+ */
+async function loadFormFieldsFromSite(
+  origin: string,
+  formIds: readonly string[],
+): Promise<Map<string, RequiredFieldInfo[]>> {
+  const found = new Map<string, RequiredFieldInfo[]>();
+  await Promise.all(
+    formIds.slice(0, 20).map(async (id) => {
+      try {
+        const response = await fetch(new URL(FORMS_DEFINITION, origin), {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id }),
+          signal: AbortSignal.timeout(3000),
+        });
+        if (!response.ok) return;
+        const body = (await response.json()) as { data?: unknown };
+        const data = (body?.data ?? body) as { pages?: unknown };
+        if (!Array.isArray(data?.pages)) return;
+        const fields: RequiredFieldInfo[] = [];
+        for (const page of data.pages as { fields?: unknown }[]) {
+          if (!Array.isArray(page?.fields)) continue;
+          for (const raw of page.fields as Record<string, unknown>[]) {
+            if (typeof raw?.name !== "string") continue;
+            fields.push({
+              name: raw.name,
+              label: typeof raw.label === "string" ? raw.label : raw.name,
+              required: raw.required === true,
+            });
+          }
+        }
+        found.set(id, fields);
+      } catch {
+        // The forms plugin is missing, the form is unknown, or the site can't reach itself.
+      }
+    }),
+  );
+  return found;
+}
+
 /** The tool core's ports on a plugin route (D-053, R1 save path). */
 function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   const content = ctx.content as unknown as Content | undefined;
@@ -85,6 +132,7 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   };
   return {
     caller: { userId: ctx.user?.id ?? null, role: Number(ctx.user?.role ?? 0) },
+    formFields: (formIds) => loadFormFieldsFromSite(ctx.request.url, formIds),
     async rateLimit(cls) {
       await hitRateLimit(
         ctx.kv as unknown as RateStore,

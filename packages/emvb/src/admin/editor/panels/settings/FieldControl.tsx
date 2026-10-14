@@ -6,6 +6,7 @@ import { FIELD } from "../../../ui.ts";
 import { DraftTextField } from "./DraftTextField.tsx";
 import { FieldBindControl } from "./FieldBindControl.tsx";
 import { FormBindControl } from "./FormBindControl.tsx";
+import { RequiredFieldsNotice } from "./RequiredFieldsNotice.tsx";
 import { LoopItemBindControl } from "./LoopItemBindControl.tsx";
 import { IconPicker } from "./IconPicker.tsx";
 import { ImageSourcesField } from "./ImageSourcesField.tsx";
@@ -39,12 +40,14 @@ export function FieldControl({
 
   if (field.key === "formId" && fetcher) {
     return (
-      <FormBindControl
-        key={field.key}
-        value={typeof raw === "string" ? raw : ""}
-        fetcher={fetcher}
-        onChange={(formId) => onChange(withProp(node, "formId", formId))}
-      />
+      <React.Fragment key={field.key}>
+        <FormBindControl
+          value={typeof raw === "string" ? raw : ""}
+          fetcher={fetcher}
+          onChange={(formId) => onChange(withProp(node, "formId", formId))}
+        />
+        <RequiredFieldsNotice node={node} fetcher={fetcher} />
+      </React.Fragment>
     );
   }
 

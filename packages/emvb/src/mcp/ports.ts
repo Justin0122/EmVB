@@ -1,6 +1,6 @@
 import type { AgentSettings } from "./settings.ts";
 import type { RateClass } from "./rate-limit.ts";
-import type { DesignSystem, Layout } from "../core/index.ts";
+import type { DesignSystem, Layout, RequiredFieldInfo } from "../core/index.ts";
 
 /** A page as the tool core sees it: the current draft (or published) data and its revision. */
 export type PageRecord = {
@@ -75,4 +75,11 @@ export interface EmvbPorts {
   publishPage(id: string, expectedRev: string): Promise<{ rev: string }>;
   /** Publishes the style draft when the published revision is still `expectedPublishedRevision`. */
   publishDesign(expectedPublishedRevision: string | null): Promise<{ revision: string }>;
+  /**
+   * W-511: each form's fields as the forms plugin defines them, for describe_page's required-field
+   * warnings. Forms it can't read are left out; without this port there are no such warnings.
+   */
+  formFields?(
+    formIds: readonly string[],
+  ): Promise<ReadonlyMap<string, readonly RequiredFieldInfo[]>>;
 }

@@ -150,7 +150,11 @@ export { classStylesInListOrder, resolveCascade } from "./design/cascade.ts";
 export {
   findMissingRequiredFields,
   layoutHasForm,
+  requiredFieldIssues,
+  requiredFieldIssueText,
   type MissingRequiredField,
+  type RequiredFieldInfo,
+  type RequiredFieldIssue,
 } from "./forms/binding.ts";
 export {
   fieldsOf,

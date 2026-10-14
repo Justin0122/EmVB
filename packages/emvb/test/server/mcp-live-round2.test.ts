@@ -332,3 +332,61 @@ describe("describe_page warns about hidden content (W-500)", () => {
     expect(d.warnings?.[0]?.message).toContain("whole page");
   });
 });
+
+describe("describe_page warns about required form fields (W-511)", () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  test("a required field missing from the form, and one hidden on mobile, are warnings", async () => {
+    const asked: string[] = [];
+    globalThis.fetch = (async (url: URL | string, init?: RequestInit) => {
+      asked.push(`${String(url)} ${String(init?.body)}`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            pages: [
+              {
+                fields: [
+                  { name: "email", type: "email", label: "Email", required: true },
+                  { name: "phone", type: "tel", label: "Phone", required: true },
+                  { name: "note", type: "textarea", label: "Note", required: false },
+                ],
+              },
+            ],
+          },
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    }) as typeof fetch;
+    const { pageId, root } = await page();
+    const form = await ok<{ changed: string[] }>("add_element", {
+      pageId,
+      parentId: root.id,
+      element: {
+        type: "form",
+        props: { formId: "contact" },
+        children: [
+          {
+            type: "text-input",
+            props: { field: "email", label: "Email" },
+            hiddenOn: ["mobile"],
+          },
+        ],
+      },
+    });
+    const formId = form.changed[0] ?? "";
+    const d = await ok<{ warnings?: { nodeId: string; message: string }[] }>("describe_page", {
+      pageId,
+    });
+    const messages = d.warnings?.map((w) => w.message) ?? [];
+    expect(
+      asked.some((line) => line.includes("/emdash-forms/definition") && line.includes('"contact"')),
+    ).toBe(true);
+    expect(messages.some((m) => m.includes("“Email” is required but hidden on mobile"))).toBe(true);
+    expect(d.warnings?.find((w) => w.message.includes("“Phone”"))?.nodeId).toBe(formId);
+    expect(messages.some((m) => m.includes("Note"))).toBe(false);
+  });
+});
