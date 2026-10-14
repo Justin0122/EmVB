@@ -30472,6 +30472,46 @@
         "a different library image clears edit"
       ],
       "expect": "\\(fail\\).*a different library image clears edit"
+    },
+    {
+      "id": "W-483/fit-element-portrait",
+      "requirement": "W-483",
+      "description": "Fit this element writes a portrait element's ratio portrait-first, so photocn's orientation toggle turns it the wrong way.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/tools.ts",
+          "search": "const [a, b] = w >= h ? [w / d, h / d] : [h / d, w / d];",
+          "replace": "const [a, b] = [w / d, h / d];"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/image-editor/tools.test.ts",
+        "-t",
+        "Fit this element"
+      ],
+      "expect": "\\(fail\\).*Fit this element"
+    },
+    {
+      "id": "W-483/esc-closes-corners",
+      "requirement": "W-483",
+      "description": "Esc while adjusting the perspective corners closes the whole editor.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/ImageEditorDialog.tsx",
+          "search": "if (!next && leave && details?.reason === \"escape-key\") {",
+          "replace": "if (!next && leave && details?.reason === \"never\") {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/image-editor/image-editor-dialog.test.tsx",
+        "-t",
+        "Esc leaves"
+      ],
+      "expect": "\\(fail\\).*Esc leaves"
     }
   ]
 }

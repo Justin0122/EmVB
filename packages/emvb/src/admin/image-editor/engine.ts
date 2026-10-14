@@ -1,40 +1,49 @@
 /**
- * EmVB's only door into photocn (D-062): the image editor talks to `Photo` through this file, so
- * a photocn update touches one place. Lazily loaded with the dialog; never in the main chunk.
+ * EmVB's only door into photocn (D-062): the image editor reaches photocn through this file, so a
+ * photocn update touches one place and tests can swap the engine out. Lazily loaded with the
+ * dialog; never in the main chunk.
+ *
+ * W-483 moved the dialog from `photocn/photo` to `photocn/react`: its `useImageEditorState` already
+ * has the crop view (whole image under a frame), transient slider edits folded into one undo step,
+ * the crop keyboard and the live histogram, which the photocn-style layout needs.
  */
-import { createPhoto, type Photo } from "photocn/photo";
 import { hasWebGL2, planRendering, type RenderMode } from "./worker.ts";
 
-export type { Photo };
+export {
+  fitRectInPolygon,
+  rectInsidePolygon,
+  type NormalizedRect,
+  type Quad,
+  type Vec2,
+} from "photocn";
+export {
+  aspectRatioOptions,
+  errorMessage,
+  ImageEditorProvider,
+  useImageEditor,
+  useImageEditorState,
+  type ImageEditorGeometryApi,
+} from "photocn/react";
 
-export type OpenedPhoto =
-  | { ok: true; photo: Photo; renderMode: RenderMode; reason?: string }
+export type EnginePlan =
+  | { ok: true; renderMode: RenderMode; spawnWorker?: () => Worker; reason?: string }
   | { ok: false; message: string };
 
 const NO_WEBGL =
   "This browser can't edit images: it has no WebGL 2. Try an up-to-date Chrome, Edge, Firefox or Safari.";
 
-/** Loads the picture into photocn and decides where it renders (worker first, D-059). */
-export async function openPhoto(
-  blob: Blob,
-  name: string,
-  type: string,
-  options: { force?: RenderMode } = {},
-): Promise<OpenedPhoto> {
+/**
+ * Decides where the editor renders before its canvas mounts (worker first, D-059): a canvas handed
+ * to the worker can't come back (W-480 #4).
+ */
+export async function planEngine(options: { force?: RenderMode } = {}): Promise<EnginePlan> {
   const plan = await planRendering(options.force ? { force: options.force } : {});
   // The worker has its own WebGL 2 (OffscreenCanvas); the main thread needs one here (W-480 #5).
   if (plan.renderMode === "main" && !hasWebGL2()) return { ok: false, message: NO_WEBGL };
-  try {
-    const photo = await createPhoto(blob, {
-      renderMode: plan.renderMode,
-      spawnWorker: plan.spawnWorker,
-      decodeOptions: { name, type },
-    });
-    return { ok: true, photo, renderMode: plan.renderMode, reason: plan.reason };
-  } catch (error) {
-    return {
-      ok: false,
-      message: `Couldn't open this picture${error instanceof Error && error.message ? `: ${error.message}` : "."}`,
-    };
-  }
+  return {
+    ok: true,
+    renderMode: plan.renderMode,
+    spawnWorker: plan.spawnWorker,
+    reason: plan.reason,
+  };
 }

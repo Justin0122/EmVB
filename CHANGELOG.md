@@ -12,7 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- **Image editor (preview).** Image settings have an **Edit image** button that opens a full-screen editor for a media-library picture: undo, redo, reset, hold `\` to compare with the original, and a tool rail (crop, adjust, filters, curves, blur) whose tools arrive in the next updates. The editor loads only when it is opened and renders in a background thread where the browser allows it. Saving a copy comes in a later update.
+- **Image editor (preview).** Image settings have an **Edit image** button that opens a full-screen editor for a media-library picture, laid out like [photocn](https://photocn.dev)'s editor: undo, redo, Reset, hold **Original** to compare, the tool switcher, a live histogram and the tool's panel in a resizable sidebar, and on narrow screens the photo first with tools at the bottom and controls in a sheet. **Crop** works: drag the frame, move and zoom the picture under it, rotate, flip, straighten, fix perspective with two sliders or by dragging the corners, pick a ratio (including **Fit this element**, the Image element's own width and height), and use the keyboard (R, H, V, X, [ ], arrows). The other tools arrive in the next updates. The editor loads only when it is opened and renders in a background thread where the browser allows it. Saving a copy comes in a later update.
 
 ### Fixed
 

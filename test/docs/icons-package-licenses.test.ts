@@ -16,7 +16,11 @@ describe("the icons package carries its licenses (W-395)", () => {
   });
 
   test("each set's license text matches the copy in @perkyzz/emvb", () => {
-    const names = readdirSync(join(emvb, "licenses")).toSorted();
+    // photocn's license covers the image editor (W-483), not an icon set.
+    const notIcons = new Set(["photocn.LICENSE"]);
+    const names = readdirSync(join(emvb, "licenses"))
+      .filter((name) => !notIcons.has(name))
+      .toSorted();
     expect(names.length).toBeGreaterThan(0);
     expect(readdirSync(join(icons, "licenses")).toSorted()).toEqual(names);
     for (const name of names) {

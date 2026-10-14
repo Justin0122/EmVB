@@ -82,21 +82,23 @@ async function openImageEditor(page: Page, id: string) {
 
 const editor = (page: Page) => page.locator("[data-emvb-image-editor]");
 
+const file = (page: Page) => page.locator("[data-emvb-image-editor-file]");
+const shot = async (page: Page, name: string) => {
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${test.info().project.name}-${name}.png` });
+};
+const libraryPage = (extra: Record<string, unknown> = {}) =>
+  imagePage({ src: media.url, mediaId: media.id, width: 640, height: 480, ...extra });
+
 test("a library picture opens in the worker under the admin CSP, with nothing loaded before the click", async ({
   page,
 }) => {
   const seen = watch(page);
-  const id = await createPage(
-    author,
-    "Image editor",
-    imagePage({ src: media.url, mediaId: media.id, width: 640, height: 480 }),
-    `ie-${unique()}`,
-  );
+  const id = await createPage(author, "Image editor", libraryPage(), `ie-${unique()}`);
   await page.goto(`${EDITOR}?entry=${id}`);
   await expect(overlay(page).locator(".emvb-topbar-title")).toBeVisible({ timeout: 30_000 });
   const before = seen.scripts.length;
   // The editor chunk is in neither the editor's first load nor anything before "Edit image".
-  expect(seen.scripts.some((u) => /editor\.worker/.test(u))).toBe(false);
+  expect(seen.scripts.some((u) => /ImageEditorDialog|editor\.worker/.test(u))).toBe(false);
   await openLayers(page);
   await overlay(page).locator(".emvb-layer-select", { hasText: "Image" }).click();
   await overlay(page).locator("[data-emvb-image-edit]").click();
@@ -105,24 +107,175 @@ test("a library picture opens in the worker under the admin CSP, with nothing lo
   });
   expect(seen.scripts.length).toBeGreaterThan(before);
   await expect(editor(page)).toHaveAttribute("data-emvb-render-mode", "worker");
-  await expect(page.locator("[data-emvb-image-editor-file]")).toContainText("640 × 480 px");
+  await expect(editor(page)).toHaveAttribute("data-layout", "desktop");
+  // photocn's arrangement: Adjust first, the tool switcher and histogram on top of the sidebar.
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-tool-active", "adjust");
+  await expect(page.locator('[data-emvb-image-tool="adjust"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.locator("[data-slot=image-editor-histogram]")).toBeVisible();
+  await expect(file(page)).toContainText("640 × 480 px");
   await expect(page.locator("[data-emvb-image-save]")).toBeDisabled();
   const box = await page.locator("[data-emvb-image-canvas]").boundingBox();
-  expect(box?.width ?? 0).toBeGreaterThan(200);
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${test.info().project.name}-ready.png` });
-
-  await page.keyboard.down("\\");
-  await expect(page.locator("[data-emvb-image-original]")).toBeVisible();
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${test.info().project.name}-compare.png` });
-  await page.keyboard.up("\\");
+  expect(box?.width ?? 0).toBeGreaterThan(400);
+  await page.waitForTimeout(500);
+  await shot(page, "adjust");
   await page.locator('[data-emvb-image-tool="filters"]').click();
   await expect(page.locator('[data-emvb-image-panel="filters"]')).toBeVisible();
-  if (SHOTS)
-    await page.screenshot({ path: `${SHOTS}/${test.info().project.name}-filters-panel.png` });
+  await shot(page, "filters");
   await page.keyboard.press("Escape");
   await expect(editor(page)).toHaveCount(0);
   await expect(overlay(page).locator("[data-emvb-image-edit]")).toBeFocused();
   expect(seen.csp).toEqual([]);
+});
+
+test("crop and rotate (W-483): turns, square, the element's own ratio, straighten, undo and Done", async ({
+  page,
+}) => {
+  const seen = watch(page);
+  const id = await createPage(
+    author,
+    "Image editor crop",
+    libraryPage({ width: 300, height: 100 }),
+    `ie-c-${unique()}`,
+  );
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.locator('[data-emvb-image-tool="compose"]').click();
+  await expect(page.locator("[data-emvb-image-view]")).toHaveAttribute(
+    "data-emvb-image-view",
+    "crop",
+  );
+  await expect(page.locator("[data-emvb-image-crop-frame]")).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, "crop");
+
+  await page.locator('[data-emvb-image-rotate="right"]').click();
+  await expect(file(page)).toContainText("480 × 640 px");
+  await page.locator("[data-emvb-image-undo]").click();
+  await expect(file(page)).toContainText("640 × 480 px");
+
+  await page.getByRole("combobox", { name: "Aspect ratio" }).click();
+  await page.getByRole("option", { name: "Square" }).click();
+  await expect(file(page)).toContainText("480 × 480 px");
+
+  await page.getByRole("combobox", { name: "Aspect ratio" }).click();
+  await page.getByRole("option", { name: "Fit this element (300 × 100)" }).click();
+  await expect(file(page)).toContainText(/640 × 21[34] px/);
+
+  // The keyboard straightens; the frame stays put and the crop shrinks to stay inside.
+  const straighten = page.locator('[data-emvb-image-slider="straighten"]');
+  await straighten.focus();
+  for (let i = 0; i < 20; i++) await straighten.press("ArrowRight");
+  await expect(page.getByRole("button", { name: "+2.0°" })).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, "crop-edited");
+
+  // Adjust corners: Esc leaves the corners first, and doesn't close the editor.
+  await page.locator("[data-emvb-image-corners]").click();
+  await expect(page.locator("[data-slot=image-editor-corner-overlay]")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-slot=image-editor-corner-overlay]")).toHaveCount(0);
+  await expect(editor(page)).toHaveCount(1);
+
+  await page.locator("[data-emvb-image-crop-done]").click();
+  await expect(page.locator("[data-emvb-image-view]")).toHaveAttribute(
+    "data-emvb-image-view",
+    "result",
+  );
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-tool-active", "adjust");
+  await page.locator("[data-emvb-image-reset]").click();
+  await expect(file(page)).toContainText("640 × 480 px");
+  expect(seen.csp).toEqual([]);
+});
+
+test("the active tool stays readable after the admin switches from dark to light", async ({
+  page,
+}) => {
+  const id = await createPage(author, "Image editor theme", libraryPage(), `ie-t-${unique()}`);
+  const activeColors = async () =>
+    page
+      .locator('[data-emvb-image-tool][aria-pressed="true"]')
+      .first()
+      .evaluate((el) => [getComputedStyle(el).backgroundColor, getComputedStyle(el).color]);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  const light = await activeColors();
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.waitForTimeout(300);
+  await shot(page, "dark-adjust");
+  await page.locator('[data-emvb-image-tool="compose"]').click();
+  await page.waitForTimeout(400);
+  await shot(page, "dark-crop");
+  await page.locator('[data-emvb-image-tool="adjust"]').click();
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.waitForTimeout(300);
+  expect(await activeColors()).toEqual(light);
+  await page.setViewportSize({ width: 1024, height: 680 });
+  await page.locator('[data-emvb-image-tool="compose"]').click();
+  await page.waitForTimeout(400);
+  await shot(page, "1024-crop");
+});
+
+test("a narrow editor uses the phone layout: tools at the bottom, controls in a sheet", async ({
+  page,
+}) => {
+  const id = await createPage(author, "Image editor compact", libraryPage(), `ie-m-${unique()}`);
+  // The page editor itself needs 1024 px (its small-screen notice would unmount the dialog), but
+  // the image editor picks its layout from its own width. Keep the page editor mounted and narrow
+  // the window, as W-486's media-library entry point will be.
+  await page.addInitScript(() => {
+    const original = window.matchMedia.bind(window);
+    window.matchMedia = (query: string) =>
+      /min-width:\s*1024px/.test(query)
+        ? ({
+            matches: true,
+            media: query,
+            onchange: null,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+            addListener: () => undefined,
+            removeListener: () => undefined,
+            dispatchEvent: () => true,
+          } as MediaQueryList)
+        : original(query);
+  });
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(editor(page)).toHaveAttribute("data-layout", "compact");
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.waitForTimeout(500);
+  await shot(page, "mobile");
+  await page
+    .locator(
+      '.emvb-ie-compact-tools:not(.emvb-ie-compact-tools-inline) [data-emvb-image-tool="compose"]',
+    )
+    .click();
+  await expect(page.locator("[data-emvb-image-sheet]")).toHaveAttribute(
+    "data-emvb-image-sheet",
+    "open",
+  );
+  await expect(page.locator("[data-emvb-image-crop-frame]")).toBeVisible();
+  await page.waitForTimeout(500);
+  await shot(page, "mobile-crop");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.waitForTimeout(300);
+  await shot(page, "mobile-crop-dark");
+  await page.getByRole("button", { name: "Close panel" }).click();
+  await expect(page.locator("[data-emvb-image-sheet]")).toHaveAttribute(
+    "data-emvb-image-sheet",
+    "closed",
+  );
 });
 
 test("a picture on another website explains how to edit it", async ({ page }) => {
@@ -137,7 +290,7 @@ test("a picture on another website explains how to edit it", async ({ page }) =>
   await expect(page.locator("[data-emvb-image-error]")).toContainText(
     "Upload a copy to the media library",
   );
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${test.info().project.name}-external.png` });
+  await shot(page, "external");
 });
 
 test("the published page loads no image-editor code", async ({ page }) => {
@@ -156,26 +309,4 @@ test("the published page loads no image-editor code", async ({ page }) => {
   const html = await page.content();
   expect(html).not.toMatch(/photocn|editor\.worker|ImageEditorDialog/);
   expect(seen.scripts.some((u) => /editor\.worker|ImageEditorDialog/.test(u))).toBe(false);
-});
-
-test("dogfood screenshots in dark mode and at the smallest supported size", async ({ page }) => {
-  test.skip(!SHOTS, "Only when EMVB_IMAGE_EDITOR_SHOTS names a folder");
-  const id = await createPage(
-    author,
-    "Image editor shots",
-    imagePage({ src: media.url, mediaId: media.id, width: 640, height: 480 }),
-    `ie-s-${unique()}`,
-  );
-  const name = test.info().project.name;
-  await page.emulateMedia({ colorScheme: "dark" });
-  await openImageEditor(page, id);
-  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
-    timeout: 30_000,
-  });
-  await page.locator('[data-emvb-image-tool="curves"]').click();
-  await page.screenshot({ path: `${SHOTS}/${name}-dark-curves.png` });
-  await page.setViewportSize({ width: 1024, height: 680 });
-  await page.screenshot({ path: `${SHOTS}/${name}-dark-1024.png` });
-  await page.emulateMedia({ colorScheme: "light" });
-  await page.screenshot({ path: `${SHOTS}/${name}-light-1024.png` });
 });

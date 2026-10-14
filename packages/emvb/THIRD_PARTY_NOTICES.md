@@ -30,3 +30,10 @@ When an editor picks an icon, its SVG is stored with the page and shown inline o
 - Package: `remixicon` 4.8.0, <https://remixicon.com>. 4.8.0 is the last release under Apache-2.0; 4.9.0 moved to the custom "Remix Icon License v1.0", which forbids competing icon libraries, so EmVB stays on 4.8.0.
 - License: Apache License 2.0, Copyright (c) Remix Design. Full text: [`licenses/remixicon.LICENSE`](licenses/remixicon.LICENSE).
 - Changes (Apache-2.0 §4(b)): path coordinates are rounded to two decimals. All Remix paths use absolute commands, so the error stays under 0.005 units on the 24-unit grid. The icon files are not otherwise modified.
+
+## photocn
+
+- Package: `photocn` 0.1.2 (the image editor's engine, loaded only when the image editor opens), <https://photocn.dev>, <https://github.com/rbbydotdev/photocn>
+- License: MIT, Copyright (c) 2026 rbbydotdev. Full text: [`licenses/photocn.LICENSE`](licenses/photocn.LICENSE).
+- The image editor's layout and interactions are ported from photocn's shadcn editor components (`apps/www/src/registry/image-editor`: the editor, desktop and compact layouts, toolbar, canvas, crop overlay, crop panel, panel header, histogram and the perspective icon). Changes: rebuilt with Kumo components, Phosphor icons and EmVB's CSS tokens instead of shadcn/ui, Tailwind and Lucide; opening files and recipes left out. Each ported file names its source.
+- The quarter-turn icons in the crop panel are Lucide's `rotate-ccw-square` and `rotate-cw-square` (ISC, see Lucide above).

@@ -1,115 +1,594 @@
-import { Button, Dialog } from "@cloudflare/kumo";
+/**
+ * The full-screen image editor (W-482, laid out like photocn's editor in W-483). Loaded on demand
+ * from the Image settings; photocn and this file never ship in the main editor chunk or on public
+ * pages.
+ *
+ * The desktop layout (toolbar on top, canvas, resizable sidebar with the tool switcher, histogram
+ * and panel) and the compact phone layout (photo first, tools at the bottom, controls in a sheet)
+ * follow photocn's `image-editor.tsx`, `layout.tsx` and `compact-layout.tsx`
+ * (https://github.com/rbbydotdev/photocn, apps/www/src/registry/image-editor), MIT License,
+ * Copyright (c) 2026 rbbydotdev. Rebuilt with Kumo components and EmVB tokens.
+ */
+import { Badge, Button, Dialog, DropdownMenu, TooltipProvider } from "@cloudflare/kumo";
 import {
-  ApertureIcon,
-  ArrowClockwiseIcon,
   ArrowCounterClockwiseIcon,
-  ArrowsCounterClockwiseIcon,
-  ChartLineIcon,
-  CpuIcon,
-  CropIcon,
-  MagicWandIcon,
-  SlidersHorizontalIcon,
-  SquareSplitHorizontalIcon,
-  SwatchesIcon,
+  DotsThreeIcon,
+  DownloadSimpleIcon,
   WarningCircleIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 import * as React from "react";
-import { BUTTON, SOLID_PRIMARY, UI_CSS } from "../ui.ts";
-import { openPhoto, type Photo } from "./engine.ts";
-import { IMAGE_EDITOR_CSS } from "./image-editor-css.ts";
-import { loadEditableSource } from "./load.ts";
+import { SOLID_PRIMARY, UI_CSS } from "../ui.ts";
+import { EditorCanvas } from "./Canvas.tsx";
 import {
-  IMAGE_EDITOR_TOOLS,
-  moveTool,
-  shortcutFor,
-  displayName,
-  sizeLabel,
-  type ImageEditorToolId,
-} from "./tools.ts";
+  aspectRatioOptions,
+  errorMessage,
+  ImageEditorProvider,
+  planEngine,
+  useImageEditor,
+  useImageEditorState,
+} from "./engine.ts";
+import { IMAGE_EDITOR_CSS } from "./image-editor-css.ts";
+import { loadEditableSource, type LoadedSource } from "./load.ts";
+import { ToolPanel } from "./panels.tsx";
+import {
+  CompactToolBar,
+  CompareButton,
+  Histogram,
+  RedoButton,
+  ResetAllButton,
+  ToolSwitcher,
+  UndoButton,
+} from "./parts.tsx";
+import { displayName, elementAspectOption, sizeLabel, type ImageEditorToolId } from "./tools.ts";
 import type { RenderMode } from "./worker.ts";
-
-const TOOL_ICONS: Record<ImageEditorToolId, React.ReactElement> = {
-  crop: <CropIcon aria-hidden="true" />,
-  adjust: <SlidersHorizontalIcon aria-hidden="true" />,
-  filters: <SwatchesIcon aria-hidden="true" />,
-  curves: <ChartLineIcon aria-hidden="true" />,
-  blur: <ApertureIcon aria-hidden="true" />,
-};
-
-type Phase =
-  | { kind: "loading" }
-  | { kind: "error"; message: string; retry: boolean }
-  | { kind: "ready"; renderMode: RenderMode; reason?: string };
 
 export type ImageEditorDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The Image element's props (`src`, `alt`, `edit`…). */
+  /** The Image element's props (`src`, `alt`, `edit`, `width`, `height`…). */
   imageProps: Record<string, unknown>;
   /** Tests and the spike force main-thread rendering. */
   forceRenderMode?: RenderMode;
   onClosed?: () => void;
 };
 
-/** Live photo state the toolbar needs, refreshed on every photocn change. */
-function usePhotoState(photo: Photo | null) {
-  const [, bump] = React.useReducer((n: number) => n + 1, 0);
-  React.useEffect(() => (photo ? photo.subscribe(() => bump()) : undefined), [photo]);
-  return {
-    canUndo: photo?.canUndo ?? false,
-    canRedo: photo?.canRedo ?? false,
-    edited: photo ? photo.recipe !== null : false,
-    size: photo?.outputSize,
+/** Below this editor width the compact (phone) layout is used (photocn COMPACT_WIDTH). */
+const COMPACT_WIDTH = 640;
+const SIDEBAR = { default: 338, min: 288, max: 544, canvasMin: 384 };
+/** Sheet heights as a fraction of the editor: peek and expanded (photocn SNAP_POINTS). */
+const SNAP_POINTS = [0.42, 0.9] as const;
+
+type Ready = {
+  source: Extract<LoadedSource, { ok: true }>;
+  renderMode: RenderMode;
+  spawnWorker?: () => Worker;
+  reason?: string;
+};
+type Phase =
+  | { kind: "loading" }
+  | { kind: "error"; message: string; retry: boolean }
+  | { kind: "ready"; ready: Ready };
+
+/** The editor's width, measured before paint (null until then). */
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
+  const [width, setWidth] = React.useState<number | null>(null);
+  React.useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    setWidth(element.getBoundingClientRect().width || window.innerWidth);
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setWidth(entry.contentRect.width);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return width;
+}
+
+function SaveCopyButton() {
+  // W-485 brings export and saving; the button shows where it goes.
+  return (
+    <Button
+      type="button"
+      variant="primary"
+      size="sm"
+      className="emvb-ie-btn"
+      style={SOLID_PRIMARY}
+      icon={<DownloadSimpleIcon aria-hidden="true" />}
+      disabled
+      title="Saving a copy comes in the next update"
+      data-emvb-image-save=""
+    >
+      Save copy
+    </Button>
+  );
+}
+
+function CancelButton({ compact = false }: { compact?: boolean }) {
+  return (
+    <Dialog.Close
+      render={(props) =>
+        compact ? (
+          <Button
+            {...props}
+            type="button"
+            variant="ghost"
+            size="sm"
+            shape="square"
+            className="emvb-ie-btn emvb-ie-btn-icon emvb-ie-touch"
+            aria-label="Close editor"
+            icon={<XIcon aria-hidden="true" />}
+            data-emvb-image-cancel=""
+          />
+        ) : (
+          <Button
+            {...props}
+            type="button"
+            variant="outline"
+            size="sm"
+            className="emvb-ie-btn"
+            data-emvb-image-cancel=""
+          >
+            Cancel
+          </Button>
+        )
+      }
+    />
+  );
+}
+
+/** Loading or error (photocn ImageEditorStatusBadge), plus the main-thread fallback note. */
+function StatusBadge({ renderMode, reason }: { renderMode: RenderMode; reason?: string }) {
+  const editor = useImageEditor();
+  if (editor.status === "error") {
+    const message = errorMessage(editor.error);
+    return (
+      <span className="emvb-ie-badge" title={message}>
+        <Badge variant="error">
+          <WarningCircleIcon aria-hidden="true" /> {message}
+        </Badge>
+      </span>
+    );
+  }
+  if (editor.status === "loading" || editor.status === "idle") {
+    return (
+      <span className="emvb-ie-badge">
+        <Badge variant="neutral">Loading</Badge>
+      </span>
+    );
+  }
+  if (renderMode !== "main") return null;
+  return (
+    <span className="emvb-ie-badge" title={reason} data-emvb-image-mode="main">
+      <Badge variant="neutral">Standard preview</Badge>
+    </span>
+  );
+}
+
+/** File name and output size, where photocn has its Open button. */
+function FileLabel({ name }: { name: string }) {
+  const editor = useImageEditor();
+  const size = editor.geometry.outputSize;
+  return (
+    <span className="emvb-ie-file" data-emvb-image-editor-file="" title={name}>
+      <span className="emvb-ie-file-name">{name}</span>
+      {size ? (
+        <span className="emvb-ie-file-size">{sizeLabel(size.width, size.height)}</span>
+      ) : null}
+    </span>
+  );
+}
+
+function DesktopLayout({ ready, name }: { ready: Ready; name: string }) {
+  const [sidebar, setSidebar] = React.useState(SIDEBAR.default);
+  const workspaceRef = React.useRef<HTMLDivElement>(null);
+  const drag = React.useRef<{ id: number; x: number; start: number } | null>(null);
+  const clamp = (w: number) => {
+    const total = workspaceRef.current?.getBoundingClientRect().width ?? 0;
+    const max = total ? Math.min(SIDEBAR.max, total - SIDEBAR.canvasMin) : SIDEBAR.max;
+    return Math.round(Math.max(SIDEBAR.min, Math.min(Math.max(SIDEBAR.min, max), w)));
   };
+  return (
+    <div className="emvb-ie-layout" data-slot="image-editor-layout">
+      <div className="emvb-ie-toolbar" data-slot="editor-toolbar">
+        <UndoButton />
+        <RedoButton />
+        <FileLabel name={name} />
+        <StatusBadge renderMode={ready.renderMode} reason={ready.reason} />
+        <div className="emvb-ie-toolbar-end">
+          <ResetAllButton />
+          <CompareButton />
+          <CancelButton />
+          <SaveCopyButton />
+        </div>
+      </div>
+      <div
+        className="emvb-ie-workspace"
+        ref={workspaceRef}
+        style={{ gridTemplateColumns: `minmax(0, 1fr) 0 ${sidebar}px` }}
+        data-slot="editor-workspace"
+      >
+        <main className="emvb-ie-main" data-slot="editor-canvas">
+          <EditorCanvas alt={name} />
+        </main>
+        <div
+          className="emvb-ie-resize"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize the sidebar"
+          aria-valuemin={SIDEBAR.min}
+          aria-valuemax={SIDEBAR.max}
+          aria-valuenow={sidebar}
+          tabIndex={0}
+          onKeyDown={(event) => {
+            const step = event.shiftKey ? 48 : 16;
+            if (event.key === "ArrowLeft") setSidebar((w) => clamp(w + step));
+            else if (event.key === "ArrowRight") setSidebar((w) => clamp(w - step));
+            else return;
+            event.preventDefault();
+          }}
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+            drag.current = { id: event.pointerId, x: event.clientX, start: sidebar };
+          }}
+          onPointerMove={(event) => {
+            const d = drag.current;
+            if (d?.id === event.pointerId) setSidebar(clamp(d.start - (event.clientX - d.x)));
+          }}
+          onPointerUp={() => {
+            drag.current = null;
+          }}
+        >
+          <span aria-hidden="true" />
+        </div>
+        <aside className="emvb-ie-sidebar" data-slot="editor-sidebar">
+          <div className="emvb-ie-sidebar-tools">
+            <ToolSwitcher />
+          </div>
+          <Histogram />
+          <ToolPanel />
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+/** A non-modal bottom sheet: the photo stays touchable, e.g. to drag the crop frame. */
+function PanelSheet({
+  open,
+  onOpenChange,
+  snap,
+  onSnapChange,
+  label,
+  children,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  snap: number;
+  onSnapChange: (snap: number) => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  const drag = React.useRef<{ pointerId: number; startY: number; startSnap: number } | null>(null);
+  const [dragSnap, setDragSnap] = React.useState<number | null>(null);
+  const height = dragSnap ?? snap;
+  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || d.pointerId !== event.pointerId) return;
+    drag.current = null;
+    const released = dragSnap ?? snap;
+    setDragSnap(null);
+    if (released < SNAP_POINTS[0] * 0.6) {
+      onOpenChange(false);
+      return;
+    }
+    onSnapChange(
+      SNAP_POINTS.reduce((best, point) =>
+        Math.abs(point - released) < Math.abs(best - released) ? point : best,
+      ),
+    );
+  };
+  return (
+    <section
+      aria-hidden={!open}
+      aria-label={`${label} controls`}
+      className="emvb-ie-sheet"
+      data-open={open || undefined}
+      data-dragging={dragSnap === null ? undefined : ""}
+      data-emvb-image-sheet={open ? "open" : "closed"}
+      inert={!open}
+      style={{ height: `${height * 100}%` }}
+    >
+      <div
+        aria-label="Resize panel"
+        className="emvb-ie-sheet-grip"
+        role="separator"
+        onPointerCancel={onPointerUp}
+        onPointerDown={(event) => {
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+          drag.current = { pointerId: event.pointerId, startY: event.clientY, startSnap: snap };
+        }}
+        onPointerMove={(event) => {
+          const d = drag.current;
+          if (!d || d.pointerId !== event.pointerId) return;
+          const container = event.currentTarget.closest(".emvb-ie-compact");
+          const containerHeight = container?.clientHeight || window.innerHeight;
+          const next = d.startSnap - (event.clientY - d.startY) / containerHeight;
+          setDragSnap(Math.min(0.96, Math.max(0.08, next)));
+        }}
+        onPointerUp={onPointerUp}
+      >
+        <span />
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function CompactLayout({ name }: { name: string }) {
+  const editor = useImageEditor();
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const [rootHeight, setRootHeight] = React.useState<number | null>(null);
+  React.useLayoutEffect(() => {
+    const element = rootRef.current;
+    if (!element) return;
+    setRootHeight(element.getBoundingClientRect().height);
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry) setRootHeight(entry.contentRect.height);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const [panelOpen, setPanelOpen] = React.useState(false);
+  const [snap, setSnap] = React.useState<number>(SNAP_POINTS[0]);
+  const selectTool = (tool: ImageEditorToolId) => {
+    if (tool === editor.tool) {
+      setPanelOpen((open) => !open);
+      return;
+    }
+    editor.setTool(tool);
+    setPanelOpen(true);
+    setSnap(SNAP_POINTS[0]);
+  };
+  // Keep the photo above the sheet: pad the canvas by the sheet's peek height.
+  const inset = panelOpen && rootHeight ? Math.max(0, rootHeight * SNAP_POINTS[0] - 28) : undefined;
+  const label =
+    editor.tool === "compose" ? "Crop" : editor.tool.charAt(0).toUpperCase() + editor.tool.slice(1);
+  return (
+    <div className="emvb-ie-compact" ref={rootRef} data-slot="image-editor-compact">
+      <header className="emvb-ie-compact-head">
+        <UndoButton className="emvb-ie-touch" />
+        <RedoButton className="emvb-ie-touch" />
+        <div className="emvb-ie-toolbar-end">
+          <CompareButton showLabel={false} />
+          <SaveCopyButton />
+          <DropdownMenu>
+            <DropdownMenu.Trigger
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  shape="square"
+                  size="sm"
+                  aria-label="More"
+                  className="emvb-ie-btn emvb-ie-btn-icon emvb-ie-touch"
+                  icon={<DotsThreeIcon aria-hidden="true" weight="bold" />}
+                  data-emvb-image-more=""
+                />
+              }
+            />
+            <DropdownMenu.Content align="end">
+              <DropdownMenu.Item
+                icon={ArrowCounterClockwiseIcon}
+                variant="danger"
+                disabled={!editor.hasImage || editor.recipes.current === null}
+                onClick={() => editor.resetAll()}
+              >
+                Reset all edits
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu>
+          <CancelButton compact />
+        </div>
+      </header>
+      <div className="emvb-ie-compact-canvas" style={{ paddingBottom: inset }}>
+        <EditorCanvas alt={name} padding={12} />
+      </div>
+      <CompactToolBar onSelect={selectTool} disabled={!editor.hasImage || editor.disabled} />
+      <PanelSheet
+        label={label}
+        open={panelOpen}
+        onOpenChange={setPanelOpen}
+        snap={snap}
+        onSnapChange={setSnap}
+      >
+        <div className="emvb-ie-sheet-tools">
+          <CompactToolBar
+            className="emvb-ie-compact-tools-inline"
+            disabled={editor.disabled}
+            onSelect={(tool) => editor.setTool(tool)}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            shape="square"
+            size="sm"
+            aria-label="Close panel"
+            className="emvb-ie-btn emvb-ie-btn-icon emvb-ie-touch"
+            icon={<XIcon aria-hidden="true" />}
+            onClick={() => setPanelOpen(false)}
+          />
+        </div>
+        <div className="emvb-ie-sheet-body">
+          <ToolPanel />
+        </div>
+      </PanelSheet>
+    </div>
+  );
+}
+
+function EditorView({
+  ready,
+  imageProps,
+  escapeRef,
+}: {
+  ready: Ready;
+  imageProps: Record<string, unknown>;
+  escapeRef: React.MutableRefObject<(() => void) | null>;
+}) {
+  const fitValue = elementAspectOption(imageProps.width, imageProps.height);
+  const fitKey = fitValue ? `${fitValue.value}|${fitValue.label}` : "";
+  // A stable list: a new one each render would look like new options to the hook.
+  const options = React.useMemo(
+    () => (fitValue ? withElementOption(fitValue) : undefined),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fitKey stands for fitValue.
+    [fitKey],
+  );
+  const editor = useImageEditorState({
+    src: ready.source.blob,
+    decodeOptions: { name: ready.source.name, type: ready.source.type },
+    renderMode: ready.renderMode,
+    ...(ready.spawnWorker ? { spawnWorker: ready.spawnWorker } : {}),
+    defaultTool: "adjust",
+    ...(options ? { aspectRatioOptions: options } : {}),
+  });
+  // Esc leaves corner editing before it closes the editor.
+  const { editingCorners, setEditingCorners } = editor.geometry;
+  escapeRef.current = editingCorners ? () => setEditingCorners(false) : null;
+  const width = useWidth(editor.rootRef);
+  const compact = width !== null && width < COMPACT_WIDTH;
+  const name = displayName(ready.source.name, imageProps.alt);
+  return (
+    <ImageEditorProvider editor={editor}>
+      <div
+        className="emvb-ie"
+        ref={editor.rootRef}
+        data-emvb-dialog="image-editor"
+        data-emvb-image-editor={
+          editor.status === "error" ? "error" : editor.isReady ? "ready" : "loading"
+        }
+        data-emvb-render-mode={ready.renderMode}
+        data-layout={compact ? "compact" : "desktop"}
+        data-emvb-image-tool-active={editor.tool}
+      >
+        {width === null ? null : compact ? (
+          <CompactLayout name={name} />
+        ) : (
+          <DesktopLayout ready={ready} name={name} />
+        )}
+      </div>
+    </ImageEditorProvider>
+  );
+}
+
+/** photocn's presets with "Fit this element" after Original (W-483). */
+function withElementOption(fit: { value: string; label: string }) {
+  const rest = aspectRatioOptions.filter((o) => o.value !== fit.value);
+  const at = rest.findIndex((o) => o.value === "original") + 1;
+  return [...rest.slice(0, at), fit, ...rest.slice(at)];
+}
+
+/** Before the picture loads, or when it can't: the same frame with a message in the stage. */
+function StateFrame({
+  phase,
+  onRetry,
+}: {
+  phase: Exclude<Phase, { kind: "ready" }>;
+  onRetry: () => void;
+}) {
+  return (
+    <div
+      className="emvb-ie"
+      data-emvb-dialog="image-editor"
+      data-emvb-image-editor={phase.kind}
+      data-layout="desktop"
+    >
+      <div className="emvb-ie-layout">
+        <div className="emvb-ie-toolbar">
+          <span className="emvb-ie-file">
+            <span className="emvb-ie-file-name">
+              {phase.kind === "error" ? "Couldn't open the picture" : "Opening the picture…"}
+            </span>
+          </span>
+          <div className="emvb-ie-toolbar-end">
+            <CancelButton />
+          </div>
+        </div>
+        <main className="emvb-ie-main emvb-ie-main-solo">
+          <div className="emvb-ie-stage emvb-ie-stage-message">
+            {phase.kind === "loading" ? (
+              <div className="emvb-ie-loading" aria-busy="true">
+                <span className="emvb-ie-spinner" aria-hidden="true" />
+                <span className="emvb-ie-sr">Opening the picture…</span>
+              </div>
+            ) : (
+              <div className="emvb-ie-error" role="alert" data-emvb-image-error="">
+                <span className="emvb-ie-error-icon" aria-hidden="true">
+                  <WarningCircleIcon weight="duotone" />
+                </span>
+                <h3>Can't edit this picture</h3>
+                <p>{phase.message}</p>
+                {phase.retry ? (
+                  <Button variant="outline" size="sm" className="emvb-ie-btn" onClick={onRetry}>
+                    Try again
+                  </Button>
+                ) : (
+                  <Dialog.Close
+                    render={(props) => (
+                      <Button {...props} variant="outline" size="sm" className="emvb-ie-btn">
+                        Back to the page
+                      </Button>
+                    )}
+                  />
+                )}
+              </div>
+            )}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }
 
 function Editor({
   imageProps,
   forceRenderMode,
-}: Pick<ImageEditorDialogProps, "imageProps" | "forceRenderMode">) {
-  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+  escapeRef,
+}: {
+  imageProps: Record<string, unknown>;
+  forceRenderMode?: RenderMode;
+  escapeRef: React.MutableRefObject<(() => void) | null>;
+}) {
   const [phase, setPhase] = React.useState<Phase>({ kind: "loading" });
-  const [photo, setPhoto] = React.useState<Photo | null>(null);
-  const [name, setName] = React.useState("");
-  const [originalUrl, setOriginalUrl] = React.useState<string | null>(null);
-  const [tool, setTool] = React.useState<ImageEditorToolId>("crop");
-  const [comparing, setComparing] = React.useState(false);
   const [attempt, setAttempt] = React.useState(0);
-  const state = usePhotoState(photo);
-  const railId = React.useId();
-
   React.useEffect(() => {
     let alive = true;
-    let opened: Photo | null = null;
-    let url: string | null = null;
     setPhase({ kind: "loading" });
     void (async () => {
       const source = await loadEditableSource(imageProps, window.location.origin);
       if (!alive) return;
       if (!source.ok) {
-        return setPhase({
-          kind: "error",
-          message: source.message,
-          retry: source.reason === "network",
-        });
-      }
-      setName(displayName(source.name, imageProps.alt));
-      const result = await openPhoto(source.blob, source.name, source.type, {
-        force: forceRenderMode,
-      });
-      if (!alive) {
-        if (result.ok) result.photo.dispose();
+        setPhase({ kind: "error", message: source.message, retry: source.reason === "network" });
         return;
       }
-      if (!result.ok) return setPhase({ kind: "error", message: result.message, retry: true });
-      opened = result.photo;
-      url = URL.createObjectURL(source.blob);
-      setOriginalUrl(url);
-      const canvas = canvasRef.current;
-      if (canvas) result.photo.attach(canvas);
-      setPhoto(result.photo);
-      await result.photo.ready();
-      if (alive) setPhase({ kind: "ready", renderMode: result.renderMode, reason: result.reason });
+      const plan = await planEngine(forceRenderMode ? { force: forceRenderMode } : {});
+      if (!alive) return;
+      if (!plan.ok) {
+        setPhase({ kind: "error", message: plan.message, retry: false });
+        return;
+      }
+      setPhase({
+        kind: "ready",
+        ready: {
+          source,
+          renderMode: plan.renderMode,
+          ...(plan.spawnWorker ? { spawnWorker: plan.spawnWorker } : {}),
+          ...(plan.reason ? { reason: plan.reason } : {}),
+        },
+      });
     })().catch((error: unknown) => {
       if (alive) {
         setPhase({
@@ -121,295 +600,16 @@ function Editor({
     });
     return () => {
       alive = false;
-      opened?.dispose();
-      if (url) URL.revokeObjectURL(url);
-      setPhoto(null);
     };
-    // A retry needs a fresh <canvas>: transferControlToOffscreen is one-way (W-480 #4).
   }, [imageProps, forceRenderMode, attempt]);
-
-  const run = React.useCallback(
-    (action: "undo" | "redo" | "reset") => {
-      if (!photo) return;
-      if (action === "undo" && photo.canUndo) photo.undo();
-      if (action === "redo" && photo.canRedo) photo.redo();
-      if (action === "reset" && photo.recipe) photo.reset();
-    },
-    [photo],
-  );
-
-  const onKeyDown = (event: React.KeyboardEvent) => {
-    const target = event.target as HTMLElement;
-    if (target.closest("input, textarea, [contenteditable='true']")) return;
-    const shortcut = shortcutFor(event);
-    if (shortcut) {
-      event.preventDefault();
-      run(shortcut);
-    } else if (event.key === "\\" && !event.repeat) {
-      setComparing(true);
-    }
-  };
-  const onKeyUp = (event: React.KeyboardEvent) => {
-    if (event.key === "\\") setComparing(false);
-  };
-
-  const active = IMAGE_EDITOR_TOOLS.find((t) => t.id === tool) ?? IMAGE_EDITOR_TOOLS[0];
-  const ready = phase.kind === "ready";
-  const subtitle = [name, state.size ? sizeLabel(state.size.width, state.size.height) : ""]
-    .filter(Boolean)
-    .join(" · ");
-
+  if (phase.kind !== "ready") {
+    return <StateFrame phase={phase} onRetry={() => setAttempt((n) => n + 1)} />;
+  }
   return (
-    <div
-      className="emvb-image-editor"
-      data-emvb-dialog="image-editor"
-      data-emvb-image-editor={phase.kind}
-      data-emvb-render-mode={ready ? phase.renderMode : undefined}
-      onKeyDown={onKeyDown}
-      onKeyUp={onKeyUp}
-    >
-      <header className="emvb-image-editor-top">
-        <div className="emvb-image-editor-heading">
-          <span className="emvb-image-editor-mark" aria-hidden="true">
-            <MagicWandIcon weight="duotone" />
-          </span>
-          <div className="emvb-image-editor-titles">
-            <Dialog.Title className="emvb-image-editor-title">Edit image</Dialog.Title>
-            <Dialog.Description
-              className="emvb-image-editor-subtitle"
-              data-emvb-image-editor-file=""
-            >
-              {subtitle ||
-                (phase.kind === "error" ? "Couldn't open the picture" : "Opening the picture…")}
-            </Dialog.Description>
-          </div>
-        </div>
-        <div className="emvb-image-editor-tools" role="toolbar" aria-label="History and compare">
-          <Button
-            variant="ghost"
-            shape="square"
-            className="emvb-icon-btn"
-            aria-label="Undo"
-            title="Undo (Ctrl+Z)"
-            disabled={!state.canUndo}
-            icon={<ArrowCounterClockwiseIcon aria-hidden="true" />}
-            data-emvb-image-undo=""
-            onClick={() => run("undo")}
-          />
-          <Button
-            variant="ghost"
-            shape="square"
-            className="emvb-icon-btn"
-            aria-label="Redo"
-            title="Redo (Ctrl+Shift+Z)"
-            disabled={!state.canRedo}
-            icon={<ArrowClockwiseIcon aria-hidden="true" />}
-            data-emvb-image-redo=""
-            onClick={() => run("redo")}
-          />
-          <span className="emvb-image-editor-divider" aria-hidden="true" />
-          <Button
-            variant="ghost"
-            className={BUTTON}
-            aria-pressed={comparing}
-            title="Hold to see the original (\\)"
-            disabled={!ready}
-            icon={<SquareSplitHorizontalIcon aria-hidden="true" />}
-            data-emvb-image-compare=""
-            onPointerDown={() => setComparing(true)}
-            onPointerUp={() => setComparing(false)}
-            onPointerLeave={() => setComparing(false)}
-            onKeyDown={(event) => {
-              if (event.key === " " || event.key === "Enter") setComparing(true);
-            }}
-            onKeyUp={() => setComparing(false)}
-          >
-            Compare
-          </Button>
-          <Button
-            variant="ghost"
-            className={BUTTON}
-            disabled={!state.edited}
-            icon={<ArrowsCounterClockwiseIcon aria-hidden="true" />}
-            data-emvb-image-reset=""
-            onClick={() => run("reset")}
-          >
-            Reset
-          </Button>
-        </div>
-        <div className="emvb-image-editor-actions">
-          <Dialog.Close
-            render={(props) => (
-              <Button {...props} variant="secondary" className={BUTTON} data-emvb-image-cancel="">
-                Cancel
-              </Button>
-            )}
-          />
-          <Button
-            variant="primary"
-            className={`${BUTTON} ${SOLID_PRIMARY}`}
-            disabled
-            title={
-              state.edited ? "Saving arrives with export settings" : "Make a change to save a copy"
-            }
-            data-emvb-image-save=""
-          >
-            Save copy
-          </Button>
-        </div>
-      </header>
-
-      <nav className="emvb-image-editor-rail" aria-label="Editing tools">
-        <div role="tablist" aria-orientation="vertical" aria-label="Editing tools">
-          {IMAGE_EDITOR_TOOLS.map((t, index) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              id={`${railId}-${t.id}`}
-              aria-selected={tool === t.id}
-              aria-controls={`${railId}-panel`}
-              tabIndex={tool === t.id ? 0 : -1}
-              className="emvb-image-editor-tool"
-              data-emvb-image-tool={t.id}
-              onClick={() => setTool(t.id)}
-              onKeyDown={(event) => {
-                const next = moveTool(event.key, index, IMAGE_EDITOR_TOOLS.length);
-                if (next === undefined) return;
-                event.preventDefault();
-                const nextTool = IMAGE_EDITOR_TOOLS[next];
-                if (!nextTool) return;
-                setTool(nextTool.id);
-                document.getElementById(`${railId}-${nextTool.id}`)?.focus();
-              }}
-            >
-              <span className="emvb-image-editor-tool-icon">{TOOL_ICONS[t.id]}</span>
-              <span className="emvb-image-editor-tool-label">{t.label}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      <section
-        className="emvb-image-editor-panel"
-        role="tabpanel"
-        id={`${railId}-panel`}
-        aria-labelledby={`${railId}-${active.id}`}
-        data-emvb-image-panel={active.id}
-      >
-        <div className="emvb-image-editor-panel-head">
-          <h3>{active.title}</h3>
-          <span className="emvb-image-editor-soon">Next update</span>
-        </div>
-        <p className="emvb-helper">{active.blurb}</p>
-        <ul className="emvb-image-editor-hints">
-          {active.hints.map((hint) => (
-            <li key={hint}>
-              <span className="emvb-image-editor-hint-icon" aria-hidden="true">
-                {TOOL_ICONS[active.id]}
-              </span>
-              {hint}
-            </li>
-          ))}
-        </ul>
-        <div className="emvb-image-editor-note">
-          <strong>Your original stays safe.</strong>
-          <span>
-            Saving makes a new copy in the media library; the picture you started from is never
-            changed.
-          </span>
-        </div>
-      </section>
-
-      <main className="emvb-image-editor-stage" data-emvb-image-stage="">
-        <div className="emvb-image-editor-frame" data-comparing={comparing || undefined}>
-          <canvas
-            key={attempt}
-            ref={canvasRef}
-            className="emvb-image-editor-canvas"
-            aria-label={
-              typeof imageProps.alt === "string" && imageProps.alt
-                ? `Preview: ${imageProps.alt}`
-                : "Preview"
-            }
-            role="img"
-            data-emvb-image-canvas=""
-            hidden={phase.kind === "error"}
-          />
-          {comparing && originalUrl ? (
-            <img
-              className="emvb-image-editor-original"
-              src={originalUrl}
-              alt=""
-              data-emvb-image-original=""
-            />
-          ) : null}
-          {comparing ? <span className="emvb-image-editor-badge">Original</span> : null}
-        </div>
-        {phase.kind === "loading" ? (
-          <div className="emvb-image-editor-overlay" aria-busy="true" aria-live="polite">
-            <span className="emvb-image-editor-spinner" aria-hidden="true" />
-            <span>Opening the picture…</span>
-          </div>
-        ) : null}
-        {phase.kind === "error" ? (
-          <div className="emvb-image-editor-error" role="alert" data-emvb-image-error="">
-            <span className="emvb-image-editor-error-icon" aria-hidden="true">
-              <WarningCircleIcon weight="duotone" />
-            </span>
-            <h3>Can't edit this picture</h3>
-            <p>{phase.message}</p>
-            <div className="emvb-image-editor-error-actions">
-              {phase.retry ? (
-                <Button
-                  variant="secondary"
-                  className={BUTTON}
-                  onClick={() => setAttempt((n) => n + 1)}
-                >
-                  Try again
-                </Button>
-              ) : (
-                <Dialog.Close
-                  render={(props) => (
-                    <Button {...props} variant="secondary" className={BUTTON}>
-                      Back to the page
-                    </Button>
-                  )}
-                />
-              )}
-            </div>
-          </div>
-        ) : null}
-      </main>
-
-      <footer className="emvb-image-editor-status" aria-live="polite">
-        {ready ? (
-          <span
-            className="emvb-image-editor-mode"
-            data-emvb-image-mode={phase.renderMode}
-            title={phase.reason}
-          >
-            <CpuIcon aria-hidden="true" />
-            {phase.renderMode === "worker"
-              ? "Fast preview (background thread)"
-              : "Standard preview"}
-          </span>
-        ) : (
-          <span>{phase.kind === "loading" ? "Loading…" : "Nothing to edit yet"}</span>
-        )}
-        <span className="emvb-image-editor-keys">
-          <kbd>Ctrl</kbd>
-          <kbd>Z</kbd> undo · hold <kbd>\</kbd> to compare · <kbd>Esc</kbd> closes
-        </span>
-      </footer>
-    </div>
+    <EditorView key={attempt} ready={phase.ready} imageProps={imageProps} escapeRef={escapeRef} />
   );
 }
 
-/**
- * The full-screen image editor (W-482). Loaded on demand from the Image settings; photocn and
- * this file never ship in the main editor chunk or on public pages.
- */
 export default function ImageEditorDialog({
   open,
   onOpenChange,
@@ -417,17 +617,38 @@ export default function ImageEditorDialog({
   forceRenderMode,
   onClosed,
 }: ImageEditorDialogProps) {
+  const escapeRef = React.useRef<(() => void) | null>(null);
   return (
     <Dialog.Root
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(next, details) => {
+        // photocn's Esc leaves the corner handles; it shouldn't also close the editor.
+        const leave = escapeRef.current;
+        if (!next && leave && details?.reason === "escape-key") {
+          leave();
+          return;
+        }
+        onOpenChange(next);
+      }}
       onOpenChangeComplete={(next) => {
         if (!next) onClosed?.();
       }}
     >
       <Dialog className="emvb-image-editor-popup" data-emvb-image-editor-popup="">
         <style>{UI_CSS + IMAGE_EDITOR_CSS}</style>
-        {open ? <Editor imageProps={imageProps} forceRenderMode={forceRenderMode} /> : null}
+        <Dialog.Title className="emvb-ie-sr">Edit image</Dialog.Title>
+        <Dialog.Description className="emvb-ie-sr">
+          Crop, rotate and adjust a copy of this picture.
+        </Dialog.Description>
+        <TooltipProvider>
+          {open ? (
+            <Editor
+              imageProps={imageProps}
+              forceRenderMode={forceRenderMode}
+              escapeRef={escapeRef}
+            />
+          ) : null}
+        </TooltipProvider>
       </Dialog>
     </Dialog.Root>
   );
