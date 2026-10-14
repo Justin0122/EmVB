@@ -102,3 +102,37 @@ describe("a table of contents with no headings (W-430)", () => {
     );
   });
 });
+
+describe("headings inside a box hidden on every device stay out of the contents (W-512)", () => {
+  test("the hidden box's heading is left out; one in a box hidden on one device stays", () => {
+    const page = {
+      schemaVersion: 16,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          { id: "toc00001", type: "toc", props: {} },
+          {
+            id: "box00001",
+            type: "container",
+            props: {},
+            hiddenOn: ["desktop", "tablet", "mobile"],
+            children: [h("head0001", "Gone")],
+          },
+          {
+            id: "box00002",
+            type: "container",
+            props: {},
+            hiddenOn: ["mobile"],
+            children: [h("head0002", "Wide screens")],
+          },
+        ],
+      },
+    } as unknown as Layout;
+    const html = renderPage(page, emptyDesign(), { scope: "p" }).html;
+    const toc = html.match(/<nav class="emvb-toc"[^]*?<\/nav>/)?.[0] ?? "";
+    expect(toc).not.toContain("Gone");
+    expect(toc).toContain("Wide screens");
+  });
+});

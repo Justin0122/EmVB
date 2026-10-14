@@ -6,7 +6,7 @@ import { cssScopeToken, scopeClassName, scopeCss, scopeWrapperCss } from "../css
 import { ELEMENTS } from "../elements/index.ts";
 import { controlId } from "../elements/field-id.ts";
 import { layoutHasForm } from "../forms/binding.ts";
-import { forEachNode, someNode } from "../tree-ops.ts";
+import { nodeChildren, someNode } from "../tree-ops.ts";
 import { layoutHasMenuDropdown, layoutHasTabs } from "../tabs/presence.ts";
 import type { DesignSystem } from "../schema/design.ts";
 import {
@@ -557,14 +557,23 @@ function treeHasType(node: LayoutNode, type: string): boolean {
   return someNode(node, (current) => current.type === type);
 }
 
-/** The page's own heading nodes (not synced section or loop item contents). */
+/**
+ * The page's own heading nodes (not synced section or loop item contents). W-512: not those
+ * inside an element hidden on every device, which never show, so a contents link has nothing
+ * to jump to (W-409 covered only the heading's own visibility).
+ */
 function headingAnchors(root: LayoutNode): { node: LayoutNode }[] {
   const out: { node: LayoutNode }[] = [];
-  forEachNode(root, (node) => {
+  const walk = (node: LayoutNode) => {
+    if (node !== root && HIDDEN_DEVICES.every((device) => node.hiddenOn?.includes(device))) return;
     if (node.type === "heading") out.push({ node });
-  });
+    for (const child of nodeChildren(node)) walk(child);
+  };
+  walk(root);
   return out;
 }
+
+const HIDDEN_DEVICES = ["desktop", "tablet", "mobile"] as const;
 
 function tocChildren(
   node: LayoutNode,

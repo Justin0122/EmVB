@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Table of contents:** a heading inside a box hidden on every device is no longer listed as a link that goes nowhere (W-512).
 - **Forms:** a Form element now warns, in its settings and in MCP `describe_page`, when a required field has no field on the form or is hidden on a device. Either way visitors can't send the form, and they see no reason why (W-511).
 - **MCP:** `update_element` giving an image a new `src` now drops the old picture's extra sizes, media id, size and image-editor record, so the page shows the new picture instead of the old one from srcset (W-510).
 - **Text limits:** canvas text at the 2,000-character limit, class names, class and variable copies, layer names, uploaded icon names and the post author no longer end in half an emoji (W-509).
