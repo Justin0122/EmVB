@@ -1,6 +1,8 @@
 # Third-party notices
 
-EmVB (<https://emvb.dev>) is MIT licensed. The editor's **Icon library** (`@perkyzz/emvb-icons`, the JSON sets) contains icons from the projects below. They keep their own licenses, copied in full in [`licenses/`](licenses/). `scripts/build-icon-sets.ts` in the EmVB repository builds the set files from the pinned npm packages. It refuses to build when a package's license file changes.
+EmVB (<https://emvb.dev>) is MIT licensed. It includes or depends on the projects below, which keep their own licenses, copied in full in [`licenses/`](licenses/): the icon sets (Lucide, Font Awesome Free, Tabler, Remix) and the image editor's engine (photocn and the code photocn includes: mini-photo-editor, glfx.js and exif-js; and its dependency fflate).
+
+The editor's **Icon library** (`@perkyzz/emvb-icons`, the JSON sets) contains icons from the projects below. They keep their own licenses, copied in full in [`licenses/`](licenses/). `scripts/build-icon-sets.ts` in the EmVB repository builds the set files from the pinned npm packages. It refuses to build when a package's license file changes.
 
 Changes made to every set: the SVG markup is reformatted into compact JSON, and only elements and attributes in EmVB's SVG allowlist are kept. Class attributes and comments are removed. Shared presentation attributes (stroke or fill, viewBox) move to the root `<svg>`. Set-specific changes are listed with each set.
 
@@ -37,3 +39,16 @@ When an editor picks an icon, its SVG is stored with the page and shown inline o
 - License: MIT, Copyright (c) 2026 rbbydotdev. Full text: [`licenses/photocn.LICENSE`](licenses/photocn.LICENSE).
 - The image editor's layout and interactions are ported from photocn's shadcn editor components (`apps/www/src/registry/image-editor`: the editor, desktop and compact layouts, toolbar, canvas, crop overlay, crop panel, adjustments, filters, curves and blur panels, blur center overlay, panel header, histogram, the perspective icon, the export dialog and the metadata panel). Changes: rebuilt with Kumo components, Phosphor icons and EmVB's CSS tokens instead of shadcn/ui, Tailwind and Lucide; opening files and recipes left out; typed slider values, curve-point Input/Output fields and keyboard control of curve points and the blur spot added; the export dialog gets EmVB defaults (WebP 85 %, a 2560 px cap, removing a JPEG's GPS location) and saves to the media library. Each ported file names its source.
 - The quarter-turn icons in the crop panel are Lucide's `rotate-ccw-square` and `rotate-cw-square` (ISC, see Lucide above).
+
+### Included in photocn
+
+photocn's own [`THIRD_PARTY_NOTICES.md`](https://github.com/rbbydotdev/photocn) lists code it carries from these MIT projects. EmVB ships them only inside the lazy image editor chunk and its worker; published pages never load them.
+
+- **mini-photo-editor**, <https://github.com/xdadda/mini-photo-editor>: photocn's WebGL renderer and filters, EXIF/ICC reading and the filter LUT textures, and the perspective "adjust corners" icon EmVB uses (`parts.tsx`). MIT, Copyright (c) 2025 xdadda. Full text: [`licenses/mini-photo-editor.LICENSE`](licenses/mini-photo-editor.LICENSE).
+- **glfx.js**, <https://github.com/evanw/glfx.js>: the texture and shader core of photocn's renderer (via mini-photo-editor). MIT, Copyright (C) 2011 by Evan Wallace. Full text: [`licenses/glfx.js.LICENSE`](licenses/glfx.js.LICENSE).
+- **exif-js**, <https://github.com/exif-js/exif-js>: EXIF parsing (via mini-photo-editor), shown in the Metadata tool. MIT, Copyright (c) 2008 Jacob Seidelin. Full text: [`licenses/exif-js.LICENSE`](licenses/exif-js.LICENSE).
+
+### fflate
+
+- Package: `fflate` 0.8.3 (a dependency of photocn, installed with it), <https://github.com/101arrowz/fflate>
+- License: MIT, Copyright (c) 2026 Arjun Barrett. Full text: [`licenses/fflate.LICENSE`](licenses/fflate.LICENSE).

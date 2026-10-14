@@ -30672,6 +30672,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/announce.test.ts"],
       "expect": "\\(fail\\).*reads a recipe"
+    },
+    {
+      "id": "W-488/worker-budget-drift",
+      "requirement": "W-488",
+      "description": "The worker budget is raised in code but the guide still says 32 KB.",
+      "edits": [
+        {
+          "file": "scripts/image-editor-budget.ts",
+          "search": "export const IMAGE_EDITOR_WORKER_GZIP_BUDGET = 32 * 1024;",
+          "replace": "export const IMAGE_EDITOR_WORKER_GZIP_BUDGET = 64 * 1024;"
+        }
+      ],
+      "command": ["bun", "test", "./scripts/image-editor-docs.test.ts"],
+      "expect": "\\(fail\\).*the defaults"
+    },
+    {
+      "id": "W-488/notice-missing-fflate",
+      "requirement": "W-488",
+      "description": "fflate loses its own section in THIRD_PARTY_NOTICES.",
+      "edits": [
+        {
+          "file": "packages/emvb/THIRD_PARTY_NOTICES.md",
+          "search": "### fflate\n",
+          "replace": "### The zip library\n"
+        }
+      ],
+      "command": ["bun", "test", "./scripts/image-editor-docs.test.ts"],
+      "expect": "\\(fail\\).*THIRD_PARTY_NOTICES"
     }
   ]
 }

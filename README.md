@@ -6,14 +6,14 @@ A visual page builder plugin for [EmDash CMS](https://github.com/emdash-cms/emda
 
 **Website:** <https://emvb.dev>.
 
-**Status:** 0.5.0 is the current npm release (adds AI agents through MCP and `@perkyzz/emvb-mcp`). See the [changelog](CHANGELOG.md). Layout and design schema 15.
+**Status:** 0.5.0 is the current npm release (adds AI agents through MCP and `@perkyzz/emvb-mcp`). See the [changelog](CHANGELOG.md). Layout schema 16 (images may carry an `edit` record); design schema 15.
 
 ![The EmVB editor: the element tree, the canvas and the Style panel](site/public/screenshots/editor-1600.webp)
 
 ## Features
 
 - **Editor:** drag, drop and nest elements; edit text on the canvas; copy, paste, undo and redo; preview desktop, tablet and mobile.
-- **Elements:** containers (flexbox or CSS Grid), sections, headings, text, lists, links, buttons (with an optional icon), images (link, caption, focal point and extra sizes for `srcset`), video, icons (a library of about 14,400 from Lucide, Font Awesome Free, Tabler and Remix, shipped in [`@perkyzz/emvb-icons`](packages/emvb-icons/); see [the icon library guide](docs/guides/icon-library.md)), dividers, spacers, tabs, accordions, a table of contents, menus, popups, floating bars, forms, loops, pagination, and post fields for theme templates.
+- **Elements:** containers (flexbox or CSS Grid), sections, headings, text, lists, links, buttons (with an optional icon), images (link, caption, focal point, extra sizes for `srcset`, and an in-admin **image editor** for library pictures: crop, adjust, filters, curves, blur, metadata; see [the image editor guide](docs/guides/image-editor.md)), video, icons (a library of about 14,400 from Lucide, Font Awesome Free, Tabler and Remix, shipped in [`@perkyzz/emvb-icons`](packages/emvb-icons/); see [the icon library guide](docs/guides/icon-library.md)), dividers, spacers, tabs, accordions, a table of contents, menus, popups, floating bars, forms, loops, pagination, and post fields for theme templates.
 - **Styling:** Hover, Focus and Active states with transitions, per-device styles and hide on device, container queries, per-element text direction, backgrounds (image, video, gradient, overlay), entrance animations and scroll motion, custom attributes, print styles.
 - **Accessibility check:** a score and a list of issues in the editor (alt text, headings, link and field names, contrast including opacity, new-tab links, landmarks), most with a one-click fix.
 - **Site styles:** variables (including fluid type and spacing), classes in a clear priority order, tag defaults, text direction, changes staged until **Publish styles**, import and export as JSON.
@@ -82,6 +82,7 @@ Then add the public route and run **Set up EmVB** once, as [docs/guides/install-
 - [docs/guides/install-in-a-host-site.md](docs/guides/install-in-a-host-site.md): install, the public route, runtimes and visitor data.
 - [docs/guides/mcp.md](docs/guides/mcp.md): connecting AI agents, tokens, tools, rate limits and publishing.
 - [docs/guides/icon-library.md](docs/guides/icon-library.md): the Icon library, uploads and attribution.
+- [docs/guides/image-editor.md](docs/guides/image-editor.md): edit a library picture (crop, adjust, filters, curves, blur, metadata) and save a copy.
 - [docs/system/layout-format.md](docs/system/layout-format.md): how pages and the design system are stored.
 - [docs/system/theme-parts.md](docs/system/theme-parts.md): theme parts, conditions, triggers and dynamic data.
 - [CHANGELOG.md](CHANGELOG.md).

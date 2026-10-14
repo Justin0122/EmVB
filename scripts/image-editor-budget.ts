@@ -7,6 +7,8 @@ import { gzipSync } from "node:zlib";
 
 /** 350 KB since W-484 (approved by Charles; was 300 KB). */
 export const IMAGE_EDITOR_GZIP_BUDGET = 350 * 1024;
+/** The render worker (W-488): about 15 KB gzipped today, loaded only by the editor. */
+export const IMAGE_EDITOR_WORKER_GZIP_BUDGET = 32 * 1024;
 /** Strings only photocn's code contains. */
 const PHOTOCN_MARKERS = ["transferControlToOffscreen", "mini-gl renderer", "bridge:worker"];
 
@@ -66,10 +68,32 @@ export async function imageEditorChunks(
   );
 }
 
+/** The worker entry, bundled on its own the way the host's bundler emits it. */
+export async function imageEditorWorker(
+  root = new URL("..", import.meta.url).pathname,
+): Promise<{ bytes: number; gzip: number }> {
+  const result = await Bun.build({
+    entrypoints: [
+      Bun.resolveSync("photocn/worker/entry", `${root}packages/emvb/src/admin/image-editor/`),
+    ],
+    minify: true,
+    target: "browser",
+    format: "esm",
+  });
+  if (!result.success) throw new AggregateError(result.logs, "worker bundle failed");
+  const texts = await Promise.all(
+    result.outputs.filter((o) => o.path.endsWith(".js")).map((o) => o.text()),
+  );
+  const text = texts.join("\n");
+  return { bytes: Buffer.byteLength(text), gzip: gzipSync(text, { level: 9 }).length };
+}
+
 if (import.meta.main) {
   for (const c of await imageEditorChunks()) {
     process.stdout.write(
       `${c.entry ? "entry" : "chunk"} ${c.path} ${c.bytes} B, ${c.gzip} B gz${c.photocn ? " (photocn)" : ""}\n`,
     );
   }
+  const worker = await imageEditorWorker();
+  process.stdout.write(`worker ${worker.bytes} B, ${worker.gzip} B gz (photocn worker)\n`);
 }

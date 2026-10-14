@@ -6,6 +6,10 @@ A visual page builder plugin for [EmDash CMS](https://github.com/emdash-cms/emda
 
 ![The EmVB editor](https://raw.githubusercontent.com/PerkyZZ999/EmVB/main/site/public/screenshots/editor-1600.webp)
 
+## Image editor
+
+Library pictures can be cropped, adjusted, filtered and saved as a new media item from Image settings, the media library and the command palette. See [the image editor guide](../../docs/guides/image-editor.md). Third-party notices for the editor engine are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+
 ## Install
 
 ```bash

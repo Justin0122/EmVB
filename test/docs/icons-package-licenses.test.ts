@@ -17,7 +17,14 @@ describe("the icons package carries its licenses (W-395)", () => {
 
   test("each set's license text matches the copy in @perkyzz/emvb", () => {
     // photocn's license covers the image editor (W-483), not an icon set.
-    const notIcons = new Set(["photocn.LICENSE"]);
+    // The image editor's engine and the code it carries (W-488), not icon sets.
+    const notIcons = new Set([
+      "photocn.LICENSE",
+      "mini-photo-editor.LICENSE",
+      "glfx.js.LICENSE",
+      "exif-js.LICENSE",
+      "fflate.LICENSE",
+    ]);
     const names = readdirSync(join(emvb, "licenses"))
       .filter((name) => !notIcons.has(name))
       .toSorted();

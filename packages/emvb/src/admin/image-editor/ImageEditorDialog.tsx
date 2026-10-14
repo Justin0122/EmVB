@@ -76,7 +76,7 @@ type SaveApi = { open: () => void; enabled: boolean };
 const SaveContext = React.createContext<SaveApi>({ open: () => undefined, enabled: false });
 
 /** Below this editor width the compact (phone) layout is used (photocn COMPACT_WIDTH). */
-const COMPACT_WIDTH = 640;
+export const COMPACT_WIDTH = 640;
 const SIDEBAR = { default: 338, min: 288, max: 544, canvasMin: 384 };
 /** Sheet heights as a fraction of the editor: peek and expanded (photocn SNAP_POINTS). */
 const SNAP_POINTS = [0.42, 0.9] as const;

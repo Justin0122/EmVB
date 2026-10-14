@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { IMAGE_EDITOR_GZIP_BUDGET, imageEditorChunks } from "./image-editor-budget.ts";
+import {
+  IMAGE_EDITOR_GZIP_BUDGET,
+  IMAGE_EDITOR_WORKER_GZIP_BUDGET,
+  imageEditorChunks,
+  imageEditorWorker,
+} from "./image-editor-budget.ts";
 
-describe("image editor size budget (W-482)", () => {
+describe("image editor size budget (W-488)", () => {
   test("photocn is only in one lazy chunk, under 350 KB gzipped, and the entry loads it dynamically", async () => {
     const chunks = await imageEditorChunks();
     const photocn = chunks.filter((c) => c.photocn);
@@ -16,5 +21,11 @@ describe("image editor size budget (W-482)", () => {
       expect(chunk.staticImports).not.toContain(file);
     }
     expect(chunks.some((c) => c.dynamicImports.includes(file))).toBe(true);
+  }, 60_000);
+
+  test("the photocn worker stays under 32 KB gzipped", async () => {
+    const worker = await imageEditorWorker();
+    expect(worker.gzip).toBeLessThanOrEqual(IMAGE_EDITOR_WORKER_GZIP_BUDGET);
+    expect(worker.gzip).toBeGreaterThan(8 * 1024);
   }, 60_000);
 });
