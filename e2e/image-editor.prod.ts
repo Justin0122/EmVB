@@ -8,8 +8,9 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
-import { createPage, ensureEmvbSetup, getPage, publishPage } from "./support/api.ts";
-import { EDITOR, openLayers, overlay, unique } from "./support/helpers.ts";
+import { createPage, ensureEmvbSetup, getPage, publishPage, storedLayout } from "./support/api.ts";
+import { EDITOR, openLayers, overlay, saveDraft, unique } from "./support/helpers.ts";
+import { stripJpegGps } from "../packages/emvb/src/admin/image-editor/exif.ts";
 
 // W-482: the image editor under the production CSP (EmDash sends it only in production builds).
 const PHOTO = path.join(process.cwd(), "e2e/fixtures/photo-gps.jpg");
@@ -157,7 +158,7 @@ test("a library picture opens in the worker under the admin CSP, with nothing lo
   );
   await expect(page.locator("[data-slot=image-editor-histogram]")).toBeVisible();
   await expect(file(page)).toContainText("640 × 480 px");
-  await expect(page.locator("[data-emvb-image-save]")).toBeDisabled();
+  await expect(page.locator("[data-emvb-image-save]")).toBeEnabled();
   const box = await page.locator("[data-emvb-image-canvas]").boundingBox();
   expect(box?.width ?? 0).toBeGreaterThan(400);
   await page.waitForTimeout(500);
@@ -526,4 +527,235 @@ test("the published page loads no image-editor code", async ({ page }) => {
   const html = await page.content();
   expect(html).not.toMatch(/photocn|editor\.worker|ImageEditorDialog/);
   expect(seen.scripts.some((u) => /editor\.worker|ImageEditorDialog/.test(u))).toBe(false);
+});
+
+type StoredImage = { root: { children: { props: Record<string, unknown> }[] } };
+const storedImage = async (id: string) =>
+  (await storedLayout<StoredImage>(author, id)).root.children[0]?.props ?? {};
+const fileBytes = async (url: string) => {
+  const res = await author.get(url);
+  expect(res.status()).toBe(200);
+  return { type: res.headers()["content-type"] ?? "", body: await res.body() };
+};
+const exportDialog = (page: Page) => page.locator("[data-slot=image-editor-export-dialog]");
+const setValue = async (page: Page, name: string, value: string) => {
+  const field = page.getByRole("textbox", { name: `${name} value` });
+  await field.fill(value);
+  await field.press("Enter");
+};
+
+test("save a copy (W-485): a new WebP in the library, the original untouched, published, re-opened and reset", async ({
+  page,
+}) => {
+  const seen = watch(page);
+  const original = await fileBytes(media.url);
+  const slug = `ie-save-${unique()}`;
+  const id = await createPage(author, "Image editor save", libraryPage(), slug);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await setValue(page, "Exposure", "0.25");
+  await page.locator('[data-emvb-image-tool="filters"]').click();
+  await page.locator('[data-emvb-image-filter="crema"]').click();
+  await expect(page.locator('[data-emvb-image-filter="crema"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+
+  // photocn's export step, with EmVB's defaults.
+  await page.locator("[data-emvb-image-save]").click();
+  await expect(exportDialog(page)).toBeVisible();
+  await expect(exportDialog(page)).toContainText("Export image");
+  await expect(exportDialog(page)).toContainText("WebP (recommended)");
+  await expect(page.getByRole("textbox", { name: "Quality value" })).toHaveValue("85%");
+  await expect(page.getByRole("spinbutton", { name: "Width in pixels" })).toHaveValue("640");
+  await expect(page.getByRole("spinbutton", { name: "Height in pixels" })).toHaveValue("480");
+  await expect(page.locator("[data-emvb-image-export-note]")).toHaveText("Full resolution");
+  // WebP never carries a location, so there's nothing to switch.
+  await expect(page.locator("[data-emvb-image-export-gps]")).toHaveCount(0);
+  await page.waitForTimeout(300);
+  await shot(page, "export-dialog");
+  const result = await new AxeBuilder({ page })
+    .include("[data-slot=image-editor-export-dialog]")
+    .analyze();
+  expect(
+    result.violations.filter((v) => v.impact === "serious" || v.impact === "critical"),
+  ).toEqual([]);
+
+  const upload = page.waitForResponse(
+    (r) => r.url().endsWith("/_emdash/api/media") && r.request().method() === "POST",
+  );
+  await page.locator("[data-emvb-image-export-save]").click();
+  expect((await upload).status()).toBeLessThan(300);
+  await expect(editor(page)).toHaveCount(0);
+  await expect(overlay(page).locator("[data-emvb-image-edited]")).toBeVisible();
+  await expect(overlay(page).locator("[data-emvb-image-edited]")).toHaveAttribute(
+    "title",
+    /Crema.*Exposure \+25/,
+  );
+  await overlay(page).locator("[data-emvb-image-edited]").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(800);
+  await shot(page, "settings-edited");
+  await saveDraft(page);
+
+  const props = await storedImage(id);
+  const edit = props["edit"] as Record<string, unknown> & {
+    recipe: { lights?: Record<string, number> };
+    output: Record<string, unknown>;
+  };
+  expect(props["src"]).not.toBe(media.url);
+  expect(props["mediaId"]).not.toBe(media.id);
+  expect(props["width"]).toBe(640);
+  expect(props["height"]).toBe(480);
+  expect(props["alt"]).toBe("A garden in autumn");
+  expect(edit).toMatchObject({
+    v: 1,
+    engine: "photocn",
+    originalMediaId: media.id,
+    originalSrc: media.url,
+    output: { format: "webp", quality: 0.85, stripGps: true },
+  });
+  expect(edit.recipe.lights?.["exposure"]).toBeCloseTo(0.25);
+  const copy = await fileBytes(String(props["src"]));
+  expect(copy.type).toBe("image/webp");
+  expect(copy.body.subarray(8, 12).toString("latin1")).toBe("WEBP");
+  // The original file is byte-for-byte what was uploaded.
+  const after = await fileBytes(media.url);
+  expect(after.body.equals(original.body)).toBe(true);
+  expect(after.body.equals(readFileSync(PHOTO))).toBe(true);
+
+  // Published, the page shows the new file.
+  await publishPage(author, id);
+  const { slug: stored } = await getPage(author, id);
+  const visitor = await page.context().browser()?.newPage();
+  if (!visitor) throw new Error("no browser");
+  await visitor.goto(`/${stored}`);
+  const img = visitor.locator("img[alt='A garden in autumn']");
+  await expect(img).toBeVisible();
+  expect(await img.getAttribute("src")).toContain(String(props["src"]));
+  expect(await img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBe(640);
+  await visitor.close();
+
+  // Re-opening (after a reload: publishing moved the page on) loads the original and puts the
+  // same sliders back.
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await expect(file(page)).toContainText("garden");
+  await expect(file(page)).not.toContainText("edited");
+  await page.locator('[data-emvb-image-tool="adjust"]').click();
+  await expect(page.getByRole("textbox", { name: "Exposure value" })).toHaveValue("+0.25");
+  await page.locator('[data-emvb-image-tool="filters"]').click();
+  await expect(page.locator('[data-emvb-image-filter="crema"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.waitForTimeout(500);
+  await shot(page, "reopened");
+  await page.keyboard.press("Escape");
+  await expect(editor(page)).toHaveCount(0);
+
+  // Reset to original: the first file again, and the copy stays in the library.
+  await overlay(page).locator("[data-emvb-image-reset-original]").click();
+  await expect(overlay(page).locator("[data-emvb-image-edited]")).toHaveCount(0);
+  await expect(overlay(page).locator("[data-emvb-image-reset-original]")).toHaveCount(0);
+  await saveDraft(page);
+  const reset = await storedImage(id);
+  expect(reset["src"]).toBe(media.url);
+  expect(reset["mediaId"]).toBe(media.id);
+  expect(reset["edit"]).toBeUndefined();
+  expect((await fileBytes(String(props["src"]))).type).toBe("image/webp");
+  expect(seen.csp).toEqual([]);
+});
+
+test("a JPEG copy of a photo with a location has it removed by default (W-485)", async ({
+  page,
+}) => {
+  expect(stripJpegGps(readFileSync(PHOTO).buffer.slice(0) as ArrayBuffer).removed).toBe(true);
+  const seen = watch(page);
+  const id = await createPage(author, "Image editor jpeg", libraryPage(), `ie-jpg-${unique()}`);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await setValue(page, "Contrast", "0.3");
+  await page.locator("[data-emvb-image-save]").click();
+  await expect(exportDialog(page)).toBeVisible();
+  await exportDialog(page).getByRole("combobox").click();
+  await page.getByRole("option", { name: "JPEG" }).click();
+  const gps = page.getByRole("switch", { name: "Remove location (GPS)" });
+  await expect(gps).toBeChecked();
+  await expect(page.locator("[data-emvb-image-export-note]")).toHaveText(
+    "Full resolution · EXIF kept, location removed",
+  );
+  await shot(page, "export-jpeg-gps");
+  await page.locator("[data-emvb-image-export-save]").click();
+  await expect(editor(page)).toHaveCount(0);
+  await saveDraft(page);
+  const props = await storedImage(id);
+  expect(props["edit"]).toMatchObject({ output: { format: "jpeg", stripGps: true } });
+  const copy = await fileBytes(String(props["src"]));
+  expect(copy.type).toBe("image/jpeg");
+  const bytes = copy.body.buffer.slice(
+    copy.body.byteOffset,
+    copy.body.byteOffset + copy.body.byteLength,
+  ) as ArrayBuffer;
+  expect(stripJpegGps(bytes).removed).toBe(false);
+  expect(String(props["src"])).toMatch(/\.jpe?g$/);
+  expect(seen.csp).toEqual([]);
+});
+
+test("saving from the main-thread renderer works under the admin CSP (W-485)", async ({ page }) => {
+  // No OffscreenCanvas: the editor renders on the main thread, whose export fetches data: URLs.
+  await page.addInitScript(() => {
+    delete (window as { OffscreenCanvas?: unknown }).OffscreenCanvas;
+  });
+  const seen = watch(page);
+  const id = await createPage(author, "Image editor main", libraryPage(), `ie-main-${unique()}`);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await expect(editor(page)).toHaveAttribute("data-emvb-render-mode", "main");
+  await page.getByRole("tab", { name: "Color" }).click();
+  await setValue(page, "Saturation", "-0.5");
+  await page.locator("[data-emvb-image-save]").click();
+  await page.locator("[data-emvb-image-export-save]").click();
+  await expect(editor(page)).toHaveCount(0, { timeout: 20_000 });
+  await saveDraft(page);
+  const props = await storedImage(id);
+  expect((await fileBytes(String(props["src"]))).type).toBe("image/webp");
+  expect(seen.csp).toEqual([]);
+});
+
+test("the export step in dark mode and on a phone (W-485)", async ({ page }) => {
+  const id = await createPage(author, "Image editor export ui", libraryPage(), `ie-xu-${unique()}`);
+  await keepPageEditorMounted(page);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.locator("[data-emvb-image-save]").click();
+  await expect(exportDialog(page)).toBeVisible();
+  await page.waitForTimeout(400);
+  await shot(page, "export-dialog-dark");
+  // Esc closes the export step only; the editor stays open.
+  await page.keyboard.press("Escape");
+  await expect(exportDialog(page)).toHaveCount(0);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready");
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(editor(page)).toHaveAttribute("data-layout", "compact");
+  await page.locator("[data-emvb-image-save]").click();
+  await expect(exportDialog(page)).toBeVisible();
+  const box = await exportDialog(page).boundingBox();
+  expect(Math.round((box?.y ?? 0) + (box?.height ?? 0))).toBeGreaterThan(780);
+  await page.waitForTimeout(400);
+  await shot(page, "mobile-export");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.waitForTimeout(300);
+  await shot(page, "mobile-export-dark");
 });

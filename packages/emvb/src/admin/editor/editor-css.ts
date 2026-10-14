@@ -408,6 +408,7 @@ export const EDITOR_CSS = `${UI_CSS}
 
 .emvb-media-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .emvb-media-preview { display: flex; flex-direction: column; gap: 4px; }
+.emvb-media-edited { align-self: flex-start; }
 .emvb-media-thumb { display: block; max-width: 100%; max-height: 96px; border-radius: 6px; object-fit: contain; background: var(--color-kumo-canvas); }
 .emvb-media-dialog {
   display: flex;

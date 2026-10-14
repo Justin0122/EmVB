@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import type { Fetcher } from "./api.ts";
-import { propsFromMedia, propsFromUrl, type MediaLibraryItem } from "./media-api.ts";
+import {
+  getMedia,
+  propsFromEdited,
+  propsFromMedia,
+  propsFromOriginal,
+  propsFromUrl,
+  type MediaLibraryItem,
+} from "./media-api.ts";
 
 const item = (over: Partial<MediaLibraryItem> = {}): MediaLibraryItem => ({
   id: "01MEDIA",
@@ -166,5 +173,68 @@ describe("a picture change drops the image-editor record (W-482)", () => {
     const current = { src: "/a.webp", alt: "Shop", edit };
     expect(propsFromUrl(current, "https://example.com/x.jpg").edit).toBeUndefined();
     expect(propsFromUrl(current, "/a.webp").edit).toEqual(edit);
+  });
+});
+
+describe("edited copies and Reset to original (W-485)", () => {
+  const edit = { v: 1, engine: "photocn", originalSrc: "/m/a.jpg", originalMediaId: "01ORIG" };
+  const original = {
+    src: "/m/a.jpg",
+    mediaId: "01ORIG",
+    width: 4000,
+    height: 3000,
+    alt: "Garden",
+    sources: [{ src: "/m/a-800.jpg", width: 800 }],
+  };
+
+  test("saving points the element at the new file, keeps alt, drops old sizes", () => {
+    const next = propsFromEdited(
+      original,
+      { id: "01COPY", url: "/m/a-edited.webp", width: 2560, height: 1920 },
+      edit,
+    );
+    expect(next).toEqual({
+      src: "/m/a-edited.webp",
+      mediaId: "01COPY",
+      width: 2560,
+      height: 1920,
+      alt: "Garden",
+      edit,
+    });
+  });
+
+  test("reset restores the library original and removes the record", () => {
+    const edited = propsFromEdited(
+      original,
+      { id: "01COPY", url: "/m/a-edited.webp", width: 2560, height: 1920 },
+      edit,
+    );
+    expect(
+      propsFromOriginal(edited, { id: "01ORIG", url: "/m/a.jpg", width: 4000, height: 3000 }),
+    ).toEqual({ src: "/m/a.jpg", mediaId: "01ORIG", width: 4000, height: 3000, alt: "Garden" });
+  });
+
+  test("reset without the library item falls back to the recorded URL", () => {
+    const edited = { src: "/m/a-edited.webp", mediaId: "01COPY", width: 10, height: 10, edit };
+    expect(propsFromOriginal(edited, null)).toEqual({ src: "/m/a.jpg" });
+    expect(propsFromOriginal({ src: "/m/x.webp" }, null)).toBeNull();
+  });
+
+  test("getMedia reads one item, builds its URL, and returns null when it's gone", async () => {
+    const seen: string[] = [];
+    const fetcher = (async (url: string) => {
+      seen.push(url);
+      if (url.endsWith("/gone")) {
+        return new Response(JSON.stringify({ error: { message: "Not found" } }), { status: 404 });
+      }
+      return new Response(
+        JSON.stringify({ data: { item: item({ id: "01ORIG", url: undefined as never }) } }),
+        { headers: { "content-type": "application/json" } },
+      );
+    }) as unknown as Fetcher;
+    const found = await getMedia(fetcher, "01ORIG");
+    expect(seen[0]).toBe("/_emdash/api/media/01ORIG");
+    expect(found?.url).toBe(`/_emdash/api/media/file/${found?.storageKey}`);
+    expect(await getMedia(fetcher, "gone")).toBeNull();
   });
 });

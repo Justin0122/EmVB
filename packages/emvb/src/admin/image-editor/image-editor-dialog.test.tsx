@@ -44,6 +44,7 @@ const fresh = () => ({
   strength: 1,
   blur: defaultBlur(),
   curves: null as unknown[] | null,
+  out: { width: 640, height: 480 },
 });
 const state = fresh();
 const listeners = new Set<() => void>();
@@ -79,7 +80,28 @@ function fakeApi() {
       redo: record("redo"),
     },
     compare: { active: false, setActive: record("compare") },
-    recipes: { current: state.edited ? { v: 1 } : null },
+    recipes: {
+      current: state.edited ? { version: 1, lights: { exposure: 0.2 } } : null,
+      apply: async (recipe: unknown) => {
+        calls.push(["applyRecipe", recipe]);
+      },
+    },
+    exportImage: async (options: Record<string, unknown>) => {
+      calls.push(["exportImage", options]);
+      const width = (options.width as number | undefined) ?? state.out.width;
+      const height = (options.height as number | undefined) ?? state.out.height;
+      return {
+        blob: new Blob(["webp"], { type: "image/webp" }),
+        type: "image/webp",
+        width,
+        height,
+        filename: "x",
+      };
+    },
+    download: async (options: unknown) => {
+      calls.push(["download", options]);
+      return { blob: new Blob([]), type: "image/png", width: 1, height: 1, filename: "x" };
+    },
     resetAll: record("resetAll"),
     commit: record("commit"),
     patch: record("patch", (section, patch) => {
@@ -141,7 +163,7 @@ function fakeApi() {
       isDefault: state.straighten === 0,
       orientedSize: null,
       polygon: null,
-      outputSize: { width: 640, height: 480 },
+      outputSize: state.out,
       crop: { x: 0, y: 0, width: 1, height: 1 },
       bounds: { x: 0, y: 0, width: 1, height: 1 },
       displayRect: { x: 0, y: 0, width: 1, height: 1 },
@@ -227,13 +249,15 @@ afterEach(async () => {
 });
 
 let openChanges: boolean[] = [];
-const open = async (imageProps: Record<string, unknown>) => {
+type OnSave = NonNullable<React.ComponentProps<typeof ImageEditorDialog>["onSave"]>;
+const open = async (imageProps: Record<string, unknown>, onSave?: OnSave) => {
   openChanges = [];
   await mount(
     <ImageEditorDialog
       open
       onOpenChange={(next) => openChanges.push(next)}
       imageProps={imageProps}
+      {...(onSave ? { onSave } : {})}
     />,
   );
   // The load and the plan each resolve a turn later; settle them one after another.
@@ -556,5 +580,116 @@ describe("tone tools in photocn's panels (W-484)", () => {
     expect(calls.at(-2)).toEqual(["setBlur", expect.objectContaining({ gaussianLensOut: 0.8 })]);
     await setRange('[data-emvb-image-slider="center-x"]', "30");
     expect(calls.at(-2)).toEqual(["setBlur", expect.objectContaining({ centerX: 0.3 })]);
+  });
+});
+
+describe("save a copy (W-485)", () => {
+  const settleAll = () => [1, 2, 3, 4, 5].reduce((prev) => prev.then(settle), Promise.resolve());
+
+  test("Save copy opens photocn's export step with WebP 85% and the longest side at 2560", async () => {
+    serveImage();
+    change({ out: { width: 4000, height: 3000 }, edited: true });
+    await open({ src: "/_emdash/api/media/file/shop.jpg", alt: "Shop" }, async () => undefined);
+    expect(q<HTMLButtonElement>("[data-emvb-image-save]")?.disabled).toBe(false);
+    await click("[data-emvb-image-save]");
+    await settleAll();
+    const dialog = q("[data-slot=image-editor-export-dialog]");
+    expect(dialog?.textContent).toContain("Export image");
+    expect(dialog?.textContent).toContain("WebP (recommended)");
+    expect(q<HTMLInputElement>("[data-emvb-image-number=export-quality]")?.value).toBe("85%");
+    expect(q<HTMLInputElement>("[data-emvb-image-export-width]")?.value).toBe("2560");
+    expect(q<HTMLInputElement>("[data-emvb-image-export-height]")?.value).toBe("1920");
+    expect(q("[data-emvb-image-export-note]")?.textContent).toBe("64% of the crop");
+    await click("[data-emvb-image-export-full]");
+    expect(q<HTMLInputElement>("[data-emvb-image-export-width]")?.value).toBe("4000");
+    expect(q("[data-emvb-image-export-note]")?.textContent).toBe("Full resolution");
+  });
+
+  test("saving uploads a WebP named after the original with the edit record, then closes", async () => {
+    serveImage();
+    change({ out: { width: 4000, height: 3000 }, edited: true });
+    const saved: { file: File; copy: Parameters<OnSave>[1] }[] = [];
+    await open(
+      { src: "/_emdash/api/media/file/shop.jpg", mediaId: "m1", alt: "Shop" },
+      async (file, copy) => {
+        saved.push({ file, copy });
+      },
+    );
+    await click("[data-emvb-image-save]");
+    await click("[data-emvb-image-export-save]");
+    await settleAll();
+    expect(calls.find((c) => c[0] === "exportImage")?.[1]).toEqual({
+      format: "webp",
+      quality: 0.85,
+      width: 2560,
+      height: 1920,
+    });
+    expect(saved).toHaveLength(1);
+    const [first] = saved;
+    if (!first) throw new Error("not saved");
+    const { file, copy } = first;
+    expect(file.name).toBe("shop-edited.webp");
+    expect(file.type).toBe("image/webp");
+    expect({ w: copy.width, h: copy.height }).toEqual({ w: 2560, h: 1920 });
+    expect(copy.edit).toMatchObject({
+      v: 1,
+      engine: "photocn",
+      originalMediaId: "m1",
+      originalSrc: "/_emdash/api/media/file/shop.jpg",
+      recipe: { version: 1, lights: { exposure: 0.2 } },
+      output: { format: "webp", quality: 0.85, maxSide: 2560, stripGps: true },
+    });
+    expect(openChanges).toContain(false);
+  });
+
+  test("a failed upload keeps the editor open with the reason and a Retry", async () => {
+    serveImage();
+    change({ edited: true });
+    let tries = 0;
+    await open({ src: "/a.jpg", alt: "A" }, async () => {
+      tries++;
+      throw new Error("The server is busy.");
+    });
+    await click("[data-emvb-image-save]");
+    await click("[data-emvb-image-export-save]");
+    await settleAll();
+    expect(q("[data-emvb-image-export-error]")?.textContent).toBe(
+      "Couldn't save the copy. The server is busy.",
+    );
+    expect(q("[data-emvb-image-export-save]")?.textContent).toBe("Retry");
+    expect(openChanges).not.toContain(false);
+    await click("[data-emvb-image-export-save]");
+    await settleAll();
+    expect(tries).toBe(2);
+  });
+
+  test("re-opening an edited picture loads the original and puts the recipe back", async () => {
+    let fetched = "";
+    globalThis.fetch = (async (url: string) => {
+      fetched = String(url);
+      return new Response("img", { headers: { "content-type": "image/jpeg" } });
+    }) as unknown as typeof fetch;
+    const recipe = { version: 1, lights: { exposure: 0.3 }, filters: { label: "crema" } };
+    await open({
+      src: "/_emdash/api/media/file/shop-edited.webp",
+      edit: {
+        v: 1,
+        engine: "photocn",
+        engineVersion: "0.1.2",
+        recipe,
+        originalSrc: "/_emdash/api/media/file/shop.jpg",
+        output: { format: "webp", quality: 0.85, stripGps: true },
+        editedAt: "2026-10-14T12:00:00.000Z",
+      },
+    });
+    await settleAll();
+    expect(fetched).toBe("/_emdash/api/media/file/shop.jpg");
+    expect(calls.filter((c) => c[0] === "applyRecipe")).toEqual([["applyRecipe", recipe]]);
+  });
+
+  test("without a save handler the button stays off", async () => {
+    serveImage();
+    await open({ src: "/a.jpg", alt: "A" });
+    expect(q<HTMLButtonElement>("[data-emvb-image-save]")?.disabled).toBe(true);
   });
 });

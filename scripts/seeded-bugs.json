@@ -30560,6 +30560,62 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/BlurFocus.test.tsx"],
       "expect": "\\(fail\\).*arrow keys move"
+    },
+    {
+      "id": "W-485/edit-of-edit-new-original",
+      "requirement": "W-485",
+      "description": "Editing an edited picture records the edited copy as the original, so re-opening stacks losses.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/save.ts",
+          "search": "  const originalSrc = prior.success\n    ? prior.data.originalSrc\n    :",
+          "replace": "  const originalSrc = prior.success && false\n    ? prior.data.originalSrc\n    :"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/save.test.ts"],
+      "expect": "\\(fail\\).*an edit of an edit keeps the first original"
+    },
+    {
+      "id": "W-485/jpeg-gps-kept",
+      "requirement": "W-485",
+      "description": "A JPEG copy keeps the photo's GPS location even when Remove location is on.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/save.ts",
+          "search": "if (format !== \"jpeg\" || !stripGps) {",
+          "replace": "if (format !== \"jpeg\" || stripGps) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/save.test.ts"],
+      "expect": "\\(fail\\).*loses its GPS when asked"
+    },
+    {
+      "id": "W-485/reset-keeps-record",
+      "requirement": "W-485",
+      "description": "Reset to original leaves the edit record behind, so the element still shows Edited.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/media-api.ts",
+          "search": "  const next: Record<string, unknown> = { ...current };\n  delete next.edit;",
+          "replace": "  const next: Record<string, unknown> = { ...current };"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/media-api.test.ts"],
+      "expect": "\\(fail\\).*reset restores the library original"
+    },
+    {
+      "id": "W-485/export-not-capped",
+      "requirement": "W-485",
+      "description": "Save copy exports at full size, ignoring the 2560 px longest-side cap.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/save.ts",
+          "search": "  if (longest <= maxSide) return null;",
+          "replace": "  if (longest <= maxSide || longest > 0) return null;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/save.test.ts"],
+      "expect": "\\(fail\\).*capped at 2560"
     }
   ]
 }

@@ -29,6 +29,8 @@ import {
   useImageEditorState,
 } from "./engine.ts";
 import { IMAGE_EDITOR_CSS } from "./image-editor-css.ts";
+import { withDataUrlFetch } from "./data-url-fetch.ts";
+import { ExportDialog, type ExportResult, type ExportSettings } from "./ExportDialog.tsx";
 import { loadEditableSource, type LoadedSource } from "./load.ts";
 import { ToolPanel } from "./panels.tsx";
 import {
@@ -40,8 +42,10 @@ import {
   ToolSwitcher,
   UndoButton,
 } from "./parts.tsx";
+import { buildImageEdit, editedFileName, hasGps, outputFile, savedRecipe } from "./save.ts";
 import { displayName, elementAspectOption, sizeLabel, type ImageEditorToolId } from "./tools.ts";
 import type { RenderMode } from "./worker.ts";
+import type { ImageEdit } from "../../core/index.ts";
 
 export type ImageEditorDialogProps = {
   open: boolean;
@@ -51,7 +55,23 @@ export type ImageEditorDialogProps = {
   /** Tests and the spike force main-thread rendering. */
   forceRenderMode?: RenderMode;
   onClosed?: () => void;
+  /**
+   * Saves the edited copy (W-485): upload `file` as a new media item and point the element at
+   * it with `edit`. Rejecting keeps the editor open with the error and a Retry. Without it the
+   * export step only downloads.
+   */
+  onSave?: (file: File, copy: SavedCopy) => Promise<void>;
 };
+
+export type SavedCopy = {
+  width: number;
+  height: number;
+  /** The validated `ImageEdit` record for `props.edit`. */
+  edit: ImageEdit;
+};
+
+type SaveApi = { open: () => void; enabled: boolean };
+const SaveContext = React.createContext<SaveApi>({ open: () => undefined, enabled: false });
 
 /** Below this editor width the compact (phone) layout is used (photocn COMPACT_WIDTH). */
 const COMPACT_WIDTH = 640;
@@ -88,7 +108,8 @@ function useWidth(ref: React.RefObject<HTMLElement | null>) {
 }
 
 function SaveCopyButton() {
-  // W-485 brings export and saving; the button shows where it goes.
+  const save = React.useContext(SaveContext);
+  const editor = useImageEditor();
   return (
     <Button
       type="button"
@@ -97,8 +118,9 @@ function SaveCopyButton() {
       className="emvb-ie-btn"
       style={SOLID_PRIMARY}
       icon={<DownloadSimpleIcon aria-hidden="true" />}
-      disabled
-      title="Saving a copy comes in the next update"
+      disabled={!save.enabled || !editor.isReady || editor.disabled}
+      onClick={save.open}
+      aria-haspopup="dialog"
       data-emvb-image-save=""
     >
       Save copy
@@ -434,10 +456,14 @@ function EditorView({
   ready,
   imageProps,
   escapeRef,
+  onSave,
+  onSaved,
 }: {
   ready: Ready;
   imageProps: Record<string, unknown>;
   escapeRef: React.MutableRefObject<(() => void) | null>;
+  onSave?: (file: File, copy: SavedCopy) => Promise<void>;
+  onSaved: () => void;
 }) {
   const fitValue = elementAspectOption(imageProps.width, imageProps.height);
   const fitKey = fitValue ? `${fitValue.value}|${fitValue.label}` : "";
@@ -458,28 +484,84 @@ function EditorView({
   // Esc leaves corner editing before it closes the editor.
   const { editingCorners, setEditingCorners } = editor.geometry;
   escapeRef.current = editingCorners ? () => setEditingCorners(false) : null;
+  const mainThread = ready.renderMode === "main";
+  // Re-opening an edited picture: the original is loaded, then the saved recipe goes back on.
+  const applied = React.useRef(false);
+  const { isReady, recipes } = editor;
+  React.useEffect(() => {
+    if (!isReady || applied.current) return;
+    applied.current = true;
+    const recipe = ready.source.fromOriginal ? savedRecipe(imageProps) : null;
+    if (!recipe) return;
+    const task = () => recipes.apply(recipe as Parameters<typeof recipes.apply>[0]);
+    void (mainThread ? withDataUrlFetch(task) : task()).catch(() => undefined);
+  }, [isReady, recipes, imageProps, ready.source.fromOriginal, mainThread]);
+  const [gps, setGps] = React.useState(false);
+  React.useEffect(() => {
+    let alive = true;
+    void hasGps(ready.source.blob).then(
+      (found) => alive && setGps(found),
+      () => undefined,
+    );
+    return () => {
+      alive = false;
+    };
+  }, [ready.source.blob]);
+  const [exportOpen, setExportOpen] = React.useState(false);
+  const save = React.useMemo<SaveApi>(
+    () => ({ open: () => setExportOpen(true), enabled: Boolean(onSave) }),
+    [onSave],
+  );
+  const currentRecipe = editor.recipes.current;
+  const saveCopy = async (result: ExportResult, settings: ExportSettings) => {
+    if (!onSave) return;
+    const built = buildImageEdit({ imageProps, recipe: currentRecipe, output: settings });
+    if (!built.ok) throw new Error(built.message);
+    const name = editedFileName(ready.source.name, settings.format);
+    const { file } = await outputFile(result.blob, name, settings.format, settings.stripGps);
+    try {
+      await onSave(file, { width: result.width, height: result.height, edit: built.edit });
+    } catch (caught) {
+      const why = caught instanceof Error && caught.message ? ` ${caught.message}` : "";
+      throw new Error(`Couldn't save the copy.${why}`, { cause: caught });
+    }
+    setExportOpen(false);
+    onSaved();
+  };
   const width = useWidth(editor.rootRef);
   const compact = width !== null && width < COMPACT_WIDTH;
   const name = displayName(ready.source.name, imageProps.alt);
   return (
     <ImageEditorProvider editor={editor}>
-      <div
-        className="emvb-ie"
-        ref={editor.rootRef}
-        data-emvb-dialog="image-editor"
-        data-emvb-image-editor={
-          editor.status === "error" ? "error" : editor.isReady ? "ready" : "loading"
-        }
-        data-emvb-render-mode={ready.renderMode}
-        data-layout={compact ? "compact" : "desktop"}
-        data-emvb-image-tool-active={editor.tool}
-      >
-        {width === null ? null : compact ? (
-          <CompactLayout name={name} />
-        ) : (
-          <DesktopLayout ready={ready} name={name} />
-        )}
-      </div>
+      <SaveContext.Provider value={save}>
+        <div
+          className="emvb-ie"
+          ref={editor.rootRef}
+          data-emvb-dialog="image-editor"
+          data-emvb-image-editor={
+            editor.status === "error" ? "error" : editor.isReady ? "ready" : "loading"
+          }
+          data-emvb-render-mode={ready.renderMode}
+          data-layout={compact ? "compact" : "desktop"}
+          data-emvb-image-tool-active={editor.tool}
+        >
+          {width === null ? null : compact ? (
+            <CompactLayout name={name} />
+          ) : (
+            <DesktopLayout ready={ready} name={name} />
+          )}
+        </div>
+        {exportOpen ? <div className="emvb-ie-scrim" aria-hidden="true" /> : null}
+        {onSave ? (
+          <ExportDialog
+            open={exportOpen}
+            onOpenChange={setExportOpen}
+            mainThread={mainThread}
+            sourceHasGps={gps}
+            onSave={saveCopy}
+          />
+        ) : null}
+      </SaveContext.Provider>
     </ImageEditorProvider>
   );
 }
@@ -557,10 +639,14 @@ function Editor({
   imageProps,
   forceRenderMode,
   escapeRef,
+  onSave,
+  onSaved,
 }: {
   imageProps: Record<string, unknown>;
   forceRenderMode?: RenderMode;
   escapeRef: React.MutableRefObject<(() => void) | null>;
+  onSave?: (file: File, copy: SavedCopy) => Promise<void>;
+  onSaved: () => void;
 }) {
   const [phase, setPhase] = React.useState<Phase>({ kind: "loading" });
   const [attempt, setAttempt] = React.useState(0);
@@ -606,7 +692,14 @@ function Editor({
     return <StateFrame phase={phase} onRetry={() => setAttempt((n) => n + 1)} />;
   }
   return (
-    <EditorView key={attempt} ready={phase.ready} imageProps={imageProps} escapeRef={escapeRef} />
+    <EditorView
+      key={attempt}
+      ready={phase.ready}
+      imageProps={imageProps}
+      escapeRef={escapeRef}
+      onSave={onSave}
+      onSaved={onSaved}
+    />
   );
 }
 
@@ -616,6 +709,7 @@ export default function ImageEditorDialog({
   imageProps,
   forceRenderMode,
   onClosed,
+  onSave,
 }: ImageEditorDialogProps) {
   const escapeRef = React.useRef<(() => void) | null>(null);
   return (
@@ -646,6 +740,8 @@ export default function ImageEditorDialog({
               imageProps={imageProps}
               forceRenderMode={forceRenderMode}
               escapeRef={escapeRef}
+              onSave={onSave}
+              onSaved={() => onOpenChange(false)}
             />
           ) : null}
         </TooltipProvider>

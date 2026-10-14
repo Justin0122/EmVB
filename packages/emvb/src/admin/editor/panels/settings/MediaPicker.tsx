@@ -1,10 +1,18 @@
-import { Button, Input } from "@cloudflare/kumo";
+import { Badge, Button, Input } from "@cloudflare/kumo";
 import * as React from "react";
-import { sanitizeMediaUrl, type LayoutNode } from "../../../../core/index.ts";
+import {
+  ImageEdit,
+  sanitizeMediaUrl,
+  summarizeImageEdit,
+  type LayoutNode,
+} from "../../../../core/index.ts";
 import type { Fetcher } from "../../../api.ts";
 import {
+  getMedia,
   listImages,
+  propsFromEdited,
   propsFromMedia,
+  propsFromOriginal,
   propsFromUrl,
   uploadImage,
   type MediaLibraryItem,
@@ -63,6 +71,47 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
     if (open) void loadLibrary();
   }, [open, loadLibrary]);
 
+  const edit = ImageEdit.safeParse(props.edit);
+  const editSummary = edit.success ? summarizeImageEdit(edit.data.recipe) || "Edited" : null;
+
+  /** W-485: upload the edited copy as a new item; the original stays in the library. */
+  const saveEditedCopy = async (
+    file: File,
+    copy: { width: number; height: number; edit: unknown },
+  ) => {
+    const alt = typeof props.alt === "string" && props.alt !== "Image" ? props.alt : undefined;
+    const item = await uploadImage(fetcher, file, {
+      width: copy.width,
+      height: copy.height,
+      ...(alt ? { alt } : {}),
+    });
+    onChange(
+      withProps(
+        node,
+        propsFromEdited(
+          props,
+          { ...item, width: item.width ?? copy.width, height: item.height ?? copy.height },
+          copy.edit,
+        ),
+      ),
+    );
+  };
+
+  /** W-485: back to the untouched original; the edited copy is not deleted. */
+  const resetToOriginal = async () => {
+    if (!edit.success) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const id = edit.data.originalMediaId;
+      const original = id ? await getMedia(fetcher, id).catch(() => null) : null;
+      const next = propsFromOriginal(props, original);
+      if (next) onChange(withProps(node, next));
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const applyItem = (item: MediaLibraryItem) => {
     onChange(withProps(node, propsFromMedia(propsOf(node), item)));
     setOpen(false);
@@ -117,6 +166,12 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
         <div className="emvb-media-preview">
           <img src={src} alt="" className="emvb-media-thumb" />
           <span className="emvb-helper emvb-mono">{src}</span>
+          {editSummary ? (
+            <span className="emvb-media-edited" title={editSummary} data-emvb-image-edited="">
+              <Badge variant="neutral">Edited</Badge>
+              <span className="emvb-sr-only">: {editSummary}</span>
+            </span>
+          ) : null}
         </div>
       ) : (
         <p className="emvb-helper">No image selected yet.</p>
@@ -141,7 +196,19 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
         >
           Upload
         </Button>
-        {editable && src ? <ImageEditButton imageProps={props} /> : null}
+        {editable && src ? <ImageEditButton imageProps={props} onSave={saveEditedCopy} /> : null}
+        {editable && edit.success ? (
+          <Button
+            type="button"
+            className={BUTTON}
+            variant="ghost"
+            onClick={() => void resetToOriginal()}
+            disabled={busy}
+            data-emvb-image-reset-original=""
+          >
+            Reset to original
+          </Button>
+        ) : null}
         <input
           ref={fileRef}
           type="file"
