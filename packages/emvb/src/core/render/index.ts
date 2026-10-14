@@ -201,6 +201,12 @@ export function renderPage(
     scope?: string;
     /** Editor canvas: device rules follow this device, not the frame width (W-116). */
     previewDevice?: PopupDevice;
+    /**
+     * Theme parts (header, footer, popup, float) render apart from the page, so a synced section
+     * on both gave form fields, honeypots and tab groups the same ids: a label in a popup focused
+     * the page's field. Their generated ids get a suffix from `scope` (W-527).
+     */
+    partIds?: boolean;
   } = {},
 ): RenderResult {
   const mode = opts.mode ?? "public";
@@ -229,6 +235,7 @@ export function renderPage(
   let backgroundVideo = false;
 
   const domIds = new Map<string, number>();
+  const idSuffix = opts.partIds && opts.scope ? `-t${originHash(opts.scope)}` : "";
   // W-253: runtimes follow what renders, including synced section and loop item contents,
   // which the page's own layout doesn't hold.
   const rendered = { form: false, tabs: false, menuDropdown: false };
@@ -242,7 +249,7 @@ export function renderPage(
     uniqueId: (base) => {
       const count = (domIds.get(base) ?? 0) + 1;
       domIds.set(base, count);
-      return count === 1 ? base : `${base}-r${count}`;
+      return `${base}${count === 1 ? "" : `-r${count}`}${idSuffix}`;
     },
   };
 

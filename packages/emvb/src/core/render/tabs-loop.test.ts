@@ -210,3 +210,52 @@ describe("one element rendered twice keeps its HTML ids unique (W-249)", () => {
     expect(groups.size).toBe(2);
   });
 });
+
+describe("a synced section on the page and in a popup keeps ids unique (W-527)", () => {
+  const field = {
+    id: "field001",
+    type: "radio",
+    props: { field: "plan", label: "Plan" },
+  } as LayoutNode;
+  const input = { id: "field002", type: "text-input", props: { field: "email", label: "Email" } };
+  const synced = page(
+    {
+      id: "form0001",
+      type: "form",
+      props: { formId: "f1" },
+      children: [input as LayoutNode, field],
+    } as LayoutNode,
+    tabsOf("tabs0001", [panel("tabp0001", "One"), panel("tabp0002", "Two")]),
+  );
+  const placed = page({
+    id: "sec00001",
+    type: "section",
+    props: { partId: "p1" },
+    children: [],
+  } as LayoutNode);
+  const dynamic = { sectionTemplates: { p1: synced } };
+  const onPage = renderPage(placed, design, { dynamic, scope: "page1" }).html;
+  const inPopup = renderPage(placed, design, { dynamic, scope: "popup1", partIds: true }).html;
+
+  test("no id appears twice in the page and popup together", () => {
+    const dom = parse(onPage + inPopup);
+    const ids = [...dom.querySelectorAll("[id]")].map((el) => el.id);
+    expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([]);
+  });
+
+  test("each label, legend and tab points into its own copy", () => {
+    const popup = parse(inPopup);
+    for (const attr of ["for", "aria-controls", "aria-labelledby"]) {
+      for (const el of popup.querySelectorAll(`[${attr}]`)) {
+        for (const ref of (el.getAttribute(attr) ?? "").split(" ")) {
+          expect(popup.querySelector(`#${ref}`)).not.toBeNull();
+        }
+      }
+    }
+    expect(popup.querySelector("legend")?.id).toMatch(/^emvb-field-field001-t\w+-label$/);
+  });
+
+  test("the page keeps its plain ids", () => {
+    expect(parse(onPage).querySelector(".ec-form-input")?.id).toBe("emvb-field-field002");
+  });
+});

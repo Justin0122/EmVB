@@ -70,6 +70,8 @@ export function renderStored(
   pageId: string,
   formDefinitions?: FormDefinitions,
   dynamic?: ThemeDynamicData,
+  /** A theme part: generated ids get a suffix of its own (W-527). */
+  partIds = false,
 ): RenderedPage {
   const { layout, problem } = inspectLayout(raw);
   if (!layout) {
@@ -95,6 +97,7 @@ export function renderStored(
       formDefinitions,
       dynamic,
       scope: pageId,
+      ...(partIds ? { partIds } : {}),
     },
   );
   return {

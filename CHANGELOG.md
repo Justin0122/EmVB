@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A synced section with a form or tabs used both on the page and in a popup, header, footer or float no longer repeats HTML ids; the popup’s labels focused the page’s fields (W-527).
 - Choosing a colour with the colour picker keeps a see-through colour see-through, in element colours and colour variables; the picker has no alpha and made it solid (W-526).
 - Post Content keeps a line break inside bold, italic or linked text instead of turning it into a space (W-525).
 - The Radio field names its group with a real `<legend>` inside the `<fieldset>` instead of a separate label and `aria-labelledby`; it looks the same (W-524).

@@ -484,7 +484,7 @@ export async function resolveThemePartsWith(
         ...Object.values(dynamic?.loopTemplates ?? {}),
       ]),
     );
-    const page = renderStored(stored.layout, design, stored.id, formDefinitions, dynamic);
+    const page = renderStored(stored.layout, design, stored.id, formDefinitions, dynamic, true);
     rendered.push(page);
     // W-216: a header or footer part is the page's banner or contentinfo landmark (hosts put it
     // straight in <body> instead of their own <header>/<footer>).
