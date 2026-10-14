@@ -48,7 +48,10 @@ export const UI_CSS = `
 .emvb-helper { margin: 0; font-size: 12px; line-height: 16px; color: var(--text-color-kumo-subtle); }
 .emvb-helper a { color: var(--text-color-kumo-default); text-decoration: underline; text-underline-offset: 2px; }
 .emvb-required-notice { margin-top: 4px; }
-.emvb-required-notice__list { margin: 4px 0 0; padding-inline-start: 16px; display: grid; gap: 4px; font-size: 12px; line-height: 16px; }
+.emvb-required-notice__list { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 12px; line-height: 16px; }
+.emvb-required-notice__list > li { padding-inline-start: 10px; border-inline-start: 2px solid currentColor; }
+.emvb-required-notice__list strong { font-weight: 600; }
+.emvb-required-notice__hint { display: block; margin-top: 8px; font-size: 12px; line-height: 16px; opacity: 0.85; }
 .emvb-inline-error { display: flex; gap: 4px; align-items: flex-start; margin: 0; font-size: 12px; line-height: 16px; color: var(--text-color-kumo-danger); }
 .emvb-status {
   display: inline-flex;

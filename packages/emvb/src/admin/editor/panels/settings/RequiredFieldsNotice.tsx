@@ -7,7 +7,19 @@ import {
   requiredFieldIssues,
   requiredFieldIssueText,
   type LayoutNode,
+  type RequiredFieldIssue,
 } from "../../../../core/index.ts";
+
+/** The panel's short line for one issue; the full sentence is its tooltip and the MCP text. */
+function shortReason(issue: RequiredFieldIssue): string {
+  if (issue.kind === "missing") return `has no field on this form (${issue.field}).`;
+  if (issue.kind === "hidden") {
+    return issue.devices.length === 3
+      ? "is hidden on every device."
+      : `is hidden on ${issue.devices.join(" and ")}.`;
+  }
+  return `is shown only to some visitors: ${issue.who}.`;
+}
 
 /**
  * W-511: on a Form, the required fields visitors can't fill: missing from the form, or hidden on
@@ -40,13 +52,23 @@ export function RequiredFieldsNotice({ node, fetcher }: { node: LayoutNode; fetc
         icon={<WarningIcon aria-hidden="true" />}
         title={title}
         description={
-          <ul className="emvb-required-notice__list">
-            {issues.map((issue) => (
-              <li key={`${issue.kind}:${issue.field}`} data-emvb-required-issue={issue.kind}>
-                {requiredFieldIssueText(issue)}
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="emvb-required-notice__list">
+              {issues.map((issue) => (
+                <li
+                  key={`${issue.kind}:${issue.field}`}
+                  data-emvb-required-issue={issue.kind}
+                  title={requiredFieldIssueText(issue)}
+                >
+                  <strong>{issue.label}</strong> {shortReason(issue)}
+                </li>
+              ))}
+            </ul>
+            <span className="emvb-required-notice__hint">
+              Visitors who can't fill a required field can't send the form. Show the field to
+              everyone, or make it optional in Forms.
+            </span>
+          </>
         }
       />
     </div>

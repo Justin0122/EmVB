@@ -49,11 +49,11 @@ describe("Form required-fields notice (W-511)", () => {
     await flush();
     const notice = document.querySelector("[data-emvb-required-fields]");
     expect(notice?.textContent).toContain("2 required fields can't be filled in");
-    expect(document.querySelector('[data-emvb-required-issue="hidden"]')?.textContent).toContain(
-      "“Email” is required but hidden on mobile",
-    );
+    const hidden = document.querySelector('[data-emvb-required-issue="hidden"]');
+    expect(hidden?.textContent).toBe("Email is hidden on mobile.");
+    expect(hidden?.getAttribute("title")).toContain("“Email” is required but hidden on mobile");
     expect(document.querySelector('[data-emvb-required-issue="missing"]')?.textContent).toContain(
-      "“Phone”",
+      "Phone has no field on this form (phone).",
     );
   });
 

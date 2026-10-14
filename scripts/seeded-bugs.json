@@ -31079,6 +31079,24 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/visitor.test.ts"],
       "expect": "\\(fail\\).*W-514"
+    },
+    {
+      "id": "W-515/notice-long-sentences",
+      "requirement": "W-515",
+      "description": "The notice lists the long sentences again.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/RequiredFieldsNotice.tsx",
+          "search": "<strong>{issue.label}</strong> {shortReason(issue)}",
+          "replace": "{requiredFieldIssueText(issue)}"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/required-fields-notice.test.tsx"
+      ],
+      "expect": "\\(fail\\).*W-511"
     }
   ]
 }
