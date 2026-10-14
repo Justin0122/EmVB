@@ -30746,6 +30746,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/tools.test.ts"],
       "expect": "\\(fail\\).*left out beyond"
+    },
+    {
+      "id": "W-495/jpeg-of-png-not-flattened",
+      "requirement": "W-495",
+      "description": "A JPEG copy of a transparent PNG is not flattened, so transparent areas turn black.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/flatten.ts",
+          "search": "  return format === \"jpeg\" && !/^image\\/jpe?g$/i.test(sourceType);",
+          "replace": "  return false && format === \"jpeg\" && !/^image\\/jpe?g$/i.test(sourceType);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/flatten.test.ts"],
+      "expect": "\\(fail\\).*flattened onto white"
     }
   ]
 }

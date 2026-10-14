@@ -570,6 +570,8 @@ function EditorView({
               onOpenChange={setExportOpen}
               mainThread={mainThread}
               sourceHasGps={gps}
+              sourceType={ready.source.blob.type}
+              downloadName={editedFileName(ready.source.name, "jpeg")}
               onSave={saveCopy}
             />
           ) : null}

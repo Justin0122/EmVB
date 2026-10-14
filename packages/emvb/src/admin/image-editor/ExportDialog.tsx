@@ -17,6 +17,7 @@ import {
 import * as React from "react";
 import { SOLID_PRIMARY } from "../ui.ts";
 import { withDataUrlFetch } from "./data-url-fetch.ts";
+import { downloadBlob, flattenToJpeg, needsFlatten } from "./flatten.ts";
 import { useImageEditor } from "./engine.ts";
 import { ValueSlider } from "./parts.tsx";
 import {
@@ -47,6 +48,8 @@ export function ExportDialog({
   onOpenChange,
   mainThread,
   sourceHasGps,
+  sourceType = "",
+  downloadName = "image-edited.jpg",
   onSave,
   onClosed,
 }: {
@@ -55,6 +58,9 @@ export function ExportDialog({
   /** Main-thread exports fetch `data:` URLs, which the admin CSP blocks without the shim. */
   mainThread: boolean;
   sourceHasGps: boolean;
+  /** The source's MIME type: non-JPEG sources may be transparent (W-495). */
+  sourceType?: string;
+  downloadName?: string;
   onSave: (result: ExportResult, settings: ExportSettings) => Promise<void>;
   onClosed?: () => void;
 }) {
@@ -68,7 +74,13 @@ export function ExportDialog({
     >
       <Dialog className="emvb-ie-export">
         {open ? (
-          <ExportForm mainThread={mainThread} sourceHasGps={sourceHasGps} onSave={onSave} />
+          <ExportForm
+            mainThread={mainThread}
+            sourceHasGps={sourceHasGps}
+            sourceType={sourceType}
+            downloadName={downloadName}
+            onSave={onSave}
+          />
         ) : null}
       </Dialog>
     </Dialog.Root>
@@ -78,10 +90,14 @@ export function ExportDialog({
 function ExportForm({
   mainThread,
   sourceHasGps,
+  sourceType,
+  downloadName,
   onSave,
 }: {
   mainThread: boolean;
   sourceHasGps: boolean;
+  sourceType: string;
+  downloadName: string;
   onSave: (result: ExportResult, settings: ExportSettings) => Promise<void>;
 }) {
   const editor = useImageEditor();
@@ -112,8 +128,17 @@ function ExportForm({
       width: output && width ? output.width : undefined,
       height: output && width ? output.height : undefined,
     };
-    const exportTask = () =>
-      kind === "download" ? editor.download(options) : editor.exportImage(options);
+    const flatten = needsFlatten(format, sourceType);
+    const exportTask = async (): Promise<ExportResult> => {
+      if (!flatten) {
+        return kind === "download" ? editor.download(options) : editor.exportImage(options);
+      }
+      // W-495: render as PNG, then fill the transparent parts with white for the JPEG.
+      const png = await editor.exportImage({ ...options, format: "png", quality: undefined });
+      const blob = await flattenToJpeg(png.blob, options.quality);
+      if (kind === "download") downloadBlob(blob, downloadName);
+      return { ...png, blob, type: "image/jpeg" };
+    };
     try {
       const result = mainThread ? await withDataUrlFetch(exportTask) : await exportTask();
       if (kind === "save") {
