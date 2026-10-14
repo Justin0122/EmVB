@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The version timeline no longer marks unchanged sections as changed because a saved version lists element settings in another order (W-518).
 - Restoring a section from the version timeline no longer brings back a CSS id another section took since then, which made the page fail to save (W-517).
 - **Site styles Import:** a design file over the 256 KB site-styles limit is refused when you pick it, with its size and what to do, instead of replacing the site styles and then failing every save (W-516).
 - **Forms:** the required-field notice on a Form is shorter and easier to scan: each field name in bold with a one-line reason, then one hint on how to fix it. The full sentence is in the tooltip (W-515).

@@ -31125,6 +31125,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/history/diff.test.ts"],
       "expect": "\\(fail\\).*W-517"
+    },
+    {
+      "id": "W-518/key-order",
+      "requirement": "W-518",
+      "description": "Timeline diff counts key order as an edit.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/history/diff.ts",
+          "search": "  return JSON.stringify(sorted(rest));",
+          "replace": "  return JSON.stringify(rest);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/history/diff.test.ts"],
+      "expect": "\\(fail\\).*W-518"
     }
   ]
 }

@@ -108,3 +108,23 @@ describe("Restoring a section keeps CSS ids unique (W-517)", () => {
     expect(result.layout.root.children[0]?.htmlId).toBe("top");
   });
 });
+
+describe("Timeline diff ignores key order (W-518)", () => {
+  test("the same section with keys in another order is unchanged", () => {
+    const saved = page(box("sec00001", [{ ...h("head0001", "Hi"), style: { color: "#ff0000" } }]));
+    const edited = page({
+      children: [
+        {
+          style: { color: "#ff0000" },
+          props: { level: 2, text: "Hi" },
+          type: "heading",
+          id: "head0001",
+        },
+      ],
+      props: {},
+      type: "container",
+      id: "sec00001",
+    } as unknown as LayoutNode);
+    expect(diffSections(saved, edited).map((c) => [c.kind, c.edits])).toEqual([["same", 0]]);
+  });
+});
