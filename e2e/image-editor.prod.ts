@@ -496,18 +496,23 @@ test("the phone layout shows the tone panels in its sheet", async ({ page }) => 
   await shot(page, "mobile-curves-dark");
 });
 
-test("a picture on another website explains how to edit it", async ({ page }) => {
+test("a picture on another website says why it can't be edited, with no Edit button (W-487)", async ({
+  page,
+}) => {
   const id = await createPage(
     author,
     "Image editor external",
     imagePage({ src: "https://images.example.com/a.jpg" }),
     `ie-x-${unique()}`,
   );
-  await openImageEditor(page, id);
-  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "error");
-  await expect(page.locator("[data-emvb-image-error]")).toContainText(
-    "Upload a copy to the media library",
-  );
+  await page.goto(`${EDITOR}?entry=${id}`);
+  await expect(overlay(page).locator(".emvb-topbar-title")).toBeVisible({ timeout: 30_000 });
+  await openLayers(page);
+  await overlay(page).locator(".emvb-layer-select", { hasText: "Image" }).click();
+  const why = overlay(page).locator("[data-emvb-image-cant-edit=external]");
+  await expect(why).toContainText("Upload a copy to the media library");
+  await expect(overlay(page).locator("[data-emvb-image-edit]")).toHaveCount(0);
+  await why.scrollIntoViewIfNeeded();
   await shot(page, "external");
 });
 
@@ -590,8 +595,7 @@ test("save a copy (W-485): a new WebP in the library, the original untouched, pu
   expect((await upload).status()).toBeLessThan(300);
   await expect(editor(page)).toHaveCount(0);
   await expect(overlay(page).locator("[data-emvb-image-edited]")).toBeVisible();
-  await expect(overlay(page).locator("[data-emvb-image-edited]")).toHaveAttribute(
-    "title",
+  await expect(overlay(page).locator("[data-emvb-image-edit-summary]")).toHaveText(
     /Crema.*Exposure \+25/,
   );
   await overlay(page).locator("[data-emvb-image-edited]").scrollIntoViewIfNeeded();
@@ -893,4 +897,114 @@ test("the Metadata tool lists the file and camera data, and warns about the loca
   await expect(editor(page)).toHaveAttribute("data-layout", "desktop");
   await page.waitForTimeout(400);
   await shot(page, "metadata-dark");
+});
+
+/** Serious or critical axe findings, plus touch targets smaller than 24 px (WCAG 2.2). */
+async function axeTouchProblems(page: Page) {
+  const result = await new AxeBuilder({ page })
+    .include("[data-emvb-image-editor]")
+    .withRules(["target-size"])
+    .analyze();
+  return result.violations.map(
+    (v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`,
+  );
+}
+
+test("keyboard only (W-487): focus stays in the editor, the crop frame moves and zooms, edits are announced", async ({
+  page,
+}) => {
+  const id = await createPage(author, "Image editor keyboard", libraryPage(), `ie-kb-${unique()}`);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  /** null while focus is in the editor (or on Kumo's focus guard that sends it back). */
+  const outside = () =>
+    page.evaluate(() => {
+      const el = document.activeElement;
+      if (el?.closest(".emvb-image-editor-popup") || el?.hasAttribute("data-base-ui-focus-guard"))
+        return null;
+      return el?.tagName ?? "none";
+    });
+  // Focus trap: Tab and Shift+Tab never leave the dialog.
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press("Tab");
+    expect(await outside()).toBeNull();
+  }
+  for (let i = 0; i < 10; i++) {
+    await page.keyboard.press("Shift+Tab");
+    expect(await outside()).toBeNull();
+  }
+  const live = page.locator("[data-emvb-image-live]");
+  await page.locator('[data-emvb-image-tool="compose"]').first().click();
+  await expect(live).toHaveText("Crop tool");
+  const frame = page.locator("[data-emvb-image-crop-frame]");
+  await frame.focus();
+  await expect(frame).toBeFocused();
+  const before = await file(page).textContent();
+  for (let i = 0; i < 3; i++) await page.keyboard.press("+");
+  for (let i = 0; i < 4; i++) await page.keyboard.press("Shift+ArrowRight");
+  await expect(file(page)).not.toHaveText(before ?? "");
+  await expect(live).toHaveText(/^Edits: .*Cropped/);
+  await page.waitForTimeout(300);
+  await shot(page, "keyboard-crop");
+  // Each key press is its own undo step; one Undo is announced, then Reset all.
+  await page.locator("[data-emvb-image-undo]").first().click();
+  await expect(live).toHaveText(/^Edits: Cropped/);
+  await resetAll(page);
+  await expect(live).toHaveText("Edits: No changes", { timeout: 5_000 });
+  await page.locator('[data-emvb-image-tool="metadata"]').first().click();
+  await expect(live).toHaveText("Metadata tool");
+  await expect(page.locator("[data-emvb-image-meta-edits]")).toContainText("No changes");
+  expect(await axeProblems(page)).toEqual([]);
+  // Esc closes the editor and focus goes back to Edit image.
+  await page.keyboard.press("Escape");
+  await expect(editor(page)).toHaveCount(0);
+  await expect(overlay(page).locator("[data-emvb-image-edit]")).toBeFocused();
+});
+
+test("phone, tablet and desktop widths (W-487): layouts, touch targets and reduced motion", async ({
+  page,
+}) => {
+  const id = await createPage(author, "Image editor widths", libraryPage(), `ie-w-${unique()}`);
+  await keepPageEditorMounted(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  for (const [width, height, layout] of [
+    [390, 844, "compact"],
+    [768, 1024, "desktop"],
+    [1440, 900, "desktop"],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await expect(editor(page)).toHaveAttribute("data-layout", layout);
+    if (layout === "compact") {
+      await page
+        .locator(
+          '.emvb-ie-compact-tools:not(.emvb-ie-compact-tools-inline) [data-emvb-image-tool="compose"]',
+        )
+        .click();
+      await expect(page.locator("[data-emvb-image-sheet]")).toHaveAttribute(
+        "data-emvb-image-sheet",
+        "open",
+      );
+    } else {
+      await page.locator('[data-emvb-image-tool="compose"]').first().click();
+    }
+    await page.waitForTimeout(400);
+    expect(await axeTouchProblems(page)).toEqual([]);
+    expect(await axeProblems(page)).toEqual([]);
+    await shot(page, `width-${width}`);
+  }
+  // Reduced motion: the sheet and the tools don't animate.
+  const animated = await page.evaluate(
+    () =>
+      [...document.querySelectorAll<HTMLElement>("[data-emvb-image-editor] *")].filter((el) => {
+        const s = getComputedStyle(el);
+        return parseFloat(s.transitionDuration) > 0.01 || parseFloat(s.animationDuration) > 0.01;
+      }).length,
+  );
+  expect(animated).toBe(0);
 });

@@ -9,6 +9,7 @@
 import { Badge } from "@cloudflare/kumo";
 import { MapPinIcon } from "@phosphor-icons/react";
 import * as React from "react";
+import { useEditSummary } from "./announce.tsx";
 import { useImageEditor } from "./engine.ts";
 
 type Tag = { hvalue?: unknown; value?: unknown } | undefined;
@@ -127,6 +128,7 @@ export function MetadataPanel() {
     metadata,
     ...(displayName ? { displayName } : {}),
   });
+  const edits = useEditSummary();
   const hasGps = rows.some((r) => r.label === "GPS");
   const badge: { text: string; variant: React.ComponentProps<typeof Badge>["variant"] } =
     status === "loading"
@@ -163,6 +165,9 @@ export function MetadataPanel() {
         ) : (
           <p className="emvb-ie-subtle">No image metadata loaded.</p>
         )}
+        <p className="emvb-ie-meta-edits" data-emvb-image-meta-edits="">
+          <span className="emvb-ie-subtle">Edits</span> {edits}
+        </p>
         {hasGps ? (
           <p className="emvb-ie-meta-gps" data-emvb-image-meta-gps="">
             <MapPinIcon aria-hidden="true" />

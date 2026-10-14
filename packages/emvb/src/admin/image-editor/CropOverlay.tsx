@@ -224,6 +224,26 @@ export function CropFrameOverlay({ geometry, view, stage, disabled, onFreezeView
     geometry.setCrop(resizeBy(handle, geometry.crop, view.k, d[0], d[1]), { transient: true });
   };
 
+  /** W-487: the frame itself takes the keyboard: arrows move the picture, + and − zoom. */
+  const onFrameKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (disabled || event.target !== event.currentTarget) return;
+    const step = event.shiftKey ? 20 : 4;
+    const pan: Record<string, Vec2> = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, -step],
+      ArrowDown: [0, step],
+    };
+    const zoom: Record<string, number> = { "+": 0.9, "=": 0.9, "-": 1.1, _: 1.1 };
+    const d = pan[event.key];
+    const z = zoom[event.key];
+    if (d) geometry.setCrop(panBy(geometry.crop, view.k, d[0], d[1]), { transient: true });
+    else if (z) geometry.setCrop(zoomBy(geometry.crop, z, view.k), { transient: true });
+    else return;
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
   const maskPath = `M0 0H${stage.width}V${stage.height}H0Z M${frame.left} ${frame.top}v${frame.height}h${frame.width}v${-frame.height}Z`;
 
   return (
@@ -237,7 +257,7 @@ export function CropFrameOverlay({ geometry, view, stage, disabled, onFreezeView
         <path d={maskPath} fillRule="evenodd" />
       </svg>
       <div
-        aria-label="Crop area. Drag to move the image, scroll to zoom."
+        aria-label="Crop area. Drag or use the arrow keys to move the picture; scroll, pinch or press + and − to zoom."
         className="emvb-ie-crop-frame"
         data-disabled={disabled || undefined}
         data-emvb-image-crop-frame=""
@@ -245,7 +265,12 @@ export function CropFrameOverlay({ geometry, view, stage, disabled, onFreezeView
         onPointerDown={(event) => begin(event, null)}
         onPointerMove={move}
         onPointerUp={end}
+        onKeyDown={onFrameKey}
+        onKeyUp={(event) => {
+          if (event.target === event.currentTarget) geometry.commit();
+        }}
         role="group"
+        tabIndex={disabled ? -1 : 0}
         style={{ left: frame.left, top: frame.top, width: frame.width, height: frame.height }}
       >
         <div aria-hidden="true" className="emvb-ie-crop-thirds">

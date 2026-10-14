@@ -736,3 +736,15 @@ describe("the Metadata tool (W-486)", () => {
     expect(q("[data-emvb-image-meta-gps]")?.textContent).toContain("A JPEG copy has it removed");
   });
 });
+
+describe("announcements and the edit summary (W-487)", () => {
+  test("the Metadata panel says what the edits are, and the live region announces the tool", async () => {
+    serveImage();
+    change({ tool: "metadata", edited: true });
+    await open({ src: "/_emdash/api/media/file/01M4X9JVR25AERTZ0000000000.jpg" });
+    expect(q("[data-emvb-image-meta-edits]")?.textContent).toContain("Exposure +20");
+    change({ tool: "adjust" });
+    await Promise.resolve();
+    expect(q("[data-emvb-image-live]")?.textContent).toBe("Adjust tool");
+  });
+});

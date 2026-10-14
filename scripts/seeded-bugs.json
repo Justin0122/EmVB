@@ -30644,6 +30644,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/MetadataPanel.test.ts"],
       "expect": "\\(fail\\).*photocn's order"
+    },
+    {
+      "id": "W-487/announce-no-delay",
+      "requirement": "W-487",
+      "description": "Edits are announced on every slider tick instead of after a pause.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/announce.tsx",
+          "search": "export const ANNOUNCE_DELAY_MS = 700;",
+          "replace": "export const ANNOUNCE_DELAY_MS = 0;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/announce.test.ts"],
+      "expect": "\\(fail\\).*waits before announcing"
+    },
+    {
+      "id": "W-487/summary-always-edited",
+      "requirement": "W-487",
+      "description": "The edit summary always says Edited, never the plain-language list.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/announce.tsx",
+          "search": "    return summarizeImageEdit(recipe as ImageEditRecipe, 12);",
+          "replace": "    return \"Edited\";"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/announce.test.ts"],
+      "expect": "\\(fail\\).*reads a recipe"
     }
   ]
 }

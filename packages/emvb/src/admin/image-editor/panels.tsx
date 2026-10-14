@@ -37,7 +37,7 @@ const CROP_SHORTCUTS: readonly [keys: string, action: string][] = [
   ["X", "Portrait ⇄ landscape"],
   ["[ ]", "Straighten ±0.5° (⇧ ±5°)"],
   ["← → ↑ ↓", "Move the image (⇧ faster)"],
-  ["Scroll", "Zoom inside the frame"],
+  ["Scroll · + −", "Zoom inside the frame (+ − with the frame focused)"],
   ["Esc", "Cancel a drag / leave corners"],
   ["⌫", "Reset crop"],
   ["↵", "Done"],

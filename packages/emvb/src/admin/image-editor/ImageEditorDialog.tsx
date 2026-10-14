@@ -29,6 +29,7 @@ import {
   useImageEditorState,
 } from "./engine.ts";
 import { IMAGE_EDITOR_CSS } from "./image-editor-css.ts";
+import { Announcer } from "./announce.tsx";
 import { withDataUrlFetch } from "./data-url-fetch.ts";
 import { ExportDialog, type ExportResult, type ExportSettings } from "./ExportDialog.tsx";
 import { loadEditableSource, type LoadedSource } from "./load.ts";
@@ -553,6 +554,7 @@ function EditorView({
             ) : (
               <DesktopLayout ready={ready} name={name} />
             )}
+            <Announcer />
           </div>
           {exportOpen ? <div className="emvb-ie-scrim" aria-hidden="true" /> : null}
           {onSave ? (

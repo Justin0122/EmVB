@@ -211,6 +211,7 @@ export const IMAGE_EDITOR_CSS = `
   outline: 1px solid rgb(255 255 255 / 0.9); outline-offset: -1px; box-shadow: 0 0 0 1px rgb(0 0 0 / 0.35);
 }
 .emvb-ie-crop-frame[data-disabled] { pointer-events: none; }
+.emvb-ie-crop-frame:focus-visible { outline: 2px solid var(--color-kumo-focus, var(--color-kumo-brand)); outline-offset: 2px; }
 .emvb-ie-crop-thirds { position: absolute; inset: 0; pointer-events: none; }
 .emvb-ie-crop-thirds i { position: absolute; top: 0; bottom: 0; width: 1px; background: rgb(255 255 255 / 0.4); }
 .emvb-ie-crop-thirds b { position: absolute; left: 0; right: 0; height: 1px; background: rgb(255 255 255 / 0.4); }
@@ -338,6 +339,12 @@ export const IMAGE_EDITOR_CSS = `
 @media (prefers-reduced-motion: reduce) {
   .emvb-ie-sheet, .emvb-ie-compact-canvas, .emvb-ie-switch, .emvb-ie-switch svg, .emvb-ie-blur-handle { transition: none; }
 }
+/* W-487: no motion at all when the system asks for less, Kumo's own transitions included. */
+@media (prefers-reduced-motion: reduce) {
+  .emvb-ie, .emvb-ie *, .emvb-ie-export, .emvb-ie-export * { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+.emvb-ie-meta-edits { margin: 0; font-size: 13px; line-height: 20px; display: flex; gap: 8px; }
+.emvb-ie-meta-edits > .emvb-ie-subtle { flex: 0 0 112px; padding-left: 8px; }
 /* W-485 export dialog (photocn export-dialog.tsx; a bottom sheet on phones like its drawer). */
 .emvb-ie-scrim { position: fixed; inset: 0; z-index: 1; background: rgb(0 0 0 / 0.25); backdrop-filter: blur(4px); }
 

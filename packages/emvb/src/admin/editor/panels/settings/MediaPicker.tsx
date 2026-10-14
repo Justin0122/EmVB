@@ -81,7 +81,9 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
   }, [open, loadLibrary]);
 
   const edit = ImageEdit.safeParse(props.edit);
-  const editSummary = edit.success ? summarizeImageEdit(edit.data.recipe) || "Edited" : null;
+  /** W-487: say why a picture can't be edited instead of offering a button that fails. */
+  const editCheck = src ? editableSource(props, window.location.origin) : null;
+  const editSummary = edit.success ? summarizeImageEdit(edit.data.recipe, 12) || "Edited" : null;
 
   /** W-485: upload the edited copy as a new item; the original stays in the library. */
   const saveCopy = async (file: File, copy: { width: number; height: number; edit: unknown }) => {
@@ -175,9 +177,11 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
           <img src={src} alt="" className="emvb-media-thumb" />
           <span className="emvb-helper emvb-mono">{src}</span>
           {editSummary ? (
-            <span className="emvb-media-edited" title={editSummary} data-emvb-image-edited="">
+            <span className="emvb-media-edited" data-emvb-image-edited="">
               <Badge variant="neutral">Edited</Badge>
-              <span className="emvb-sr-only">: {editSummary}</span>
+              <span className="emvb-helper" data-emvb-image-edit-summary="">
+                {editSummary}
+              </span>
             </span>
           ) : null}
         </div>
@@ -204,7 +208,9 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
         >
           Upload
         </Button>
-        {editable && src ? <ImageEditButton imageProps={props} onSave={saveCopy} /> : null}
+        {editable && src && editCheck?.ok ? (
+          <ImageEditButton imageProps={props} onSave={saveCopy} />
+        ) : null}
         {editable && edit.success ? (
           <Button
             type="button"
@@ -226,6 +232,11 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
           onChange={(event) => void onUpload(event.target.files?.[0])}
         />
       </div>
+      {editable && src && editCheck && !editCheck.ok ? (
+        <p className="emvb-helper" data-emvb-image-cant-edit={editCheck.reason}>
+          {editCheck.message}
+        </p>
+      ) : null}
       <Input
         label="Or paste a URL"
         className={FIELD}
