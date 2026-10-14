@@ -30830,6 +30830,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb-mcp/test/options.test.ts"],
       "expect": "\\(fail\\).*second line is refused"
+    },
+    {
+      "id": "W-499/unsafe-image-src-accepted",
+      "requirement": "W-499",
+      "description": "MCP writes accept a javascript: image source.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/write.ts",
+          "search": "      refuseUnsafeImageSources(current.layout, next.layout);\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/test/server/mcp-live-round2.test.ts"],
+      "expect": "\\(fail\\).*refused with a clear error"
     }
   ]
 }

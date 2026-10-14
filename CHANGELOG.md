@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **MCP:** an image source other than http(s) or a path on the site (`javascript:`, `data:`, `//host`) is refused with an explanation instead of publishing a blank image (W-499).
 - **MCP bridge (`@perkyzz/emvb-mcp`):** a token with a line break or space (for example a second line in the token file) is refused at start-up instead of failing later with an error that quoted the token to the agent; errors are redacted of the token, and `--token-file` with no path is an error (W-498).
 - **MCP:** on a site where EmVB isn't set up yet, `get_layout`, `describe_page` and the other page tools now say so (`NOT_SET_UP`) instead of claiming the page doesn't exist (W-497).
 - **Image editor and images:** pictures larger than the browser's graphics limit open scaled down to fit, marked "Reduced to fit", instead of a blank preview and a grey copy; pictures over 10000 px on a side no longer make the draft unsaveable (W-496).

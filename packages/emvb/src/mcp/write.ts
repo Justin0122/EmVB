@@ -17,7 +17,8 @@ import {
 } from "../core/index.ts";
 import { addNode, moveNode, withFreshIds } from "../core/arrange.ts";
 import { ELEMENT_DESCRIPTORS } from "../core/elements/index.ts";
-import { removeNode, slugify, starterLayout, updateNode } from "../core/tree-ops.ts";
+import { nodeChildren, removeNode, slugify, starterLayout, updateNode } from "../core/tree-ops.ts";
+import { sanitizeMediaUrl } from "../core/sanitize/media-url.ts";
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts } from "./ports.ts";
 import { queued } from "./queue.ts";
@@ -109,6 +110,7 @@ async function mutatePage(
         );
       }
       const next = apply(current.layout);
+      refuseUnsafeImageSources(current.layout, next.layout);
       const layout = checkLayout(next.layout);
       try {
         const saved = await ports.savePage(pageId, { layout }, page.rev);
@@ -132,6 +134,44 @@ async function mutatePage(
 const refused = (reason: string): never => {
   throw new McpToolError("REFUSED", reason);
 };
+
+/** Image sources (src and srcset widths) on a node, keyed for comparison. */
+function imageSources(root: LayoutNode): Map<string, string[]> {
+  const found = new Map<string, string[]>();
+  const walk = (node: LayoutNode) => {
+    if (node.type === "image") {
+      const props = node.props as { src?: unknown; sources?: unknown };
+      const list = typeof props.src === "string" ? [props.src] : [];
+      if (Array.isArray(props.sources)) {
+        for (const source of props.sources as { src?: unknown }[]) {
+          if (typeof source?.src === "string") list.push(source.src);
+        }
+      }
+      found.set(node.id, list);
+    }
+    for (const child of nodeChildren(node)) walk(child);
+  };
+  walk(root);
+  return found;
+}
+
+/**
+ * W-499: a `javascript:` or `data:` image source passed validation and published as a blank
+ * placeholder (the renderer drops it), with nothing telling the agent why. Sources the write
+ * adds or changes must be http(s) or a same-site path; ones already stored are left alone.
+ */
+function refuseUnsafeImageSources(before: Layout, after: Layout) {
+  const old = imageSources(before.root);
+  for (const [id, list] of imageSources(after.root)) {
+    const kept = new Set(old.get(id) ?? []);
+    for (const src of list) {
+      if (src.trim() === "" || kept.has(src) || sanitizeMediaUrl(src)) continue;
+      refused(
+        `Image ${id} has the source ${JSON.stringify(src.slice(0, 80))}, which pages can't show. Use an https:// URL or a path on this site such as /_emdash/api/media/file/photo.jpg (upload in the EmDash media library first).`,
+      );
+    }
+  }
+}
 
 const KNOWN_TYPES = new Set(ELEMENT_DESCRIPTORS.map((d) => d.type));
 

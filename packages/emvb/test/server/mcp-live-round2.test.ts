@@ -249,3 +249,45 @@ describe("a site where EmVB isn't set up (W-497)", () => {
     expect(e.code).toBe("NOT_FOUND");
   });
 });
+
+describe("image sources agents can set (W-499)", () => {
+  test("javascript:, data: and protocol-relative sources are refused with a clear error", async () => {
+    const { pageId, root } = await page();
+    for (const src of [
+      "javascript:alert(1)",
+      "data:image/png;base64,AAAA",
+      "//evil.example/x.png",
+    ]) {
+      // oxlint-disable-next-line no-await-in-loop -- one write per source, in order.
+      const e = await err("add_element", {
+        pageId,
+        parentId: root.id,
+        element: { type: "image", props: { src, alt: "x" } },
+      });
+      expect(e.code, src).toBe("REFUSED");
+      expect(e.message, src).toContain("https:// URL or a path on this site");
+    }
+  });
+
+  test("https, site paths and an empty placeholder are fine, and updates are checked too", async () => {
+    const { pageId, root } = await page();
+    const added = await ok<{ changed: string[] }>("add_element", {
+      pageId,
+      parentId: root.id,
+      element: { type: "image", props: { src: "https://cdn.example/a.jpg", alt: "A" } },
+    });
+    const id = added.changed[0] ?? "";
+    await ok("update_element", {
+      pageId,
+      nodeId: id,
+      set: { props: { src: "/_emdash/api/media/file/b.jpg" } },
+    });
+    await ok("update_element", { pageId, nodeId: id, set: { props: { src: "" } } });
+    const e = await err("update_element", {
+      pageId,
+      nodeId: id,
+      set: { props: { src: "JaVaScRiPt:alert(1)" } },
+    });
+    expect(e.code).toBe("REFUSED");
+  });
+});
