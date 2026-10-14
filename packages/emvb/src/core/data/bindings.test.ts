@@ -219,3 +219,31 @@ describe("data bindings (W-307)", () => {
     expect(layoutUsesSource(page(heading).root, "site")).toBe(false);
   });
 });
+
+describe("a bound image with extra sizes (W-501)", () => {
+  const image: LayoutNode = {
+    id: "img00001",
+    type: "image",
+    props: {
+      src: "/media/typed.jpg",
+      alt: "Typed",
+      width: 800,
+      sources: [{ src: "/media/typed-1600.jpg", width: 1600 }],
+    },
+    bind: { src: { source: "post", key: "featuredImageUrl" } },
+  } as LayoutNode;
+
+  test("shows the bound picture: the typed picture's srcset is dropped", () => {
+    const html = renderPage(page(image), emptyDesign(), {
+      dynamic: { post: { ...post, featuredImageUrl: "/media/featured.jpg" } },
+    }).html;
+    expect(html).toContain('src="/media/featured.jpg"');
+    expect(html).not.toContain("typed-1600");
+    expect(html).not.toContain("srcset");
+  });
+
+  test("without a live value the typed picture keeps its extra sizes", () => {
+    const html = renderPage(page(image), emptyDesign(), { dynamic: { post } }).html;
+    expect(html).toContain("typed-1600.jpg 1600w");
+  });
+});

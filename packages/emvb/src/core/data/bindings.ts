@@ -189,8 +189,13 @@ export function applyBindings(node: LayoutNode, data: BindingData): LayoutNode {
     if (value === undefined) continue;
     props ??= { ...(node.props as Record<string, unknown>) };
     props[field.key] = value;
-    // A bound image is no longer the media library item it was picked from.
-    if (field.kind === "image") delete props["mediaId"];
+    // A bound image is no longer the media library item it was picked from. W-501: nor are the
+    // typed picture's extra sizes; with `w` descriptors the browser picks only from srcset, so
+    // they hid the bound image on most screens.
+    if (field.kind === "image") {
+      delete props["mediaId"];
+      delete props["sources"];
+    }
   }
   return props ? ({ ...node, props } as LayoutNode) : node;
 }

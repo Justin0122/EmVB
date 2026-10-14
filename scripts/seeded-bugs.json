@@ -30858,6 +30858,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/mcp-live-round2.test.ts"],
       "expect": "\\(fail\\).*hidden on every device is a warning"
+    },
+    {
+      "id": "W-501/bound-image-keeps-srcset",
+      "requirement": "W-501",
+      "description": "A bound image keeps the typed picture srcset, hiding the bound picture.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/data/bindings.ts",
+          "search": "      delete props[\"sources\"];\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/data/bindings.test.ts"],
+      "expect": "\\(fail\\).*srcset is dropped"
     }
   ]
 }
