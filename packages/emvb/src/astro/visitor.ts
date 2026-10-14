@@ -108,6 +108,8 @@ function requestCookie(astro: VisitorAstro, name: string): string | undefined {
 }
 
 const COUNTRY = /^[A-Z]{2}$/;
+/** XX is Cloudflare's "unknown" and T1 is Tor: neither is a country (W-514: host facts too). */
+const isCountry = (code: string) => COUNTRY.test(code) && code !== "XX" && code !== "T1";
 
 /**
  * The visitor's country from the edge: Cloudflare's header or `request.cf`, or Vercel's header.
@@ -123,8 +125,7 @@ function countryOf(astro: VisitorAstro): string | undefined {
   ];
   for (const value of candidates) {
     const code = typeof value === "string" ? value.trim().toUpperCase() : "";
-    // XX is Cloudflare's "unknown" and T1 is Tor: neither is a country.
-    if (COUNTRY.test(code) && code !== "XX" && code !== "T1") return code;
+    if (isCountry(code)) return code;
   }
   return undefined;
 }
@@ -159,7 +160,7 @@ export function hostVisitorFacts(host: HostVisitor | undefined): Partial<Visitor
     facts.segments = segments;
   }
   const country = typeof host.country === "string" ? host.country.trim().toUpperCase() : "";
-  if (COUNTRY.test(country)) facts.country = country;
+  if (isCountry(country)) facts.country = country;
   if (host.device === "mobile" || host.device === "tablet" || host.device === "desktop")
     facts.device = host.device;
   if (typeof host.returning === "boolean") facts.returning = host.returning;

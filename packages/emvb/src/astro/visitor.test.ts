@@ -224,6 +224,12 @@ describe("the host's visitor facts (W-329)", () => {
     expect(hostVisitorFacts(undefined)).toEqual({});
   });
 
+  test("a host passing Cloudflare's XX (unknown) or T1 (Tor) leaves the detected country (W-514)", async () => {
+    const { hostVisitorFacts } = await import("./visitor.ts");
+    expect(hostVisitorFacts({ country: "xx" })).toEqual({});
+    expect(hostVisitorFacts({ country: "T1" })).toEqual({});
+  });
+
   test("visitorFor adds them over what EmVB detects, only when the layout has a rule", () => {
     const { astro } = astroWith();
     const request = new Request("https://example.com/", {

@@ -26111,7 +26111,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/visitor.ts",
-          "search": "if (COUNTRY.test(code) && code !== \"XX\" && code !== \"T1\") return code;",
+          "search": "if (isCountry(code)) return code;",
           "replace": "if (COUNTRY.test(code)) return code;"
         }
       ],
@@ -31065,6 +31065,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/forms/required-issues.test.ts"],
       "expect": "\\(fail\\).*W-513"
+    },
+    {
+      "id": "W-514/host-country-xx",
+      "requirement": "W-514",
+      "description": "A host country of XX replaces the detected country.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/visitor.ts",
+          "search": "if (isCountry(country)) facts.country = country;",
+          "replace": "if (COUNTRY.test(country)) facts.country = country;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/visitor.test.ts"],
+      "expect": "\\(fail\\).*W-514"
     }
   ]
 }
