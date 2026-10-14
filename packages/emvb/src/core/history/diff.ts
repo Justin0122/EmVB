@@ -96,6 +96,27 @@ export function diffSections(older: Layout, current: Layout): SectionChange[] {
   return changes;
 }
 
+/** `node` without the CSS ids that `taken` already holds, so a restored section never repeats one. */
+function withoutTakenHtmlIds(node: LayoutNode, taken: Set<string>): LayoutNode {
+  const kids = nodeChildren(node);
+  const { htmlId, ...rest } = node;
+  const keep = htmlId && !taken.has(htmlId) ? { htmlId } : {};
+  const out = { ...rest, ...keep } as LayoutNode;
+  if (kids.length === 0) return out;
+  return { ...out, children: kids.map((child) => withoutTakenHtmlIds(child, taken)) } as LayoutNode;
+}
+
+const htmlIdsOf = (node: LayoutNode, skip?: LayoutNode): Set<string> => {
+  const ids = new Set<string>();
+  const walk = (n: LayoutNode) => {
+    if (n === skip) return;
+    if (n.htmlId) ids.add(n.htmlId);
+    for (const child of nodeChildren(n)) walk(child);
+  };
+  walk(node);
+  return ids;
+};
+
 const count = (node: LayoutNode): number =>
   1 + nodeChildren(node).reduce((sum, child) => sum + count(child), 0);
 
@@ -116,11 +137,14 @@ export function restoreSection(
   const elsewhere = new Set(index(current.root).keys());
   if (replacing) for (const id of index(replacing).keys()) elsewhere.delete(id);
   const clashes = [...index(section).keys()].some((id) => elsewhere.has(id));
-  const incoming = clashes ? withFreshIds(current, section) : section;
+  // CSS ids another section took since then stay there: a repeat made the page fail to save (W-517).
+  const takenHtml = htmlIdsOf(current.root, replacing);
+  const fresh = clashes ? withFreshIds(current, section) : section;
+  const incoming = withoutTakenHtmlIds(fresh, takenHtml);
   const size = count(current.root) - (replacing ? count(replacing) : 0) + count(incoming);
   if (size > MAX_NODES) return { ok: false, reason: "The page would have too many elements." };
   if (replacing && !clashes) {
-    return { ok: true, layout: updateNode(current, sectionId, () => structuredClone(section)) };
+    return { ok: true, layout: updateNode(current, sectionId, () => structuredClone(incoming)) };
   }
   // Removed (or renewed): after the nearest earlier section that is still on the page.
   const before = new Set(older.root.children.slice(0, oldIndex).map((n) => n.id));

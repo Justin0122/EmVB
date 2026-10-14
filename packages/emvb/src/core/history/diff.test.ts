@@ -84,3 +84,27 @@ describe("version timeline (W-315)", () => {
     expect(restoreSection(current, older, "nope0001").ok).toBe(false);
   });
 });
+
+describe("Restoring a section keeps CSS ids unique (W-517)", () => {
+  test("a CSS id another section took since then is left off the restored one", () => {
+    const old = page({
+      ...box("cta00001", [{ ...h("head0003", "Buy"), htmlId: "buy" }]),
+      htmlId: "pricing",
+    });
+    const now = page({ ...box("new00001", [h("head0004", "Plans")]), htmlId: "pricing" });
+    const result = restoreSection(now, old, "cta00001");
+    if (!result.ok) throw new Error(result.reason);
+    expect(validateLayout(result.layout).ok).toBe(true);
+    const restored = result.layout.root.children.find((n) => n.id === "cta00001");
+    expect(restored?.htmlId).toBeUndefined();
+    expect((restored as { children: LayoutNode[] }).children[0]?.htmlId).toBe("buy");
+  });
+
+  test("replacing a section keeps its own CSS id", () => {
+    const old = page({ ...box("hero0001", [h("head0001", "Old")]), htmlId: "top" });
+    const now = page({ ...box("hero0001", [h("head0001", "New")]), htmlId: "top" });
+    const result = restoreSection(now, old, "hero0001");
+    if (!result.ok) throw new Error(result.reason);
+    expect(result.layout.root.children[0]?.htmlId).toBe("top");
+  });
+});

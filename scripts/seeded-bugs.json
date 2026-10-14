@@ -26223,8 +26223,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/history/diff.ts",
-          "search": "  const incoming = clashes ? withFreshIds(current, section) : section;",
-          "replace": "  const incoming = section;"
+          "search": "  const fresh = clashes ? withFreshIds(current, section) : section;",
+          "replace": "  const fresh = section;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/history/diff.test.ts"],
@@ -31111,6 +31111,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/wave.test.ts"],
       "expect": "\\(fail\\).*W-516"
+    },
+    {
+      "id": "W-517/restore-keeps-html-id",
+      "requirement": "W-517",
+      "description": "A restored section repeats a CSS id another section took.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/history/diff.ts",
+          "search": "const keep = htmlId && !taken.has(htmlId) ? { htmlId } : {};",
+          "replace": "const keep = htmlId ? { htmlId } : {};"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/history/diff.test.ts"],
+      "expect": "\\(fail\\).*W-517"
     }
   ]
 }
