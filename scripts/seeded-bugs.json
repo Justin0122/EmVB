@@ -31209,6 +31209,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/server/agent-log.test.ts"],
       "expect": "\\(fail\\).*W-522"
+    },
+    {
+      "id": "W-523/query-container-collapses",
+      "requirement": "W-523",
+      "description": "A query container collapses to zero width in a row.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/index.ts",
+          "search": "      declarations.push({ property: \"width\", value: \"100%\" });",
+          "replace": "      void declarations;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/features-w332.test.ts"],
+      "expect": "\\(fail\\).*W-523"
     }
   ]
 }

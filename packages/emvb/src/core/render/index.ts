@@ -310,6 +310,11 @@ export function renderPage(
       }
     }
     if (node.container) declarations.push({ property: "container-type", value: "inline-size" });
+    // W-523: a query container can't size to its content, so in a row (or with align-items other
+    // than stretch) it collapsed to 0 px and its content vanished. Full width unless a width is set.
+    if (node.container && node.style?.width === undefined && !node.classes?.length) {
+      declarations.push({ property: "width", value: "100%" });
+    }
     if (node.type === "image") {
       const focal = node.props as { focalX?: unknown; focalY?: unknown };
       const position = objectPosition(focal.focalX, focal.focalY);

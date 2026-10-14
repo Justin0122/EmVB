@@ -236,3 +236,30 @@ describe("Style comparisons ignore key order (W-519)", () => {
     expect(mergeDesign(saved, reordered, theirs).conflicts).toEqual([]);
   });
 });
+
+describe("A query container keeps its width (W-523)", () => {
+  const box = (extra: Record<string, unknown>) =>
+    renderPage(
+      page([
+        {
+          id: "cq000001",
+          type: "container",
+          props: {},
+          container: true,
+          children: [],
+          ...extra,
+        } as never,
+      ]),
+      emptyDesign(),
+    ).css;
+
+  test("a query container without a width is full width, so it can't collapse in a row", () => {
+    expect(box({})).toMatch(/\.emvb-e-cq000001\{[^}]*container-type:inline-size;width:100%/);
+  });
+
+  test("a width set on the box (or by a class) wins", () => {
+    expect(box({ style: { width: { value: 300, unit: "px" } } })).toContain("width:300px");
+    expect(box({ style: { width: { value: 300, unit: "px" } } })).not.toContain("width:100%");
+    expect(box({ classes: ["card"] })).not.toContain("width:100%");
+  });
+});

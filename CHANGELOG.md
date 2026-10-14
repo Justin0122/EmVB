@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- A box marked Query container no longer collapses to zero width (hiding its content) in a row or a non-stretched column: it is full width unless it has a width of its own (W-523).
 - The agent activity log now keeps 90 days: each new entry drops older ones, so a busy agent token no longer grows it without end (W-522).
 - Dropping an element back on its own spot no longer marks the page unsaved, adds an empty undo step, or clears redo (W-521).
 - In Layers, the up and down arrows skip the rows inside a collapsed element instead of selecting a hidden one and re-opening it (W-520).
