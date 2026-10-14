@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **MCP:** `update_site_styles` refuses to remove a class a page still uses, naming the pages, unless `force: true`, as it already did for variables (W-504).
 - **Playground:** the image editor's Reset to original and re-opening an edit work in the playground; its mock media library now answers a lookup by id (W-503).
 - **Data binding:** a bound value cut at the 500-character limit no longer ends in half an emoji (W-502).
 - **Data binding:** an Image whose picture is bound (post featured image, URL parameter, site setting) shows the bound picture even when the typed one has extra sizes; the old srcset hid it on most screens (W-501).

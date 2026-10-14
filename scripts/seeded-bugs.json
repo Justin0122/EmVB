@@ -30065,8 +30065,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/mcp/write.ts",
-          "search": "    if (!input.force) {",
-          "replace": "    if (input.force === false) {"
+          "search": "          where: variableUses(layouts, state.design, id, KIND_OF[kind]),",
+          "replace": "          where: [] as string[],"
         }
       ],
       "command": [
@@ -30895,6 +30895,20 @@
       ],
       "command": ["bun", "test", "./test/playground/backend.test.ts"],
       "expect": "\\(fail\\).*same-origin path"
+    },
+    {
+      "id": "W-504/remove-used-class",
+      "requirement": "W-504",
+      "description": "update_site_styles removes a class pages still use.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/write.ts",
+          "search": "        ...(input.removeClasses ?? []).map((id) => ({ id, where: classUses(layouts, id) })),\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/test/server/mcp-write.test.ts"],
+      "expect": "\\(fail\\).*W-504"
     }
   ]
 }

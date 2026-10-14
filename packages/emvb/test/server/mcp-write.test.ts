@@ -161,6 +161,29 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(JSON.stringify(await call("get_site_styles", {}))).not.toContain('"brand"');
   });
 
+  test("removing a class a page still uses is refused unless forced (W-504)", async () => {
+    const pageId = await newPage();
+    await call("update_site_styles", {
+      classes: [
+        { id: "card", name: "Card", style: {} },
+        { id: "spare", name: "Spare", style: {} },
+      ],
+    });
+    const { layout } = await layoutOf(pageId);
+    await call("update_element", { pageId, nodeId: layout.root.id, set: { classes: ["card"] } });
+    const error = await fail("update_site_styles", { removeClasses: ["card"] });
+    expect(error.code).toBe("REFUSED");
+    expect(error.message).toContain('card (page "Home")');
+    // An unused class goes without force; the used one stays until forced.
+    await call("update_site_styles", { removeClasses: ["spare"] });
+    let styles = JSON.stringify(await call("get_site_styles", {}));
+    expect(styles).not.toContain('"spare"');
+    expect(styles).toContain('"card"');
+    await call("update_site_styles", { removeClasses: ["card"], force: true });
+    styles = JSON.stringify(await call("get_site_styles", {}));
+    expect(styles).not.toContain('"card"');
+  });
+
   test("viewers can't call write tools", async () => {
     const pageId = await newPage();
     const result = (await t.mcp(

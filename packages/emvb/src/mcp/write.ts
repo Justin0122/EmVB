@@ -487,7 +487,7 @@ export const UpdateSiteStylesInput = z.strictObject({
   removeClasses: z.array(z.string().min(1).max(64)).max(100).optional(),
   defaults: z.record(z.string(), z.unknown()).optional(),
   direction: z.enum(["ltr", "rtl", "auto"]).optional(),
-  /** Remove variables even when pages or classes still use them (their references fall back). */
+  /** Remove variables or classes even when pages or classes still use them (references fall back). */
   force: z.boolean().optional(),
   expectedRevision: z.string().max(256).nullable().optional(),
 });
@@ -500,14 +500,8 @@ const KIND_OF: Record<(typeof VARIABLE_KINDS)[number], VariableKind> = {
   spacings: "spacing",
 };
 
-/** Where a variable is still used: class ids and page titles (W-458 in-use guard). */
-async function variableUses(
-  ports: EmvbPorts,
-  design: DesignSystem,
-  id: string,
-  kind: VariableKind,
-): Promise<string[]> {
-  const where = findVariableUsagesInDesign(design, id, kind).map((u) => `class ${u.classId}`);
+/** Every EmVB page's title and layout, for the in-use guards (at most 1000 pages). */
+async function allLayouts(ports: EmvbPorts): Promise<{ title: string; layout: Layout }[]> {
   const pages: { id: string; title: string }[] = [];
   let cursor: string | undefined;
   for (let i = 0; i < 20; i++) {
@@ -518,13 +512,33 @@ async function variableUses(
     cursor = batch.nextCursor;
   }
   const records = await Promise.all(pages.map((page) => ports.getPage(page.id)));
+  const out: { title: string; layout: Layout }[] = [];
   records.forEach((record, i) => {
     const layout = record ? validateLayout(record.layout) : null;
-    if (layout?.ok && findVariableUsages(layout.layout, id, kind).length > 0) {
-      where.push(`page "${pages[i]?.title ?? ""}"`);
-    }
+    if (layout?.ok) out.push({ title: pages[i]?.title ?? "", layout: layout.layout });
   });
+  return out;
+}
+
+/** Where a variable is still used: class ids and page titles (W-458 in-use guard). */
+function variableUses(
+  layouts: { title: string; layout: Layout }[],
+  design: DesignSystem,
+  id: string,
+  kind: VariableKind,
+): string[] {
+  const where = findVariableUsagesInDesign(design, id, kind).map((u) => `class ${u.classId}`);
+  for (const { title, layout } of layouts) {
+    if (findVariableUsages(layout, id, kind).length > 0) where.push(`page "${title}"`);
+  }
   return where;
+}
+
+/** W-504: pages whose elements still carry a class (removing it silently unstyled them). */
+function classUses(layouts: { title: string; layout: Layout }[], id: string): string[] {
+  const uses = (node: LayoutNode): boolean =>
+    (node.classes ?? []).includes(id) || nodeChildren(node).some(uses);
+  return layouts.filter(({ layout }) => uses(layout.root)).map(({ title }) => `page "${title}"`);
 }
 
 const upsert = (list: Item[] | undefined, items: Item[]): Item[] => {
@@ -563,13 +577,15 @@ export async function updateSiteStyles(
         changes.push(`${items.length} ${kind}`);
       }
     }
-    if (!input.force) {
-      const inUse = await Promise.all(
-        (input.removeVariables ?? []).map(async ({ kind, id }) => ({
+    if (!input.force && (input.removeVariables?.length || input.removeClasses?.length)) {
+      const layouts = await allLayouts(ports);
+      const inUse = [
+        ...(input.removeVariables ?? []).map(({ kind, id }) => ({
           id,
-          where: await variableUses(ports, state.design, id, KIND_OF[kind]),
+          where: variableUses(layouts, state.design, id, KIND_OF[kind]),
         })),
-      );
+        ...(input.removeClasses ?? []).map((id) => ({ id, where: classUses(layouts, id) })),
+      ];
       const blocked = inUse.filter((u) => u.where.length > 0);
       if (blocked.length > 0) {
         throw new McpToolError(
