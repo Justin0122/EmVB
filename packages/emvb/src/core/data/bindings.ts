@@ -100,11 +100,12 @@ function clean(value: string): string {
   let out = "";
   for (const char of value) {
     const code = char.codePointAt(0) ?? 0;
-    if (code === 10 || code === 9) out += char === "\t" ? " " : char;
-    else if (code >= 32 && code !== 127) out += char;
-    if (out.length >= MAX_BOUND_LENGTH) break;
+    const kept = code === 9 ? " " : code === 10 || (code >= 32 && code !== 127) ? char : "";
+    // W-502: cutting at a UTF-16 length split an emoji at the limit into a broken half.
+    if (out.length + kept.length > MAX_BOUND_LENGTH) break;
+    out += kept;
   }
-  return out.slice(0, MAX_BOUND_LENGTH).trim();
+  return out.trim();
 }
 
 /** The live value of one binding, or undefined when its source has nothing for this key. */

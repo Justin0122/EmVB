@@ -25743,12 +25743,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/data/bindings.ts",
-          "search": "  return out.slice(0, MAX_BOUND_LENGTH).trim();",
-          "replace": "  return value.trim();"
-        },
-        {
-          "file": "packages/emvb/src/core/data/bindings.ts",
-          "search": "    if (out.length >= MAX_BOUND_LENGTH) break;\n",
+          "search": "    if (out.length + kept.length > MAX_BOUND_LENGTH) break;\n",
           "replace": ""
         }
       ],
@@ -30872,6 +30867,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/data/bindings.test.ts"],
       "expect": "\\(fail\\).*srcset is dropped"
+    },
+    {
+      "id": "W-502/cap-splits-emoji",
+      "requirement": "W-502",
+      "description": "The bound-value cap cuts an emoji in half.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/data/bindings.ts",
+          "search": "    if (out.length + kept.length > MAX_BOUND_LENGTH) break;\n    out += kept;",
+          "replace": "    out += kept;\n    if (out.length >= MAX_BOUND_LENGTH) { out = out.slice(0, MAX_BOUND_LENGTH); break; }"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/data/bindings.test.ts"],
+      "expect": "\\(fail\\).*never splits an emoji"
     }
   ]
 }

@@ -247,3 +247,18 @@ describe("a bound image with extra sizes (W-501)", () => {
     expect(html).toContain("typed-1600.jpg 1600w");
   });
 });
+
+describe("long bound values (W-502)", () => {
+  test("the 500-character cap never splits an emoji", () => {
+    const value = resolveBinding(
+      { source: "param", key: "n" },
+      { params: { n: `${"a".repeat(499)}😀b` } },
+    );
+    expect(value).toBe("a".repeat(499));
+    const fits = resolveBinding(
+      { source: "param", key: "n" },
+      { params: { n: `${"a".repeat(498)}😀b` } },
+    );
+    expect(fits).toBe(`${"a".repeat(498)}😀`);
+  });
+});

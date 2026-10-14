@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Data binding:** a bound value cut at the 500-character limit no longer ends in half an emoji (W-502).
 - **Data binding:** an Image whose picture is bound (post featured image, URL parameter, site setting) shows the bound picture even when the typed one has extra sizes; the old srcset hid it on most screens (W-501).
 - **MCP:** `describe_page` warns when an element, or the whole page, is hidden on every device (W-500).
 - **MCP:** an image source other than http(s) or a path on the site (`javascript:`, `data:`, `//host`) is refused with an explanation instead of publishing a blank image (W-499).
