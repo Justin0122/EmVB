@@ -352,3 +352,34 @@ describe("a field uses the form it sits in", () => {
     expect(html).toContain('<option value="weekly">Weekly</option>');
   });
 });
+
+describe("radio options keep the group's legend (W-524)", () => {
+  const required: FormDefinitions = new Map([
+    [
+      "contact",
+      {
+        ...definition,
+        pages: [
+          {
+            fields: [
+              {
+                name: "size",
+                type: "radio",
+                label: "Size",
+                required: true,
+                options: [{ label: "Small", value: "s" }],
+              },
+            ],
+          },
+        ],
+      } as PublicFormDefinition,
+    ],
+  ]);
+  const { html } = renderPage(layout, emptyDesign(), { formDefinitions: required });
+
+  test("the legend comes first, with the required mark, then the options", () => {
+    expect(html).toMatch(
+      /<fieldset class="emvb-radio-group"><legend class="emvb-form-label" id="emvb-field-radi0001-label">size<span class="emvb-form-required"[^>]*>[^<]*<\/span><\/legend><label class="emvb-form-radio-label"><input type="radio" name="size" value="s" required=""> Small<\/label><\/fieldset>/,
+    );
+  });
+});

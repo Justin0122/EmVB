@@ -3,8 +3,8 @@ import { emptyDesign } from "../schema/design.ts";
 import type { Layout } from "../schema/layout.ts";
 import { renderPage } from "../render/index.ts";
 
-describe("radio group is named by its label (W-442)", () => {
-  test("the fieldset points at the label, which points at nothing", () => {
+describe("radio group is named by its legend (W-442, W-524)", () => {
+  test("the question is the fieldset's legend; no label points at nothing", () => {
     const html = renderPage(
       {
         schemaVersion: 15,
@@ -27,11 +27,10 @@ describe("radio group is named by its label (W-442)", () => {
       emptyDesign(),
     ).html;
     expect(html).toContain(
-      '<label class="emvb-form-label" id="emvb-field-radi0001-label">Plan</label>',
+      '<fieldset class="emvb-radio-group"><legend class="emvb-form-label" id="emvb-field-radi0001-label">Plan</legend>',
     );
-    expect(html).toContain(
-      '<fieldset class="emvb-radio-group" aria-labelledby="emvb-field-radi0001-label">',
-    );
+    expect(html).not.toContain('<label class="emvb-form-label"');
+    expect(html).not.toContain("aria-labelledby");
     expect(html).not.toContain('for="emvb-field-radi0001"');
   });
 });

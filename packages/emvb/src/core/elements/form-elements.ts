@@ -44,7 +44,8 @@ const FORM_FIELD_CSS =
   ':where(.emvb-form .ec-form-input[aria-invalid="true"]){border-color:#b3261e}' +
   ':where(.emvb-form input[type="checkbox"],.emvb-form input[type="radio"]){width:1.1em;height:1.1em;margin:0;accent-color:currentColor}' +
   ":where(.emvb-form .emvb-form-checkbox-label,.emvb-form .emvb-form-radio-label){display:inline-flex;align-items:center;gap:.5em}" +
-  ":where(.emvb-form .emvb-radio-group){display:flex;flex-direction:column;gap:6px;margin:0;padding:0;border:0}" +
+  ":where(.emvb-form .emvb-radio-group){display:flex;flex-direction:column;gap:6px;margin:0;padding:0;border:0;min-width:0}" +
+  ":where(.emvb-form .emvb-radio-group>legend){float:left;width:100%;margin:0 0 -2px;padding:0}" +
   ":where(.emvb-form .ec-form-error){font-size:.875em;color:#b3261e}";
 
 export const form: ElementDefinition<FormNode> = {
@@ -185,15 +186,22 @@ export const radio: ElementDefinition<RadioNode> = {
     const name = node.props.field;
     // Options filled from definition in W-035; placeholder single option for schema/render smoke.
     const id = controlId(node.id);
-    // W-442: a fieldset can't be the target of <label for>, so the question named nothing and
-    // the group was read without it. The label names the group through aria-labelledby.
-    const labelled: Record<string, string> = node.props.label
-      ? { "aria-labelledby": `${id}-label` }
-      : {};
+    // W-524: the question is the fieldset's <legend>, so the group is named natively (it was a
+    // <label> pointing at nothing plus aria-labelledby, W-442). The id stays for old references.
+    const legend: VNode[] = node.props.label
+      ? [
+          {
+            tag: "legend",
+            attrs: { class: "emvb-form-label", id: `${id}-label` },
+            children: [node.props.label],
+          },
+        ]
+      : [];
     const control: VNode = {
       tag: "fieldset",
-      attrs: { class: "emvb-radio-group", ...labelled },
+      attrs: { class: "emvb-radio-group" },
       children: [
+        ...legend,
         {
           tag: "label",
           attrs: { class: "emvb-form-radio-label" },
@@ -204,16 +212,7 @@ export const radio: ElementDefinition<RadioNode> = {
         },
       ],
     };
-    const label: VNode[] = node.props.label
-      ? [
-          {
-            tag: "label",
-            attrs: { class: "emvb-form-label", id: `${id}-label` },
-            children: [node.props.label],
-          },
-        ]
-      : [];
-    return fieldBox(attrs, [...label, control, errorSlot(name)]);
+    return fieldBox(attrs, [control, errorSlot(name)]);
   },
 };
 

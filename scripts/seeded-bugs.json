@@ -2915,8 +2915,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/form.ts",
-          "search": "    meta.options.map((option) => ({",
-          "replace": "    meta.options.slice(0, 1).map((option) => ({"
+          "search": "    ...(legend ?? []),\n    ...meta.options.map((option): VNode => ({",
+          "replace": "    ...(legend ?? []),\n    ...meta.options.slice(0, 1).map((option): VNode => ({"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/form-options.test.ts"],
@@ -29777,12 +29777,12 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/form-elements.ts",
-          "search": "      ? { \"aria-labelledby\": `${id}-label` }\n      : {};",
-          "replace": "      ? {}\n      : {};"
+          "search": "            tag: \"legend\",",
+          "replace": "            tag: \"span\","
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/elements/radio-label.test.ts"],
-      "expect": "\\(fail\\).*points at the label"
+      "expect": "\\(fail\\).*legend"
     },
     {
       "id": "W-443/caption-left",
@@ -31223,6 +31223,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/features-w332.test.ts"],
       "expect": "\\(fail\\).*W-523"
+    },
+    {
+      "id": "W-524/options-drop-legend",
+      "requirement": "W-524",
+      "description": "Form options replace the radio legend.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/form.ts",
+          "search": "    ...(legend ?? []),",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/form-options.test.ts"],
+      "expect": "\\(fail\\).*W-524"
     }
   ]
 }

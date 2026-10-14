@@ -296,7 +296,7 @@ function withFieldMeta(vnode: VNode, node: LayoutNode, meta: PublicFormField): V
         },
       };
     }
-    if (!meta.required || child.tag !== "label") return child;
+    if (!meta.required || (child.tag !== "label" && child.tag !== "legend")) return child;
     if (child.attrs.class === "emvb-form-label") {
       return { ...child, children: [...child.children, mark] };
     }
@@ -332,6 +332,10 @@ export function withFieldOptions(
   return withFieldMeta(withOptions(vnode, node, meta), node, meta);
 }
 
+/** The fieldset that holds a radio group's options. */
+const radioGroup = (child: VNode) =>
+  child.tag === "fieldset" && (child.attrs.class ?? "").includes("emvb-radio-group");
+
 /** A select or radio field filled with the definition's options. */
 function withOptions(vnode: VNode, node: LayoutNode, meta: PublicFormField): VNode {
   const field = meta.name;
@@ -346,10 +350,13 @@ function withOptions(vnode: VNode, node: LayoutNode, meta: PublicFormField): VNo
       })),
     ]);
   }
-  return replaceChildren(
-    vnode,
-    (child) => child.tag === "fieldset" && (child.attrs.class ?? "").includes("emvb-radio-group"),
-    meta.options.map((option) => ({
+  // W-524: the group's <legend> stays; only the placeholder option is replaced.
+  const legend = findNode(vnode, radioGroup)?.children.filter(
+    (child): child is VNode => typeof child !== "string" && child.tag === "legend",
+  );
+  return replaceChildren(vnode, radioGroup, [
+    ...(legend ?? []),
+    ...meta.options.map((option): VNode => ({
       tag: "label",
       attrs: { class: "emvb-form-radio-label" },
       children: [
@@ -361,5 +368,16 @@ function withOptions(vnode: VNode, node: LayoutNode, meta: PublicFormField): VNo
         ` ${option.label}`,
       ],
     })),
-  );
+  ]);
+}
+
+/** The first element node `match` accepts, depth first. */
+function findNode(vnode: VNode, match: (node: VNode) => boolean): VNode | undefined {
+  if (match(vnode)) return vnode;
+  for (const child of vnode.children) {
+    if (typeof child === "string") continue;
+    const found = findNode(child, match);
+    if (found) return found;
+  }
+  return undefined;
 }
