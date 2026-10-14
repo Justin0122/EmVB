@@ -6,7 +6,7 @@ A visual page builder plugin for [EmDash CMS](https://github.com/emdash-cms/emda
 
 **Website:** <https://emvb.dev>.
 
-**Status:** 0.6.0 is prepared (adds the image editor); 0.5.0 is the current npm release. See the [changelog](CHANGELOG.md). Layout schema 16 (images may carry an `edit` record); design schema 15.
+**Status:** 0.6.0 is the current npm release (adds the image editor and `@perkyzz/emvb-mcp` fixes). See the [changelog](CHANGELOG.md). Layout schema 16 (images may carry an `edit` record); design schema 15.
 
 ![The EmVB editor: the element tree, the canvas and the Style panel](site/public/screenshots/editor-1600.webp)
 
