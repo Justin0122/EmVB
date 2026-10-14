@@ -436,3 +436,31 @@ describe("a choice can set a number setting (W-331)", () => {
     expect((node?.props as { columns?: unknown } | undefined)?.columns).toBe(1);
   });
 });
+
+describe("an image field keeps the image's size (W-335)", () => {
+  test("a bound image gets the picked image's width and height", () => {
+    const [band] = applyComponent(template, {
+      photo: { src: "/a.jpg", alt: "Logo", width: 222, height: 180 },
+    }) as [LayoutNode & { children: LayoutNode[] }];
+    const image = band.children.find((c) => c.type === "image");
+    expect(image?.props).toEqual({ src: "/a.jpg", alt: "Logo", width: 222, height: 180 });
+    const { html } = renderPage(
+      {
+        schemaVersion: 12,
+        root: { id: "root0001", type: "container", props: {}, children: [band] },
+      } as Layout,
+      emptyDesign(),
+    );
+    expect(html).toContain('width="222" height="180"');
+  });
+
+  test("a size that isn't a whole number of pixels, or only one side of it, is dropped", () => {
+    for (const size of [{ width: 0, height: 10 }, { width: 1.5, height: 10 }, { width: 10 }]) {
+      const [band] = applyComponent(template, {
+        photo: { src: "/a.jpg", alt: "Logo", ...size },
+      }) as [LayoutNode & { children: LayoutNode[] }];
+      const image = band.children.find((c) => c.type === "image");
+      expect(image?.props).toEqual({ src: "/a.jpg", alt: "Logo" });
+    }
+  });
+});

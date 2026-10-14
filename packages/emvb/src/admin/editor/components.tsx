@@ -228,13 +228,21 @@ function FieldInput({
               } as LayoutNode
             }
             onChange={(next) => {
-              const p = next.props as { src?: string; alt?: string; mediaId?: string };
+              const p = next.props as {
+                src?: string;
+                alt?: string;
+                mediaId?: string;
+                width?: number;
+                height?: number;
+              };
               onChange(
                 p.src
                   ? {
                       src: p.src,
                       ...(p.alt ? { alt: p.alt } : {}),
                       ...(p.mediaId ? { mediaId: p.mediaId } : {}),
+                      // W-335: the picked image's size travels with it.
+                      ...(p.width && p.height ? { width: p.width, height: p.height } : {}),
                     }
                   : null,
               );

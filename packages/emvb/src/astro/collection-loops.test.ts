@@ -114,6 +114,16 @@ describe("loadCollectionLoops (W-308)", () => {
     expect(Object.keys(loops)).toEqual(["news|6|newest|tags:blogs,events"]);
   });
 
+  test("pinned entries come first, with room for them in the load (W-334)", async () => {
+    const entry = (slug: string) => ({ id: slug, data: { id: slug, slug, title: slug } });
+    entries = { news: ["new", "mid", "old"].map(entry) };
+    const loops = await loadCollectionLoops([
+      page(loop("loop0001", { collection: "news", limit: 2, pinned: "old" })),
+    ]);
+    expect(calls.map((c) => c.options)).toEqual([{ orderBy: { published_at: "desc" }, limit: 3 }]);
+    expect(loops["news|2|newest|pinned:old"]?.map((p) => p.slug)).toEqual(["old", "new"]);
+  });
+
   test("a missing collection lists nothing instead of failing the page", async () => {
     expect(await loadCollectionLoops([page(loop("loop0001", { collection: "gone" }))])).toEqual({
       "gone|6|newest": [],

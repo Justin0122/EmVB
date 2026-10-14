@@ -502,6 +502,8 @@ export const LoopNode = parentNode(
       .regex(/^[a-z][a-z0-9_]{0,62}$/, "Use a taxonomy name such as tags")
       .optional(),
     terms: z.string().max(1000).optional(),
+    /** W-334: these entries first (comma-separated slugs), in this order; the rest follow. */
+    pinned: z.string().max(2000).optional(),
     /** W-315: show the items as a carousel, this many in view (per device). Unset = a list. */
     slidesInView: z.number().int().min(1).max(6).optional(),
     slidesInViewTablet: z.number().int().min(1).max(6).optional(),
@@ -913,6 +915,7 @@ export type LoopNode = {
     order?: LoopOrder;
     taxonomy?: string;
     terms?: string;
+    pinned?: string;
     slidesInView?: number;
     slidesInViewTablet?: number;
     slidesInViewMobile?: number;

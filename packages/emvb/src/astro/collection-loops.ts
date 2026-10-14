@@ -5,6 +5,7 @@ import {
   loopQueryKey,
   type Layout,
   type LoopQuery,
+  pinEntries,
   type ThemePostFields,
 } from "../core/index.ts";
 import { themePostFromEntry } from "./theme-posts.ts";
@@ -33,7 +34,8 @@ async function loadQuery(query: LoopQuery): Promise<ThemePostFields[]> {
       getCollectionInfo(query.collection).catch(() => null),
       getEmDashCollection(query.collection, {
         orderBy: ORDER_BY[query.order],
-        limit: query.limit,
+        // W-334: room for the pinned entries beyond the limit, which pinEntries cuts back to.
+        limit: query.limit + (query.pinned?.length ?? 0),
         // W-318: EmDash filters by a taxonomy's term slugs when the key names a taxonomy.
         ...(query.taxonomy && query.terms?.length
           ? { where: { [query.taxonomy]: query.terms } }
@@ -47,7 +49,7 @@ async function loadQuery(query: LoopQuery): Promise<ThemePostFields[]> {
       if (post)
         items.push({ ...post, permalink: entryPermalink(query.collection, urlPattern, post.slug) });
     }
-    return items;
+    return pinEntries(items, query.pinned, query.limit);
   } catch {
     // A collection that doesn't exist (any more) lists nothing instead of failing the page.
     return [];

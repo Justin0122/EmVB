@@ -4,7 +4,7 @@ import { emptyDesign } from "../schema/design.ts";
 import type { Layout, LayoutNode, LoopNode } from "../schema/layout.ts";
 import { validateLayout } from "../validate.ts";
 import { SAMPLE_POST, type ThemePostFields } from "./dynamic.ts";
-import { collectLoopQueries, loopQueryKey, loopQueryOf } from "./loop-queries.ts";
+import { collectLoopQueries, loopQueryKey, loopQueryOf, pinEntries } from "./loop-queries.ts";
 
 const title = { id: "ptitle01", type: "post-title", props: { level: 3 } } as LayoutNode;
 const loop = (id: string, props: Record<string, unknown>, children: LayoutNode[] = [title]) =>
@@ -199,5 +199,28 @@ describe("a Loop filtered by taxonomy terms (W-318)", () => {
     expect(collectLoopQueries([page(self)], { comp1: template })).toEqual([
       { collection: "news", limit: 6, order: "newest" },
     ]);
+  });
+});
+
+describe("a Loop with pinned entries (W-334)", () => {
+  test("pinned slugs are trimmed, blanks and repeats dropped, and part of the query and key", () => {
+    const query = loopQueryOf(
+      loop("loop0001", { collection: "news", pinned: " b, ,a,b " }) as LoopNode,
+    );
+    expect(query).toEqual({ collection: "news", limit: 6, order: "newest", pinned: ["b", "a"] });
+    expect(loopQueryKey(query as never)).toBe("news|6|newest|pinned:b,a");
+    const plain = loopQueryOf(loop("loop0002", { collection: "news" }) as LoopNode);
+    expect(loopQueryKey(plain as never)).toBe("news|6|newest");
+  });
+
+  test("pinned entries come first in their order, the rest after in theirs, up to the limit", () => {
+    const entries = ["a", "b", "c", "d", "e"].map((slug) => ({ slug }));
+    expect(pinEntries(entries, ["d", "gone", "b"], 4).map((e) => e.slug)).toEqual([
+      "d",
+      "b",
+      "a",
+      "c",
+    ]);
+    expect(pinEntries(entries, undefined, 2).map((e) => e.slug)).toEqual(["a", "b"]);
   });
 });

@@ -211,6 +211,14 @@ export const loop: ElementDefinition<LoopNode> = {
         message: "Term slugs, separated by commas. An entry with any of them is shown.",
       },
       {
+        key: "pinned",
+        kind: "text",
+        label: "Entries first",
+        optional: true,
+        message:
+          "Entry slugs, separated by commas, shown first in this order. The others follow in the Loop's order.",
+      },
+      {
         key: "slidesInView",
         kind: "select",
         label: "Show as carousel",

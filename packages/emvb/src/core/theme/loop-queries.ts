@@ -8,12 +8,16 @@ export const DEFAULT_LOOP_LIMIT = 6;
 /** W-318: most terms one Loop filters on. */
 const MAX_LOOP_TERMS = 20;
 
+/** W-334: most entries one Loop pins. */
+const MAX_LOOP_PINS = 50;
+
 /** Components inside components a query walk follows, like the renderer's limit. */
 const MAX_COMPONENT_DEPTH = 6;
 
 /**
  * What a collection Loop asks for: one load per distinct query, shared by Loops that match.
- * W-318: `taxonomy` and `terms` keep only entries with one of those terms.
+ * W-318: `taxonomy` and `terms` keep only entries with one of those terms. W-334: `pinned` entry
+ * slugs come first, in that order.
  */
 export type LoopQuery = {
   collection: string;
@@ -21,15 +25,16 @@ export type LoopQuery = {
   order: LoopOrder;
   taxonomy?: string;
   terms?: string[];
+  pinned?: string[];
 };
 
-/** W-318: the term slugs of a comma-separated list, trimmed, without blanks or repeats. */
-function loopTerms(raw: string | undefined): string[] {
-  const terms = (raw ?? "")
+/** The slugs of a comma-separated list, trimmed, without blanks or repeats, at most `max`. */
+function slugList(raw: string | undefined, max: number): string[] {
+  const slugs = (raw ?? "")
     .split(",")
     .map((t) => t.trim())
     .filter(Boolean);
-  return [...new Set(terms)].slice(0, MAX_LOOP_TERMS);
+  return [...new Set(slugs)].slice(0, max);
 }
 
 /** The query of a Loop that lists a collection, or null for an archive Loop. */
@@ -42,15 +47,36 @@ export function loopQueryOf(node: LoopNode): LoopQuery | null {
     order: node.props.order ?? "newest",
   };
   const taxonomy = node.props.taxonomy?.trim();
-  const terms = loopTerms(node.props.terms);
-  return taxonomy && terms.length > 0 ? { ...query, taxonomy, terms } : query;
+  const terms = slugList(node.props.terms, MAX_LOOP_TERMS);
+  const pinned = slugList(node.props.pinned, MAX_LOOP_PINS);
+  return {
+    ...query,
+    ...(taxonomy && terms.length > 0 ? { taxonomy, terms } : {}),
+    ...(pinned.length > 0 ? { pinned } : {}),
+  };
 }
 
 /** The key a query's entries are stored under in `ThemeDynamicData.collectionLoops`. */
 export const loopQueryKey = (query: LoopQuery) =>
   `${query.collection}|${query.limit}|${query.order}${
     query.taxonomy ? `|${query.taxonomy}:${(query.terms ?? []).join(",")}` : ""
-  }`;
+  }${query.pinned ? `|pinned:${query.pinned.join(",")}` : ""}`;
+
+/**
+ * W-334: the entries with the pinned ones first, in the pinned order, then the rest in their own
+ * order, at most `limit`. A pinned slug with no entry is skipped.
+ */
+export function pinEntries<T extends { slug: string }>(
+  entries: readonly T[],
+  pinned: readonly string[] | undefined,
+  limit: number,
+): T[] {
+  if (!pinned?.length) return entries.slice(0, limit);
+  const bySlug = new Map(entries.map((entry) => [entry.slug, entry]));
+  const first = pinned.flatMap((slug) => bySlug.get(slug) ?? []);
+  const rest = entries.filter((entry) => !first.includes(entry));
+  return [...first, ...rest].slice(0, limit);
+}
 
 /**
  * Every distinct collection Loop query in these layouts, in document order. With

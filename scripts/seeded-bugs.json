@@ -26778,8 +26778,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/theme/loop-queries.ts",
-          "search": "return [...new Set(terms)].slice(0, MAX_LOOP_TERMS);",
-          "replace": "return terms.slice(0, MAX_LOOP_TERMS);"
+          "search": "return [...new Set(slugs)].slice(0, max);",
+          "replace": "return slugs.slice(0, max);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
@@ -27550,6 +27550,104 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/images.test.ts"],
       "expect": "\\(fail\\).*W-333"
+    },
+    {
+      "id": "W-334/pins-ignored",
+      "requirement": "W-334",
+      "description": "The loader keeps the Loop's own order and drops the pinned one.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/collection-loops.ts",
+          "search": "    return pinEntries(items, query.pinned, query.limit);",
+          "replace": "    return items.slice(0, query.limit);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/collection-loops.test.ts"],
+      "expect": "\\(fail\\).*W-334"
+    },
+    {
+      "id": "W-334/no-room",
+      "requirement": "W-334",
+      "description": "The load asks for only the limit, so pinned entries past it are never found.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/collection-loops.ts",
+          "search": "        limit: query.limit + (query.pinned?.length ?? 0),",
+          "replace": "        limit: query.limit,"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/collection-loops.test.ts"],
+      "expect": "\\(fail\\).*W-334"
+    },
+    {
+      "id": "W-334/key-without-pins",
+      "requirement": "W-334",
+      "description": "Loops that pin different entries share one load.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "  }${query.pinned ? `|pinned:${query.pinned.join(\",\")}` : \"\"}`;",
+          "replace": "  }`;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-334"
+    },
+    {
+      "id": "W-334/pin-order",
+      "requirement": "W-334",
+      "description": "Pinned entries come first but in the Loop's order, not the pinned order.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/loop-queries.ts",
+          "search": "  const first = pinned.flatMap((slug) => bySlug.get(slug) ?? []);",
+          "replace": "  const first = entries.filter((entry) => bySlug.has(entry.slug) && pinned.includes(entry.slug));"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/loop-queries.test.ts"],
+      "expect": "\\(fail\\).*W-334"
+    },
+    {
+      "id": "W-335/size-dropped",
+      "requirement": "W-335",
+      "description": "An image field forgets the image's size.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "        ...(width && height ? { width, height } : {}),",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-335"
+    },
+    {
+      "id": "W-335/not-bound",
+      "requirement": "W-335",
+      "description": "A bound image doesn't get the size.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "        props[\"width\"] = image.width;",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-335"
+    },
+    {
+      "id": "W-335/fractional",
+      "requirement": "W-335",
+      "description": "A fractional size is kept, which the image element refuses.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/component.ts",
+          "search": "Number.isInteger(value) && value > 0",
+          "replace": "value > 0"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
+      "expect": "\\(fail\\).*W-335"
     }
   ]
 }

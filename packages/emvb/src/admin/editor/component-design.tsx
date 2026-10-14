@@ -348,6 +348,7 @@ const BINDABLE: Record<string, { prop: string; label: string; kinds: ComponentFi
   loop: [
     { prop: "collection", label: "Collection", kinds: ["select", "text"] },
     { prop: "terms", label: "Terms", kinds: ["select", "text"] },
+    { prop: "pinned", label: "Entries first", kinds: ["text"] },
     // W-331: number settings take a choice whose values are numbers.
     { prop: "slidesInView", label: "Slides in view", kinds: ["select"] },
   ],

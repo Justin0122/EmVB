@@ -96,13 +96,19 @@ export function validateComponentFields(
 /** The published design and fields of one component, as the renderer gets them. */
 export type ComponentTemplate = { nodes: LayoutNode[]; fields: ComponentField[] };
 
-type ImageValue = { src: string; alt?: string; mediaId?: string };
+/** W-335: `width` and `height` are the image's own size in pixels, when known. */
+type ImageValue = { src: string; alt?: string; mediaId?: string; width?: number; height?: number };
 type LinkValue = { href: string; newTab?: boolean };
 
 const str = (value: unknown, max: number) =>
   typeof value === "string" ? value.slice(0, max) : undefined;
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value) && typeof value === "object" && !Array.isArray(value);
+/** A size in pixels as the image element takes it, else undefined. */
+const pixels = (value: unknown) =>
+  typeof value === "number" && Number.isInteger(value) && value > 0 && value <= 10000
+    ? value
+    : undefined;
 
 /** A stored value as its field's kind expects it, else the field's default, else undefined. */
 export function fieldValue(field: LeafField, raw: unknown): unknown {
@@ -117,7 +123,14 @@ export function fieldValue(field: LeafField, raw: unknown): unknown {
       if (!src) return undefined;
       const alt = str(raw["alt"], 500);
       const mediaId = str(raw["mediaId"], 128);
-      return { src, ...(alt ? { alt } : {}), ...(mediaId ? { mediaId } : {}) } satisfies ImageValue;
+      const width = pixels(raw["width"]);
+      const height = pixels(raw["height"]);
+      return {
+        src,
+        ...(alt ? { alt } : {}),
+        ...(mediaId ? { mediaId } : {}),
+        ...(width && height ? { width, height } : {}),
+      } satisfies ImageValue;
     }
     case "link": {
       const href = isRecord(raw) ? str(raw["href"], 2000) : str(raw, 2000);
@@ -196,6 +209,7 @@ function bindProp(
   target: string,
   field: ComponentField,
   value: unknown,
+  type: string,
 ) {
   if (value === undefined) return;
   if (field.kind === "image" && isRecord(value)) {
@@ -209,6 +223,11 @@ function bindProp(
       if (image.alt !== undefined) props["alt"] = image.alt;
       if (image.mediaId) props["mediaId"] = image.mediaId;
       if (image.alt) delete props["decorative"];
+      // W-335: the image's own size, so the page reserves its space and can keep it that small.
+      if (target === "src" && type === "image" && image.width && image.height) {
+        props["width"] = image.width;
+        props["height"] = image.height;
+      }
     }
     return;
   }
@@ -320,7 +339,7 @@ function applyNode(
       }
       continue;
     }
-    bindProp(props, target, found.field, found.value);
+    bindProp(props, target, found.field, found.value, node.type);
   }
   const { bind: _bind, ...rest } = node;
   const next = {

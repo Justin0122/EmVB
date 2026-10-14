@@ -6375,28 +6375,33 @@ exports[`element panel markup (W-021, W-086 M16) loop renders the same content a
         span
           "Terms"
       input.emvb-field id="id-13" data-emvb-field="terms" value="" aria-labelledby="id-12"
+    div
+      label id="id-14" for="id-15"
+        span
+          "Entries first"
+      input.emvb-field id="id-15" data-emvb-field="pinned" value="" aria-labelledby="id-14"
     div data-emvb-field="slidesInView"
       div data-filled=""
-        div id="id-14" data-filled=""
+        div id="id-16" data-filled=""
           span
             "Show as carousel"
-        button.emvb-field type="button" tabindex="0" id="id-15" role="combobox" aria-expanded="false" aria-haspopup="listbox" data-kumo-component="Select" data-kumo-part="trigger" aria-label="Show as carousel" data-filled=""
+        button.emvb-field type="button" tabindex="0" id="id-17" role="combobox" aria-expanded="false" aria-haspopup="listbox" data-kumo-component="Select" data-kumo-part="trigger" aria-label="Show as carousel" data-filled=""
           span
             "1 in view"
           span aria-hidden="true"
             svg
-        input id="id-16" tabindex="-1" aria-hidden="true" value="1"
+        input id="id-18" tabindex="-1" aria-hidden="true" value="1"
     div data-emvb-field="order"
       div data-filled=""
-        div id="id-17" data-filled=""
+        div id="id-19" data-filled=""
           span
             "Order"
-        button.emvb-field type="button" tabindex="0" id="id-18" role="combobox" aria-expanded="false" aria-haspopup="listbox" data-kumo-component="Select" data-kumo-part="trigger" aria-label="Order" data-filled=""
+        button.emvb-field type="button" tabindex="0" id="id-20" role="combobox" aria-expanded="false" aria-haspopup="listbox" data-kumo-component="Select" data-kumo-part="trigger" aria-label="Order" data-filled=""
           span
             "Newest first"
           span aria-hidden="true"
             svg
-        input id="id-19" tabindex="-1" aria-hidden="true" value="newest"
+        input id="id-21" tabindex="-1" aria-hidden="true" value="newest"
     p.emvb-helper data-emvb-loop-note="true"
       "A Loop lists posts only in an Archive template. Here the editor shows sample posts, but the live page shows nothing. Build post lists in Theme Builder › Archive.""
 ,

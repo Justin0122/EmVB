@@ -375,6 +375,7 @@ export {
   loopQueryKey,
   loopQueryOf,
   type LoopQuery,
+  pinEntries,
 } from "./theme/loop-queries.ts";
 
 export { layoutHasMenuDropdown, layoutHasTabs } from "./tabs/presence.ts";
