@@ -1,8 +1,10 @@
+import { sameJson } from "../stable-json.ts";
 import { emptyDesign, type DesignSystem } from "../schema/design.ts";
 
 export type DesignConflict = { kind: "variable" | "class" | "setting"; name: string };
 
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** Key order is ignored: an edit that removes and re-adds a value is no change (W-519). */
+const same = sameJson;
 
 type Named = { id: string; name: string };
 

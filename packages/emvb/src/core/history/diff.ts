@@ -1,5 +1,6 @@
 import { withFreshIds } from "../arrange.ts";
 import { MAX_NODES } from "../limits.ts";
+import { stableJson } from "../stable-json.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
 import { insertNode, nodeChildren, updateNode } from "../tree-ops.ts";
 
@@ -12,23 +13,13 @@ export type SectionChange = {
   edits: number;
 };
 
-/** Keys sorted at every level: a saved version comes back in schema order, not edit order. */
-function sorted(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sorted);
-  if (!value || typeof value !== "object") return value;
-  const entries = Object.entries(value as Record<string, unknown>).toSorted(([a], [b]) =>
-    a < b ? -1 : a > b ? 1 : 0,
-  );
-  return Object.fromEntries(entries.map(([k, v]) => [k, sorted(v)]));
-}
-
 /**
  * A stable text of a node without its children, to tell edits from unchanged nodes. Key order
  * is ignored, so the same element saved and reloaded doesn't count as edited (W-518).
  */
 function own(node: LayoutNode): string {
   const { children: _children, ...rest } = node as LayoutNode & { children?: unknown };
-  return JSON.stringify(sorted(rest));
+  return stableJson(rest);
 }
 
 function index(node: LayoutNode, into = new Map<string, LayoutNode>()): Map<string, LayoutNode> {

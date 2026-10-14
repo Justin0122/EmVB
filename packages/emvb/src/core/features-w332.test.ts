@@ -213,3 +213,26 @@ describe("print, scope, styles merge and page features", () => {
     expect(html.includes('dir="')).toBe(false);
   });
 });
+
+describe("Style comparisons ignore key order (W-519)", () => {
+  const saved: DesignSystem = {
+    ...emptyDesign(),
+    classes: [{ id: "card", name: "Card", style: { opacity: 0.5, color: "#112233" } }],
+  };
+  const reordered: DesignSystem = {
+    ...emptyDesign(),
+    classes: [{ style: { color: "#112233", opacity: 0.5 }, name: "Card", id: "card" }],
+  };
+
+  test("Publish styles lists no change for the same class in another key order", () => {
+    expect(designChanges(saved, reordered)).toEqual([]);
+  });
+
+  test("a merge doesn't report a clash for a class this tab only reordered", () => {
+    const theirs: DesignSystem = {
+      ...saved,
+      classes: [{ id: "card", name: "Card", style: { opacity: 0.9, color: "#112233" } }],
+    };
+    expect(mergeDesign(saved, reordered, theirs).conflicts).toEqual([]);
+  });
+});

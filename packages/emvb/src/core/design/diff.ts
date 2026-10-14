@@ -1,3 +1,4 @@
+import { sameJson } from "../stable-json.ts";
 import type { DesignSystem } from "../schema/design.ts";
 
 export type DesignChange = {
@@ -6,7 +7,8 @@ export type DesignChange = {
   name: string;
 };
 
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+/** Key order is ignored: an edit that removes and re-adds a value is no change (W-519). */
+const same = sameJson;
 
 /** What Publish styles will write: draft compared with the published design (W-340). */
 export function designChanges(published: DesignSystem, draft: DesignSystem): DesignChange[] {

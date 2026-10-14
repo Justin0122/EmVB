@@ -31133,12 +31133,40 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/history/diff.ts",
-          "search": "  return JSON.stringify(sorted(rest));",
+          "search": "  return stableJson(rest);",
           "replace": "  return JSON.stringify(rest);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/history/diff.test.ts"],
       "expect": "\\(fail\\).*W-518"
+    },
+    {
+      "id": "W-519/publish-list-key-order",
+      "requirement": "W-519",
+      "description": "Publish styles counts key order as a change.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/design/diff.ts",
+          "search": "const same = sameJson;",
+          "replace": "const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b) && sameJson(a, b);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/features-w332.test.ts"],
+      "expect": "\\(fail\\).*W-519"
+    },
+    {
+      "id": "W-519/merge-key-order",
+      "requirement": "W-519",
+      "description": "Style merge reports a clash for a reordered class.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/design/merge.ts",
+          "search": "const same = sameJson;",
+          "replace": "const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b) && sameJson(a, b);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/features-w332.test.ts"],
+      "expect": "\\(fail\\).*W-519"
     }
   ]
 }
