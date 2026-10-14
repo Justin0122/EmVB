@@ -19,6 +19,8 @@ export type LoadedSource =
       fromOriginal: boolean;
       /** W-493: the recorded original is gone (404), so this is the edited copy, edited afresh. */
       originalMissing?: boolean;
+      /** W-496: the picture was larger than the GPU can edit and was scaled down from this. */
+      reducedFrom?: { width: number; height: number };
     }
   | { ok: false; reason: "empty" | "external" | "format" | "network"; message: string };
 

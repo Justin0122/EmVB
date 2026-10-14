@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Fetcher } from "./api.ts";
+import { ImageNode } from "../core/schema/layout.ts";
 import {
   getMedia,
   propsFromEdited,
@@ -236,5 +237,42 @@ describe("edited copies and Reset to original (W-485)", () => {
     expect(seen[0]).toBe("/_emdash/api/media/01ORIG");
     expect(found?.url).toBe(`/_emdash/api/media/file/${found?.storageKey}`);
     expect(await getMedia(fetcher, "gone")).toBeNull();
+  });
+});
+
+describe("pictures over 10000 px on a side (W-496)", () => {
+  const bigItem = (width: number, height: number) => ({
+    id: "01BIG",
+    url: "/_emdash/api/media/file/big.png",
+    filename: "big.png",
+    mimeType: "image/png",
+    width,
+    height,
+  });
+  test("picking one keeps its ratio inside the layout's 10000 px limit", () => {
+    const next = propsFromMedia({ alt: "A" }, bigItem(12000, 600) as never);
+    expect([next.width, next.height]).toEqual([10000, 500]);
+    expect(ImageNode.safeParse({ id: "img00001", type: "image", props: next }).success).toBe(true);
+  });
+  test("a tall one, an edited copy and a reset are fitted the same way", () => {
+    expect(propsFromMedia({ alt: "A" }, bigItem(300, 15000) as never)).toMatchObject({
+      width: 200,
+      height: 10000,
+    });
+    expect(propsFromEdited({ alt: "A" }, bigItem(20000, 10000), {})).toMatchObject({
+      width: 10000,
+      height: 5000,
+    });
+    const reset = propsFromOriginal(
+      { alt: "A", edit: { originalSrc: "/x.png" } },
+      bigItem(11000, 11000),
+    );
+    expect(reset).toMatchObject({ width: 10000, height: 10000 });
+  });
+  test("pictures within the limit are untouched", () => {
+    expect(propsFromMedia({ alt: "A" }, bigItem(640, 480) as never)).toMatchObject({
+      width: 640,
+      height: 480,
+    });
   });
 });

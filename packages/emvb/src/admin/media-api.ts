@@ -73,6 +73,28 @@ export function propsFromUrl(
   return next;
 }
 
+/** The layout's Image width and height top out at 10000 (core/schema/layout.ts). */
+const MAX_IMAGE_SIDE = 10_000;
+
+/**
+ * W-496: a library picture over 10000 px on a side would be written as-is and the whole draft
+ * refused. Its size only sets the aspect ratio, so it is scaled down to fit, keeping the ratio.
+ */
+function fitImageSize(
+  next: Record<string, unknown>,
+  width: number | undefined | null,
+  height: number | undefined | null,
+): void {
+  if (!width || !height) {
+    if (width) next.width = Math.min(Math.round(width), MAX_IMAGE_SIDE);
+    if (height) next.height = Math.min(Math.round(height), MAX_IMAGE_SIDE);
+    return;
+  }
+  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(width, height));
+  next.width = Math.max(1, Math.round(width * scale));
+  next.height = Math.max(1, Math.round(height * scale));
+}
+
 /** Applies a library item onto an image node's props (id, URL, alt, dimensions). */
 export function propsFromMedia(
   current: Record<string, unknown>,
@@ -85,8 +107,7 @@ export function propsFromMedia(
     // W-482: the image-editor record belongs to the old picture.
     delete next.edit;
   }
-  if (item.width) next.width = item.width;
-  if (item.height) next.height = item.height;
+  fitImageSize(next, item.width, item.height);
   const alt = current.alt;
   if ((!alt || alt === "Image") && item.alt) next.alt = item.alt;
   else if (!alt || alt === "Image") next.alt = item.filename.replace(/\.[^.]+$/, "") || "Image";
@@ -120,8 +141,7 @@ export function propsFromEdited(
   const next: Record<string, unknown> = { ...current, src: item.url, edit };
   next.mediaId = item.id;
   delete next.sources;
-  if (item.width) next.width = item.width;
-  if (item.height) next.height = item.height;
+  fitImageSize(next, item.width, item.height);
   return next;
 }
 
@@ -142,10 +162,9 @@ export function propsFromOriginal(
   if (original) {
     next.src = original.url || originalSrc;
     next.mediaId = original.id;
-    if (original.width) next.width = original.width;
-    else delete next.width;
-    if (original.height) next.height = original.height;
-    else delete next.height;
+    delete next.width;
+    delete next.height;
+    fitImageSize(next, original.width, original.height);
   } else {
     next.src = originalSrc;
     delete next.mediaId;

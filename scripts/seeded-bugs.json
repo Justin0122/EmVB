@@ -30760,6 +30760,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/flatten.test.ts"],
       "expect": "\\(fail\\).*flattened onto white"
+    },
+    {
+      "id": "W-496/gpu-limit-ignored",
+      "requirement": "W-496",
+      "description": "Pictures past the GPU texture limit are edited at full size and export blank.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/gpu-fit.ts",
+          "search": "  if (!maxSide || (size.width <= maxSide && size.height <= maxSide)) return null;",
+          "replace": "  if (true || !maxSide || (size.width <= maxSide && size.height <= maxSide)) return null;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/gpu-fit.test.ts"],
+      "expect": "\\(fail\\).*8192 px limit"
+    },
+    {
+      "id": "W-496/image-side-over-layout-limit",
+      "requirement": "W-496",
+      "description": "A library picture over 10000 px on a side is written as-is and the draft is refused.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/media-api.ts",
+          "search": "  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(width, height));",
+          "replace": "  const scale = 1;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/media-api.test.ts"],
+      "expect": "\\(fail\\).*10000 px limit"
     }
   ]
 }

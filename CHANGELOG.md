@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Image editor and images:** pictures larger than the browser's graphics limit open scaled down to fit, marked "Reduced to fit", instead of a blank preview and a grey copy; pictures over 10000 px on a side no longer make the draft unsaveable (W-496).
 - **Image editor:** a JPEG copy of a transparent picture is put on a white background instead of turning the transparent parts black (W-495).
 - **Image editor:** Reset to original no longer points an image at a deleted original; re-opening an edit whose original was deleted opens the edited copy; Fit this element is not offered for strips longer than 100:1, which couldn't be saved (W-492 to W-494).
 - Choosing a different picture for an Image element drops the old picture's edit record.

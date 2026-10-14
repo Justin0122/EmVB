@@ -32,6 +32,7 @@ import { IMAGE_EDITOR_CSS } from "./image-editor-css.ts";
 import { Announcer } from "./announce.tsx";
 import { withDataUrlFetch } from "./data-url-fetch.ts";
 import { ExportDialog, type ExportResult, type ExportSettings } from "./ExportDialog.tsx";
+import { fitSourceToGpu } from "./gpu-fit.ts";
 import { loadEditableSource, type LoadedSource } from "./load.ts";
 import { ImageNameContext } from "./MetadataPanel.tsx";
 import { ToolPanel } from "./panels.tsx";
@@ -226,6 +227,15 @@ function DesktopLayout({ ready, name }: { ready: Ready; name: string }) {
         <RedoButton />
         <FileLabel name={name} />
         <StatusBadge renderMode={ready.renderMode} reason={ready.reason} />
+        {ready.source.reducedFrom ? (
+          <span
+            className="emvb-ie-badge"
+            data-emvb-image-reduced=""
+            title={`The original is ${sizeLabel(ready.source.reducedFrom.width, ready.source.reducedFrom.height)}, more than this browser can edit. The copy is saved at the reduced size; the original stays untouched.`}
+          >
+            <Badge variant="neutral">Reduced to fit</Badge>
+          </span>
+        ) : null}
         <div className="emvb-ie-toolbar-end">
           <ResetAllButton />
           <CompareButton />
@@ -681,10 +691,20 @@ function Editor({
         setPhase({ kind: "error", message: plan.message, retry: false });
         return;
       }
+      const fitted = await fitSourceToGpu(source).catch(() => null);
+      if (!alive) return;
+      if (!fitted) {
+        setPhase({
+          kind: "error",
+          retry: false,
+          message: "This picture is too large to edit in the browser. Use a smaller copy.",
+        });
+        return;
+      }
       setPhase({
         kind: "ready",
         ready: {
-          source,
+          source: fitted,
           renderMode: plan.renderMode,
           ...(plan.spawnWorker ? { spawnWorker: plan.spawnWorker } : {}),
           ...(plan.reason ? { reason: plan.reason } : {}),
