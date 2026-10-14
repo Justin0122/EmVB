@@ -282,6 +282,8 @@ export const DescribePageOutput = z.object({
     }),
   ),
   headingOutline: z.array(z.string()),
+  /** W-500: things that make content vanish without an error, such as hidden on every device. */
+  warnings: z.array(z.object({ nodeId: z.string(), message: z.string() })).optional(),
   wordCount: z.number(),
   images: z
     .array(z.object({ id: z.string(), alt: z.string(), src: z.string(), decorative: z.boolean() }))
@@ -305,6 +307,27 @@ function imagesOf(root: LayoutNode) {
   };
   walk(root);
   return found;
+}
+
+/** W-500: elements hidden on desktop, tablet and mobile never show; the agent should know. */
+function hiddenEverywhere(root: LayoutNode) {
+  const warnings: { nodeId: string; message: string }[] = [];
+  const walk = (node: LayoutNode) => {
+    const hidden = new Set((node as { hiddenOn?: string[] }).hiddenOn ?? []);
+    if (hidden.has("desktop") && hidden.has("tablet") && hidden.has("mobile")) {
+      warnings.push({
+        nodeId: node.id,
+        message:
+          node.id === root.id
+            ? "The whole page is hidden on every device, so visitors see an empty page. Unset hiddenOn on the root."
+            : `${node.label ?? node.type} ${node.id} is hidden on every device, so it and everything inside it never show. Unset hiddenOn, or remove it.`,
+      });
+      return;
+    }
+    for (const child of nodeChildren(node)) walk(child);
+  };
+  walk(root);
+  return warnings.slice(0, 50);
 }
 
 const clip = (text: string, max: number) =>
@@ -336,6 +359,7 @@ export async function describePage(ports: EmvbPorts, input: z.infer<typeof Descr
     return section;
   });
   const wordCount = all.text.join(" ").split(/\s+/).filter(Boolean).length;
+  const warnings = hiddenEverywhere(layout.root);
   const summary = clip(
     `"${page.title}" (/${page.slug}, ${page.status}${page.hasDraft ? ", unpublished changes" : ""}): ` +
       `${sections.length} top-level section${sections.length === 1 ? "" : "s"}, ` +
@@ -351,6 +375,7 @@ export async function describePage(ports: EmvbPorts, input: z.infer<typeof Descr
     headingOutline: all.headings,
     wordCount,
     images: imagesOf(layout.root),
+    ...(warnings.length ? { warnings } : {}),
   };
 }
 

@@ -291,3 +291,44 @@ describe("image sources agents can set (W-499)", () => {
     expect(e.code).toBe("REFUSED");
   });
 });
+
+describe("describe_page warns about hidden content (W-500)", () => {
+  test("an element hidden on every device is a warning; partly hidden is not", async () => {
+    const { pageId, root } = await page();
+    const first = root.children?.[0]?.id ?? "";
+    const extra = await ok<{ changed: string[] }>("add_element", {
+      pageId,
+      parentId: root.id,
+      element: { type: "text" },
+    });
+    const second = extra.changed[0] ?? "";
+    await ok("update_element", {
+      pageId,
+      nodeId: first,
+      set: { hiddenOn: ["mobile", "tablet", "desktop"] },
+    });
+    await ok("update_element", { pageId, nodeId: second, set: { hiddenOn: ["mobile"] } });
+    const d = await ok<{ warnings?: { nodeId: string; message: string }[] }>("describe_page", {
+      pageId,
+    });
+    expect(d.warnings?.map((w) => w.nodeId)).toEqual([first]);
+    expect(d.warnings?.[0]?.message).toContain("hidden on every device");
+  });
+
+  test("a hidden root is one page-level warning, and a clean page has none", async () => {
+    const { pageId, root } = await page();
+    expect(
+      (await ok<{ warnings?: unknown }>("describe_page", { pageId })).warnings,
+    ).toBeUndefined();
+    await ok("update_element", {
+      pageId,
+      nodeId: root.id,
+      set: { hiddenOn: ["desktop", "tablet", "mobile"] },
+    });
+    const d = await ok<{ warnings?: { nodeId: string; message: string }[] }>("describe_page", {
+      pageId,
+    });
+    expect(d.warnings).toHaveLength(1);
+    expect(d.warnings?.[0]?.message).toContain("whole page");
+  });
+});

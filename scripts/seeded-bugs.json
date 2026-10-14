@@ -30844,6 +30844,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/mcp-live-round2.test.ts"],
       "expect": "\\(fail\\).*refused with a clear error"
+    },
+    {
+      "id": "W-500/no-hidden-warning",
+      "requirement": "W-500",
+      "description": "describe_page says nothing about an element hidden on every device.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/mcp/read.ts",
+          "search": "  const warnings = hiddenEverywhere(layout.root);",
+          "replace": "  const warnings: unknown[] = [];"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/test/server/mcp-live-round2.test.ts"],
+      "expect": "\\(fail\\).*hidden on every device is a warning"
     }
   ]
 }
