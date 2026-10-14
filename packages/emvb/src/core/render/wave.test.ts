@@ -202,3 +202,26 @@ describe("link on a container (W-111)", () => {
     expect(html.match(/<a /g)?.length).toBe(1);
   });
 });
+
+describe("Import refuses a design over the saved cap (W-516)", () => {
+  test("a design that fits the 1 MB file cap but not the saved cap is refused up front", () => {
+    const big = {
+      ...emptyDesign(),
+      classes: Array.from({ length: 30 }, (_, i) => {
+        const sheet = {
+          backgroundImage: `https://example.com/${"a".repeat(1900)}.jpg`,
+          backgroundVideo: `https://example.com/${"b".repeat(1900)}.mp4`,
+        };
+        return {
+          id: `c${i}`,
+          name: `Class ${i}`,
+          style: sheet,
+          devices: { tablet: sheet, mobile: sheet },
+        };
+      }),
+    };
+    const result = designFromJson(JSON.stringify(big));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toContain("site styles can be at most 256 KB");
+  });
+});

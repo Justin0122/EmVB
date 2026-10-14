@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Site styles Import:** a design file over the 256 KB site-styles limit is refused when you pick it, with its size and what to do, instead of replacing the site styles and then failing every save (W-516).
 - **Forms:** the required-field notice on a Form is shorter and easier to scan: each field name in bold with a one-line reason, then one hint on how to fix it. The full sentence is in the tooltip (W-515).
 - **Visitors:** a host that passes Cloudflare's `XX` (unknown) or `T1` (Tor) as the visitor's country no longer replaces the country EmVB detected, so country rules keep working (W-514).
 - **Forms:** the required-field warning (W-511) also covers a required field shown only to some visitors, by a Visitors rule or as one arm of an A/B test, on the field or a box around it (W-513).

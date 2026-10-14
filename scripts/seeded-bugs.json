@@ -24944,8 +24944,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/transfer.ts",
-          "search": "  return { ok: true, ...uniqueImportNames(result.data) };",
-          "replace": "  return { ok: true, design: result.data, renamed: [] };"
+          "search": "  const imported = uniqueImportNames(result.data);",
+          "replace": "  const imported = { design: result.data, renamed: [] };"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/design/import-names.test.ts"],
@@ -31097,6 +31097,20 @@
         "./packages/emvb/src/admin/editor/panels/settings/required-fields-notice.test.tsx"
       ],
       "expect": "\\(fail\\).*W-511"
+    },
+    {
+      "id": "W-516/import-over-saved-cap",
+      "requirement": "W-516",
+      "description": "Import accepts a design over the saved site-styles cap.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/design/transfer.ts",
+          "search": "if (bytes > MAX_DESIGN_BYTES) {",
+          "replace": "if (bytes > MAX_DESIGN_BYTES * 100) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/wave.test.ts"],
+      "expect": "\\(fail\\).*W-516"
     }
   ]
 }

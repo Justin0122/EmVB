@@ -1,3 +1,4 @@
+import { clipText, MAX_DESIGN_BYTES } from "../limits.ts";
 import { DesignSystem as DesignSystemSchema, DESIGN_SCHEMA_VERSION } from "../schema/design.ts";
 import type { DesignSystem } from "../schema/design.ts";
 import { DESIGN_MIGRATIONS, upgradeLayout } from "../migrate/index.ts";
@@ -21,7 +22,7 @@ export type DesignImport =
 function freeName(name: string, taken: Set<string>): string {
   for (let n = 2; ; n++) {
     const suffix = ` ${n}`;
-    const next = `${name.slice(0, 60 - suffix.length).trim()}${suffix}`;
+    const next = `${clipText(name, 60 - suffix.length).trim()}${suffix}`;
     if (!taken.has(next.toLowerCase())) return next;
   }
 }
@@ -83,7 +84,17 @@ export function designFromJson(text: string): DesignImport {
   }
   const result = DesignSystemSchema.safeParse(upgraded.doc);
   if (!result.success) return { ok: false, message: "That file is not an EmVB design document." };
-  return { ok: true, ...uniqueImportNames(result.data) };
+  const imported = uniqueImportNames(result.data);
+  // W-516: the file cap is 1 MB, but the saved design is capped lower; a design over that cap
+  // replaced the site styles in the editor and then every save of them was refused.
+  const bytes = new TextEncoder().encode(JSON.stringify(imported.design)).length;
+  if (bytes > MAX_DESIGN_BYTES) {
+    return {
+      ok: false,
+      message: `That design is ${Math.ceil(bytes / 1024)} KB; site styles can be at most ${MAX_DESIGN_BYTES / 1024} KB. Remove some classes or variables from the file, then import it again.`,
+    };
+  }
+  return { ok: true, ...imported };
 }
 
 /** The largest design file Import reads (W-214); the saved design is capped far lower. */
