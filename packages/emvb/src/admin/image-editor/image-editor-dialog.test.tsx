@@ -10,7 +10,28 @@ type Calls = [string, ...unknown[]][];
 let calls: Calls = [];
 let hookOptions: Record<string, unknown> | undefined;
 let plan: { ok: boolean; message?: string } = { ok: true };
-const state = {
+const zeroAdjust = () => ({
+  lights: {
+    brightness: 0,
+    exposure: 0,
+    gamma: 0,
+    contrast: 0,
+    shadows: 0,
+    highlights: 0,
+    bloom: 0,
+  },
+  colors: { temperature: 0, tint: 0, vibrance: 0, saturation: 0, sepia: 0 },
+  effects: { clarity: 0, noise: 0, vignette: 0 },
+});
+const defaultBlur = () => ({
+  bokehStrength: 0,
+  bokehLensOut: 0.5,
+  gaussianStrength: 0,
+  gaussianLensOut: 0.5,
+  centerX: 0.5,
+  centerY: 0.5,
+});
+const fresh = () => ({
   tool: "adjust",
   canUndo: false,
   canRedo: false,
@@ -18,7 +39,13 @@ const state = {
   editingCorners: false,
   straighten: 0,
   status: "ready",
-};
+  adjust: zeroAdjust() as Record<string, Record<string, number>>,
+  filter: null as string | null,
+  strength: 1,
+  blur: defaultBlur(),
+  curves: null as unknown[] | null,
+});
+const state = fresh();
 const listeners = new Set<() => void>();
 let version = 0;
 const change = (patch: Partial<typeof state>) => {
@@ -54,6 +81,50 @@ function fakeApi() {
     compare: { active: false, setActive: record("compare") },
     recipes: { current: state.edited ? { v: 1 } : null },
     resetAll: record("resetAll"),
+    commit: record("commit"),
+    patch: record("patch", (section, patch) => {
+      const opt = (patch as { opt?: { label: string } }).opt;
+      if (section === "filters" && opt) change({ filter: opt.label, strength: 1 });
+    }),
+    adjust: {
+      value: state.adjust,
+      setLights: record("setLights", (v) =>
+        change({ adjust: { ...state.adjust, lights: v as never } }),
+      ),
+      setColors: record("setColors", (v) =>
+        change({ adjust: { ...state.adjust, colors: v as never } }),
+      ),
+      setEffects: record("setEffects", (v) =>
+        change({ adjust: { ...state.adjust, effects: v as never } }),
+      ),
+      resetSection: record("resetSection"),
+      reset: record("resetAdjust"),
+    },
+    filters: {
+      value: { label: state.filter, strength: state.strength },
+      presets: ["Aden", "Crema", "Kodak"].map((label) => ({
+        label,
+        load: async () => ({ label, type: "MTX" }),
+      })),
+      loading: null,
+      select: record("selectFilter", (p) => change({ filter: p === null ? null : String(p) })),
+      setStrength: record("setStrength", (v) => change({ strength: v as number })),
+      reset: record("resetFilters"),
+    },
+    blur: {
+      value: state.blur,
+      set: record("setBlur", (v) => change({ blur: v as never })),
+      setCenter: record("setCenter", (c) => change({ blur: { ...state.blur, ...(c as object) } })),
+      commitCenter: record("commitCenter"),
+      reset: record("resetBlur"),
+    },
+    curves: {
+      value: state.curves,
+      histogram: null,
+      set: record("setCurves", (v) => change({ curves: v as unknown[] })),
+      commit: record("commitCurves"),
+      reset: record("resetCurves"),
+    },
     histogram: { data: { pixels: 38400 }, canvasRef: ref<HTMLCanvasElement>() },
     rootRef: fakeApi.rootRef,
     stageRef: ref<HTMLDivElement>(),
@@ -132,6 +203,7 @@ mock.module(new URL("./engine.ts", import.meta.url).pathname, () => ({
     { value: "1:1", label: "Square" },
     { value: "3:2", label: "3:2" },
   ],
+  drawRgbHistogram: () => undefined,
   fitRectInPolygon: (rect: unknown) => rect,
   rectInsidePolygon: () => true,
 }));
@@ -150,15 +222,7 @@ afterEach(async () => {
   calls = [];
   hookOptions = undefined;
   plan = { ok: true };
-  Object.assign(state, {
-    tool: "adjust",
-    canUndo: false,
-    canRedo: false,
-    edited: false,
-    editingCorners: false,
-    straighten: 0,
-    status: "ready",
-  });
+  Object.assign(state, fresh());
   Object.defineProperty(window, "innerWidth", { value: realWidth, configurable: true });
 });
 
@@ -341,5 +405,156 @@ describe("image editor in photocn's layout (W-483)", () => {
     const root = await open({ src: "/a.jpg", alt: "A" });
     expect(root.dataset.emvbImageEditor).toBe("error");
     expect(q(".emvb-ie-badge")?.textContent).toContain("Broken file");
+  });
+});
+
+const setRange = async (sel: string, v: string) => {
+  const el = q<HTMLInputElement>(sel);
+  if (!el) throw new Error(`no ${sel}`);
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(el, v);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+  el.dispatchEvent(new Event("pointerup", { bubbles: true }));
+  await settle();
+};
+const typeInto = async (sel: string, v: string) => {
+  const el = q<HTMLInputElement>(sel);
+  if (!el) throw new Error(`no ${sel}`);
+  el.focus();
+  el.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+  await settle();
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(el, v);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+  await settle();
+  el.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+  await settle();
+};
+const key = async (el: Element | null, k: string, init: KeyboardEventInit = {}) => {
+  if (!el) throw new Error("no element for key");
+  el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true, ...init }));
+  el.dispatchEvent(new KeyboardEvent("keyup", { key: k, bubbles: true, ...init }));
+  await settle();
+};
+const tab = (name: string) =>
+  [...document.querySelectorAll<HTMLElement>('[role="tab"]')].find(
+    (t) => t.textContent?.replace(" channel", "").trim() === name,
+  );
+
+describe("tone tools in photocn's panels (W-484)", () => {
+  test("Adjust: labelled sliders with typed values, sections as tabs, a reset per section", async () => {
+    serveImage();
+    await open({ src: "/a.jpg", alt: "A" });
+    const range = q<HTMLInputElement>('[data-emvb-image-slider="brightness"]');
+    expect(range?.getAttribute("aria-labelledby")).toBeTruthy();
+    expect(document.getElementById(range?.getAttribute("aria-labelledby") ?? "")?.textContent).toBe(
+      "Brightness",
+    );
+    expect(q('[data-emvb-image-number="brightness"]')?.getAttribute("aria-label")).toBe(
+      "Brightness value",
+    );
+    await setRange('[data-emvb-image-slider="brightness"]', "0.25");
+    expect(q<HTMLInputElement>('[data-emvb-image-number="brightness"]')?.value).toBe("+0.25");
+    await typeInto('[data-emvb-image-number="contrast"]', "-0.4");
+    expect(calls.filter((c) => c[0] === "setLights").map((c) => c[1])).toEqual([
+      expect.objectContaining({ brightness: 0.25, contrast: 0 }),
+      expect.objectContaining({ brightness: 0.25, contrast: -0.4 }),
+    ]);
+    expect(calls.some((c) => c[0] === "commit")).toBe(true);
+    // A typed value past the end is held to it.
+    await typeInto('[data-emvb-image-number="gamma"]', "7");
+    expect(calls.at(-2)).toEqual(["setLights", expect.objectContaining({ gamma: 1 })]);
+    await click('[data-emvb-image-section-reset="lights"]');
+    expect(calls.at(-1)).toEqual(["resetSection", "lights"]);
+    tab("Color")?.click();
+    await settle();
+    expect(q("[data-emvb-image-section]")?.dataset.emvbImageSection).toBe("colors");
+    await setRange('[data-emvb-image-slider="saturation"]', "-0.5");
+    expect(calls.at(-2)).toEqual(["setColors", expect.objectContaining({ saturation: -0.5 })]);
+    await click("[data-emvb-image-panel-reset]");
+    expect(calls.at(-1)).toEqual(["resetAdjust"]);
+  });
+
+  test("Effects opens the adjustments on their Effects tab, as in photocn", async () => {
+    serveImage();
+    await open({ src: "/a.jpg", alt: "A" });
+    await click('[data-slot=editor-sidebar] [data-emvb-image-tool="effects"]');
+    expect(q("[data-emvb-image-panel]")?.dataset.emvbImagePanel).toBe("effects");
+    expect(q("[data-emvb-image-section]")?.dataset.emvbImageSection).toBe("effects");
+    await setRange('[data-emvb-image-slider="vignette"]', "0.3");
+    expect(calls.at(-2)).toEqual(["setEffects", expect.objectContaining({ vignette: 0.3 })]);
+  });
+
+  test("Filters: None and the looks as pressed buttons; Strength only once a look is on", async () => {
+    serveImage();
+    await open({ src: "/a.jpg", alt: "A" });
+    await click('[data-slot=editor-sidebar] [data-emvb-image-tool="filters"]');
+    const chips = [...document.querySelectorAll<HTMLElement>("[data-emvb-image-filter]")];
+    expect(chips.map((c) => c.textContent)).toEqual(["None", "Aden", "Crema", "Kodak"]);
+    expect(chips[0]?.getAttribute("aria-pressed")).toBe("true");
+    expect(q('[data-emvb-image-slider="filter-strength"]')).toBeNull();
+    await click('[data-emvb-image-filter="Crema"]');
+    await settle();
+    expect(calls).toContainEqual([
+      "patch",
+      "filters",
+      { opt: { label: "Crema", type: "MTX" }, mix: 0 },
+    ]);
+    expect(q('[data-emvb-image-filter="Crema"]')?.getAttribute("aria-pressed")).toBe("true");
+    expect(q<HTMLInputElement>('[data-emvb-image-number="filter-strength"]')?.value).toBe("100%");
+    await typeInto('[data-emvb-image-number="filter-strength"]', "40");
+    expect(calls).toContainEqual(["setStrength", 0.4]);
+    await click('[data-emvb-image-filter="None"]');
+    expect(calls).toContainEqual(["selectFilter", null]);
+  });
+
+  test("Curves: each point is a keyboard slider; + adds, Delete removes, levels can be typed", async () => {
+    serveImage();
+    await open({ src: "/a.jpg", alt: "A" });
+    await click('[data-slot=editor-sidebar] [data-emvb-image-tool="curves"]');
+    const points = () => [...document.querySelectorAll<SVGElement>("[data-curve-index]")];
+    expect(points()).toHaveLength(5);
+    expect(points()[2]?.getAttribute("role")).toBe("slider");
+    expect(points()[2]?.getAttribute("aria-valuetext")).toBe("input 128, output 128");
+    expect(q("[data-emvb-image-panel-reset]")?.hasAttribute("disabled")).toBe(true);
+    const mid = points()[2];
+    (mid as unknown as HTMLElement).focus();
+    mid?.dispatchEvent(new FocusEvent("focus"));
+    await settle();
+    await key(mid ?? null, "ArrowUp", { shiftKey: true });
+    const moved = calls.find((c) => c[0] === "setCurves")?.[1] as [number, number][][];
+    expect(moved[0]?.[2]?.[1]).toBeCloseTo(0.5 + 10 / 255, 5);
+    expect(calls).toContainEqual(["commitCurves"]);
+    expect(points()[2]?.getAttribute("aria-valuetext")).toBe("input 128, output 138");
+    // Typed Output level for the focused point.
+    await typeInto("[data-emvb-image-level=output]", "200");
+    expect(points()[2]?.getAttribute("aria-valuenow")).toBe("200");
+    // + adds a point after it, Delete removes one; the end points stay.
+    await key(points()[2] ?? null, "+");
+    expect(points()).toHaveLength(6);
+    await key(points()[3] ?? null, "Delete");
+    expect(points()).toHaveLength(5);
+    await key(points()[0] ?? null, "Delete");
+    expect(points()).toHaveLength(5);
+    expect(q("[data-emvb-image-panel-reset]")?.hasAttribute("disabled")).toBe(false);
+    // Channels are tabs; a channel starts on the identity curve.
+    tab("R")?.click();
+    await settle();
+    expect(q("[data-emvb-image-curve]")?.getAttribute("data-emvb-image-curve")).toBe("r");
+    expect(points()[2]?.getAttribute("aria-valuetext")).toBe("input 128, output 128");
+  });
+
+  test("Blur: kinds as tabs, percentage sliders, and a sharp spot that moves with the arrows", async () => {
+    serveImage();
+    await open({ src: "/a.jpg", alt: "A" });
+    await click('[data-slot=editor-sidebar] [data-emvb-image-tool="blur"]');
+    expect(q("[data-emvb-image-panel-reset]")?.hasAttribute("disabled")).toBe(true);
+    await typeInto('[data-emvb-image-number="bokeh-strength"]', "60");
+    expect(calls).toContainEqual(["setBlur", expect.objectContaining({ bokehStrength: 0.6 })]);
+    tab("Gaussian")?.click();
+    await settle();
+    expect(q("[data-emvb-image-section]")?.dataset.emvbImageSection).toBe("gaussian");
+    await setRange('[data-emvb-image-slider="gaussian-radius"]', "80");
+    expect(calls.at(-2)).toEqual(["setBlur", expect.objectContaining({ gaussianLensOut: 0.8 })]);
+    await setRange('[data-emvb-image-slider="center-x"]', "30");
+    expect(calls.at(-2)).toEqual(["setBlur", expect.objectContaining({ centerX: 0.3 })]);
   });
 });

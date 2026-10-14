@@ -5,28 +5,19 @@
 export const IMAGE_EDITOR_TOOLS = [
   { id: "adjust", label: "Adjust", blurb: "Light, color, and effects" },
   { id: "compose", label: "Crop", blurb: "Drag the frame on the image to crop" },
-  { id: "curves", label: "Curves", blurb: "Tone curves for RGB and each channel" },
-  { id: "effects", label: "Effects", blurb: "Clarity, grain, vignette and more" },
-  { id: "filters", label: "Filters", blurb: "Looks with a strength slider" },
+  { id: "curves", label: "Curves", blurb: "RGB and per-channel tone curves" },
+  { id: "effects", label: "Effects", blurb: "Texture, grain, and edge falloff" },
+  { id: "filters", label: "Filters", blurb: "Film-style looks" },
   { id: "blender", label: "Blender", blurb: "Blend a second picture into this one" },
-  { id: "blur", label: "Blur", blurb: "Soften everything around a sharp spot" },
+  { id: "blur", label: "Blur", blurb: "Bokeh and gaussian blur" },
   { id: "metadata", label: "Metadata", blurb: "File details and camera data" },
 ] as const;
 
 export type ImageEditorToolId = (typeof IMAGE_EDITOR_TOOLS)[number]["id"];
 
-/** Tools whose panels land in later work items (W-484 to W-486); they show what's coming. */
-export const COMING_SOON: Record<Exclude<ImageEditorToolId, "compose">, readonly string[]> = {
-  adjust: [
-    "Brightness, exposure, contrast",
-    "Shadows, highlights, bloom",
-    "Temperature, tint, saturation",
-  ],
-  curves: ["RGB, red, green and blue curves", "Drawn over a live histogram"],
-  effects: ["Clarity, dehaze, grain", "Vignette that follows the crop"],
-  filters: ["13 looks with live previews", "A strength slider for each look"],
+/** Tools whose panels land in later work items (W-485, W-486); they show what's coming. */
+export const COMING_SOON: Record<"blender" | "metadata", readonly string[]> = {
   blender: ["Blend a picture from your media library", "A mix slider"],
-  blur: ["Lens (bokeh) and Gaussian blur", "Drag the dot to choose what stays sharp"],
   metadata: ["File name, size and type", "Camera details, with GPS removed when saving"],
 };
 

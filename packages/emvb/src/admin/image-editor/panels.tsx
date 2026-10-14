@@ -1,6 +1,6 @@
 /**
- * The sidebar panels (W-483): the crop tool's controls, and placeholders for the tools that land
- * with W-484 to W-486.
+ * The sidebar panels: the crop tool's controls (W-483), the tone tools (W-484, in tone-panels.tsx
+ * and CurvesPanel.tsx), and placeholders for the blender and metadata tools.
  *
  * The crop panel follows photocn's `crop-panel.tsx` (https://github.com/rbbydotdev/photocn,
  * apps/www/src/registry/image-editor), MIT License, Copyright (c) 2026 rbbydotdev, rebuilt with
@@ -25,6 +25,8 @@ import {
   SkewIcon,
   TOOL_ICONS,
 } from "./parts.tsx";
+import { CurvesPanel } from "./CurvesPanel.tsx";
+import { AdjustPanel, BlurPanel, FiltersPanel } from "./tone-panels.tsx";
 import { COMING_SOON, IMAGE_EDITOR_TOOLS, type ImageEditorToolId } from "./tools.ts";
 
 /** Keys handled by photocn while the crop tool is active (its `handleCropKey`). */
@@ -226,7 +228,7 @@ function CropPanel() {
 }
 
 /** A tool whose controls arrive in a later update: its header and what it will do. */
-function ComingSoonPanel({ tool }: { tool: Exclude<ImageEditorToolId, "compose"> }) {
+function ComingSoonPanel({ tool }: { tool: keyof typeof COMING_SOON }) {
   const meta = IMAGE_EDITOR_TOOLS.find((t) => t.id === tool) ?? IMAGE_EDITOR_TOOLS[0];
   const ToolIcon = TOOL_ICONS[tool];
   return (
@@ -261,7 +263,23 @@ function ComingSoonPanel({ tool }: { tool: Exclude<ImageEditorToolId, "compose">
 export function ToolPanel() {
   const editor = useImageEditor();
   const tool = editor.tool as ImageEditorToolId;
-  if (tool === "compose") return <CropPanel />;
-  if (tool in COMING_SOON) return <ComingSoonPanel tool={tool} />;
-  return null;
+  switch (tool) {
+    case "compose":
+      return <CropPanel />;
+    case "adjust":
+      return <AdjustPanel />;
+    case "effects":
+      return <AdjustPanel defaultSection="effects" />;
+    case "filters":
+      return <FiltersPanel />;
+    case "curves":
+      return <CurvesPanel />;
+    case "blur":
+      return <BlurPanel />;
+    case "blender":
+    case "metadata":
+      return <ComingSoonPanel tool={tool} />;
+    default:
+      return null;
+  }
 }

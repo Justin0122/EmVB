@@ -20,12 +20,8 @@ describe("image editor tools (W-482, W-483)", () => {
       "metadata",
     ]);
     expect(IMAGE_EDITOR_TOOLS.find((t) => t.id === "compose")?.label).toBe("Crop");
-    // Every tool but crop says what's coming.
-    expect(Object.keys(COMING_SOON).toSorted()).toEqual(
-      IMAGE_EDITOR_TOOLS.map((t) => t.id)
-        .filter((id) => id !== "compose")
-        .toSorted(),
-    );
+    // After W-484 only the blender and metadata tools say what's coming.
+    expect(Object.keys(COMING_SOON).toSorted()).toEqual(["blender", "metadata"]);
   });
 
   test("size labels and display names", () => {

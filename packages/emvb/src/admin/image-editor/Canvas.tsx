@@ -10,6 +10,7 @@
 import { Button } from "@cloudflare/kumo";
 import { CircleNotchIcon, CornersOutIcon } from "@phosphor-icons/react";
 import * as React from "react";
+import { BlurFocus } from "./BlurFocus.tsx";
 import { CornerHandlesOverlay, CropFrameOverlay } from "./CropOverlay.tsx";
 import {
   blendViews,
@@ -221,6 +222,25 @@ export function EditorCanvas({ alt, padding = 24 }: { alt: string; padding?: num
             stage={stage}
             view={view}
           />
+        ) : null}
+        {canvasBox && !isCropView && editor.tool === "blur" && editor.isReady ? (
+          <div
+            className="emvb-ie-overlay-box"
+            style={{
+              left: canvasBox.left,
+              top: canvasBox.top,
+              width: canvasBox.width,
+              height: canvasBox.height,
+            }}
+          >
+            <BlurFocus
+              centerX={editor.blur.value.centerX}
+              centerY={editor.blur.value.centerY}
+              disabled={editor.disabled}
+              onChange={editor.blur.setCenter}
+              onCommit={editor.blur.commitCenter}
+            />
+          </div>
         ) : null}
         {!isCropView && userView !== IDENTITY_VIEW ? (
           <Button

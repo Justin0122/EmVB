@@ -5,7 +5,8 @@
  */
 import { gzipSync } from "node:zlib";
 
-export const IMAGE_EDITOR_GZIP_BUDGET = 300 * 1024;
+/** 350 KB since W-484 (approved by Charles; was 300 KB). */
+export const IMAGE_EDITOR_GZIP_BUDGET = 350 * 1024;
 /** Strings only photocn's code contains. */
 const PHOTOCN_MARKERS = ["transferControlToOffscreen", "mini-gl renderer", "bridge:worker"];
 

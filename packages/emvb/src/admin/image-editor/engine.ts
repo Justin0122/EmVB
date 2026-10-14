@@ -10,6 +10,8 @@
 import { hasWebGL2, planRendering, type RenderMode } from "./worker.ts";
 
 export {
+  type CurveChannels,
+  type CurvePoint,
   fitRectInPolygon,
   rectInsidePolygon,
   type NormalizedRect,
@@ -22,8 +24,12 @@ export {
   ImageEditorProvider,
   useImageEditor,
   useImageEditorState,
+  type AdjustSection,
+  type AdjustValue,
+  type BlurValue,
   type ImageEditorGeometryApi,
 } from "photocn/react";
+export { drawRgbHistogram } from "photocn/dom";
 
 export type EnginePlan =
   | { ok: true; renderMode: RenderMode; spawnWorker?: () => Worker; reason?: string }

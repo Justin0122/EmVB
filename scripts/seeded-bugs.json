@@ -30512,6 +30512,54 @@
         "Esc leaves"
       ],
       "expect": "\\(fail\\).*Esc leaves"
+    },
+    {
+      "id": "W-484/curve-end-removed",
+      "requirement": "W-484",
+      "description": "Delete on a curve's end point removes it, leaving the curve undefined past that edge.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/curve-math.ts",
+          "search": "if (index <= 0 || index >= sorted.length - 1) return null;",
+          "replace": "if (index < 0 || index >= sorted.length) return null;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/curve-math.test.ts"],
+      "expect": "\\(fail\\).*end points can't be removed"
+    },
+    {
+      "id": "W-484/typed-value-unclamped",
+      "requirement": "W-484",
+      "description": "A typed slider value past the slider's end is used as is, outside photocn's range.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/parts.tsx",
+          "search": "const next = roundTo(Math.min(max, Math.max(min, parsed)), step);",
+          "replace": "const next = roundTo(parsed, step);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/image-editor/image-editor-dialog.test.tsx",
+        "-t",
+        "Adjust: labelled sliders"
+      ],
+      "expect": "\\(fail\\).*Adjust: labelled sliders"
+    },
+    {
+      "id": "W-484/blur-focus-no-keys",
+      "requirement": "W-484",
+      "description": "The blur tool's sharp spot ignores the arrow keys, so it can only be moved with a pointer.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/BlurFocus.tsx",
+          "search": "const move = moves[event.key];",
+          "replace": "const move = moves[\"\"];"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/BlurFocus.test.tsx"],
+      "expect": "\\(fail\\).*arrow keys move"
     }
   ]
 }

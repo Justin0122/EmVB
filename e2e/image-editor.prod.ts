@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { AxeBuilder } from "@axe-core/playwright";
 import {
   expect,
   request as requestFactory,
@@ -88,6 +89,46 @@ const shot = async (page: Page, name: string) => {
 };
 const libraryPage = (extra: Record<string, unknown> = {}) =>
   imagePage({ src: media.url, mediaId: media.id, width: 640, height: 480, ...extra });
+
+/**
+ * The page editor needs 1024 px (its small-screen notice would unmount the dialog), but the image
+ * editor picks its layout from its own width. Keep the page editor mounted and narrow the window,
+ * as W-486's media-library entry point will be.
+ */
+async function keepPageEditorMounted(page: Page) {
+  await page.addInitScript(() => {
+    const original = window.matchMedia.bind(window);
+    window.matchMedia = (query: string) =>
+      /min-width:\s*1024px/.test(query)
+        ? ({
+            matches: true,
+            media: query,
+            onchange: null,
+            addEventListener: () => undefined,
+            removeEventListener: () => undefined,
+            addListener: () => undefined,
+            removeListener: () => undefined,
+            dispatchEvent: () => true,
+          } as MediaQueryList)
+        : original(query);
+  });
+}
+
+/** Serious or critical axe findings inside the image editor. */
+async function axeProblems(page: Page) {
+  const result = await new AxeBuilder({ page }).include("[data-emvb-image-editor]").analyze();
+  return result.violations
+    .filter((v) => v.impact === "serious" || v.impact === "critical")
+    .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`);
+}
+
+const canvasShot = (page: Page) => page.locator("[data-emvb-image-canvas]").screenshot();
+/** Reset all, so each tool's screenshot shows only its own edit. */
+const resetAll = async (page: Page) => {
+  const reset = page.locator("[data-emvb-image-reset]");
+  if (await reset.isEnabled()) await reset.click();
+  await expect(reset).toBeDisabled();
+};
 
 test("a library picture opens in the worker under the admin CSP, with nothing loaded before the click", async ({
   page,
@@ -226,25 +267,7 @@ test("a narrow editor uses the phone layout: tools at the bottom, controls in a 
   page,
 }) => {
   const id = await createPage(author, "Image editor compact", libraryPage(), `ie-m-${unique()}`);
-  // The page editor itself needs 1024 px (its small-screen notice would unmount the dialog), but
-  // the image editor picks its layout from its own width. Keep the page editor mounted and narrow
-  // the window, as W-486's media-library entry point will be.
-  await page.addInitScript(() => {
-    const original = window.matchMedia.bind(window);
-    window.matchMedia = (query: string) =>
-      /min-width:\s*1024px/.test(query)
-        ? ({
-            matches: true,
-            media: query,
-            onchange: null,
-            addEventListener: () => undefined,
-            removeEventListener: () => undefined,
-            addListener: () => undefined,
-            removeListener: () => undefined,
-            dispatchEvent: () => true,
-          } as MediaQueryList)
-        : original(query);
-  });
+  await keepPageEditorMounted(page);
   await openImageEditor(page, id);
   await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
     timeout: 30_000,
@@ -276,6 +299,200 @@ test("a narrow editor uses the phone layout: tools at the bottom, controls in a 
     "data-emvb-image-sheet",
     "closed",
   );
+});
+
+test("tone tools (W-484): adjust, effects, filters, curves and blur change the picture, by mouse and keyboard", async ({
+  page,
+}) => {
+  const seen = watch(page);
+  const id = await createPage(author, "Image editor tone", libraryPage(), `ie-tone-${unique()}`);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.waitForTimeout(600);
+  const original = await canvasShot(page);
+  const undo = page.locator("[data-emvb-image-undo]");
+  await expect(undo).toBeDisabled();
+  expect(await axeProblems(page)).toEqual([]);
+
+  // Adjust: the arrow keys move a labelled slider; the value field takes a typed number.
+  const brightness = page.getByRole("slider", { name: "Brightness" });
+  await brightness.focus();
+  for (let i = 0; i < 30; i++) await brightness.press("ArrowRight");
+  await expect(page.getByRole("textbox", { name: "Brightness value" })).toHaveValue("+0.30");
+  const contrast = page.getByRole("textbox", { name: "Contrast value" });
+  await contrast.fill("-0.4");
+  await contrast.press("Enter");
+  await expect(contrast).toHaveValue("-0.40");
+  await expect(page.getByRole("slider", { name: "Contrast" })).toHaveValue("-0.4");
+  await expect(undo).toBeEnabled();
+  await page.getByRole("tab", { name: "Color" }).click();
+  const saturation = page.getByRole("textbox", { name: "Saturation value" });
+  await saturation.fill("0.6");
+  await saturation.press("Enter");
+  await page.waitForTimeout(600);
+  expect((await canvasShot(page)).equals(original)).toBe(false);
+  await shot(page, "adjust-edited");
+  await page.locator("[data-emvb-image-section-reset=colors]").click();
+  await expect(saturation).toHaveValue("0.00");
+
+  // Effects opens the same panel on its Effects tab.
+  await page.locator('[data-emvb-image-tool="effects"]').click();
+  await expect(page.getByRole("tab", { name: "Effects" })).toHaveAttribute("aria-selected", "true");
+  await shot(page, "effects");
+
+  // Filters: a look, then its strength.
+  await resetAll(page);
+  await page.locator('[data-emvb-image-tool="filters"]').click();
+  await expect(page.locator('[data-emvb-image-filter="None"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const beforeFilter = await canvasShot(page);
+  await page.locator('[data-emvb-image-filter="crema"]').click();
+  await expect(page.locator('[data-emvb-image-filter="crema"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  const strength = page.getByRole("textbox", { name: "Strength value" });
+  await expect(strength).toHaveValue("100%");
+  await strength.fill("60");
+  await strength.press("Enter");
+  await expect(strength).toHaveValue("60%");
+  await page.waitForTimeout(600);
+  expect((await canvasShot(page)).equals(beforeFilter)).toBe(false);
+  await shot(page, "filters-on");
+  expect(await axeProblems(page)).toEqual([]);
+
+  // Curves: a point is a keyboard slider; + adds a point, Delete removes it.
+  await resetAll(page);
+  await page.locator('[data-emvb-image-tool="curves"]').click();
+  await page.waitForTimeout(400);
+  await shot(page, "curves-default");
+  const point = (i: number) => page.locator(`[data-curve-index="${i}"]`);
+  await expect(page.locator("[data-curve-index]")).toHaveCount(5);
+  await point(1).focus();
+  for (let i = 0; i < 4; i++) await page.keyboard.press("Shift+ArrowUp");
+  await expect(point(1)).toHaveAttribute("aria-valuetext", "input 64, output 104");
+  await page.keyboard.press("+");
+  await expect(page.locator("[data-curve-index]")).toHaveCount(6);
+  await expect(point(2)).toBeFocused();
+  await page.keyboard.press("Delete");
+  await expect(page.locator("[data-curve-index]")).toHaveCount(5);
+  // Typed levels for the focused point.
+  await point(3).focus();
+  const output = page.getByRole("spinbutton", { name: "Output" });
+  await output.fill("150");
+  await output.press("Enter");
+  await expect(point(3)).toHaveAttribute("aria-valuetext", "input 191, output 150");
+  // A mouse drag on the red channel.
+  await page.getByRole("tab", { name: /^R/ }).nth(1).click();
+  await expect(page.locator("[data-emvb-image-curve]")).toHaveAttribute(
+    "data-emvb-image-curve",
+    "r",
+  );
+  const mid = await point(2).boundingBox();
+  if (mid) {
+    await page.mouse.move(mid.x + mid.width / 2, mid.y + mid.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(mid.x + mid.width / 2, mid.y - 30, { steps: 5 });
+    await page.mouse.up();
+  }
+  await expect(point(2)).not.toHaveAttribute("aria-valuetext", "input 128, output 128");
+  await page.getByRole("tab", { name: "RGB" }).click();
+  await page.waitForTimeout(600);
+  await shot(page, "curves");
+  expect(await axeProblems(page)).toEqual([]);
+
+  // Blur: strength, then move the sharp spot with the keyboard and by dragging.
+  await resetAll(page);
+  await page.locator('[data-emvb-image-tool="blur"]').click();
+  await page.waitForTimeout(400);
+  await shot(page, "blur-default");
+  const blurStrength = page.getByRole("textbox", { name: "Strength value" });
+  await blurStrength.fill("70");
+  await blurStrength.press("Enter");
+  const spot = page.getByRole("slider", { name: "Sharp spot (blur center)" });
+  await spot.focus();
+  for (let i = 0; i < 10; i++) await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("Shift+ArrowDown");
+  await expect(spot).toHaveAttribute("aria-valuetext", "40% across, 60% down");
+  await expect(page.getByRole("textbox", { name: "X value" })).toHaveValue("40%");
+  const area = await page.locator("[data-emvb-image-blur-area]").boundingBox();
+  if (area) {
+    await page.mouse.click(area.x + area.width * 0.7, area.y + area.height * 0.3);
+  }
+  await expect(spot).toHaveAttribute("aria-valuetext", /^(69|70|71)% across, (29|30|31)% down$/);
+  // Dragging the spot doesn't flash the original.
+  await expect(page.locator('[data-emvb-image-compare][aria-pressed="true"]')).toHaveCount(0);
+  await page.waitForTimeout(800);
+  await shot(page, "blur");
+  expect(await axeProblems(page)).toEqual([]);
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.waitForTimeout(300);
+  await shot(page, "dark-blur");
+  await resetAll(page);
+  for (const tool of ["adjust", "curves", "blur", "effects"]) {
+    await page.locator(`[data-emvb-image-tool="${tool}"]`).click();
+    await page.waitForTimeout(400);
+    await shot(page, `dark-${tool}-default`);
+  }
+  await page.locator('[data-emvb-image-tool="filters"]').click();
+  await page.locator('[data-emvb-image-filter="crema"]').click();
+  await expect(page.locator('[data-emvb-image-filter="crema"]')).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await page.waitForTimeout(600);
+  await shot(page, "dark-filters-on");
+  expect(await axeProblems(page)).toEqual([]);
+  await page.emulateMedia({ colorScheme: "light" });
+
+  // Reset all puts the original back.
+  await resetAll(page);
+  await page.waitForTimeout(800);
+  expect((await canvasShot(page)).equals(original)).toBe(true);
+  expect(seen.csp).toEqual([]);
+});
+
+test("the phone layout shows the tone panels in its sheet", async ({ page }) => {
+  const id = await createPage(
+    author,
+    "Image editor tone phone",
+    libraryPage(),
+    `ie-tm-${unique()}`,
+  );
+  await keepPageEditorMounted(page);
+  await openImageEditor(page, id);
+  await expect(editor(page)).toHaveAttribute("data-emvb-image-editor", "ready", {
+    timeout: 30_000,
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(editor(page)).toHaveAttribute("data-layout", "compact");
+  const bar = (tool: string) =>
+    page.locator(
+      `.emvb-ie-compact-tools:not(.emvb-ie-compact-tools-inline) [data-emvb-image-tool="${tool}"]`,
+    );
+  const inSheet = (tool: string) =>
+    page.locator(`[data-emvb-image-sheet] [data-emvb-image-panel="${tool}"]`);
+  await bar("adjust").click();
+  await expect(inSheet("adjust")).toBeVisible();
+  await page.waitForTimeout(500);
+  await shot(page, "mobile-adjust");
+  for (const tool of ["curves", "blur", "filters"]) {
+    await page.locator(`[data-emvb-image-sheet] [data-emvb-image-tool="${tool}"]`).click();
+    await expect(inSheet(tool)).toBeVisible();
+    await page.waitForTimeout(500);
+    await shot(page, `mobile-${tool}`);
+  }
+  await page.getByRole("button", { name: "Crema" }).click();
+  await expect(page.getByRole("button", { name: "Crema" })).toHaveAttribute("aria-pressed", "true");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.locator('[data-emvb-image-sheet] [data-emvb-image-tool="curves"]').click();
+  await page.waitForTimeout(400);
+  await shot(page, "mobile-curves-dark");
 });
 
 test("a picture on another website explains how to edit it", async ({ page }) => {

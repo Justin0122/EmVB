@@ -7,7 +7,7 @@
  * compact-layout.tsx, icon-skew.tsx), MIT License, Copyright (c) 2026 rbbydotdev. Rebuilt with
  * Kumo components and EmVB tokens instead of shadcn/ui.
  */
-import { Button, Tooltip } from "@cloudflare/kumo";
+import { Button, Tabs, Tooltip } from "@cloudflare/kumo";
 import {
   ArrowCounterClockwiseIcon,
   ArrowUUpLeftIcon,
@@ -346,6 +346,150 @@ export function CenteredSlider({
         onPointerUp={() => onCommit?.()}
         onKeyUp={() => onCommit?.()}
         onBlur={() => onCommit?.()}
+      />
+    </div>
+  );
+}
+
+const roundTo = (v: number, step: number) => {
+  const places = Math.max(0, -Math.floor(Math.log10(step)));
+  return Number(v.toFixed(places));
+};
+
+/**
+ * A labelled slider with a typed value (W-484; photocn's adjustment, blur and filter sliders,
+ * whose value is a read-only output). The value field takes a number in the shown unit: Enter or
+ * leaving the field applies it, Escape puts the old one back, ↑/↓ step it. Values are in the
+ * units shown (−1 to 1, or 0 to 100 for percentages); `onCommit` ends one undo step.
+ */
+export function ValueSlider({
+  label,
+  name,
+  value,
+  min,
+  max,
+  step,
+  disabled,
+  format,
+  onChange,
+  onCommit,
+}: {
+  label: string;
+  name: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  disabled?: boolean;
+  format: (value: number) => string;
+  onChange: (value: number) => void;
+  onCommit?: () => void;
+}) {
+  const id = React.useId();
+  const labelId = `${id}-label`;
+  const [draft, setDraft] = React.useState<string | null>(null);
+  const fill = ((value - min) / (max - min)) * 100;
+  const apply = (raw: string) => {
+    setDraft(null);
+    const parsed = Number.parseFloat(raw.replace(/[^\d.+-]/g, ""));
+    if (!Number.isFinite(parsed)) return;
+    const next = roundTo(Math.min(max, Math.max(min, parsed)), step);
+    if (next !== value) onChange(next);
+    onCommit?.();
+  };
+  return (
+    <div className="emvb-ie-slider" data-disabled={disabled || undefined}>
+      <div className="emvb-ie-slider-head">
+        <label id={labelId} htmlFor={id}>
+          {label}
+        </label>
+        <input
+          type="text"
+          inputMode="decimal"
+          className="emvb-ie-number"
+          aria-label={`${label} value`}
+          disabled={disabled}
+          data-emvb-image-number={name}
+          value={draft ?? format(value)}
+          onFocus={(event) => event.currentTarget.select()}
+          onChange={(event) => setDraft(event.currentTarget.value)}
+          onBlur={(event) => {
+            if (draft !== null) apply(event.currentTarget.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              apply(event.currentTarget.value);
+            } else if (event.key === "Escape") {
+              // Put the old value back, and keep Esc from closing the editor.
+              event.preventDefault();
+              event.stopPropagation();
+              setDraft(null);
+            } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+              event.preventDefault();
+              const delta = (event.key === "ArrowUp" ? 1 : -1) * step * (event.shiftKey ? 10 : 1);
+              const next = roundTo(Math.min(max, Math.max(min, value + delta)), step);
+              setDraft(null);
+              onChange(next);
+              onCommit?.();
+            }
+          }}
+        />
+      </div>
+      <input
+        id={id}
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        disabled={disabled}
+        aria-labelledby={labelId}
+        aria-valuetext={format(value)}
+        data-emvb-image-slider={name}
+        style={{ "--emvb-ie-from": "0%", "--emvb-ie-to": `${fill}%` } as React.CSSProperties}
+        onChange={(event) => onChange(Number(event.currentTarget.value))}
+        onPointerUp={() => onCommit?.()}
+        onKeyUp={() => onCommit?.()}
+        onBlur={() => onCommit?.()}
+      />
+    </div>
+  );
+}
+
+/** Underlined or segmented section tabs (photocn's TabsList, here Kumo Tabs). */
+export function SectionTabs<T extends string>({
+  label,
+  value,
+  items,
+  onChange,
+  variant = "underline",
+  name,
+}: {
+  label: string;
+  value: T;
+  items: readonly { value: T; label: React.ReactNode }[];
+  onChange: (value: T) => void;
+  variant?: "underline" | "segmented";
+  name: string;
+}) {
+  return (
+    <div
+      className="emvb-ie-tabs"
+      data-variant={variant}
+      data-emvb-image-tabs={name}
+      role="group"
+      aria-label={label}
+    >
+      <Tabs
+        variant={variant}
+        size="sm"
+        value={value}
+        tabs={items.map((item) => ({ value: item.value, label: item.label }))}
+        onValueChange={(next) => {
+          const match = items.find((item) => item.value === next);
+          if (match) onChange(match.value);
+        }}
       />
     </div>
   );
