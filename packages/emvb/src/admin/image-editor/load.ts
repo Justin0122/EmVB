@@ -11,7 +11,15 @@ export type EditableSource =
   | { ok: false; reason: "empty" | "external" | "format"; message: string };
 
 export type LoadedSource =
-  | { ok: true; blob: Blob; name: string; type: string; fromOriginal: boolean }
+  | {
+      ok: true;
+      blob: Blob;
+      name: string;
+      type: string;
+      fromOriginal: boolean;
+      /** W-493: the recorded original is gone (404), so this is the edited copy, edited afresh. */
+      originalMissing?: boolean;
+    }
   | { ok: false; reason: "empty" | "external" | "format" | "network"; message: string };
 
 const REFUSED_TYPES = /^image\/(svg\+xml|gif)$/i;
@@ -74,6 +82,12 @@ export async function loadEditableSource(
     response = await fetchImpl(source.url, { credentials: "same-origin" });
   } catch {
     return { ok: false, reason: "network", message: MESSAGES.network };
+  }
+  if (response.status === 404 && source.fromOriginal) {
+    // W-493: the original was deleted; edit the copy the element shows instead.
+    const { edit: _gone, ...current } = props;
+    const copy = await loadEditableSource(current, origin, fetchImpl);
+    return copy.ok ? { ...copy, originalMissing: true } : copy;
   }
   if (!response.ok) return { ok: false, reason: "network", message: MESSAGES.network };
   const blob = await response.blob();

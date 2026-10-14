@@ -44,3 +44,23 @@ describe("image editor tools (W-482, W-483)", () => {
     expect(elementAspectOption("640", "480")).toBeUndefined();
   });
 });
+
+describe("Fit this element for very long strips (W-494)", () => {
+  test("is offered up to 100:1 and left out beyond, where the edit couldn't be saved", async () => {
+    const { elementAspectOption: fit } = await import("./tools.ts");
+    expect(fit(1000, 10)?.value).toBe("100:1");
+    expect(fit(10, 1000)?.value).toBe("100:1");
+    expect(fit(2000, 10)).toBeUndefined();
+    expect(fit(10, 2000)).toBeUndefined();
+  });
+  test("the widest offered ratio is one the edit record accepts", async () => {
+    const { ImageEditRecipe } = await import("../../core/image-edit/schema.ts");
+    const { MAX_ASPECT } = await import("./tools.ts");
+    expect(
+      ImageEditRecipe.safeParse({ version: 1, geometry: { aspectRatio: MAX_ASPECT } }).success,
+    ).toBe(true);
+    expect(
+      ImageEditRecipe.safeParse({ version: 1, geometry: { aspectRatio: MAX_ASPECT + 1 } }).success,
+    ).toBe(false);
+  });
+});

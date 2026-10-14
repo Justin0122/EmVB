@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Image editor:** Reset to original no longer points an image at a deleted original; re-opening an edit whose original was deleted opens the edited copy; Fit this element is not offered for strips longer than 100:1, which couldn't be saved (W-492 to W-494).
 - Choosing a different picture for an Image element drops the old picture's edit record.
 
 ## [0.5.0] - 2026-10-13

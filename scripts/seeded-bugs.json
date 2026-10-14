@@ -30700,6 +30700,52 @@
       ],
       "command": ["bun", "test", "./scripts/image-editor-docs.test.ts"],
       "expect": "\\(fail\\).*THIRD_PARTY_NOTICES"
+    },
+    {
+      "id": "W-492/reset-guesses-deleted-original",
+      "requirement": "W-492",
+      "description": "Reset to original falls back to the deleted original's URL, leaving a broken image.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/MediaPicker.tsx",
+          "search": "      if (id && !original) {",
+          "replace": "      if (id && !original && false) {"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/media-picker.test.tsx"
+      ],
+      "expect": "\\(fail\\).*deleted original keeps the edited copy"
+    },
+    {
+      "id": "W-493/deleted-original-is-network-error",
+      "requirement": "W-493",
+      "description": "Re-opening an edit whose original was deleted fails with a connection error.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/load.ts",
+          "search": "  if (response.status === 404 && source.fromOriginal) {",
+          "replace": "  if (response.status === 404 && source.fromOriginal && false) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/load.test.ts"],
+      "expect": "\\(fail\\).*loads the edited copy instead"
+    },
+    {
+      "id": "W-494/fit-unsaveable-ratio",
+      "requirement": "W-494",
+      "description": "Fit this element offers a 200:1 ratio that the edit record refuses on save.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/image-editor/tools.ts",
+          "search": "  if (Math.max(w, h) / Math.min(w, h) > MAX_ASPECT) return undefined;",
+          "replace": "  if (Math.max(w, h) / Math.min(w, h) > MAX_ASPECT * 10) return undefined;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/image-editor/tools.test.ts"],
+      "expect": "\\(fail\\).*left out beyond"
     }
   ]
 }

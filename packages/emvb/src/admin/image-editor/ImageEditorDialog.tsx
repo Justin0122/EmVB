@@ -77,6 +77,11 @@ const SaveContext = React.createContext<SaveApi>({ open: () => undefined, enable
 
 /** Below this editor width the compact (phone) layout is used (photocn COMPACT_WIDTH). */
 export const COMPACT_WIDTH = 640;
+
+function withoutEdit(props: Record<string, unknown>): Record<string, unknown> {
+  const { edit: _edit, ...rest } = props;
+  return rest;
+}
 const SIDEBAR = { default: 338, min: 288, max: 544, canvasMin: 384 };
 /** Sheet heights as a fraction of the editor: peek and expanded (photocn SNAP_POINTS). */
 const SNAP_POINTS = [0.42, 0.9] as const;
@@ -518,7 +523,9 @@ function EditorView({
   const currentRecipe = editor.recipes.current;
   const saveCopy = async (result: ExportResult, settings: ExportSettings) => {
     if (!onSave) return;
-    const built = buildImageEdit({ imageProps, recipe: currentRecipe, output: settings });
+    // W-493: with the original gone, the copy becomes the new original of this edit.
+    const base = ready.source.originalMissing ? withoutEdit(imageProps) : imageProps;
+    const built = buildImageEdit({ imageProps: base, recipe: currentRecipe, output: settings });
     if (!built.ok) throw new Error(built.message);
     const name = editedFileName(ready.source.name, settings.format);
     const { file } = await outputFile(result.blob, name, settings.format, settings.stripGps);

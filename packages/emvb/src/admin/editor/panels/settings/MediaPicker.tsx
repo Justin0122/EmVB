@@ -46,6 +46,11 @@ type Props = {
  * Image source control (W-024 / R-007): pick from EmDash media library, upload a file,
  * or paste a URL. Upload uses the same POST /_emdash/api/media path on both demos.
  */
+
+/** W-492: Reset to original when the original was deleted from the library. */
+const ORIGINAL_DELETED =
+  "The original picture was deleted from the media library, so this image can't be reset. It keeps the edited copy.";
+
 export function MediaPicker({ node, fetcher, onChange, label = "Image", editable = false }: Props) {
   const props = propsOf(node);
   const src = typeof props.src === "string" ? props.src : "";
@@ -114,9 +119,19 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
     setError(null);
     try {
       const id = edit.data.originalMediaId;
-      const original = id ? await getMedia(fetcher, id).catch(() => null) : null;
+      // W-492: a failed lookup is an error, not "no original"; a deleted original can't be reset
+      // to (its recorded URL is gone too), so the element keeps the edited copy.
+      const original = id ? await getMedia(fetcher, id) : null;
+      if (id && !original) {
+        setError(ORIGINAL_DELETED);
+        return;
+      }
       const next = propsFromOriginal(props, original);
       if (next) onChange(withProps(node, next));
+    } catch (caught) {
+      setError(
+        `Couldn't reach the media library to find the original.${caught instanceof Error && caught.message ? ` ${caught.message}` : ""}`,
+      );
     } finally {
       setBusy(false);
     }

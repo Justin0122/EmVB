@@ -176,3 +176,52 @@ describe("a new picture drops the old extra sizes (W-422)", () => {
     ]);
   });
 });
+
+describe("Reset to original when the original is gone (W-492)", () => {
+  const edited = async () => {
+    const { buildImageEdit } = await import("../../../image-editor/save.ts");
+    const built = buildImageEdit({
+      imageProps: { src: "/_emdash/api/media/file/orig.jpg", mediaId: "01ORIGINAL" },
+      recipe: { version: 1, lights: { exposure: 0.2 } },
+      output: { format: "webp", quality: 0.85, maxSide: 2560, stripGps: true },
+    });
+    if (!built.ok) throw new Error(built.message);
+    return image({
+      src: "/_emdash/api/media/file/copy.webp",
+      mediaId: "01COPY",
+      alt: "A",
+      edit: built.edit,
+    });
+  };
+  const mountEdited = async (respond: () => Response) => {
+    const sent: LayoutNode[] = [];
+    const fetcher: Fetcher = async () => respond();
+    const host = await mount(
+      <MediaPicker
+        node={await edited()}
+        fetcher={fetcher}
+        editable
+        onChange={(next) => sent.push(next)}
+      />,
+    );
+    await act(async () =>
+      host.querySelector<HTMLElement>("[data-emvb-image-reset-original]")?.click(),
+    );
+    await settle();
+    return { sent, text: host.textContent ?? "" };
+  };
+
+  test("a deleted original keeps the edited copy and says why", async () => {
+    const view = await mountEdited(() => new Response("{}", { status: 404 }));
+    expect(view.sent).toEqual([]);
+    expect(view.text).toContain("The original picture was deleted from the media library");
+  });
+
+  test("a failed lookup is an error, not a reset to a guessed URL", async () => {
+    const view = await mountEdited(() =>
+      Response.json({ error: { message: "Server down" } }, { status: 500 }),
+    );
+    expect(view.sent).toEqual([]);
+    expect(view.text).toContain("Couldn't reach the media library to find the original.");
+  });
+});

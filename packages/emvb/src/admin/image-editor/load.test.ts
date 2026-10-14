@@ -77,3 +77,25 @@ describe("loadEditableSource (W-482)", () => {
     });
   });
 });
+
+describe("a deleted original (W-493)", () => {
+  test("re-opening loads the edited copy instead and says the original is missing", async () => {
+    const seen: string[] = [];
+    const fetchImpl = (async (url: string) => {
+      seen.push(url);
+      if (url.includes("orig")) return new Response("gone", { status: 404 });
+      return new Response(new Blob(["x"], { type: "image/webp" }), {
+        headers: { "content-type": "image/webp" },
+      });
+    }) as unknown as typeof fetch;
+    const result = await loadEditableSource(
+      { src: "/media/copy.webp", edit: { originalSrc: "/media/orig.jpg" } },
+      ORIGIN,
+      fetchImpl,
+    );
+    expect(seen).toEqual(["/media/orig.jpg", "/media/copy.webp"]);
+    expect(result.ok && result.originalMissing).toBe(true);
+    expect(result.ok && result.fromOriginal).toBe(false);
+    expect(result.ok && result.name).toBe("copy.webp");
+  });
+});

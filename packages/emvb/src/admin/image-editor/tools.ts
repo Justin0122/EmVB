@@ -32,6 +32,9 @@ export function displayName(fileName: string, alt: unknown): string {
   return typeof alt === "string" && alt.trim() ? alt.trim() : "Library picture";
 }
 
+/** The widest aspect ratio the edit record accepts (core/image-edit/schema.ts). */
+export const MAX_ASPECT = 100;
+
 const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
 
 /**
@@ -47,6 +50,8 @@ export function elementAspectOption(
   const w = Math.round(width);
   const h = Math.round(height);
   if (w < 1 || h < 1 || w > 100_000 || h > 100_000) return undefined;
+  // W-494: the edit record holds ratios from 1:100 to 100:1; a longer strip couldn't be saved.
+  if (Math.max(w, h) / Math.min(w, h) > MAX_ASPECT) return undefined;
   const d = gcd(w, h);
   const [a, b] = w >= h ? [w / d, h / d] : [h / d, w / d];
   // Ratios like 1279:719 read as noise; the label keeps the element size instead.
