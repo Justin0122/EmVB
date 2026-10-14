@@ -30802,6 +30802,34 @@
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/mcp-live-round2.test.ts"],
       "expect": "\\(fail\\).*say NOT_SET_UP"
+    },
+    {
+      "id": "W-498/token-not-redacted",
+      "requirement": "W-498",
+      "description": "A bridge error that quotes the token reaches the agent unredacted.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/remote.ts",
+          "search": "  if (!token || !(error instanceof Error) || !error.message.includes(token)) return error;",
+          "replace": "  if (true || !token || !(error instanceof Error) || !error.message.includes(token)) return error;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb-mcp/test/options.test.ts"],
+      "expect": "\\(fail\\).*quotes the token is redacted"
+    },
+    {
+      "id": "W-498/multiline-token-accepted",
+      "requirement": "W-498",
+      "description": "A token file with a second line is accepted and later breaks the Authorization header.",
+      "edits": [
+        {
+          "file": "packages/emvb-mcp/src/options.ts",
+          "search": "  if (/[^!-~]/.test(token)) {",
+          "replace": "  if (false) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb-mcp/test/options.test.ts"],
+      "expect": "\\(fail\\).*second line is refused"
     }
   ]
 }

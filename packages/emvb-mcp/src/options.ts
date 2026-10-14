@@ -28,8 +28,12 @@ export function parseOptions(
     const arg = argv[i];
     if (arg === "--site") site = argv[++i];
     else if (arg?.startsWith("--site=")) site = arg.slice(7);
-    else if (arg === "--token-file") tokenFile = argv[++i];
-    else if (arg === "--allow-publish") allowPublish = true;
+    else if (arg === "--token-file") {
+      tokenFile = argv[++i];
+      // W-498: `--token-file` with no path fell back to EMVB_TOKEN without a word.
+      if (!tokenFile || tokenFile.startsWith("--"))
+        throw new OptionsError("--token-file needs a path.");
+    } else if (arg === "--allow-publish") allowPublish = true;
     else if (arg === "--token" || arg?.startsWith("--token=")) {
       throw new OptionsError(
         "Pass the token in EMVB_TOKEN or --token-file, never on the command line.",
@@ -49,6 +53,13 @@ export function parseOptions(
   }
   const token = (tokenFile ? readFile(tokenFile) : (env["EMVB_TOKEN"] ?? "")).trim();
   if (!token) throw new OptionsError(`No token: set EMVB_TOKEN or pass --token-file.\n\n${USAGE}`);
+  // W-498: a token with a space or line break in it (a second line in the token file) made the
+  // HTTP header invalid (tokens are printable ASCII), and the header error quoted the whole token back to the agent.
+  if (/[^!-~]/.test(token)) {
+    throw new OptionsError(
+      `The token has a space or line break in it. ${tokenFile ? `${tokenFile} must hold only the token, on one line.` : "EMVB_TOKEN must hold only the token."}`,
+    );
+  }
   return {
     site: new URL(url.origin),
     endpoint: new URL("/_emdash/api/mcp", url.origin),

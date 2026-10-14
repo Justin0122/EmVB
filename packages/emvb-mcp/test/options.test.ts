@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseOptions } from "../src/options.ts";
+import { redactToken } from "../src/remote.ts";
 
 const read = (path: string) => (path === "/tok" ? "ec_pat_file\n" : "");
 
@@ -54,5 +55,36 @@ describe("bridge release identity (W-472)", () => {
     expect(bridge.version).toBe(BRIDGE_VERSION);
     expect(bridge.devDependencies["@perkyzz/emvb"]).toBe(core.version);
     expect(bridge.version).toBe(core.version);
+  });
+});
+
+describe("tokens that would leak or be ignored (W-498)", () => {
+  const twoLines = () => "abc123\n# my token\n";
+  test("a token file with a second line is refused without echoing the token", () => {
+    let message = "";
+    try {
+      parseOptions(["--site", "https://a.dev", "--token-file", "/t"], {}, twoLines);
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toContain("must hold only the token");
+    expect(message).not.toContain("abc123");
+  });
+  test("a token with a space in EMVB_TOKEN is refused; a trailing newline is fine", () => {
+    expect(() =>
+      parseOptions(["--site", "https://a.dev"], { EMVB_TOKEN: "ab cd" }, twoLines),
+    ).toThrow("space or line break");
+    expect(
+      parseOptions(["--site", "https://a.dev"], { EMVB_TOKEN: "abcd\n" }, twoLines).token,
+    ).toBe("abcd");
+  });
+  test("--token-file with no path is an error, not a silent fallback", () => {
+    expect(() =>
+      parseOptions(["--site", "https://a.dev", "--token-file"], { EMVB_TOKEN: "t" }, twoLines),
+    ).toThrow("--token-file needs a path");
+  });
+  test("an error that quotes the token is redacted", () => {
+    const e = redactToken(new Error('Headers.append: "Bearer s3cr3t" is invalid'), "s3cr3t");
+    expect((e as Error).message).toBe('Headers.append: "Bearer [token]" is invalid');
   });
 });

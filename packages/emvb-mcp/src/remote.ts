@@ -15,6 +15,14 @@ export interface Remote {
   close(): Promise<void>;
 }
 
+/** W-498: an error never carries the token on to the agent (a header error quotes it). */
+export function redactToken(error: unknown, token: string): unknown {
+  if (!token || !(error instanceof Error) || !error.message.includes(token)) return error;
+  const clean = new Error(error.message.split(token).join("[token]"));
+  clean.name = error.name;
+  return clean;
+}
+
 /** An MCP client to `https://site/_emdash/api/mcp` with the token as a Bearer, connected lazily. */
 export function httpRemote(endpoint: URL, token: string, version: string): Remote {
   let connected: Promise<Client> | null = null;
@@ -34,8 +42,12 @@ export function httpRemote(endpoint: URL, token: string, version: string): Remot
   };
   return {
     async call(name, args) {
-      const client = await connect();
-      return (await client.callTool({ name, arguments: args })) as ToolResult;
+      try {
+        const client = await connect();
+        return (await client.callTool({ name, arguments: args })) as ToolResult;
+      } catch (error) {
+        throw redactToken(error, token);
+      }
     },
     async close() {
       if (connected) await (await connected).close();
