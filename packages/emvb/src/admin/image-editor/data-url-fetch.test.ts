@@ -17,7 +17,10 @@ describe("withDataUrlFetch", () => {
   test("serves data: locally, passes others through, and restores fetch", async () => {
     const calls: string[] = [];
     const g = {
-      fetch: (async (i: string) => (calls.push(String(i)), new Response("net"))) as typeof fetch,
+      fetch: (async (i: string) => (
+        calls.push(String(i)),
+        new Response("net")
+      )) as unknown as typeof fetch,
     } as typeof globalThis;
     const original = g.fetch;
     const out = await withDataUrlFetch(async () => {
@@ -30,7 +33,9 @@ describe("withDataUrlFetch", () => {
     expect(g.fetch).toBe(original);
   });
   test("restores fetch when the task throws", async () => {
-    const g = { fetch: (async () => new Response()) as typeof fetch } as typeof globalThis;
+    const g = {
+      fetch: (async () => new Response()) as unknown as typeof fetch,
+    } as typeof globalThis;
     const original = g.fetch;
     await expect(withDataUrlFetch(async () => Promise.reject(new Error("x")), g)).rejects.toThrow(
       "x",
