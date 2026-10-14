@@ -44,7 +44,8 @@ function previewPost(item: ContentItem, loop: CollectionLoop): ThemePostFields {
 /**
  * W-330: the canvas applies a Loop's `field = value` filters to the entries it read. A field the
  * entries don't have (a taxonomy, say) can't be checked here, so it doesn't filter the preview;
- * the published page asks EmDash, which checks taxonomies too.
+ * the published page asks EmDash, which checks taxonomies too. A list or object field never
+ * matches, as on the published page (W-505).
  */
 export function matchesPreviewFilter(
   data: Record<string, unknown>,
@@ -54,6 +55,10 @@ export function matchesPreviewFilter(
   return Object.entries(where).every(([field, wanted]) => {
     if (!(field in data)) return true;
     const value = data[field];
+    // W-505: EmDash 1.2 filters a non-taxonomy field with SQL `column = value` (or IN), so a
+    // list field (stored as JSON text) never matches there. String(["news"]) is "news", which
+    // showed entries in the preview that the published Loop leaves out.
+    if (Array.isArray(value) || (typeof value === "object" && value !== null)) return false;
     const values = Array.isArray(wanted) ? wanted : [wanted];
     return values.some((option) => String(value) === option);
   });

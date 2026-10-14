@@ -14,3 +14,11 @@ describe("canvas Loop previews apply field filters (W-330)", () => {
     expect(matchesPreviewFilter({}, undefined)).toBe(true);
   });
 });
+
+describe("list fields filter like the published page (W-505)", () => {
+  test("a list or object field never matches, even a one-item list", () => {
+    expect(matchesPreviewFilter({ tags: ["news"] }, { tags: "news" })).toBe(false);
+    expect(matchesPreviewFilter({ tags: ["news", "sport"] }, { tags: "news" })).toBe(false);
+    expect(matchesPreviewFilter({ meta: { a: "news" } }, { meta: "news" })).toBe(false);
+  });
+});

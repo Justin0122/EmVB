@@ -30909,6 +30909,24 @@
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/mcp-write.test.ts"],
       "expect": "\\(fail\\).*W-504"
+    },
+    {
+      "id": "W-505/list-field-matches-preview",
+      "requirement": "W-505",
+      "description": "The Loop preview matches a one-item list field that the published page never matches.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/collection-previews.ts",
+          "search": "    if (Array.isArray(value) || (typeof value === \"object\" && value !== null)) return false;\n",
+          "replace": ""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/collection-preview-filter.test.ts"
+      ],
+      "expect": "\\(fail\\).*one-item list"
     }
   ]
 }
