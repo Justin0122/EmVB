@@ -193,3 +193,22 @@ describe("a new Heading's level (W-147)", () => {
     expect(levelOf(state, "headNEW3")).toBe(3);
   });
 });
+
+describe("A drop on its own spot is no edit (W-521)", () => {
+  test("moving an element to where it already is doesn't dirty the page", () => {
+    const start = initial();
+    const root = start.page.layout?.root.id as string;
+    const at = start.page.layout?.root.children.findIndex((n) => n.id === "head0002") as number;
+    for (const index of [at, at + 1]) {
+      const state = editorReducer(start, {
+        type: "move-node",
+        id: "head0002",
+        parentId: root,
+        index,
+      });
+      expect(isDirty(state)).toBe(false);
+      expect(state.page.layout).toBe(start.page.layout);
+      expect(state.selectedId).toBe("head0002");
+    }
+  });
+});

@@ -3013,8 +3013,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/store.ts",
-          "search": "  result.ok ? withLayout(state, result.layout, result.selected) : state;",
-          "replace": "  result.ok ? withLayout(state, result.layout, result.selected) : edited(state, state.page);"
+          "search": "  if (!result.ok) return state;",
+          "replace": "  if (!result.ok) return edited(state, state.page);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin"],
@@ -31181,6 +31181,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/layers-tree-key.test.ts"],
       "expect": "\\(fail\\).*W-520"
+    },
+    {
+      "id": "W-521/noop-drop-edits",
+      "requirement": "W-521",
+      "description": "A drop on its own spot counts as an edit.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/arrange.ts",
+          "search": "  if (sameParent && at === from.index) return { ok: true, layout, selected: id };",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/store.test.ts"],
+      "expect": "\\(fail\\).*W-521"
     }
   ]
 }

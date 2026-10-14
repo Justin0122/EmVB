@@ -204,6 +204,8 @@ export function moveNode(layout: Layout, id: string, parentId: string, index: nu
   const from = locate(layout, id) as Located & { parent: ContainerNode | FormNode | LoopNode };
   const sameParent = from.parent.id === parentId;
   const at = sameParent && from.index < index ? index - 1 : index;
+  // W-521: a drop on its own spot is no edit; the same layout tells callers nothing changed.
+  if (sameParent && at === from.index) return { ok: true, layout, selected: id };
   const { layout: without, removed } = removeNode(layout, id);
   if (!removed) return refuse(REASONS.missing);
   return { ok: true, layout: insertNode(without, parentId, at, removed.node), selected: id };

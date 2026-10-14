@@ -87,8 +87,12 @@ const withLayout = (
 ): EditorState => ({ ...edited(state, { ...state.page, layout }), selectedId, lastDeleted });
 
 /** Applies an arrange result; a refused one leaves the state unchanged. */
-const arranged = (state: EditorState, result: Arranged): EditorState =>
-  result.ok ? withLayout(state, result.layout, result.selected) : state;
+const arranged = (state: EditorState, result: Arranged): EditorState => {
+  if (!result.ok) return state;
+  // W-521: an unchanged layout (a drop on its own spot) only selects: no undo step, not unsaved.
+  if (result.layout === state.page.layout) return { ...state, selectedId: result.selected };
+  return withLayout(state, result.layout, result.selected);
+};
 
 /** Page edits kept for undo. Save, publish and design stay on the live state (D-035, proposed). */
 const PAGE_HISTORY_LIMIT = 100;
@@ -209,7 +213,7 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       if (!state.page.layout) return state;
       return arranged(state, moveNode(state.page.layout, action.id, action.parentId, action.index));
     case "apply-arranged":
-      return withLayout(state, action.layout, action.selected);
+      return arranged(state, { ok: true, layout: action.layout, selected: action.selected });
     case "saved":
       // A saved draft on a published entry is not live until Publish (W-190).
       return {
