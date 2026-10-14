@@ -216,3 +216,36 @@ describe("what agents learn from the tools (W-474)", () => {
     expect(fix).toContain('"heading-level" → set.props.level');
   });
 });
+
+describe("a site where EmVB isn't set up (W-497)", () => {
+  test("get_layout, describe_page and edits say NOT_SET_UP, not NOT_FOUND", async () => {
+    const bare = await createTestRuntime({ setUp: false });
+    try {
+      await bare.agentSettings();
+      const cases = [
+        ["get_layout", { pageId: "01ABC" }],
+        ["describe_page", { pageId: "01ABC" }],
+        ["list_versions", { pageId: "01ABC" }],
+        ["create_page", { title: "Home" }],
+        ["list_pages", {}],
+      ] as const;
+      const results = await Promise.all(
+        cases.map(([tool, input]) => bare.mcp(tool, input, userWithRole(ROLES.editor))),
+      );
+      for (const [k, result] of results.entries()) {
+        const r = result as Result;
+        const tool = cases[k]?.[0];
+        expect(r.success, tool).toBe(false);
+        expect(r.error?.code, tool).toBe("NOT_SET_UP");
+        expect(r.error?.message, tool).toContain("Set up EmVB");
+      }
+    } finally {
+      await bare.dispose();
+    }
+  });
+
+  test("a missing page on a set-up site is still NOT_FOUND", async () => {
+    const e = await err("get_layout", { pageId: "01NOPE" });
+    expect(e.code).toBe("NOT_FOUND");
+  });
+});

@@ -30788,6 +30788,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/media-api.test.ts"],
       "expect": "\\(fail\\).*10000 px limit"
+    },
+    {
+      "id": "W-497/get-layout-not-set-up",
+      "requirement": "W-497",
+      "description": "get_layout on a site where EmVB isn't set up says the page doesn't exist instead of NOT_SET_UP.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/mcp-routes.ts",
+          "search": "    if (!found) {\n      try {",
+          "replace": "    if (!found && false) {\n      try {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/test/server/mcp-live-round2.test.ts"],
+      "expect": "\\(fail\\).*say NOT_SET_UP"
     }
   ]
 }

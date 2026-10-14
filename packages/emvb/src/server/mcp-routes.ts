@@ -67,8 +67,22 @@ const summary = (item: Item): PageSummary => ({
 function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
   const content = ctx.content as unknown as Content | undefined;
   if (!content) throw new McpToolError("FORBIDDEN", "EmVB has no content access on this site.");
-  const versioned = (id: string) =>
-    content.getVersioned ? content.getVersioned(PAGES_COLLECTION, id) : Promise.resolve(null);
+  /**
+   * W-497: before "Set up EmVB", EmDash reads a page of the missing collection as "not found", so
+   * get_layout said "No EmVB page". A miss checks the collection once and says NOT_SET_UP instead.
+   */
+  const versioned = async (id: string) => {
+    const found = content.getVersioned ? await content.getVersioned(PAGES_COLLECTION, id) : null;
+    if (!found) {
+      try {
+        await content.list(PAGES_COLLECTION, { limit: 1 });
+      } catch (error) {
+        if (isNotSetUp(error)) throw new McpToolError("NOT_SET_UP", NOT_SET_UP_MESSAGE);
+        throw error;
+      }
+    }
+    return found;
+  };
   return {
     caller: { userId: ctx.user?.id ?? null, role: Number(ctx.user?.role ?? 0) },
     async rateLimit(cls) {
@@ -98,7 +112,7 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
       };
     },
     async getPage(id): Promise<PageRecord | null> {
-      const found = content.getVersioned ? await content.getVersioned(PAGES_COLLECTION, id) : null;
+      const found = await versioned(id);
       if (!found) return null;
       return {
         ...summary(found.item),

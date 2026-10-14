@@ -27,8 +27,20 @@ export const userWithRole = (role: number): UserInfo => ({
   createdAt: "2026-09-26T00:00:00.000Z",
 });
 
+/** The pages collection "Set up EmVB" creates. */
+async function createPagesCollection(schema: SchemaRegistry) {
+  await schema.createCollection({
+    slug: PAGES_COLLECTION,
+    label: "Visual pages",
+    hidden: true,
+    supports: ["drafts", "revisions"],
+  });
+  await schema.createField(PAGES_COLLECTION, { slug: "title", label: "Title", type: "string" });
+  await schema.createField(PAGES_COLLECTION, { slug: "layout", label: "Layout", type: "json" });
+}
+
 /** A real EmDash runtime on in-memory SQLite with EmVB installed and the pages collection created. */
-export async function createTestRuntime() {
+export async function createTestRuntime({ setUp = true }: { setUp?: boolean } = {}) {
   const runtime = await EmDashRuntime.create({
     // The runtime caches its database per entrypoint, so each test runtime gets its own.
     config: {
@@ -42,14 +54,8 @@ export async function createTestRuntime() {
     createSandboxRunner: null,
   } as unknown as Parameters<typeof EmDashRuntime.create>[0]);
   const schema = new SchemaRegistry(runtime.db);
-  await schema.createCollection({
-    slug: PAGES_COLLECTION,
-    label: "Visual pages",
-    hidden: true,
-    supports: ["drafts", "revisions"],
-  });
-  await schema.createField(PAGES_COLLECTION, { slug: "title", label: "Title", type: "string" });
-  await schema.createField(PAGES_COLLECTION, { slug: "layout", label: "Layout", type: "json" });
+  // W-497: `setUp: false` is a site before "Set up EmVB" (no pages collection).
+  if (setUp) await createPagesCollection(schema);
 
   const route = async (
     path: string,
