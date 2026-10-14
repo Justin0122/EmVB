@@ -30881,6 +30881,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/data/bindings.test.ts"],
       "expect": "\\(fail\\).*never splits an emoji"
+    },
+    {
+      "id": "W-503/playground-no-media-by-id",
+      "requirement": "W-503",
+      "description": "The playground mock has no media lookup by id.",
+      "edits": [
+        {
+          "file": "site/src/playground/mock/backend.ts",
+          "search": "    if (area === \"media\" && sub && !plugin && r.method === \"GET\") {",
+          "replace": "    if (false) {"
+        }
+      ],
+      "command": ["bun", "test", "./test/playground/backend.test.ts"],
+      "expect": "\\(fail\\).*same-origin path"
     }
   ]
 }

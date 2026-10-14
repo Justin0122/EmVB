@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- **Playground:** the image editor's Reset to original and re-opening an edit work in the playground; its mock media library now answers a lookup by id (W-503).
 - **Data binding:** a bound value cut at the 500-character limit no longer ends in half an emoji (W-502).
 - **Data binding:** an Image whose picture is bound (post featured image, URL parameter, site setting) shows the bound picture even when the typed one has extra sizes; the old srcset hid it on most screens (W-501).
 - **MCP:** `describe_page` warns when an element, or the whole page, is hidden on every device (W-500).

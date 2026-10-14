@@ -774,6 +774,13 @@ export function createBackend(options: BackendOptions = {}): PlaygroundBackend {
     if (area === "auth" && sub === "me") return { id: "playground", role: EDITOR_ROLE + 10 };
     if (area === "content") return content(r);
     if (area === "media" && !sub) return media(r);
+    // W-503: the image editor looks an edit's original up by id (Reset to original, re-open);
+    // without this every original read as deleted in the playground.
+    if (area === "media" && sub && !plugin && r.method === "GET") {
+      const found = state.media.find((m) => m.id === sub);
+      if (!found) throw notFound("Media item not found");
+      return { item: mediaItem(found) };
+    }
     if (area === "schema" && sub === "collections") return collections(r);
     if (area === "plugins" && sub === PLUGIN_ID && plugin === "design") return design(r);
     if (area === "plugins" && sub === PLUGIN_ID && plugin === "icons") return icons(r);

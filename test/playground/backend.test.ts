@@ -15,7 +15,7 @@ import {
   listUploadedIcons,
   uploadIconFile,
 } from "../../packages/emvb/src/admin/icon-uploads-api.ts";
-import { listImages, uploadImage } from "../../packages/emvb/src/admin/media-api.ts";
+import { getMedia, listImages, uploadImage } from "../../packages/emvb/src/admin/media-api.ts";
 import { readRole, canUseEmvb } from "../../packages/emvb/src/admin/access/role.ts";
 import { readCollection } from "../../packages/emvb/src/admin/setup/run.ts";
 import { createThemePart, listThemeParts } from "../../packages/emvb/src/admin/theme-api.ts";
@@ -284,6 +284,9 @@ describe("playground backend: uploads and forms", () => {
     expect(uploads.files.has(item.url)).toBe(true);
     expect(storage.map.get(STORAGE_KEY)?.length ?? 0).toBeLessThan(100_000);
     expect((await listImages(fetcher))[0]?.id).toBe(item.id);
+    // W-503: the image editor finds an edit's original by id; a missing id is a plain 404.
+    expect((await getMedia(fetcher, item.id))?.url).toBe(item.url);
+    expect(await getMedia(fetcher, "media-nope")).toBeNull();
     const big = new File([new Uint8Array(MEDIA_FILE_MAX_BYTES + 1)], "big.png", {
       type: "image/png",
     });
