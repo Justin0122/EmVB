@@ -31167,6 +31167,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/features-w332.test.ts"],
       "expect": "\\(fail\\).*W-519"
+    },
+    {
+      "id": "W-520/arrows-into-collapsed",
+      "requirement": "W-520",
+      "description": "Layers arrows walk into collapsed elements.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/LayersPanel.tsx",
+          "search": "  const ids = rows(layout.root, 0, collapsed).map((row) => row.node.id);",
+          "replace": "  const ids = rows(layout.root, 0, new Set()).map((row) => row.node.id);"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/layers-tree-key.test.ts"],
+      "expect": "\\(fail\\).*W-520"
     }
   ]
 }

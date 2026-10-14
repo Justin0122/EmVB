@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- In Layers, the up and down arrows skip the rows inside a collapsed element instead of selecting a hidden one and re-opening it (W-520).
 - Publish styles no longer lists an unchanged class or variable as changed, and saving styles from two tabs no longer reports a false clash, when a value was removed and set again (W-519).
 - The version timeline no longer marks unchanged sections as changed because a saved version lists element settings in another order (W-518).
 - Restoring a section from the version timeline no longer brings back a CSS id another section took since then, which made the page fail to save (W-517).

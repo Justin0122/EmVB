@@ -32,3 +32,34 @@ describe("Layers tree keys (W-233)", () => {
         expect(key(k, mods)).toBeNull();
   });
 });
+
+describe("Layers arrows skip collapsed rows (W-520)", () => {
+  const nested = {
+    schemaVersion: 16,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      children: [
+        {
+          id: "sec00001",
+          type: "container",
+          props: {},
+          children: [{ id: "head0001", type: "heading", props: { text: "A", level: 2 } }],
+        },
+        { id: "head0002", type: "heading", props: { text: "B", level: 2 } },
+      ],
+    },
+  } as unknown as Layout;
+  const shut = new Set(["sec00001"]);
+  const press = (k: string, id: string) =>
+    treeKey({ key: k, shiftKey: false }, nested, id, shut, undefined);
+
+  test("Down from a collapsed section goes to the next shown row", () => {
+    expect(press("ArrowDown", "sec00001")).toEqual({ select: "head0002" });
+  });
+
+  test("Up goes to the collapsed section, not into it", () => {
+    expect(press("ArrowUp", "head0002")).toEqual({ select: "sec00001" });
+  });
+});

@@ -107,6 +107,14 @@ function menuItems(
   }));
 }
 
+/** The row above or below `id` among the rows Layers shows, or `id` at either end. */
+function visibleStep(layout: Layout, id: string, collapsed: Set<string>, by: 1 | -1): string {
+  const ids = rows(layout.root, 0, collapsed).map((row) => row.node.id);
+  const at = ids.indexOf(id);
+  if (at === -1) return by === 1 ? nextInOrder(layout, id) : previousInOrder(layout, id);
+  return ids[at + by] ?? id;
+}
+
 /** What a key does in the tree: select another row, toggle the selected one, or nothing. */
 export function treeKey(
   event: { key: string; shiftKey: boolean; altKey?: boolean; ctrlKey?: boolean; metaKey?: boolean },
@@ -119,10 +127,11 @@ export function treeKey(
   // them. Selecting here first made the move act on the newly selected row instead.
   if (event.altKey || event.ctrlKey || event.metaKey) return null;
   switch (event.key) {
+    // W-520: rows inside a collapsed element are skipped; selecting one re-opened the branch.
     case "ArrowDown":
-      return { select: nextInOrder(layout, id) };
+      return { select: visibleStep(layout, id, collapsed, 1) };
     case "ArrowUp":
-      return { select: previousInOrder(layout, id) };
+      return { select: visibleStep(layout, id, collapsed, -1) };
     case "ArrowRight":
       return collapsed.has(id) ? { toggle: true } : { select: firstChild(layout, id) };
     case "ArrowLeft": {
