@@ -94,3 +94,16 @@ test("without robots or an image, blank mode prints neither (W-274)", async () =
   expect(output).toContain('<meta property="og:title" content="Open">');
   expect(output).toContain('<meta name="twitter:card" content="summary">');
 });
+
+test("blank canvas mode uses the page's language, and ignores one that isn't a language tag (W-528)", async () => {
+  const container = await AstroContainer.create();
+  const page = pageOf(s1Page());
+  const french = await container.renderToString(EmVBPage, {
+    props: { page, standalone: true, title: "Tarifs", lang: "fr-CA" },
+  });
+  expect(french.startsWith('<html lang="fr-CA">')).toBe(true);
+  const odd = await container.renderToString(EmVBPage, {
+    props: { page, standalone: true, title: "x", lang: 'en" onload="x' },
+  });
+  expect(odd.startsWith('<html lang="en">')).toBe(true);
+});

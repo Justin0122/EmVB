@@ -31279,6 +31279,27 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/tabs-loop.test.ts"],
       "expect": "\\(fail\\).*W-527"
+    },
+    {
+      "id": "W-528/lang-always-en",
+      "requirement": "W-528",
+      "description": "Blank canvas pages are always lang=en.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/EmVBPage.astro",
+          "search": "<html lang={docLang} dir={page.dir}>",
+          "replace": "<html lang=\"en\" dir={page.dir}>"
+        }
+      ],
+      "command": [
+        "bun",
+        "run",
+        "--cwd",
+        "packages/emvb",
+        "test:astro",
+        "test/astro/emvb-page.vitest.ts"
+      ],
+      "expect": "W-528"
     }
   ]
 }

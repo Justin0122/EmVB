@@ -21,16 +21,25 @@ interface Props {
    * canonical, robots (No index), Open Graph and Twitter card. Pass `getSeoMeta(entry, …)`.
    */
   seo?: PageMeta;
+  /**
+   * W-528: the document language in blank canvas mode, e.g. "fr-CA". Defaults to the request's
+   * Astro locale, then "en"; it was always "en", so screen readers read other sites in English.
+   */
+  lang?: string;
 }
 
-const { page, standalone = false, title = "", description, seo } = Astro.props;
+/** A BCP 47-shaped language tag, or undefined. */
+const LANG_TAG = /^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/;
+
+const { page, standalone = false, title = "", description, seo, lang } = Astro.props;
+const docLang = [lang, Astro.currentLocale].find((tag) => tag && LANG_TAG.test(tag)) ?? "en";
 const ogTitle = seo?.ogTitle || title;
 const ogDescription = seo?.ogDescription ?? description;
 ---
 
 {
   standalone ? (
-    <html lang="en" dir={page.dir}>
+    <html lang={docLang} dir={page.dir}>
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
