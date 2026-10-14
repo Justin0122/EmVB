@@ -31195,6 +31195,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/store.test.ts"],
       "expect": "\\(fail\\).*W-521"
+    },
+    {
+      "id": "W-522/agentlog-unbounded",
+      "requirement": "W-522",
+      "description": "The agent log never drops old entries.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/agent-settings.ts",
+          "search": "  if (ids.length > 0) await store.deleteMany(ids);",
+          "replace": "  void ids;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/server/agent-log.test.ts"],
+      "expect": "\\(fail\\).*W-522"
     }
   ]
 }

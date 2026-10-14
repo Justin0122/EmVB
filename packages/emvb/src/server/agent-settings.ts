@@ -34,7 +34,34 @@ type LogQuery = {
     items: { id: string; data: unknown }[];
   }>;
   put(id: string, data: unknown): Promise<void>;
+  deleteMany?(ids: string[]): Promise<number>;
 };
+
+/** Agent activity is kept this many days (W-522). */
+const AGENT_LOG_DAYS = 90;
+
+/**
+ * Adds one agent activity entry and drops up to 100 entries older than AGENT_LOG_DAYS. The log
+ * had no limit, so a busy agent token (60 changes a minute) grew it without end (W-522).
+ */
+export async function appendAgentLog(
+  store: LogQuery,
+  entry: Record<string, unknown>,
+  now: Date = new Date(),
+): Promise<void> {
+  const at = now.toISOString();
+  await store.put(`${at}-${crypto.randomUUID().slice(0, 8)}`, { ...entry, at });
+  if (!store.deleteMany) return;
+  const cutoff = new Date(now.getTime() - AGENT_LOG_DAYS * 86_400_000).toISOString();
+  const old = await store.query({
+    where: { at: { lt: cutoff } },
+    orderBy: { at: "asc" },
+    limit: 100,
+  });
+  const ids = old.items.map((item) => item.id);
+  if (ids.length > 0) await store.deleteMany(ids);
+}
+
 const agentLog = (ctx: PluginContext) => ctx.storage["agentlog"] as unknown as LogQuery;
 
 /** Agents tab: the settings, the MCP endpoint and the last 50 agent changes. Admins only. */
@@ -97,10 +124,8 @@ export const agentsSaveRoute: PluginRoute<z.infer<typeof SaveInput>> = {
     if (!write.applied) {
       throw PluginRouteError.conflict("The agent settings changed somewhere else. Reload them.");
     }
-    const at = new Date().toISOString();
     const s = ctx.input.settings;
-    await agentLog(ctx).put(`${at}-${crypto.randomUUID().slice(0, 8)}`, {
-      at,
+    await appendAgentLog(agentLog(ctx), {
       target: "settings",
       tool: "settings",
       userId: ctx.user?.id ?? null,

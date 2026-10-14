@@ -6,7 +6,7 @@ import type { EmvbPorts, PageRecord, PageSummary } from "../mcp/ports.ts";
 import { callerKey, hitRateLimit, type RateStore } from "../mcp/rate-limit.ts";
 import { runTool, type ToolDef } from "../mcp/tools.ts";
 import { publishDesignDraft, readDesign, writeDesignDraft } from "./design-routes.ts";
-import { readAgentSettings } from "./agent-settings.ts";
+import { appendAgentLog, readAgentSettings } from "./agent-settings.ts";
 
 type Item = {
   id: string;
@@ -43,8 +43,6 @@ type Content = {
   create(c: string, data: Record<string, unknown>): Promise<Item>;
   publish?(c: string, id: string, o: { _rev: string }): Promise<unknown>;
 };
-
-type LogStore = { put(id: string, data: unknown): Promise<void> };
 
 const parseJson = (raw: unknown) => {
   if (typeof raw !== "string") return raw;
@@ -210,11 +208,9 @@ function pluginPorts(ctx: RouteContext<unknown>): EmvbPorts {
       return { revision: written };
     },
     async log(entry) {
-      const at = new Date().toISOString();
-      const store = ctx.storage["agentlog"] as unknown as LogStore;
-      await store.put(`${at}-${crypto.randomUUID().slice(0, 8)}`, {
+      const store = ctx.storage["agentlog"] as unknown as Parameters<typeof appendAgentLog>[0];
+      await appendAgentLog(store, {
         ...entry,
-        at,
         userId: ctx.user?.id ?? null,
         client: (ctx.request.headers.get("user-agent") ?? "").slice(0, 120),
       });

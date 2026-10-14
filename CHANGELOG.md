@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The agent activity log now keeps 90 days: each new entry drops older ones, so a busy agent token no longer grows it without end (W-522).
 - Dropping an element back on its own spot no longer marks the page unsaved, adds an empty undo step, or clears redo (W-521).
 - In Layers, the up and down arrows skip the rows inside a collapsed element instead of selecting a hidden one and re-opening it (W-520).
 - Publish styles no longer lists an unchanged class or variable as changed, and saving styles from two tabs no longer reports a false clash, when a value was removed and set again (W-519).
