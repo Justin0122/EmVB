@@ -147,3 +147,16 @@ describe("share links as mail and chat apps pass them on (W-437)", () => {
     expect((await decodeSharedPage(`${encoded.slice(0, 20)}!${encoded.slice(20)}`)).ok).toBe(false);
   });
 });
+
+describe("long titles (W-507)", () => {
+  test("the 120-character title cap never splits an emoji", async () => {
+    const bare = {
+      schemaVersion: LAYOUT_SCHEMA_VERSION,
+      root: { id: "root0001", type: "container", props: {}, children: [] },
+    } as Layout;
+    const read = await decodeSharedPage(
+      await encodeSharedPage({ title: `${"a".repeat(119)}😀z`, layout: bare }),
+    );
+    expect(read.ok && read.page.title).toBe(`${"a".repeat(119)}😀`);
+  });
+});

@@ -17,6 +17,9 @@ const MAX_TITLE = 120;
 /** Unpacked text: a layout and a design at their limits, plus a little JSON. */
 const MAX_UNPACKED_BYTES = MAX_LAYOUT_BYTES + MAX_DESIGN_BYTES + 4096;
 
+/** W-507: the title cap counts whole characters, so an emoji at the limit isn't cut in half. */
+const clipTitle = (title: string): string => Array.from(title).slice(0, MAX_TITLE).join("");
+
 export type SharedPage = { title: string; layout: Layout; design?: DesignSystem };
 
 export type ShareRead =
@@ -120,7 +123,7 @@ export async function pipeBytes(
  */
 export async function encodeSharedPage(page: SharedPage): Promise<string> {
   const json = JSON.stringify({
-    t: page.title.slice(0, MAX_TITLE),
+    t: clipTitle(page.title),
     l: page.layout,
     ...(page.design ? { d: page.design } : {}),
   });
@@ -176,7 +179,7 @@ export async function decodeSharedPage(encoded: string): Promise<ShareRead> {
     return { ok: false, reason: "invalid", detail: layout.issues[0]?.message ?? "Bad layout" };
   }
   const page: SharedPage = {
-    title: typeof t === "string" && t.trim() ? t.trim().slice(0, MAX_TITLE) : "Shared page",
+    title: typeof t === "string" && t.trim() ? clipTitle(t.trim()) : "Shared page",
     layout: layout.layout,
   };
   if (d !== undefined) {
