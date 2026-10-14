@@ -65,7 +65,7 @@ describe("Form required-fields notice (W-511)", () => {
     await mount(<RequiredFieldsNotice node={node} fetcher={definition} />);
     await flush();
     expect(document.querySelector("[data-emvb-required-fields]")).toBeNull();
-    cleanup();
+    await cleanup();
     const failing: Fetcher = async () => new Response("{}", { status: 500 });
     await mount(<RequiredFieldsNotice node={form([])} fetcher={failing} />);
     await flush();

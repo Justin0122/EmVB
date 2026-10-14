@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Closing the command palette and leaving the editor straight away no longer moves focus to a layer up to two seconds later; a settings test no longer overlaps React updates, which failed 26 editor tests on CI (W-533).
+
 ## [0.6.0] - 2026-10-14
 
 ### Breaking

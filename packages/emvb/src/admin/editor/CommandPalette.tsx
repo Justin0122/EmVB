@@ -21,6 +21,9 @@ export function CommandPalette({
   // W-399: opened from a shortcut there is no trigger to return to, so focus fell to <body> on
   // close. Remember what had focus and go back to it when nothing else took focus.
   const wasOpen = React.useRef(false);
+  // A focus return still waiting when the palette goes away must not move focus later (W-533).
+  const settleTimer = React.useRef<number | undefined>(undefined);
+  React.useEffect(() => () => window.clearTimeout(settleTimer.current), []);
   const returnTo = React.useRef<HTMLElement | null>(null);
   if (open && !wasOpen.current && typeof document !== "undefined") {
     const focused = document.activeElement;
@@ -31,6 +34,7 @@ export function CommandPalette({
   const restoreFocus = (afterCommand = false) => {
     // The dialog lets go of focus only once its close animation ends, so wait for that.
     const started = Date.now();
+    window.clearTimeout(settleTimer.current);
     const settle = () => {
       const now = document.activeElement;
       // Kumo's Dialog doesn't pass data attributes through; find the palette by its input.
@@ -38,7 +42,7 @@ export function CommandPalette({
       const inPalette = now?.closest('[role="dialog"]')?.querySelector("[data-emvb-palette-input]");
       if (now && now !== document.body && !inPalette) return;
       if (stillOpen && Date.now() - started < 2000) {
-        setTimeout(settle, 30);
+        settleTimer.current = window.setTimeout(settle, 30);
         return;
       }
       const selected = document.querySelector<HTMLElement>(
@@ -50,7 +54,7 @@ export function CommandPalette({
         document.querySelector<HTMLElement>("iframe[data-emvb-canvas]");
       target?.focus({ preventScroll: true });
     };
-    setTimeout(settle, 30);
+    settleTimer.current = window.setTimeout(settle, 30);
   };
   const close = (next: boolean) => {
     onOpenChange(next);

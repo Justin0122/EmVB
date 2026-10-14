@@ -31314,6 +31314,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/pagination.test.ts"],
       "expect": "\\(fail\\).*W-529"
+    },
+    {
+      "id": "W-533/palette-timer-survives",
+      "requirement": "W-533",
+      "description": "A closed palette keeps returning focus after it unmounts.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/CommandPalette.tsx",
+          "search": "  React.useEffect(() => () => window.clearTimeout(settleTimer.current), []);\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/palette-focus.test.tsx"],
+      "expect": "\\(fail\\).*W-533"
     }
   ]
 }

@@ -68,3 +68,20 @@ describe("focus after the command palette closes (W-399)", () => {
     expect(document.activeElement).toBe(host.querySelector("[data-layer]"));
   });
 });
+
+test("a palette that goes away stops returning focus (W-533)", async () => {
+  const { start } = await openFrom([]);
+  const input = document.querySelector<HTMLInputElement>("[data-emvb-palette-input]");
+  await act(async () => {
+    input?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  });
+  await cleanup();
+  const other = document.createElement("button");
+  other.className = "emvb-layer-select";
+  other.setAttribute("aria-current", "true");
+  document.body.append(other);
+  await wait(150);
+  expect(document.activeElement).not.toBe(other);
+  expect(start.isConnected).toBe(false);
+  other.remove();
+});
