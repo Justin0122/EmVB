@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- The paged archive title ("Posts – page 2") can be worded in the site’s language: the Pagination element’s new "Page title text" (`{title}`, `{page}`) reaches hosts as `archiveTitleText` for `archivePageTitle` (W-529).
 - Blank canvas pages set `<html lang>` from the new `lang` prop or the request locale instead of always "en" (W-528).
 - A synced section with a form or tabs used both on the page and in a popup, header, footer or float no longer repeats HTML ids; the popup’s labels focused the page’s fields (W-527).
 - Choosing a colour with the colour picker keeps a see-through colour see-through, in element colours and colour variables; the picker has no alpha and made it solid (W-526).

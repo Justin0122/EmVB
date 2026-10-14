@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   archivePagePath,
   archivePageTitle,
+  paginationTitleText,
   DEFAULT_PER_PAGE,
   loopPerPage,
   paginationItems,
@@ -67,4 +68,31 @@ test("a paged archive title reads 'Posts – page 2'; page 1 is bare (W-229)", (
   expect(archivePageTitle("Posts", 2)).toBe("Posts – page 2");
   expect(archivePageTitle("Posts", 1)).toBe("Posts");
   expect(archivePageTitle("news", undefined)).toBe("news");
+});
+
+test("a paged archive title takes the site's wording (W-529)", () => {
+  expect(archivePageTitle("Articles", 3, "{title} – page {page}")).toBe("Articles – page 3");
+  expect(archivePageTitle("Articles", 3, "{title} · Seite {page}")).toBe("Articles · Seite 3");
+  expect(archivePageTitle("Articles", 3, "Page {page} : {title}")).toBe("Page 3 : Articles");
+  expect(archivePageTitle("Articles", 1, "{title} · Seite {page}")).toBe("Articles");
+  expect(archivePageTitle("Articles", 2, "Archive")).toBe("Articles – page 2");
+  expect(archivePageTitle("Articles", 2, "  ")).toBe("Articles – page 2");
+});
+
+test("the archive's Pagination element sets the paged title wording (W-529)", () => {
+  const layout = (props: Record<string, unknown>) =>
+    ({
+      schemaVersion: 16,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [{ id: "page0001", type: "pagination", props }],
+      },
+    }) as Layout;
+  expect(paginationTitleText(layout({ titleText: "{title} · Seite {page}" }))).toBe(
+    "{title} · Seite {page}",
+  );
+  expect(paginationTitleText(layout({ titleText: "  " }))).toBeUndefined();
+  expect(paginationTitleText(layout({}))).toBeUndefined();
 });

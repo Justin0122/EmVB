@@ -310,6 +310,14 @@ export const pagination: ElementDefinition<PaginationNode> = {
         message:
           '{page} and {total} are filled in. EmDash 1.2 doesn\'t report a total, so the count shows "Page N" until it does.',
       },
+      {
+        key: "titleText",
+        kind: "text",
+        label: "Page title text",
+        optional: true,
+        message:
+          'The browser title of page 2 onward. {title} and {page} are filled in; unset is "{title} – page {page}".',
+      },
     ],
   },
   // Rendered by core/render/pagination.ts from the archive's page data (W-222).

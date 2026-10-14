@@ -8415,6 +8415,11 @@ exports[`element panel markup (W-021, W-086 M16) pagination renders the same con
         span
           "Count text"
       input.emvb-field id="id-9" data-emvb-field="countText" value="" aria-labelledby="id-8"
+    div
+      label id="id-10" for="id-11"
+        span
+          "Page title text"
+      input.emvb-field id="id-11" data-emvb-field="titleText" value="" aria-labelledby="id-10"
     section.emvb-bind data-emvb-audience-editor="" aria-labelledby="emvb-aud-bi1nwpcq-title"
       h3.emvb-bind-title id="emvb-aud-bi1nwpcq-title"
         "Visitors"

@@ -645,6 +645,11 @@ export const PaginationNode = leafNode(
     showCount: z.boolean().optional(),
     /** The count's text; `{page}` and `{total}` are filled in. Unset = "Page {page} of {total}". */
     countText: z.string().max(60).optional(),
+    /**
+     * The page title of archive page 2 onward (W-529); `{title}` and `{page}` are filled in.
+     * Unset = "{title} – page {page}". Hosts read it with `archivePageTitle`.
+     */
+    titleText: z.string().max(60).optional(),
   }),
 );
 

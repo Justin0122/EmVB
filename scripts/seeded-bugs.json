@@ -22412,8 +22412,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/theme/pagination.ts",
-          "search": "return page !== undefined && page > 1 ? `${title} – page ${page}` : title;",
-          "replace": "return title;"
+          "search": "  if (page === undefined || page <= 1) return title;",
+          "replace": "  return title;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/pagination.test.ts"],
@@ -22440,8 +22440,8 @@
       "edits": [
         {
           "file": "demos/node/src/utils/archive-page.ts",
-          "search": "archivePageTitle(theme.archiveTitle ?? \"Archive\", context.page)",
-          "replace": "`Page ${context.page}`"
+          "search": "  const title = archivePageTitle(",
+          "replace": "  const title = `Page ${context.page}`; void archivePageTitle("
         }
       ],
       "command": ["bun", "test", "./test/demos/archive-pages.test.ts"],
@@ -31300,6 +31300,20 @@
         "test/astro/emvb-page.vitest.ts"
       ],
       "expect": "W-528"
+    },
+    {
+      "id": "W-529/title-template-ignored",
+      "requirement": "W-529",
+      "description": "The paged title ignores the site wording.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/pagination.ts",
+          "search": "  const wording = template?.trim().includes(\"{page}\") ? template.trim() : PAGED_TITLE;",
+          "replace": "  const wording = PAGED_TITLE;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/pagination.test.ts"],
+      "expect": "\\(fail\\).*W-529"
     }
   ]
 }

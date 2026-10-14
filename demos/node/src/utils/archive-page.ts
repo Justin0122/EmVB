@@ -24,7 +24,12 @@ export async function resolveArchivePage(
   }
   if (!theme.content || theme.notFound) return notFound(Astro);
   // "Posts – page 2" (W-229).
-  const title = archivePageTitle(theme.archiveTitle ?? "Archive", context.page);
+  // W-529: the Pagination element's "Page title text" sets the wording.
+  const title = archivePageTitle(
+    theme.archiveTitle ?? "Archive",
+    context.page,
+    theme.archiveTitleText,
+  );
   return { theme, page: context.page, title };
 }
 

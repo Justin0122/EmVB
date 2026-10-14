@@ -29,6 +29,7 @@ import {
   type TriggersDoc,
   archivePagePath,
   loopPerPage,
+  paginationTitleText,
   type ArchivePagination,
 } from "../core/index.ts";
 import { THEME_PARTS_COLLECTION } from "../constants.ts";
@@ -105,11 +106,16 @@ export type ResolvedThemeParts = {
   canonicalPath?: string;
   /**
    * The archive's title when an Archive part renders: "Posts", or the category/tag slug
-   * (W-229). Hosts build "Posts – page 2" with `archivePageTitle`.
+   * (W-229). Hosts build "Posts – page 2" with `archivePageTitle` and `archiveTitleText`.
    */
   archiveTitle?: string;
   /** The archive page number when an Archive part renders (1 for the bare URL). */
   archivePage?: number;
+  /**
+   * The Archive part's Pagination "Page title text", when set (W-529). Pass it to
+   * `archivePageTitle(archiveTitle, page, archiveTitleText)` for the site's own wording.
+   */
+  archiveTitleText?: string;
   /** The site's text direction from Site styles when a part renders, for `<html dir>` (W-230). */
   dir?: "ltr" | "rtl" | "auto";
 };
@@ -511,7 +517,7 @@ export async function resolveThemePartsWith(
   };
 
   let pastLastPage = false;
-  let archiveInfo: { title?: string; page: number } | undefined;
+  let archiveInfo: { title?: string; page: number; titleText?: string } | undefined;
   const renderPart = async (
     winner: ThemePartCandidate | null,
   ): Promise<RenderedThemePart | null> => {
@@ -528,7 +534,11 @@ export async function resolveThemePartsWith(
         : referenced;
     // A page past the last one has no posts; the host answers 404 (W-221).
     if (winner === contentWinner && dynamic?.pagination) {
-      archiveInfo = { title: dynamic.archiveTitle, page: dynamic.pagination.page };
+      archiveInfo = {
+        title: dynamic.archiveTitle,
+        page: dynamic.pagination.page,
+        titleText: layout ? paginationTitleText(layout) : undefined,
+      };
     }
     if (winner === contentWinner && (dynamic?.pagination?.page ?? 1) > 1) {
       pastLastPage = (dynamic?.posts ?? []).length === 0;
@@ -630,6 +640,7 @@ export async function resolveThemePartsWith(
     ...(design.direction ? { dir: design.direction } : {}),
     ...(archiveInfo?.title ? { archiveTitle: archiveInfo.title } : {}),
     ...(archiveInfo ? { archivePage: archiveInfo.page } : {}),
+    ...(archiveInfo?.titleText ? { archiveTitleText: archiveInfo.titleText } : {}),
     ...(empty.canonicalPath ? { canonicalPath: empty.canonicalPath } : {}),
   };
 }

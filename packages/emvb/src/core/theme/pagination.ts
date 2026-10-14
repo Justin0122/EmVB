@@ -88,12 +88,23 @@ export function loopPerPage(layout: Layout): number {
   return found ?? DEFAULT_PER_PAGE;
 }
 
+/** The paged archive title wording when the host passes none (W-229). */
+const PAGED_TITLE = "{title} – page {page}";
+
 /**
  * A paged archive's title for `<title>` and headings: "Posts – page 2"; page 1 is the bare
- * title (W-229).
+ * title (W-229). W-529: `template` sets the wording in the site's language, with `{title}` and
+ * `{page}` filled in like the Pagination element's "Page {page} of {total}"; one without
+ * `{page}` would give every page the same title, so it falls back to the default.
  */
-export function archivePageTitle(title: string, page: number | undefined): string {
-  return page !== undefined && page > 1 ? `${title} – page ${page}` : title;
+export function archivePageTitle(
+  title: string,
+  page: number | undefined,
+  template?: string,
+): string {
+  if (page === undefined || page <= 1) return title;
+  const wording = template?.trim().includes("{page}") ? template.trim() : PAGED_TITLE;
+  return wording.replaceAll("{title}", title).replaceAll("{page}", String(page));
 }
 
 /** One entry of a Pagination bar: a page link, the current page, or a gap (W-222). */
@@ -150,4 +161,20 @@ function totalItems(p: ArchivePagination, total: number): PaginationItem[] {
   if (to < total) items.push(page(total));
   if (p.page < total) items.push({ kind: "next", href: archivePagePath(p.basePath, p.page + 1) });
   return items;
+}
+
+/** The first Pagination element's "Page title text" in an archive layout, if set (W-529). */
+export function paginationTitleText(layout: Layout): string | undefined {
+  let found: string | undefined;
+  const walk = (node: LayoutNode): void => {
+    if (found !== undefined) return;
+    if (node.type === "pagination") {
+      const text = (node.props as { titleText?: unknown }).titleText;
+      found = typeof text === "string" && text.trim() ? text.trim() : "";
+      return;
+    }
+    if (isParentNode(node)) for (const child of node.children) walk(child);
+  };
+  walk(layout.root);
+  return found || undefined;
 }
