@@ -163,13 +163,13 @@ function totalItems(p: ArchivePagination, total: number): PaginationItem[] {
   return items;
 }
 
-/** The first Pagination element's "Page title text" in an archive layout, if set (W-529). */
-export function paginationTitleText(layout: Layout): string | undefined {
+/** A text prop of the first Pagination element in an archive layout, if set (W-529, W-532). */
+function paginationText(layout: Layout, key: "titleText" | "archiveTitle"): string | undefined {
   let found: string | undefined;
   const walk = (node: LayoutNode): void => {
     if (found !== undefined) return;
     if (node.type === "pagination") {
-      const text = (node.props as { titleText?: unknown }).titleText;
+      const text = (node.props as Record<string, unknown>)[key];
       found = typeof text === "string" && text.trim() ? text.trim() : "";
       return;
     }
@@ -178,3 +178,9 @@ export function paginationTitleText(layout: Layout): string | undefined {
   walk(layout.root);
   return found || undefined;
 }
+
+/** The first Pagination element's "Page title text" in an archive layout, if set (W-529). */
+export const paginationTitleText = (layout: Layout) => paginationText(layout, "titleText");
+
+/** The first Pagination element's "Posts archive title" (replaces "Posts"), if set (W-532). */
+export const paginationArchiveTitle = (layout: Layout) => paginationText(layout, "archiveTitle");

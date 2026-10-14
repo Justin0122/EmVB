@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   archivePagePath,
   archivePageTitle,
+  paginationArchiveTitle,
   paginationTitleText,
   DEFAULT_PER_PAGE,
   loopPerPage,
@@ -95,4 +96,7 @@ test("the archive's Pagination element sets the paged title wording (W-529)", ()
   );
   expect(paginationTitleText(layout({ titleText: "  " }))).toBeUndefined();
   expect(paginationTitleText(layout({}))).toBeUndefined();
+  // W-532: the posts archive's own title.
+  expect(paginationArchiveTitle(layout({ archiveTitle: " Artikel " }))).toBe("Artikel");
+  expect(paginationArchiveTitle(layout({ titleText: "x {page}" }))).toBeUndefined();
 });

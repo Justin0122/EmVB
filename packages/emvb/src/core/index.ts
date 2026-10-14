@@ -394,6 +394,7 @@ export {
   archivePageTitle,
   DEFAULT_PER_PAGE,
   loopPerPage,
+  paginationArchiveTitle,
   paginationTitleText,
   MAX_ARCHIVE_PAGE,
   paginationItems,

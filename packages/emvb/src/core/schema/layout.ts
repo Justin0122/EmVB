@@ -650,6 +650,7 @@ export const PaginationNode = leafNode(
      * Unset = "{title} – page {page}". Hosts read it with `archivePageTitle`.
      */
     titleText: z.string().max(60).optional(),
+    archiveTitle: z.string().max(60).optional(),
   }),
 );
 

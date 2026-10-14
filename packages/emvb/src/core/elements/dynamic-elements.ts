@@ -318,6 +318,14 @@ export const pagination: ElementDefinition<PaginationNode> = {
         message:
           'The browser title of page 2 onward. {title} and {page} are filled in; unset is "{title} – page {page}".',
       },
+      {
+        key: "archiveTitle",
+        kind: "text",
+        label: "Posts archive title",
+        optional: true,
+        message:
+          "Replaces \"Posts\" as the posts archive's title, in the site's language. Category and tag archives use the term's name.",
+      },
     ],
   },
   // Rendered by core/render/pagination.ts from the archive's page data (W-222).

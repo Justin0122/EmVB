@@ -29,6 +29,7 @@ import {
   type TriggersDoc,
   archivePagePath,
   loopPerPage,
+  paginationArchiveTitle,
   paginationTitleText,
   type ArchivePagination,
 } from "../core/index.ts";
@@ -308,6 +309,7 @@ async function loadArchivePosts(
   ctx: ThemeRequestContext,
   perPage: number,
   content: ContentPort,
+  postsTitle = "Posts",
 ): Promise<{
   posts: ThemePostFields[];
   archiveTitle?: string;
@@ -342,7 +344,7 @@ async function loadArchivePosts(
     const archiveTitle = ctx.taxonomy?.slug
       ? await termLabel(ctx.taxonomy.type, ctx.taxonomy.slug, content)
       : ctx.collection === "posts"
-        ? "Posts"
+        ? postsTitle
         : undefined;
     return { posts, archiveTitle, pagination: { page, hasMore, basePath: ctx.path } };
   } catch {
@@ -373,6 +375,8 @@ async function buildDynamicForContent(
       ctx,
       loopPerPage(layout),
       content,
+      // W-532: the Pagination element's "Posts archive title" words it in the site's language.
+      paginationArchiveTitle(layout),
     );
     return { ...referenced, posts, archiveTitle, ...(pagination ? { pagination } : {}) };
   }

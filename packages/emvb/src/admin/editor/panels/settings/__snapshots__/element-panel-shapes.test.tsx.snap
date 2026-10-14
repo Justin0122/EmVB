@@ -8420,6 +8420,11 @@ exports[`element panel markup (W-021, W-086 M16) pagination renders the same con
         span
           "Page title text"
       input.emvb-field id="id-11" data-emvb-field="titleText" value="" aria-labelledby="id-10"
+    div
+      label id="id-12" for="id-13"
+        span
+          "Posts archive title"
+      input.emvb-field id="id-13" data-emvb-field="archiveTitle" value="" aria-labelledby="id-12"
     section.emvb-bind data-emvb-audience-editor="" aria-labelledby="emvb-aud-bi1nwpcq-title"
       h3.emvb-bind-title id="emvb-aud-bi1nwpcq-title"
         "Visitors"

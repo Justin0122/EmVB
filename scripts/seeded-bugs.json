@@ -31316,6 +31316,20 @@
       "expect": "\\(fail\\).*W-529"
     },
     {
+      "id": "W-532/posts-title-ignored",
+      "requirement": "W-532",
+      "description": "The posts archive ignores the Pagination archive title.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/resolve-theme.ts",
+          "search": "      paginationArchiveTitle(layout),\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/resolve-theme.test.ts"],
+      "expect": "\\(fail\\).*W-532"
+    },
+    {
       "id": "W-533/palette-timer-survives",
       "requirement": "W-533",
       "description": "A closed palette keeps returning focus after it unmounts.",

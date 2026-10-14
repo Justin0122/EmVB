@@ -511,6 +511,23 @@ describe("archive pagination (W-221)", () => {
     expect(count(page3.content?.html)).toBe(1);
   });
 
+  test('the Pagination element\'s Posts archive title replaces "Posts" (W-532)', async () => {
+    postEntries = posts(7);
+    themeEntries = [
+      part("ARCHIVE1", "archive", [
+        {
+          id: "loop0001",
+          type: "loop",
+          props: { perPage: 3 },
+          children: [{ id: "ptitle01", type: "post-title", props: { level: 3 } }],
+        },
+        { id: "pagi0001", type: "pagination", props: { archiveTitle: "Articles" } },
+      ] as LayoutNode[]),
+    ];
+    expect((await at("/posts/page/2")).archiveTitle).toBe("Articles");
+    expect((await at("/category/news/page/2")).archiveTitle).toBe("News");
+  });
+
   test("a page past the last one is not found; page 1 with no posts is", async () => {
     postEntries = posts(4);
     themeEntries = archive(2);
