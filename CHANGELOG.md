@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Choosing a colour with the colour picker keeps a see-through colour see-through, in element colours and colour variables; the picker has no alpha and made it solid (W-526).
 - Post Content keeps a line break inside bold, italic or linked text instead of turning it into a space (W-525).
 - The Radio field names its group with a real `<legend>` inside the `<fieldset>` instead of a separate label and `aria-labelledby`; it looks the same (W-524).
 - A box marked Query container no longer collapses to zero width (hiding its content) in a row or a non-stretched column: it is full width unless it has a width of its own (W-523).

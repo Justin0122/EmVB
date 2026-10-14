@@ -5531,8 +5531,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/VariableSection.tsx",
-          "search": "onChange={(event) => setText(event.target.value)}",
-          "replace": "onChange={(event) => commit(event.target.value)}"
+          "search": "onChange={(event) => setText(withPreviousAlpha(event.target.value, committed.current))}",
+          "replace": "onChange={(event) => commit(withPreviousAlpha(event.target.value, committed.current))}"
         }
       ],
       "command": [
@@ -18545,8 +18545,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/ColorControl.tsx",
-          "search": "          ref={picker}\n          value={pickerHex(HEX.test(draft) ? draft : value || \"#000000\")}\n          onChange={(event) => setDraft(event.target.value)}",
-          "replace": "          ref={picker}\n          value={pickerHex(HEX.test(draft) ? draft : value || \"#000000\")}\n          onChange={(event) => {\n            setDraft(event.target.value);\n            commit(event.target.value);\n          }}"
+          "search": "          onChange={(event) => setDraft(withPreviousAlpha(event.target.value, value))}",
+          "replace": "          onChange={(event) => {\n            setDraft(event.target.value);\n            commit(event.target.value);\n          }}"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/admin/editor/panels/color-control.test.tsx"],
@@ -31251,6 +31251,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/post-content-format.test.ts"],
       "expect": "\\(fail\\).*W-525"
+    },
+    {
+      "id": "W-526/picker-drops-alpha",
+      "requirement": "W-526",
+      "description": "The colour picker makes a see-through colour solid.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/variable-values.ts",
+          "search": "  return alpha && alpha !== \"ff\" && /^#[0-9a-f]{6}$/i.test(picked) ? picked + alpha : picked;",
+          "replace": "  return alpha && alpha === \"zz\" ? picked + alpha : picked;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/panels/color-control.test.tsx"],
+      "expect": "\\(fail\\).*W-526"
     }
   ]
 }

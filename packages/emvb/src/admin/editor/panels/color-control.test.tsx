@@ -352,3 +352,36 @@ describe("colour field: label, swatches and Custom color (W-136)", () => {
     expect(trigger?.textContent).toContain("#c2410c");
   });
 });
+
+describe("Picking a colour keeps its transparency (W-526)", () => {
+  test("a see-through custom colour stays see-through after the picker", async () => {
+    const ui = await control("#11223380");
+    const input = ui.picker();
+    if (!input) throw new Error("no picker");
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+        input,
+        "#ff0000",
+      );
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await settle();
+    expect(ui.values.at(-1)).toBe("#ff000080");
+  });
+
+  test("a solid colour stays solid", async () => {
+    const ui = await control("#112233");
+    const input = ui.picker();
+    if (!input) throw new Error("no picker");
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+        input,
+        "#00ff00",
+      );
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await settle();
+    expect(ui.values.at(-1)).toBe("#00ff00");
+  });
+});

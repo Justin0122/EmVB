@@ -22,7 +22,7 @@ import {
   toHex,
 } from "./color-space.ts";
 import { InlineError } from "./inline-error.tsx";
-import { pickerHex } from "./variable-values.ts";
+import { pickerHex, withPreviousAlpha } from "./variable-values.ts";
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 const NONE = "__none__";
@@ -250,8 +250,9 @@ function CustomColor({
     const el = picker.current;
     if (!el) return;
     const onPicked = () => {
-      setDraft(el.value);
-      commit(el.value);
+      const picked = withPreviousAlpha(el.value, value);
+      setDraft(picked);
+      commit(picked);
     };
     el.addEventListener("change", onPicked);
     return () => el.removeEventListener("change", onPicked);
@@ -278,7 +279,7 @@ function CustomColor({
           aria-label={`Pick ${label.toLowerCase()}`}
           ref={picker}
           value={pickerHex(HEX.test(draft) ? draft : value || "#000000")}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => setDraft(withPreviousAlpha(event.target.value, value))}
         />
       </div>
       {error?.field === "hex" && <InlineError>{error.message}</InlineError>}

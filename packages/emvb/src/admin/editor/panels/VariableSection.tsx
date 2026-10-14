@@ -41,6 +41,7 @@ import {
   lengthPx,
   parseValue,
   pickerHex,
+  withPreviousAlpha,
   valueText,
   type Length,
 } from "./variable-values.ts";
@@ -162,8 +163,9 @@ function ValueEditor({
     const el = picker.current;
     if (!el) return;
     const onChange = () => {
-      setText(el.value);
-      commit(el.value);
+      const picked = withPreviousAlpha(el.value, committed.current);
+      setText(picked);
+      commit(picked);
     };
     el.addEventListener("change", onChange);
     return () => el.removeEventListener("change", onChange);
@@ -179,7 +181,7 @@ function ValueEditor({
             className="emvb-site-picker"
             aria-label={`Pick ${item.name}`}
             value={pickerHex(error ? current : text)}
-            onChange={(event) => setText(event.target.value)}
+            onChange={(event) => setText(withPreviousAlpha(event.target.value, committed.current))}
           />
         )}
         <Input

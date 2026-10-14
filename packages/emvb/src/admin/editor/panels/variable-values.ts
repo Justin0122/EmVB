@@ -73,3 +73,17 @@ export function pickerHex(hex: string): string {
   }
   return "#000000";
 }
+
+/**
+ * The picker's 6-digit colour with the alpha `previous` had: `<input type="color">` has no alpha,
+ * so picking a colour made a see-through one solid (W-526).
+ */
+export function withPreviousAlpha(picked: string, previous: string): string {
+  const p = previous.trim().toLowerCase();
+  const alpha = /^#[0-9a-f]{8}$/.test(p)
+    ? p.slice(7)
+    : /^#[0-9a-f]{4}$/.test(p)
+      ? (p[4] ?? "") + (p[4] ?? "")
+      : "";
+  return alpha && alpha !== "ff" && /^#[0-9a-f]{6}$/i.test(picked) ? picked + alpha : picked;
+}
