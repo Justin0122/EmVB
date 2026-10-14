@@ -499,3 +499,12 @@ export {
   type ShareRead,
 } from "./share/link.ts";
 export { canvasStyleUrls, MAX_CANVAS_STYLES } from "./canvas-styles.ts";
+export {
+  IMAGE_EDIT_CURVE_POINTS_MAX,
+  IMAGE_EDIT_FORMATS,
+  IMAGE_EDIT_RECIPE_MAX_BYTES,
+  ImageEdit,
+  ImageEditOutput,
+  ImageEditRecipe,
+} from "./image-edit/schema.ts";
+export { summarizeImageEdit } from "./image-edit/summary.ts";

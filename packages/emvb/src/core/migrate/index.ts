@@ -16,7 +16,8 @@ export type Migration = (doc: Record<string, unknown>) => Record<string, unknown
  * (bindings, and the rest of the W-307 feature batch), and v13 → v14 (W-329 onward) adds
  * optional fields only (audience segments, Loop options, `ch` and negative margins), and
  * v14 → v15 (W-341 onward) adds optional fields only (direction, image link and caption,
- * button icons, table of contents, container queries). Every other value is unchanged.
+ * button icons, table of contents, container queries), and layout v15 → v16 (W-481) adds the
+ * optional image `edit` record. Every other value is unchanged.
  */
 const unchanged: Migration = (doc) => doc;
 
@@ -74,6 +75,7 @@ export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {
   12: unchanged,
   13: unchanged,
   14: unchanged,
+  15: unchanged,
 };
 
 /** `DESIGN_MIGRATIONS[n]` upgrades a version-n design document to version n + 1. */

@@ -10,7 +10,7 @@ setUpEmvbOnce();
 type Stored = { root: { children: { classes?: string[] }[] } };
 
 const layoutWith = (text: string, classes?: string[]) => ({
-  schemaVersion: 15,
+  schemaVersion: 16,
   root: {
     id: "root0001",
     type: "container",

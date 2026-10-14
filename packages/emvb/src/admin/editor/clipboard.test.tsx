@@ -145,7 +145,7 @@ describe("copy and paste shortcuts (W-093)", () => {
     expect(JSON.parse(stored() ?? "null")).toMatchObject({
       format: "emvb-clipboard",
       version: 1,
-      schemaVersion: 15,
+      schemaVersion: 16,
       kind: "element",
       node: { id: "text0001", type: "text", props: { text: "Body" } },
     });

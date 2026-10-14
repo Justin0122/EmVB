@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Breaking
+
+- **Layout schema 16.** Images can carry an optional `edit` record for the upcoming image editor (the edit settings and a link back to the original picture). Pages saved by this version can't be opened by EmVB 0.5 or older; older pages open unchanged (W-481).
+
 ## [0.5.0] - 2026-10-13
 
 ### Fixed

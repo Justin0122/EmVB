@@ -87,7 +87,7 @@ describe("content:beforeSave, called directly (R-006, D-020)", () => {
 describe("elements in the wrong place are refused at save (W-225)", () => {
   test("a menu item outside a Menu is refused with the editor's reason", async () => {
     const layout = {
-      schemaVersion: 15,
+      schemaVersion: 16,
       root: {
         id: "root0001",
         type: "container",
@@ -100,5 +100,58 @@ describe("elements in the wrong place are refused at save (W-225)", () => {
       "The page layout has elements in the wrong place. Menu items can only go inside a Menu. (menu-item mitm0001)",
     );
     expect(warnings).toEqual([["emvb: page save rejected", { pageId: "01PAGE", code: "nesting" }]]);
+  });
+});
+
+describe("image edit records are checked at save (W-481)", () => {
+  const withEdit = (edit: Record<string, unknown>) => ({
+    schemaVersion: 16,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      children: [
+        {
+          id: "img00001",
+          type: "image",
+          props: {
+            src: "/_emdash/api/media/file/01EDITED.webp",
+            alt: "Shop front",
+            mediaId: "01EDITED",
+            edit: {
+              v: 1,
+              engine: "photocn",
+              engineVersion: "0.1.2",
+              recipe: { version: 1, filters: { label: "juno", strength: 0.8 } },
+              originalMediaId: "01ORIGINAL",
+              originalSrc: "/_emdash/api/media/file/01ORIGINAL.jpg",
+              output: { format: "webp", quality: 0.85, maxSide: 2560, stripGps: true },
+              editedAt: "2026-10-13T20:45:00Z",
+              ...edit,
+            },
+          },
+        },
+      ],
+    },
+  });
+
+  test("a valid edit record saves unchanged", async () => {
+    expect(await run(PAGES_COLLECTION, { layout: withEdit({}) }).result).toBeUndefined();
+  });
+
+  test("a crafted recipe is refused", async () => {
+    const { result } = run(PAGES_COLLECTION, {
+      layout: withEdit({ recipe: { version: 1, lights: { exposure: 50 } } }),
+    });
+    expect(await failure(result)).not.toBe("saved");
+  });
+
+  test("a data: blend image is refused, so a whole picture can't hide in the layout", async () => {
+    const { result } = run(PAGES_COLLECTION, {
+      layout: withEdit({
+        recipe: { version: 1, blend: { src: "data:image/png;base64,AAAA", mix: 1 } },
+      }),
+    });
+    expect(await failure(result)).not.toBe("saved");
   });
 });

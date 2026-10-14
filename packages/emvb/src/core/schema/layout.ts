@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { MAX_TEXT_LENGTH } from "../limits.ts";
+import { ImageEdit } from "../image-edit/schema.ts";
 import { DeviceStyles, HiddenOn, Length, StyleProps, StyleStates } from "./style.ts";
 
 /**
+ * 16 since W-481 (D-061): an optional editor-only `edit` record on images (image editor).
+ * Every other value is unchanged.
  * 15 since W-341: optional per-element `dir`, image link/caption/focal point/sources, button icons,
  * a table-of-contents element, and container queries. Every other value is unchanged.
  * 14 since W-329: optional visitor `segments` in an element's audience (the host names them);
@@ -14,7 +17,7 @@ import { DeviceStyles, HiddenOn, Length, StyleProps, StyleStates } from "./style
  * (`{ angle, from, to }`) become a linear gradient on read.
  * 11 since W-156 and W-157 (D-045): the layout Section element and an editor-only node label.
  */
-export const LAYOUT_SCHEMA_VERSION = 15;
+export const LAYOUT_SCHEMA_VERSION = 16;
 
 export const NodeId = z
   .string()
@@ -339,6 +342,8 @@ export const ImageNode = leafNode(
       )
       .max(6)
       .optional(),
+    /** Editor-only record of an image-editor edit; never rendered (W-481). */
+    edit: ImageEdit.optional(),
   }),
 ).refine((node) => node.props.decorative === true || node.props.alt.length > 0, {
   message: "Alt text is required unless the image is marked decorative.",

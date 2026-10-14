@@ -50,7 +50,7 @@ const READ_TOOLS: ToolDef[] = [
     name: "get_layout",
     title: "Get a page layout",
     description:
-      "Returns a page's layout (schema 15) and its revision `rev`. Use format \"outline\" first for a cheap tree of ids, types and labels; pass nodeId for one element's subtree.",
+      "Returns a page's layout (schema 16) and its revision `rev`. Use format \"outline\" first for a cheap tree of ids, types and labels; pass nodeId for one element's subtree.",
     input: read.GetLayoutInput,
     output: read.GetLayoutOutput,
     readOnly: true,

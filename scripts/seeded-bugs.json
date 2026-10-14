@@ -7921,7 +7921,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  2: unchanged,\n};"
         }
       ],
@@ -7981,7 +7981,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "export const LAYOUT_SCHEMA_VERSION = 15;",
+          "search": "export const LAYOUT_SCHEMA_VERSION = 16;",
           "replace": "export const LAYOUT_SCHEMA_VERSION = 1;"
         }
       ],
@@ -8241,7 +8241,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/migrate/index.ts",
-          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n};",
+          "search": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n  2: unchanged,\n  3: unchanged,\n  4: unchanged,\n  5: unchanged,\n  6: unchanged,\n  7: unchanged,\n  8: unchanged,\n  9: unchanged,\n  10: unchanged,\n  11: gradients,\n  12: unchanged,\n  13: unchanged,\n  14: unchanged,\n  15: unchanged,\n};",
           "replace": "export const LAYOUT_MIGRATIONS: Readonly<Record<number, Migration>> = {\n  1: unchanged,\n};"
         }
       ],
@@ -8281,7 +8281,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/schema/layout.ts",
-          "search": "export const LAYOUT_SCHEMA_VERSION = 15;",
+          "search": "export const LAYOUT_SCHEMA_VERSION = 16;",
           "replace": "export const LAYOUT_SCHEMA_VERSION = 2;"
         }
       ],
@@ -8290,9 +8290,9 @@
         "test",
         "./packages/emvb/src/core/migrate/migrate.test.ts",
         "-t",
-        "layout and design are at version 15"
+        "layout is at version 16 and design at version 15"
       ],
-      "expect": "\\(fail\\).*layout and design are at version 15"
+      "expect": "\\(fail\\).*layout is at version 16 and design at version 15"
     },
     {
       "id": "D-032/design-version-not-bumped",
@@ -27502,7 +27502,7 @@
       "edits": [
         {
           "file": "docs/system/layout-format.md",
-          "search": "\"schemaVersion\": 15,\n  \"root\": {",
+          "search": "\"schemaVersion\": 16,\n  \"root\": {",
           "replace": "\"schemaVersion\": 13,\n  \"root\": {"
         }
       ],
@@ -30398,6 +30398,46 @@
         "61st write"
       ],
       "expect": "\\(fail\\).*61st write"
+    },
+    {
+      "id": "W-481/blend-data-url",
+      "requirement": "W-481",
+      "description": "A data: blend image is accepted into an image edit recipe.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/image-edit/schema.ts",
+          "search": "(s) => /^\\/(?!\\/)/.test(s) || /^https:\\/\\//i.test(s),",
+          "replace": "(s) => s.length > 0,"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/test/server/before-save.test.ts",
+        "-t",
+        "data: blend"
+      ],
+      "expect": "\\(fail\\).*data: blend"
+    },
+    {
+      "id": "W-481/edit-not-strict",
+      "requirement": "W-481",
+      "description": "The image edit record takes unknown keys.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/image-edit/schema.ts",
+          "search": "export const ImageEdit = z.strictObject({",
+          "replace": "export const ImageEdit = z.looseObject({"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/image-edit/image-edit.test.ts",
+        "-t",
+        "unknown key"
+      ],
+      "expect": "\\(fail\\).*unknown key"
     }
   ]
 }

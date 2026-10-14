@@ -1,6 +1,6 @@
-# Layout format (schema 15)
+# Layout format (schema 16)
 
-How EmVB stores a page and its site-wide design, at schema 15 (per-element direction, image link and caption, button icons, table of contents, container queries, and focal points in W-341 onward; visitor segments in W-329; Loop fields in W-330; `ch` lengths and negative margins in W-331). The source of truth is the code: `packages/emvb/src/core/schema/` (Zod schemas), `core/limits.ts`, `core/validate.ts` and `core/migrate/`. Update this file in the same change as any of them (ARCHITECTURE.md § Documentation).
+How EmVB stores a page and its site-wide design, at schema 16 (the image editor's `edit` record on images in W-481; per-element direction, image link and caption, button icons, table of contents, container queries, and focal points in W-341 onward; visitor segments in W-329; Loop fields in W-330; `ch` lengths and negative margins in W-331). The source of truth is the code: `packages/emvb/src/core/schema/` (Zod schemas), `core/limits.ts`, `core/validate.ts` and `core/migrate/`. Update this file in the same change as any of them (ARCHITECTURE.md § Documentation).
 
 ## Where it lives
 
@@ -11,7 +11,7 @@ How EmVB stores a page and its site-wide design, at schema 15 (per-element direc
 
 ```json
 {
-  "schemaVersion": 15,
+  "schemaVersion": 16,
   "root": {
     "id": "root0001",
     "type": "container",
@@ -29,7 +29,7 @@ How EmVB stores a page and its site-wide design, at schema 15 (per-element direc
 }
 ```
 
-- `schemaVersion` is the literal `15` (D-031, D-032, D-034, D-036, D-038, D-039, D-041, D-042, D-044, W-141, D-045, W-160, W-307, W-329, W-341; older documents are upgraded on read by steps that change nothing, except v11 → v12, which rewrites a gradient's `from` and `to` into `stops`). `root` is always a container.
+- `schemaVersion` is the literal `16` (D-031, D-032, D-034, D-036, D-038, D-039, D-041, D-042, D-044, W-141, D-045, W-160, W-307, W-329, W-341, W-481; older documents are upgraded on read by steps that change nothing, except v11 → v12, which rewrites a gradient's `from` and `to` into `stops`). `root` is always a container.
 - Every node has `id` (4–24 of `A-Z a-z 0-9 _ -`, unique within the page), `type`, `props`, and optional `style`, `states` (W-089, see [State styles](#state-styles-w-089)), `classes` (up to 20 ids of 1–40 of `a-z 0-9 -`, rendered as `emvb-k-<id>`), `bind` (W-307), `variant` (an A/B arm, W-312) and `audience` (who sees it, W-313, W-329).
 - Objects are strict: unknown keys are rejected, not ignored.
 - **Unknown element types** (W-022 / R-033): a node whose `type` is not in the known set is kept on save (`id` rules still apply; `props` is an open record; every shared node field, including `devices` and `hiddenOn`, is allowed and checked as on known nodes; optional `children` are validated recursively). Public pages omit it; the editor shows a selectable placeholder. Damaged known nodes (wrong props) still fail validation with path-specific issues.
@@ -47,7 +47,7 @@ How EmVB stores a page and its site-wide design, at schema 15 (per-element direc
 | `link` | `text`, `href`, optional `newTab` | none | `<a href>` (+ `target`/`rel` when `newTab`) |
 | `button` | `text`, optional `href` and `newTab` | none | `<a href>` when `href` is safe, else `<button type="button">` |
 | `list` | `items` (string[], ≤ 200), optional `ordered` | none | `<ul>` or `<ol>` with `<li>` |
-| `image` | `src`, `alt`, optional `decorative`, `width`, `height`, `mediaId` | none | `<img loading="lazy">` (decorative → empty `alt` + `role="presentation"`) |
+| `image` | `src`, `alt`, optional `decorative`, `width`, `height`, `mediaId`, `edit` (editor-only image-editor record, never rendered; see below) | none | `<img loading="lazy">` (decorative → empty `alt` + `role="presentation"`) |
 | `icon` | `iconId` (a bundled Lucide id, or `<set prefix>:<name>` from the icon library, W-236), optional `iconSvg` (the picked icon's SVG, ≤ 32768 chars, W-234 / W-239; `iconId` `upload:<id>` for an uploaded SVG), optional `singleColor` (W-238: `true` paints a picked SVG's own fills, strokes and stops in `currentColor`), `size`, `decorative`, `title`, `href` (≤ 2000) and `newTab` (W-141); a non-empty `href` needs a `title` | none | Inline `<svg>`: `iconSvg` sanitized again at render (allowlist; size, id, role and aria attributes replaced), else the bundled Lucide icon (unknown id and no `iconSvg` → placeholder; never a remote URL); with a safe `href`, the svg is hidden inside `<a class="emvb-icon-link" aria-label="title">` |
 | `video` | `url`, `title`, optional `mediaId` | none | YouTube/Vimeo privacy `<iframe loading="lazy">` or media `<video controls>` (no autoplay) |
 | `form` | `formId` (forms-plugin id; may be empty until bound) | `children: Node[]` (form fields + submit; no nested forms) | Bound: `<form class="emvb-form ec-form" …>`. Unbound: editor placeholder `data-emvb-form-unbound`; omitted on public (no forms runtime). |
@@ -68,6 +68,8 @@ How EmVB stores a page and its site-wide design, at schema 15 (per-element direc
 | `loop` | optional `itemPartId`; `perPage` (1–50, unset = 20) on an archive; a collection Loop also takes `collection`, `limit`, `order`, `display`, `columns`, `permalink`, `imageField`, `excerptField` and `filter` (see [Schema 13](#schema-13-the-w-307-feature-batch) and [Schema 14](#schema-14)) | `children: Node[]` (inline item template when no part id) | Repeats the item template for each post or collection entry |
 | `grid` | `columns` (1–12); optional `columnsTablet` and `columnsMobile` (1–12, W-139); optional `columnTracks`, `columnTracksTablet`, `columnTracksMobile` (1–12 tracks: `1fr`, `2fr`, `3fr`, `auto`, `min-content`, `max-content`, or a length) | `children: Node[]` | `display: grid` with that many equal columns, or the custom tracks when that device sets them; the device values go in the tablet and mobile media queries, and an unset one follows the next wider device |
 | `section` (shown as "Theme section") | optional `partId` | `children: Node[]` (inline contents when no part id) | When `partId` is set, the published Section theme part's children replace the local ones |
+
+An image's optional `edit` (W-481, D-061) is written by the image editor and never rendered. `src`, `mediaId`, `width` and `height` point at the edited file; `edit` points back at the original: `v` (`1`), `engine` (`"photocn"`), `engineVersion` (such as `"0.1.2"`), `recipe` (photocn's `RecipeV1`, strict: sliders −1 to 1, blur and curve points 0 to 1, at most 32 points per curve channel, straighten ±45°, a filter name of up to 32 letters, digits, spaces, `_` or `-`, a blend image only as a site path or `https:` URL, at most 16 KB as JSON), optional `originalMediaId`, `originalSrc` (up to 2000 characters), `output` (`format` `webp`, `jpeg` or `png`, optional `quality` 0.1 to 1, optional `maxSide` 16 to 10000 px, `stripGps` boolean) and `editedAt` (an ISO 8601 timestamp).
 
 Every node may also carry an optional `label` (1–80 characters, trimmed; an editor-only name shown in Layers and on the canvas, never rendered, W-157), optional `htmlId` (CSS `id`, unique on the page), `classes` (style-class ids from the design system, S4), `devices` and `hiddenOn` (W-096, below).
 
