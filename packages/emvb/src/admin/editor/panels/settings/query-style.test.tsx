@@ -186,3 +186,22 @@ describe("container-query values read numbers like the Style tab (W-695)", () =>
     });
   });
 });
+
+describe("container-query variables keep their kind (W-696)", () => {
+  test("a padding variable is a spacing variable, a font size a font size one", () => {
+    expect(parseStyleValue("paddingTop", "var(--space-4)")).toEqual({
+      value: { var: "space-4", from: "spacing" },
+    });
+    expect(parseStyleValue("fontSize", "var(--lg)")).toEqual({
+      value: { var: "lg", from: "fontSize" },
+    });
+    expect(parseStyleValue("fontFamily", "var(--body)")).toEqual({
+      value: { var: "body", from: "font" },
+    });
+    expect(parseStyleValue("color", "var(--brand)")).toEqual({ value: { var: "brand" } });
+  });
+
+  test("a stored length variable reads as var(--name), not JSON", () => {
+    expect(formatStyleValue({ var: "space-4", from: "spacing" })).toBe("var(--space-4)");
+  });
+});

@@ -17,7 +17,11 @@ export function formatStyleValue(value: unknown): string {
     ) {
       return `${record["value"]}${record["unit"]}`;
     }
-    if (typeof record["var"] === "string" && Object.keys(record).length === 1) {
+    // W-696: a length or font variable carries `from`; it showed as raw JSON.
+    if (
+      typeof record["var"] === "string" &&
+      Object.keys(record).every((k) => k === "var" || k === "from")
+    ) {
       return `var(--${record["var"]})`;
     }
   }
@@ -31,12 +35,26 @@ const LENGTH = new RegExp(String.raw`^(${NUMBER})\s*([a-z%]+)$`, "i");
 const BARE = new RegExp(`^${NUMBER}$`);
 
 /** Readings of `text` to try, most specific first. */
-function candidates(text: string): unknown[] {
+/**
+ * W-696: the variable kinds `key` reads, most likely first. A bare `{ var }` is a colour, so
+ * "var(--space-4)" on a padding stored a colour reference and the style was silently dropped.
+ */
+function varKinds(key: string): (string | undefined)[] {
+  if (key === "color" || key === "backgroundColor" || key === "borderColor") return [undefined];
+  if (key === "fontFamily") return ["font"];
+  if (key === "fontSize") return ["fontSize", "spacing"];
+  return ["spacing", "fontSize"];
+}
+
+function candidates(text: string, key: string): unknown[] {
   const out: unknown[] = [];
   const length = LENGTH.exec(text);
   if (length) out.push({ value: Number(length[1]), unit: (length[2] as string).toLowerCase() });
   const variable = /^var\(--([a-z0-9-]{1,40})\)$/.exec(text);
-  if (variable) out.push({ var: variable[1] });
+  if (variable) {
+    for (const from of varKinds(key))
+      out.push(from ? { var: variable[1], from } : { var: variable[1] });
+  }
   if (BARE.test(text)) {
     out.push(Number(text));
     // W-404: a bare number on a length property means px, as in the Style tab.
@@ -69,7 +87,7 @@ export function parseStyleValue(key: string, text: string): { value: unknown } |
   if (trimmed === "") return { error: "Enter a value." };
   if (/^[+-]?\d*,\d+\s*[a-z%]*$/i.test(trimmed))
     return { error: "Use a dot for decimals, such as 1.5." };
-  for (const candidate of candidates(trimmed)) {
+  for (const candidate of candidates(trimmed, key)) {
     if (candidate !== undefined && schema.safeParse(candidate).success) return { value: candidate };
   }
   return { error: `"${trimmed.slice(0, 40)}" isn't a value ${key} accepts.` };
