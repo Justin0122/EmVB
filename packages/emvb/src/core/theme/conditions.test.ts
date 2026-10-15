@@ -1,5 +1,6 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it, test } from "bun:test";
 import {
+  conditionSpecificity,
   conditionsSpecificity,
   contentPartTypeForContext,
   defaultConditions,
@@ -453,5 +454,48 @@ describe("S7c content part types", () => {
     expect(onPost.map((c) => c.id)).toEqual(["p2", "p1"]);
     const onFront = listMatchingThemeParts(candidates, "popup", front);
     expect(onFront.map((c) => c.id)).toEqual(["p1"]);
+  });
+});
+
+describe("W-584 blank taxonomy slug", () => {
+  const ctx = {
+    path: "/tag/news",
+    isFront: false,
+    is404: false,
+    isSearch: false,
+    kind: "archive" as const,
+    taxonomy: { type: "tag" as const, slug: "news" },
+  };
+  const part = (id: string, slug: string | undefined, updatedAt: string) => ({
+    id,
+    partType: "archive" as const,
+    updatedAt,
+    conditions: {
+      schemaVersion: 1 as const,
+      rules: [
+        {
+          id: "r",
+          op: "include" as const,
+          group: "archive" as const,
+          name: "taxonomy",
+          args: slug === undefined ? { taxonomy: "tag" } : { taxonomy: "tag", slug },
+        },
+      ],
+    },
+  });
+
+  it("scores a blank slug like no slug (it matches every tag)", () => {
+    const blank = part("blank", "", "2026-01-01T00:00:00Z").conditions.rules[0]!;
+    const none = part("none", undefined, "2026-01-01T00:00:00Z").conditions.rules[0]!;
+    expect(conditionSpecificity(blank)).toBe(conditionSpecificity(none));
+  });
+
+  it("a specific tag part beats a newer any-tag part with a blank slug", () => {
+    const winner = pickThemePartWinner(
+      [part("news", "news", "2026-01-01T00:00:00Z"), part("blank", "", "2026-02-01T00:00:00Z")],
+      "archive",
+      ctx,
+    );
+    expect(winner?.id).toBe("news");
   });
 });

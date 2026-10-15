@@ -142,8 +142,10 @@ export function conditionSpecificity(rule: ConditionRule): number {
   if (
     rule.group === "archive" &&
     rule.name === "taxonomy" &&
-    typeof rule.args["slug"] === "string"
+    typeof rule.args["slug"] === "string" &&
+    rule.args["slug"] !== ""
   ) {
+    // A blank slug matches every term (taxonomyMatches), so it is not more specific (W-584).
     score += 5;
   }
   return score;
