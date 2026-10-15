@@ -207,15 +207,22 @@ async function loadLoopTemplates(
   parts: StoredPart[],
   request?: object,
 ): Promise<Record<string, Layout>> {
-  const ids = collectLoopItemPartIds(layout);
-  if (ids.length === 0) return {};
+  const queue = collectLoopItemPartIds(layout);
+  if (queue.length === 0) return {};
   const byId = new Map(parts.map((p) => [p.id, p]));
   const templates: Record<string, Layout> = {};
-  for (const id of ids) {
+  const seen = new Set<string>();
+  // W-654: a Loop inside a loop item part can use another loop item part; load those too.
+  while (queue.length > 0 && seen.size < 32) {
+    const id = queue.shift();
+    if (!id || seen.has(id)) continue;
+    seen.add(id);
     const part = byId.get(id);
     if (!part || part.partType !== "loop_item") continue;
     const itemLayout = layoutFor(request, part.id, part.layout);
-    if (itemLayout) templates[id] = itemLayout;
+    if (!itemLayout) continue;
+    templates[id] = itemLayout;
+    queue.push(...collectLoopItemPartIds(itemLayout));
   }
   return templates;
 }

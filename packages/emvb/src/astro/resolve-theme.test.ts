@@ -487,6 +487,44 @@ describe("resolveThemeParts (R-062)", () => {
     expect(html).toContain("Alpha");
     expect(html).toContain("Beta");
   });
+
+  test("a loop item part whose Loop uses another loop item part renders that part (W-654)", async () => {
+    postEntries = [{ id: "01A", data: { id: "01A", slug: "a", title: "Alpha" } }];
+    themeEntries = [
+      part("ARCHIVE1", "archive", [
+        { id: "loop0001", type: "loop", props: { itemPartId: "OUTER" }, children: [] },
+      ] as LayoutNode[]),
+      part("OUTER", "loop_item", [
+        { id: "loop0002", type: "loop", props: { itemPartId: "INNER" }, children: [] },
+      ] as LayoutNode[]),
+      part("INNER", "loop_item", [
+        { id: "ptitle01", type: "post-title", props: { level: 3 } } as LayoutNode,
+      ]),
+    ];
+    const resolved = await resolveThemeParts(
+      astro("/posts"),
+      themeContextFrom(new URL("http://site.test/posts")),
+    );
+    expect(resolved.content?.html).toContain("Alpha");
+  });
+
+  test("a loop item part whose Loop uses itself still renders the page (W-654)", async () => {
+    postEntries = [{ id: "01A", data: { id: "01A", slug: "a", title: "Alpha" } }];
+    themeEntries = [
+      part("ARCHIVE1", "archive", [
+        { id: "loop0001", type: "loop", props: { itemPartId: "SELF" }, children: [] },
+      ] as LayoutNode[]),
+      part("SELF", "loop_item", [
+        { id: "ptitle01", type: "post-title", props: { level: 3 } } as LayoutNode,
+        { id: "loop0002", type: "loop", props: { itemPartId: "SELF" }, children: [] } as LayoutNode,
+      ]),
+    ];
+    const resolved = await resolveThemeParts(
+      astro("/posts"),
+      themeContextFrom(new URL("http://site.test/posts")),
+    );
+    expect(resolved.content?.html.match(/data-emvb-loop-item=/g)?.length).toBe(1);
+  });
 });
 
 describe("archive pagination (W-221)", () => {

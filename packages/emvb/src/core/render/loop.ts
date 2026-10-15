@@ -41,6 +41,21 @@ function entriesFor(
  * state child (W-308) is left out of the item design and shows when there are no entries; the
  * editor shows it under the items too, so it can be designed.
  */
+/** Loops inside loop items, at most this deep (W-654). */
+const MAX_LOOP_DEPTH = 4;
+
+function countNodes(nodes: readonly LayoutNode[]): number {
+  let count = 0;
+  const stack: LayoutNode[] = [...nodes];
+  while (stack.length > 0) {
+    const node = stack.pop() as LayoutNode;
+    count++;
+    const kids = (node as { children?: LayoutNode[] }).children;
+    if (Array.isArray(kids)) for (const child of kids) stack.push(child);
+  }
+  return count;
+}
+
 export function renderLoop(
   node: LoopNode,
   attrs: Record<string, string>,
@@ -49,6 +64,14 @@ export function renderLoop(
 ): VNode | undefined {
   const posts = entriesFor(node, dynamic, ctx.mode);
   const itemPartId = node.props.itemPartId?.trim() ?? "";
+  const loopStack = dynamic?.loopStack ?? [];
+  // W-654: a loop item part holding a Loop that uses the same part (or one that leads back to it)
+  // recursed until the stack overflowed and the page failed to render.
+  const cycle = itemPartId !== "" && loopStack.includes(itemPartId);
+  if (cycle || loopStack.length >= MAX_LOOP_DEPTH) {
+    if (ctx.mode !== "editor") return undefined;
+    return { tag: "div", attrs: { ...attrs, "data-emvb-loop-empty": "" }, children: ["Loop"] };
+  }
   const templateLayout =
     itemPartId && dynamic?.loopTemplates ? dynamic.loopTemplates[itemPartId] : undefined;
   const own = node.children.filter((child) => child.type !== "loop-empty");
@@ -77,10 +100,14 @@ export function renderLoop(
   }
   const children: VNode[] = [];
   // A loop item part is another layout, so its ids may match the page's (W-250).
-  const itemDynamic = templateLayout
-    ? { ...rest, idOrigin: `${rest.idOrigin ?? ""}/l:${itemPartId}` }
-    : rest;
+  const itemDynamic = {
+    ...(templateLayout ? { ...rest, idOrigin: `${rest.idOrigin ?? ""}/l:${itemPartId}` } : rest),
+    loopStack: [...loopStack, itemPartId || node.id],
+  };
+  const itemSize = countNodes(templateNodes);
   for (const post of posts) {
+    // W-654: nested Loops multiply like nested sections; they share the render's budget.
+    if (ctx.takeSectionBudget && !ctx.takeSectionBudget(itemSize)) break;
     children.push({
       tag: "div",
       attrs: { class: "emvb-loop-item", "data-emvb-loop-item": post.id },
