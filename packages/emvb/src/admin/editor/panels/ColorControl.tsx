@@ -25,6 +25,11 @@ import { InlineError } from "./inline-error.tsx";
 import { pickerHex, withPreviousAlpha } from "./variable-values.ts";
 import { isCommitEnter } from "../ime.ts";
 
+/**
+ * W-673: Kumo's Input `variant="error"` is deprecated (and warns), and its `error` prop would print
+ * a second message under our InlineError, so a refused field gets Kumo's error ring as classes.
+ */
+const INVALID = " !ring-kumo-danger focus:ring-kumo-danger/50 focus:ring-[1.5px]";
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 const NONE = "__none__";
 const CUSTOM = "__custom__";
@@ -263,10 +268,9 @@ function CustomColor({
       <div className="emvb-custom-color-row">
         <Input
           label="Custom color"
-          className={`${FIELD} emvb-mono`}
+          className={`${FIELD} emvb-mono${error?.field === "hex" ? INVALID : ""}`}
           placeholder="#1a2b3c"
           value={draft}
-          variant={error?.field === "hex" ? "error" : undefined}
           aria-invalid={error?.field === "hex" ? true : undefined}
           onChange={(event) => setDraft(event.target.value)}
           onBlur={() => commit(draft)}
@@ -359,10 +363,9 @@ function NotationRow({
     <>
       <Input
         label={label}
-        className={`${FIELD} emvb-mono`}
+        className={`${FIELD} emvb-mono${error ? INVALID : ""}`}
         placeholder={placeholder}
         value={draft}
-        variant={error ? "error" : undefined}
         aria-invalid={error ? true : undefined}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => {
@@ -407,9 +410,9 @@ function VariableValue({
     <>
       <Input
         label={`${name} value`}
-        className={`${FIELD} emvb-mono`}
+        className={`${FIELD} emvb-mono${error ? INVALID : ""}`}
         value={draft}
-        variant={error ? "error" : undefined}
+        aria-invalid={error ? true : undefined}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => void commit()}
         onKeyDown={(event) => {

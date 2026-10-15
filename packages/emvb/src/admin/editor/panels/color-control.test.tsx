@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import * as React from "react";
 import { act } from "react";
 import type { DesignSystem, StyleProps } from "../../../core/index.ts";
@@ -109,11 +109,21 @@ describe("editing a bound colour variable (W-091)", () => {
   });
 
   test("an invalid hex shows the hex error and saves nothing", async () => {
+    const warnings: string[] = [];
+    const warn = spyOn(console, "warn").mockImplementation(
+      (...args: unknown[]) => void warnings.push(args.join(" ")),
+    );
     const view = await control({ var: "brand" });
     await view.type("Brand value", "blue");
     await view.enter("Brand value");
     expect(view.alert()).toBe("Enter a hex color such as #1a2b3c.");
     expect(view.designs).toEqual([]);
+    // W-673: the refused field is marked invalid for screen readers, like the Custom color field.
+    const input = [...view.host.querySelectorAll("input")].find((el) => el.value === "blue");
+    expect(input?.getAttribute("aria-invalid")).toBe("true");
+    expect(input?.className).toContain("ring-kumo-danger");
+    warn.mockRestore();
+    expect(warnings.filter((w) => w.includes("deprecated"))).toEqual([]);
   });
 
   test("leaving the value unchanged saves nothing", async () => {
