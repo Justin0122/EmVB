@@ -512,14 +512,34 @@ export function subtreeSize(layout: Layout, id: string): number {
   return node ? size(node) : 0;
 }
 
-/** The default A/B test name for an element (W-312): `test-` and its id, lowercased. */
-export const defaultTestName = (id: string): string =>
-  `test-${
+/**
+ * The default A/B test name for an element (W-312): `test-` and its id, lowercased.
+ * W-701: `taken` names are skipped (`-2`, `-3`…). Ids that only differ in case, punctuation or
+ * after their 12th character ("featurecard01", "featurecard02") made the same name, which merged
+ * two tests: ending one deleted the other's elements.
+ */
+export const defaultTestName = (id: string, taken: ReadonlySet<string> = new Set()): string => {
+  const base = `test-${
     id
       .toLowerCase()
       .replace(/[^a-z0-9]/g, "")
-      .slice(0, 12) || "1"
+      .slice(0, 20) || "1"
   }`;
+  let name = base;
+  for (let n = 2; taken.has(name); n++) name = `${base}-${n}`;
+  return name;
+};
+
+/** The A/B test names already used in a layout. */
+function testNames(layout: Layout): Set<string> {
+  const names = new Set<string>();
+  const walk = (node: LayoutNode): void => {
+    if (node.variant?.test) names.add(node.variant.test);
+    for (const child of nodeChildren(node)) walk(child);
+  };
+  walk(layout.root);
+  return names;
+}
 
 /**
  * Edge A/B testing (W-312): the element becomes arm A of a new test and a copy right after it
@@ -534,7 +554,7 @@ export function createVariantB(
   if (!found) return refuse(REASONS.missing);
   if (found.node.variant) return refuse("This element is already in an A/B test.");
   if (found.node.type === "loop-empty" || !found.parent) return refuse(REASONS.rootCopy);
-  const variant = { test: defaultTestName(found.node.id), arm: "a" as const };
+  const variant = { test: defaultTestName(found.node.id, testNames(layout)), arm: "a" as const };
   const marked = updateNode(layout, id, (node) => ({ ...node, variant }) as LayoutNode);
   const copied = duplicateNode(marked, id, random);
   if (!copied.ok) return copied;

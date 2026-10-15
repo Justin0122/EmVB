@@ -110,3 +110,37 @@ test("a test missing one arm is not run and its remaining arm shows to everyone 
     }
   }
 });
+
+describe("each new A/B test gets its own name (W-701)", () => {
+  test("ids alike in case or past 12 characters don't merge two tests", () => {
+    let layout = page(heading("featurecard01", "One"), heading("featurecard02", "Two"));
+    const first = createVariantB(layout, "featurecard01", random);
+    if (!first.ok) throw new Error(first.reason);
+    const second = createVariantB(first.layout, "featurecard02", random);
+    if (!second.ok) throw new Error(second.reason);
+    layout = second.layout;
+    const names = collectAbTests(layout).map((t) => t.test);
+    expect(new Set(names).size).toBe(2);
+    expect(LayoutSchema.safeParse(layout).success).toBe(true);
+    // Ending the first test leaves the second test's two elements alone.
+    const ended = endAbTest(layout, "featurecard01");
+    if (!ended.ok) throw new Error(ended.reason);
+    expect(ended.layout.root.children.map((c) => c.variant?.test ?? "none")).toEqual([
+      "none",
+      names[1],
+      names[1],
+    ]);
+  });
+
+  test("Hero_A and hero-a get different names", () => {
+    const one = createVariantB(
+      page(heading("Hero_A", "x"), heading("hero-a", "y")),
+      "Hero_A",
+      random,
+    );
+    if (!one.ok) throw new Error(one.reason);
+    const two = createVariantB(one.layout, "hero-a", random);
+    if (!two.ok) throw new Error(two.reason);
+    expect(new Set(collectAbTests(two.layout).map((t) => t.test)).size).toBe(2);
+  });
+});
