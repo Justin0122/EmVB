@@ -469,6 +469,27 @@ export const PostLinkNode = leafNode(
   }),
 );
 
+/** W-338: what a Post Field makes of its value: plain text, or a link to it as a URL, an e-mail
+ * address or a phone number. */
+export const POST_FIELD_LINKS = ["none", "url", "email", "phone"] as const;
+
+/**
+ * W-338: one more field of the post's entry (`field`, its name), as text or a link. `text`
+ * replaces the value as what shows (a link's label); empty fields show nothing.
+ */
+export const PostFieldNode = leafNode(
+  "post-field",
+  z.strictObject({
+    field: z
+      .string()
+      .regex(/^[A-Za-z][A-Za-z0-9_]{0,63}$/)
+      .optional(),
+    link: z.enum(POST_FIELD_LINKS).optional(),
+    text: z.string().max(MAX_TEXT_LENGTH).optional(),
+    newTab: z.boolean().optional(),
+  }),
+);
+
 /**
  * Repeats its item template for each post in ThemeDynamicData.posts.
  * When `itemPartId` is set, the host supplies that Loop Item layout in loopTemplates;
@@ -575,6 +596,7 @@ export const KNOWN_ELEMENT_TYPES = [
   "post-link",
   "post-date",
   "post-author",
+  "post-field",
   "loop",
   "pagination",
   "breadcrumbs",
@@ -657,6 +679,7 @@ const KnownLayoutNode = z.discriminatedUnion("type", [
   PostLinkNode,
   PostDateNode,
   PostAuthorNode,
+  PostFieldNode,
   LoopNode,
   PaginationNode,
   BreadcrumbsNode,
@@ -695,6 +718,7 @@ export type PaginationNode = z.infer<typeof PaginationNode>;
 export type BreadcrumbsNode = z.infer<typeof BreadcrumbsNode>;
 export type PostDateNode = z.infer<typeof PostDateNode>;
 export type PostAuthorNode = z.infer<typeof PostAuthorNode>;
+export type PostFieldNode = z.infer<typeof PostFieldNode>;
 
 type StyleOf = z.infer<typeof StyleProps>;
 type StatesOf = z.infer<typeof StyleStates>;
@@ -1051,6 +1075,7 @@ export type LayoutNode =
   | PostLinkNode
   | PostDateNode
   | PostAuthorNode
+  | PostFieldNode
   | PaginationNode
   | BreadcrumbsNode
   | AccordionNode

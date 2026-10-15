@@ -5,6 +5,7 @@ import type {
   PostContentNode,
   PostDateNode,
   PostExcerptNode,
+  PostFieldNode,
   PostImageNode,
   PostLinkNode,
   PostTitleNode,
@@ -128,6 +129,52 @@ export const postAuthor: ElementDefinition<PostAuthorNode> = {
     fields: [],
   },
   build: (_node, attrs) => ({ tag: "span", attrs, children: ["Author"] }),
+};
+
+/** W-338: any other field of the post's entry, as text or a link (e-mail, phone, URL). */
+export const postField: ElementDefinition<PostFieldNode> = {
+  baseCss: ".emvb-post-field{margin:0}a.emvb-post-field{color:inherit}",
+  defaults: () => ({ type: "post-field", props: {} }),
+  descriptor: {
+    type: "post-field",
+    name: "Post Field",
+    group: "dynamic",
+    defaultTab: "content",
+    fields: [
+      {
+        key: "field",
+        kind: "text",
+        label: "Field",
+        optional: true,
+        message: "The entry field's name, e.g. email or role.",
+      },
+      {
+        key: "link",
+        kind: "select",
+        label: "Link",
+        optional: true,
+        options: [
+          { value: "none", label: "No link" },
+          { value: "url", label: "Web address" },
+          { value: "email", label: "E-mail address" },
+          { value: "phone", label: "Phone number" },
+        ],
+      },
+      {
+        key: "text",
+        kind: "text",
+        label: "Text",
+        optional: true,
+        message: "Leave blank to show the field's value.",
+      },
+      { key: "newTab", kind: "boolean", label: "Open in new tab", optional: true },
+    ],
+  },
+  build: (node, attrs) => ({
+    tag: node.props.link && node.props.link !== "none" ? "a" : "p",
+    attrs,
+    children: [node.props.field ? `{${node.props.field}}` : "Post field"],
+  }),
 };
 
 export const postLink: ElementDefinition<PostLinkNode> = {

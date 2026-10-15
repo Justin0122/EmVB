@@ -24,9 +24,9 @@ type Attrs = Record<string, string>;
 
 type PostField = {
   /** Shown in the editor when there is no post, or the post lacks this field; public pages show nothing. */
-  placeholder: (attrs: Attrs) => VNode;
+  placeholder: (attrs: Attrs, node: LayoutNode) => VNode;
   /** Whether the post has this field; the placeholder stands in when it doesn't. */
-  has?: (post: ThemePostFields) => boolean;
+  has?: (post: ThemePostFields, node: LayoutNode) => boolean;
   /** The field's markup, or nothing when the post's value is empty or unsafe. */
   render: (node: LayoutNode, attrs: Attrs, post: ThemePostFields) => VNode | undefined;
 };
@@ -159,7 +159,52 @@ const POST_FIELDS = new Map<string, PostField>([
       },
     },
   ],
+  [
+    "post-field",
+    {
+      placeholder: (attrs, node) => {
+        const { field, link } = props<{ field?: string; link?: string }>(node);
+        const tag = link && link !== "none" ? "a" : "p";
+        return { tag, attrs, children: [field ? `{${field}}` : "Post field"] };
+      },
+      has: (post, node) => !!postFieldValue(post, node),
+      render: (node, attrs, post) => {
+        const value = postFieldValue(post, node);
+        if (!value) return undefined;
+        const { link, text, newTab } = props<{ link?: string; text?: string; newTab?: boolean }>(
+          node,
+        );
+        const shown = text?.trim() || value;
+        const href = link && link !== "none" ? postFieldHref(link, value) : undefined;
+        if (!href) return { tag: "p", attrs, children: [shown] };
+        const linkAttrs: Attrs = { ...attrs, href };
+        if (newTab && link === "url") {
+          linkAttrs.target = "_blank";
+          linkAttrs.rel = "noopener noreferrer";
+        }
+        return { tag: "a", attrs: linkAttrs, children: [shown] };
+      },
+    },
+  ],
 ]);
+
+/** W-338: a Post Field's value: the named field of the post's entry, trimmed. */
+function postFieldValue(post: ThemePostFields, node: LayoutNode): string {
+  const field = props<{ field?: string }>(node).field;
+  return field ? (post.fields?.[field]?.trim() ?? "") : "";
+}
+
+const EMAIL = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/;
+
+/** W-338: the link a Post Field's value makes; none when the value isn't one of its kind. */
+function postFieldHref(link: string, value: string): string | undefined {
+  if (link === "email") return EMAIL.test(value) ? `mailto:${value}` : undefined;
+  if (link === "phone") {
+    const number = value.replace(/[^\d+]/g, "");
+    return /^\+?\d{3,20}$/.test(number) ? `tel:${number}` : undefined;
+  }
+  return sanitizeHref(value) || undefined;
+}
 
 export const isDynamicPostNode = (node: LayoutNode) => POST_FIELDS.has(node.type);
 
@@ -172,8 +217,8 @@ export function renderDynamicPost(
 ): VNode | undefined {
   const field = POST_FIELDS.get(node.type);
   if (!field) return undefined;
-  if (!post || field.has?.(post) === false) {
-    return mode === "editor" ? field.placeholder(attrs) : undefined;
+  if (!post || field.has?.(post, node) === false) {
+    return mode === "editor" ? field.placeholder(attrs, node) : undefined;
   }
   return field.render(node, attrs, post);
 }

@@ -71,6 +71,7 @@ export function themePostFromEntry(
     .map((key) => entryTimestamp(data[key]))
     .find(Boolean);
   const authorName = authorFrom(data);
+  const fields = textFieldsOf(data);
   return {
     id: id || slug,
     slug: slug || id,
@@ -80,8 +81,24 @@ export function themePostFromEntry(
     permalink,
     ...(publishedAt ? { publishedAt } : {}),
     ...(authorName ? { authorName } : {}),
+    ...(Object.keys(fields).length > 0 ? { fields } : {}),
     ...media,
   };
+}
+
+const MAX_FIELDS = 100;
+const MAX_FIELD_LENGTH = 5000;
+
+/** W-338: an entry's text and number fields by name, for Post Field. */
+function textFieldsOf(data: Record<string, unknown>): Record<string, string> {
+  const fields: Record<string, string> = {};
+  for (const key of Object.keys(data).slice(0, MAX_FIELDS)) {
+    const value = data[key];
+    if (typeof value === "string" && value.trim())
+      fields[key] = value.trim().slice(0, MAX_FIELD_LENGTH);
+    else if (typeof value === "number" && Number.isFinite(value)) fields[key] = String(value);
+  }
+  return fields;
 }
 
 function firstString(data: Record<string, unknown>, keys: string[]): string | undefined {

@@ -16255,8 +16255,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
-          "search": "      setEditing(edit);",
-          "replace": "      setEditing(null);"
+          "search": "    setEditing(edit);\n    return true;",
+          "replace": "    setEditing(null);\n    return true;"
         }
       ],
       "command": [
@@ -17812,8 +17812,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
-          "search": "(${DROP_BOXES})::after{content:\"Drop elements here\"",
-          "replace": "(${DROP_BOXES})::after{content:\"\""
+          "search": "(${DROP_BOXES})${OWN}::after{content:\"Drop elements here\"",
+          "replace": "(${DROP_BOXES})${OWN}::after{content:\"\""
         }
       ],
       "command": ["bun", "run", "e2e", "e2e/drag.e2e.ts", "--project=node", "-g", "W-128"],
@@ -18090,8 +18090,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
-          "search": "`:is(${DROP_BODIES}){outline:1px dashed #94a3b8;outline-offset:-1px}` +",
-          "replace": "`:is(${DROP_BODIES}){outline:1px dashed #94a3b8;outline-offset:-1px;display:flex}` +"
+          "search": "`:is(${DROP_BODIES})${OWN}{outline:1px dashed #94a3b8;outline-offset:-1px}` +",
+          "replace": "`:is(${DROP_BODIES})${OWN}{outline:1px dashed #94a3b8;outline-offset:-1px;display:flex}` +"
         }
       ],
       "command": [
@@ -18971,8 +18971,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/canvas/CanvasFrame.tsx",
-          "search": "  `:where(${DROP_BOXES}){min-height:48px}` +",
-          "replace": "  `:is(${DROP_BOXES}){min-height:48px}` +"
+          "search": "  `:where(${DROP_BOXES})${OWN}{min-height:48px}` +",
+          "replace": "  `:is(${DROP_BOXES})${OWN}{min-height:48px}` +"
         }
       ],
       "command": ["bun", "run", "e2e", "e2e/canvas-boxes.e2e.ts", "--project=node", "-g", "W-145"],
@@ -27032,8 +27032,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/theme/component.ts",
-          "search": "path: `${found.path}.${at < 0 ? index : at}.`,",
-          "replace": "path: `${found.path}.${index}.`,"
+          "search": "const position = at < 0 ? index : at;",
+          "replace": "const position = index;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
@@ -27648,6 +27648,48 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/component.test.ts"],
       "expect": "\\(fail\\).*W-335"
+    },
+    {
+      "id": "W-338/phone-unchecked",
+      "requirement": "W-338",
+      "description": "A Post Field phone link takes any value, so text becomes a tel: link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/dynamic-post.ts",
+          "search": "return /^\\+?\\d{3,20}$/.test(number) ? `tel:${number}` : undefined;",
+          "replace": "return `tel:${number}`;"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/dynamic-post.test.ts"],
+      "expect": "\\(fail\\).*W-338"
+    },
+    {
+      "id": "W-338/unsafe-url",
+      "requirement": "W-338",
+      "description": "A Post Field web link skips the href check.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/dynamic-post.ts",
+          "search": "  return sanitizeHref(value) || undefined;\n}",
+          "replace": "  return value;\n}"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/dynamic-post.test.ts"],
+      "expect": "\\(fail\\).*W-338"
+    },
+    {
+      "id": "W-338/fields-dropped",
+      "requirement": "W-338",
+      "description": "Entries carry no other fields, so Post Field shows nothing.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/astro/theme-posts.ts",
+          "search": "    ...(Object.keys(fields).length > 0 ? { fields } : {}),\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/astro/theme-posts.test.ts"],
+      "expect": "\\(fail\\).*W-338"
     }
   ]
 }

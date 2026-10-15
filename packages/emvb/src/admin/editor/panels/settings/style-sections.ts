@@ -272,6 +272,7 @@ const SPANS_ONLY = [
   "post-link",
   "post-date",
   "post-author",
+  "post-field",
 ] as const;
 
 /** Per-type filters so Spacer and Divider don't get every control. */

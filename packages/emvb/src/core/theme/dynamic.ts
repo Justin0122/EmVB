@@ -19,6 +19,8 @@ export type ThemePostFields = {
   /** ISO date or a display string from the post. */
   publishedAt?: string;
   authorName?: string;
+  /** W-338: the entry's other text fields by name (texts and numbers), for Post Field. */
+  fields?: Readonly<Record<string, string>>;
 };
 
 /** Data passed into `renderPage` when resolving Single Post / Archive / Loop Item. */

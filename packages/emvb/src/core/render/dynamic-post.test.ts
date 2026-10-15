@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import golden from "../../../test/fixtures/dynamic-post-golden.json";
-import { PostDateNode, PostExcerptNode, type LayoutNode } from "../schema/layout.ts";
+import { PostDateNode, PostExcerptNode, PostFieldNode, type LayoutNode } from "../schema/layout.ts";
 import type { ThemePostFields } from "../theme/dynamic.ts";
 import { renderDynamicPost } from "./dynamic-post.ts";
 import { serialize } from "./vnode.ts";
@@ -102,5 +102,63 @@ describe("Post Date format and Post Excerpt length (W-177)", () => {
     expect(parse("post-excerpt", { maxWords: 30 })).toBe(true);
     expect(parse("post-excerpt", { maxWords: 0 })).toBe(false);
     expect(parse("post-excerpt", { maxWords: 2.5 })).toBe(false);
+  });
+});
+
+describe("Post Field shows another field of the entry (W-338)", () => {
+  const withFields: ThemePostFields = {
+    ...post,
+    fields: {
+      role: "Accountmanager",
+      email: "a.b@tuwi.nl",
+      phone: "06 24 369 149",
+      site: "https://x.nl",
+      bad: "javascript:alert(1)",
+    },
+  };
+  const html = (
+    props: Record<string, unknown>,
+    mode: "public" | "editor" = "public",
+    of = withFields,
+  ) => {
+    const node = { id: "node0001", type: "post-field", props } as LayoutNode;
+    const vnode = renderDynamicPost(node, {}, of, mode);
+    return vnode ? serialize(vnode) : null;
+  };
+
+  test("as text, or links of each kind with the value or a fixed text", () => {
+    expect(html({ field: "role" })).toBe("<p>Accountmanager</p>");
+    expect(html({ field: "email", link: "email" })).toBe(
+      '<a href="mailto:a.b@tuwi.nl">a.b@tuwi.nl</a>',
+    );
+    expect(html({ field: "phone", link: "phone", text: "Bel" })).toBe(
+      '<a href="tel:0624369149">Bel</a>',
+    );
+    expect(html({ field: "site", link: "url", newTab: true })).toBe(
+      '<a href="https://x.nl" target="_blank" rel="noopener noreferrer">https://x.nl</a>',
+    );
+  });
+
+  test("a value that isn't its link kind shows as text; an unsafe one never links", () => {
+    expect(html({ field: "role", link: "email" })).toBe("<p>Accountmanager</p>");
+    expect(html({ field: "role", link: "phone" })).toBe("<p>Accountmanager</p>");
+    expect(html({ field: "bad", link: "url" })).toBe("<p>javascript:alert(1)</p>");
+  });
+
+  test("an empty or missing field shows nothing publicly and its name in the editor", () => {
+    expect(html({ field: "linkedin" })).toBeNull();
+    expect(html({})).toBeNull();
+    expect(html({ field: "linkedin", link: "url" }, "editor")).toBe("<a>{linkedin}</a>");
+    const node = { id: "node0001", type: "post-field", props: { field: "role" } } as LayoutNode;
+    const vnode = renderDynamicPost(node, {}, undefined, "editor");
+    expect(vnode ? serialize(vnode) : null).toBe("<p>{role}</p>");
+  });
+
+  test("the schema takes field names only", () => {
+    const valid = (field: string) =>
+      PostFieldNode.safeParse({ id: "node0001", type: "post-field", props: { field } }).success;
+    expect(valid("phone_number")).toBe(true);
+    expect(valid("1st")).toBe(false);
+    expect(valid("a.b")).toBe(false);
   });
 });

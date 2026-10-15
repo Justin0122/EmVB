@@ -61,6 +61,8 @@ describe("themePostFromEntry", () => {
       excerpt: "",
       content: "",
       permalink: "/blog/hello",
+      // W-338: the bag's text and number fields come along as they are.
+      fields: { slug: "hello", title: "5" },
     });
   });
 
@@ -103,5 +105,28 @@ describe("local images stored by EmDash (W-313)", () => {
     expect(
       mediaFieldsFrom({ id: "01M", meta: { storageKey: "../x?y" } }).featuredImageUrl,
     ).toBeUndefined();
+  });
+});
+
+describe("an entry's other fields come along for Post Field (W-338)", () => {
+  test("texts and numbers by name, trimmed; other values are left out", () => {
+    const post = themePostFromEntry({
+      id: "e1",
+      data: {
+        slug: "maik",
+        title: "Maik",
+        email: " m.wensink@tuwi.nl ",
+        position: 3,
+        blank: "  ",
+        photo: { src: "/x.jpg" },
+        tags: ["a"],
+      },
+    });
+    expect(post?.fields).toEqual({
+      slug: "maik",
+      title: "Maik",
+      email: "m.wensink@tuwi.nl",
+      position: "3",
+    });
   });
 });

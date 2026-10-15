@@ -49,6 +49,7 @@ import {
   postTitle,
   postDate,
   postAuthor,
+  postField,
 } from "./dynamic-elements.ts";
 
 const HEADING_TAGS = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
@@ -1183,6 +1184,7 @@ export const ELEMENTS = {
   "post-link": postLink,
   "post-date": postDate,
   "post-author": postAuthor,
+  "post-field": postField,
   loop,
   pagination,
   breadcrumbs,

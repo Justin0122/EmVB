@@ -85,6 +85,8 @@ describe("loadCollectionLoops (W-308)", () => {
         permalink: "/nieuws/opening",
         featuredImageUrl: "/a.jpg",
         featuredImageAlt: "A",
+        // W-338: the entry's text fields, for Post Field.
+        fields: { id: "n1", slug: "opening", title: "Opening", excerpt: "Hi" },
       },
     ]);
   });

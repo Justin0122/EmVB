@@ -72,6 +72,7 @@ const ICONS: Record<string, typeof TextHIcon> = {
   "post-link": LinkSimpleIcon,
   "post-date": TextTIcon,
   "post-author": TextTIcon,
+  "post-field": TextTIcon,
   loop: ListBulletsIcon,
   pagination: ArrowsLeftRightIcon,
   breadcrumbs: SignpostIcon,
