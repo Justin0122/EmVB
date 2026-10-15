@@ -27,14 +27,17 @@ function stampGroup(children: VNode["children"], name: string): VNode["children"
 }
 
 /** Runs of menu items become a list. Other elements stay in the panel beside that list. */
-function groupItems(children: VNode["children"]): VNode["children"] {
+function groupItems(
+  children: VNode["children"],
+  listClass = "emvb-menu__list emvb-menu__list--sub",
+): VNode["children"] {
   const out: VNode["children"] = [];
   let batch: VNode[] = [];
   const flush = () => {
     if (batch.length === 0) return;
     out.push({
       tag: "ul",
-      attrs: { class: "emvb-menu__list emvb-menu__list--sub" },
+      attrs: { class: listClass },
       children: batch,
     });
     batch = [];
@@ -118,13 +121,9 @@ export const menu: ElementDefinition<MenuNode> = {
     return {
       tag: "nav",
       attrs: { ...attrs, class: classes, "aria-label": label },
-      children: [
-        {
-          tag: "ul",
-          attrs: { class: "emvb-menu__list" },
-          children: stampGroup(children, `emvb-menu-${node.id}`),
-        },
-      ],
+      // W-601: an imported layout can put a non-item straight in the Menu; it sits beside the
+      // list, since a <ul> holds only <li>.
+      children: groupItems(stampGroup(children, `emvb-menu-${node.id}`), "emvb-menu__list"),
     };
   },
 };

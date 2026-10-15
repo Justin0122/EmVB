@@ -103,3 +103,20 @@ describe("menu", () => {
     });
   });
 });
+
+test("W-601 a non-item straight in a Menu (import, MCP) sits beside the list, not inside the ul", () => {
+  const menu: LayoutNode = {
+    id: "menu0001",
+    type: "menu",
+    props: { direction: "row" },
+    children: [
+      item("item0001", "Home", { href: "/" }),
+      heading("head0001", "Hi", 2),
+      item("item0002", "Blog", { href: "/blog" }),
+    ],
+  };
+  const html = renderPage(page(menu), design).html;
+  expect(html).not.toMatch(/<ul[^>]*>(?:(?!<\/ul>).)*<h2/s);
+  expect(html).toContain('<h2 class="emvb-heading">Hi</h2>');
+  expect(html.match(/<ul class="emvb-menu__list">/g)?.length).toBe(2);
+});
