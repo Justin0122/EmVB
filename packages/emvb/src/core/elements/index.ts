@@ -762,13 +762,15 @@ const video: ElementDefinition<VideoNode> = {
         children: [],
       };
     }
+    // W-549: an empty Title left the player unnamed for screen readers.
+    const title = String(node.props.title ?? "").trim() || "Video";
     if (target.kind === "iframe") {
       return {
         tag: "iframe",
         attrs: {
           ...attrs,
           src: target.src,
-          title: node.props.title,
+          title,
           loading: "lazy",
           referrerpolicy: "strict-origin-when-cross-origin",
           allow: "encrypted-media; picture-in-picture; fullscreen",
@@ -784,7 +786,7 @@ const video: ElementDefinition<VideoNode> = {
       attrs: {
         ...attrs,
         src: target.src,
-        title: node.props.title,
+        title,
         controls: "",
         preload: "metadata",
       },

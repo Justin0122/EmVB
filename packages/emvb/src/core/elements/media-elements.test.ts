@@ -192,3 +192,15 @@ describe("dynamic element defaults (W-091)", () => {
     expect(defaultElement("post-image", "pimg0001").props).toEqual({ decorative: false });
   });
 });
+
+describe("video title (W-549)", () => {
+  test("an empty title still names the player", () => {
+    const video = (props: Record<string, unknown>) =>
+      render({ ...defaultElement("video", "vide0001"), props } as LayoutNode);
+    expect(video({ url: "https://youtu.be/dQw4w9WgXcQ", title: "  " }).getAttribute("title")).toBe(
+      "Video",
+    );
+    expect(video({ url: "/media/a.mp4", title: "" }).getAttribute("title")).toBe("Video");
+    expect(video({ url: "/media/a.mp4", title: "Tour" }).getAttribute("title")).toBe("Tour");
+  });
+});
