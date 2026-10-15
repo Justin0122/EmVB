@@ -83,6 +83,16 @@ describe("Post Date format and Post Excerpt length (W-177)", () => {
     );
   });
 
+  test("a Post Date shows the day as written, whatever the offset (W-599)", () => {
+    // 22:00 in Toronto is already the 7th in UTC; the post was published on the 6th.
+    expect(html("post-date", {}, { publishedAt: "2026-10-06T22:00:00-04:00" })).toBe(
+      '<time datetime="2026-10-06T22:00:00-04:00">Oct 6, 2026</time>',
+    );
+    expect(
+      html("post-date", { format: "numeric" }, { publishedAt: "2026-10-07T01:00:00+05:30" }),
+    ).toBe('<time datetime="2026-10-07T01:00:00+05:30">2026-10-07</time>');
+  });
+
   test("a Post Excerpt is cut to its word count with an ellipsis, and a short one is kept", () => {
     const excerpt = { excerpt: "One two  three\nfour five" };
     expect(html("post-excerpt", { maxWords: 3 }, excerpt)).toBe("<p>One two three…</p>");

@@ -21159,14 +21159,28 @@
       "expect": "\\(fail\\)"
     },
     {
+      "id": "W-599/utc-day",
+      "requirement": "W-599",
+      "description": "A Post Date with a negative offset late in the day shows the next day (UTC).",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/dynamic-post.ts",
+          "search": "    ? day.getTime()\n",
+          "replace": "    ? parsed\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/dynamic-post.test.ts"],
+      "expect": "\\(fail\\)"
+    },
+    {
       "id": "W-196/rollover-date",
       "requirement": "W-196",
       "description": "An impossible ISO date (Feb 30) rolls over to another day.",
       "edits": [
         {
           "file": "packages/emvb/src/core/render/dynamic-post.ts",
-          "search": "  return day.getUTCDate() === Number(match[3]) && day.getUTCMonth() === Number(match[2]) - 1\n    ? parsed\n    : Number.NaN;",
-          "replace": "  return day ? parsed : Number.NaN;"
+          "search": "  return day.getUTCDate() === Number(match[3]) && day.getUTCMonth() === Number(match[2]) - 1\n    ? day.getTime()\n    : Number.NaN;",
+          "replace": "  return day.getTime();"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/dynamic-post.test.ts"],

@@ -17,8 +17,10 @@ const parseIsoDate = (raw: string): number => {
   const parsed = Date.parse(raw.replace(" ", "T"));
   if (Number.isNaN(parsed)) return Number.NaN;
   const day = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  // W-599: the day as written. A post at 22:00-04:00 was published that day, not the next
+  // one in UTC, and a time with no zone isn't moved by the server's zone.
   return day.getUTCDate() === Number(match[3]) && day.getUTCMonth() === Number(match[2]) - 1
-    ? parsed
+    ? day.getTime()
     : Number.NaN;
 };
 
@@ -40,7 +42,7 @@ type PostField = {
 
 type PostDateFormat = (typeof POST_DATE_FORMATS)[number];
 
-/** In UTC, so the date doesn't move with the server's time zone. */
+/** In UTC on the written day, so the date doesn't move with the server's time zone. */
 function formatPostDate(time: number, format: PostDateFormat): string {
   const date = new Date(time);
   if (format === "numeric") return date.toISOString().slice(0, 10);
