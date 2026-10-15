@@ -29263,8 +29263,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "if (FIELD_TYPES.has(node.type) && !String",
-          "replace": "if (false && FIELD_TYPES.has(node.type) && !String"
+          "search": "if (FIELD_TYPES.has(node.type) && !spoken",
+          "replace": "if (false && FIELD_TYPES.has(node.type) && !spoken"
         }
       ],
       "command": [
@@ -29323,7 +29323,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/a11y/audit.ts",
-          "search": "if (node.type === \"heading\" && !String(props[\"text\"] ?? \"\").trim() && !node.bind) {",
+          "search": "if (node.type === \"heading\" && !spoken(props[\"text\"]) && !node.bind) {",
           "replace": "if (false) {"
         }
       ],
