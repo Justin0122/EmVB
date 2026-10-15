@@ -122,7 +122,7 @@ export function localStylesToClass(
   node: LayoutNode,
   name: string,
 ): { design: DesignSystem; node: LayoutNode; classId: string } | null {
-  const trimmed = clipText(name.trim(), 60);
+  const trimmed = cleanClassName(name);
   if (!trimmed || localToClassRefusal(design, node)) return null;
   const classes = design.classes ?? [];
   const base = slugify(trimmed).slice(0, 34).replace(/-+$/, "") || "class";

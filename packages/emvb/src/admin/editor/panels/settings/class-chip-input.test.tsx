@@ -775,6 +775,24 @@ describe("save local styles as class (W-134)", () => {
     expect(log).toEqual({ nodes: [], designs: [] });
   });
 
+  test("a name that only differs in spacing or a tab is taken; saved names are cleaned (W-558)", async () => {
+    const log = { nodes: [] as LayoutNode[], designs: [] as DesignSystem[] };
+    await mount(<PanelHarness initial={local()} log={log} />);
+    await openStyle();
+    await nameLocal("Hero  title");
+    expect(document.querySelector("[data-emvb-class-error]")?.textContent).toBe(
+      'A class named "Hero title" already exists. Pick another name.',
+    );
+    expect(log.designs).toEqual([]);
+    await cleanup();
+
+    const fresh = { nodes: [] as LayoutNode[], designs: [] as DesignSystem[] };
+    await mount(<PanelHarness initial={local()} log={fresh} />);
+    await openStyle();
+    await nameLocal("Brand\tbig   heading");
+    expect(fresh.designs[0]?.classes?.at(-1)?.name).toBe("Brand big heading");
+  });
+
   test("a failed site styles save keeps the local styles and shows why", async () => {
     const log = { nodes: [] as LayoutNode[], designs: [] as DesignSystem[] };
     await mount(

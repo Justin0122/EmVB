@@ -9,6 +9,7 @@ import {
   removeClassId,
   renameClass,
   classNameTaken,
+  cleanClassName,
   classNameTakenMessage,
   replaceClassId,
   type DesignSystem,
@@ -157,10 +158,11 @@ export function ClassChipInput({
 
   /** "Save local styles as class" (W-134): one page edit, so one Ctrl+Z puts them back. */
   const saveLocal = async () => {
-    const name = localName.trim();
+    // W-558: cleaned as every class name is, so "Hero  title" can't sit beside "Hero title".
+    const name = cleanClassName(localName);
     if (!name || !onSaveLocal) return;
-    if (catalog.some((cls) => cls.name.toLowerCase() === name.toLowerCase())) {
-      setError(`A class named "${name}" already exists. Pick another name.`);
+    if (classNameTaken(design, name)) {
+      setError(classNameTakenMessage(name));
       return;
     }
     setError(null);
