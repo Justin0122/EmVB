@@ -58,6 +58,8 @@ function FilterTabs({
   const refs = React.useRef(new Map<Filter, HTMLButtonElement>());
 
   const onKeyDown = (event: React.KeyboardEvent) => {
+    // W-680: Alt+Left is the browser's Back; Ctrl/Cmd keys are shortcuts.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     const at = FILTERS.findIndex((f) => f.value === filter);
     const last = FILTERS.length - 1;
     const to =

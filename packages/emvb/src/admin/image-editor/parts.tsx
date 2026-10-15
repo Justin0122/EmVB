@@ -160,6 +160,8 @@ export function ToolSwitcher() {
   const buttons = React.useRef<(HTMLButtonElement | null)[]>([]);
   const index = IMAGE_EDITOR_TOOLS.findIndex((t) => t.id === editor.tool);
   const onKeyDown = (event: React.KeyboardEvent) => {
+    // W-680: Alt+Left is the browser's Back; Ctrl/Cmd keys are shortcuts.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     const count = IMAGE_EDITOR_TOOLS.length;
     const next =
       event.key === "ArrowRight"

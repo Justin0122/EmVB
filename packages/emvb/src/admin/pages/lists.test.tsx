@@ -144,6 +144,16 @@ describe("ThemePartList", () => {
     expect((document.activeElement as HTMLElement | null)?.id).toBe("emvb-theme-filter-float");
     expect(await press("a")).toBe(false);
     expect(selected()).toEqual(["Floats"]);
+    // W-680: Alt+Left is the browser's Back; modified keys are left alone.
+    const alt = new KeyboardEvent("keydown", {
+      key: "ArrowLeft",
+      altKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    await act(async () => document.activeElement?.dispatchEvent(alt));
+    expect(alt.defaultPrevented).toBe(false);
+    expect(selected()).toEqual(["Floats"]);
     const panel = host.querySelector('[role="tabpanel"]');
     expect(panel?.getAttribute("aria-labelledby")).toBe("emvb-theme-filter-float");
     expect(tabs().every((t) => t.getAttribute("aria-controls") === panel?.id)).toBe(true);

@@ -336,6 +336,12 @@ describe("image editor in photocn's layout (W-483)", () => {
     tools[1]?.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
     await settle();
     expect(q("[data-emvb-image-panel]")?.dataset.emvbImagePanel).toBe("metadata");
+    // W-680: Alt/Ctrl/Cmd + arrows belong to the browser.
+    tools[5]?.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "ArrowLeft", altKey: true, bubbles: true }),
+    );
+    await settle();
+    expect(q("[data-emvb-image-panel]")?.dataset.emvbImagePanel).toBe("metadata");
   });
 
   test("undo, redo and reset follow the editor's history", async () => {
