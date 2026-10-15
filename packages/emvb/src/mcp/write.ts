@@ -18,6 +18,7 @@ import {
 import { addNode, moveNode, withFreshIds } from "../core/arrange.ts";
 import { ELEMENT_DESCRIPTORS } from "../core/elements/index.ts";
 import { nodeChildren, removeNode, slugify, starterLayout, updateNode } from "../core/tree-ops.ts";
+import { isSafeFontStack } from "../core/sanitize/css.ts";
 import { sanitizeMediaUrl } from "../core/sanitize/media-url.ts";
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts } from "./ports.ts";
@@ -608,6 +609,15 @@ export async function updateSiteStyles(
       defaults?: Record<string, unknown>;
     };
     const changes: string[] = [];
+    // W-547: a font stack the site CSS can't carry was saved, then dropped from the page.
+    for (const font of (input.variables?.fonts ?? []) as { id?: unknown; value?: unknown }[]) {
+      if (typeof font.value === "string" && !isSafeFontStack(font.value)) {
+        throw new McpToolError(
+          "INVALID_INPUT",
+          `Font ${String(font.id)}: "${font.value.slice(0, 60)}" can't be used in the site CSS. Use names of letters, digits, spaces, - and _, quoted or not, separated by commas.`,
+        );
+      }
+    }
     for (const kind of VARIABLE_KINDS) {
       const items = input.variables?.[kind] as Item[] | undefined;
       if (items?.length) {

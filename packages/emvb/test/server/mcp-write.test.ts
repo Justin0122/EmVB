@@ -145,6 +145,16 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(error.message).toContain("taken");
   });
 
+  test("update_site_styles refuses a font stack the site CSS would drop (W-547)", async () => {
+    const error = await fail("update_site_styles", {
+      variables: { fonts: [{ id: "agent-font", name: "Agent font", value: "Inter; color: red" }] },
+    });
+    expect(error.code).toBe("INVALID_INPUT");
+    await call("update_site_styles", {
+      variables: { fonts: [{ id: "agent-font", name: "Agent font", value: '"Open Sans", serif' }] },
+    });
+  });
+
   test("update_site_styles writes the draft and records the history", async () => {
     const out = await call<{ revision: string }>("update_site_styles", {
       variables: { colors: [{ id: "agent-accent", name: "Agent accent", value: "#ff0066" }] },
