@@ -26077,8 +26077,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "if (mode === \"public\" && !variantShows(stored, dynamic?.abArms)) return undefined;",
-          "replace": "if (mode === \"editor\" && !variantShows(stored, dynamic?.abArms)) return undefined;"
+          "search": "if (mode === \"public\" && !variantShows(stored, dynamic?.abArms, loneTests)) return undefined;",
+          "replace": "if (mode === \"editor\" && !variantShows(stored, dynamic?.abArms, loneTests)) return undefined;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/audience/variants.test.ts"],
