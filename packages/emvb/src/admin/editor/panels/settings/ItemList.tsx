@@ -138,6 +138,12 @@ export function ItemList({
                 className="emvb-item-row"
                 data-emvb-item={child.id}
                 draggable
+                // W-611: in Chrome a draggable row drags itself when the mouse goes down in its
+                // title field, so text can't be selected. The row only drags from outside a field.
+                onPointerDown={(event) => {
+                  const target = event.target instanceof Element ? event.target : null;
+                  event.currentTarget.draggable = !target?.closest("input, textarea, select");
+                }}
                 onDragStart={(event) => {
                   // A text drag from the title field keeps the browser's own data (W-605).
                   if (event.target !== event.currentTarget) return;

@@ -268,6 +268,21 @@ describe("Accordion and Tabs item editing (W-130)", () => {
     expect(calls.changed.length).toBe(0);
   });
 
+  test("pressing in a title field turns the row's drag off so text can be selected (W-611)", async () => {
+    await panel(accordion([item("itm00001", "First"), item("itm00002", "Second")]));
+    const row = document.querySelector<HTMLElement>("[data-emvb-item]");
+    const input = row?.querySelector("input");
+    if (!row || !input) throw new Error("no row");
+    const press = (target: Element) =>
+      act(() => {
+        target.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+      });
+    press(input);
+    expect(row.draggable).toBe(false);
+    press(row);
+    expect(row.draggable).toBe(true);
+  });
+
   test("dragging text inside a title field doesn't drag or drop the row (W-605)", async () => {
     const calls = await panel(accordion([item("itm00001", "First"), item("itm00002", "Second")]));
     const store = new Map<string, string>();
