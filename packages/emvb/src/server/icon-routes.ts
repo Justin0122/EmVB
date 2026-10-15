@@ -29,8 +29,11 @@ type IconStore = {
 
 const store = (ctx: RouteContext<unknown>) => ctx.storage["icons"] as unknown as IconStore;
 
-/** The most recent uploads the picker lists. */
-const UPLOAD_LIST_LIMIT = 100;
+/**
+ * The uploads the picker lists, and the most My uploads holds (W-535): past it the oldest
+ * uploads dropped off the list and could no longer be seen or deleted.
+ */
+export const UPLOAD_LIST_LIMIT = 100;
 
 /** A file name without its folder or extension, as the icon's label. */
 export const uploadName = (name: string) =>
@@ -87,6 +90,14 @@ export const iconUploadRoute: PluginRoute<z.infer<typeof UploadInput>> = {
   handler: async (ctx) => {
     const prepared = prepareUploadedSvg(ctx.input.svg);
     if (!prepared.ok) throw new PluginRouteError("INVALID_SVG", prepared.message, 422);
+    const held = await store(ctx).query({ limit: UPLOAD_LIST_LIMIT });
+    if (held.items.length >= UPLOAD_LIST_LIMIT) {
+      throw new PluginRouteError(
+        "UPLOADS_FULL",
+        `My uploads holds up to ${UPLOAD_LIST_LIMIT} icons. Delete one you no longer use, then upload again.`,
+        409,
+      );
+    }
     const id = crypto.randomUUID().replaceAll("-", "").slice(0, 16);
     const item: UploadedIcon = {
       name: uploadName(ctx.input.name),

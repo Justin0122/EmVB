@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { iconRenameRoute, publicUploadedIcon, uploadName } from "../../src/server/icon-routes.ts";
+import {
+  iconRenameRoute,
+  publicUploadedIcon,
+  UPLOAD_LIST_LIMIT,
+  uploadName,
+} from "../../src/server/icon-routes.ts";
 import { createTestRuntime, ROLES, userWithRole } from "./runtime.ts";
 
 // W-239: uploaded SVG icons live in EmVB's plugin storage, sanitized on the server.
@@ -58,6 +63,28 @@ describe("icon upload routes (W-239)", () => {
     expect(JSON.stringify(result.body)).toContain("scripts, event handlers or embedded HTML");
     const list = await t.route("icons", { user: editor() });
     expect((list.body["data"] as { items: Item[] }).items).toEqual([]);
+  });
+
+  test("My uploads is full at the list limit, so no upload drops out of sight (W-535)", async () => {
+    const svg = '<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>';
+    let firstId = "";
+    for (let i = 0; i < UPLOAD_LIST_LIMIT; i++) {
+      // oxlint-disable-next-line no-await-in-loop -- one runtime; uploads in turn
+      const up = await t.route("icons/upload", {
+        user: editor(),
+        body: { name: `i${i}.svg`, svg },
+      });
+      if (i === 0) firstId = (up.body["data"] as { item: Item }).item.id;
+    }
+    const refused = await t.route("icons/upload", { user: editor(), body: { name: "x.svg", svg } });
+    expect(refused.status).toBe(409);
+    expect(JSON.stringify(refused.body)).toContain("My uploads holds up to 100 icons");
+    await t.route("icons/delete", { user: editor(), body: { id: firstId } });
+    const accepted = await t.route("icons/upload", {
+      user: editor(),
+      body: { name: "x.svg", svg },
+    });
+    expect(accepted.status).toBe(200);
   });
 
   test("anonymous visitors and authors can neither list nor upload", async () => {

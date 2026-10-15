@@ -31356,6 +31356,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/image-edit/image-edit.test.ts"],
       "expect": "\\(fail\\).*W-534"
+    },
+    {
+      "id": "W-535/uploads-unbounded",
+      "requirement": "W-535",
+      "description": "Uploads past the list limit are stored and drop out of sight.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/server/icon-routes.ts",
+          "search": "    if (held.items.length >= UPLOAD_LIST_LIMIT) {",
+          "replace": "    if (held.items.length > UPLOAD_LIST_LIMIT) {"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/test/server/icon-uploads.test.ts"],
+      "expect": "\\(fail\\).*W-535"
     }
   ]
 }
