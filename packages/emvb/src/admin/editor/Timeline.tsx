@@ -256,6 +256,7 @@ export function TimelineDialog({
                   onClick={() => {
                     setWho(key);
                     setPickedId(null);
+                    setError(null);
                   }}
                 >
                   <WhoIcon aria-hidden="true" size={14} />
@@ -278,7 +279,11 @@ export function TimelineDialog({
                     className="emvb-timeline-version"
                     aria-current={v.id === picked.id ? "true" : undefined}
                     data-emvb-version={v.id}
-                    onClick={() => setPickedId(v.id)}
+                    onClick={() => {
+                      setPickedId(v.id);
+                      // W-561: a refusal is about the version it came from.
+                      setError(null);
+                    }}
                   >
                     <span className="emvb-timeline-when">
                       <span>{whenParts(v.at).day}</span>

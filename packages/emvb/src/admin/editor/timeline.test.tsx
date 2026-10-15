@@ -207,3 +207,57 @@ describe("version timeline dialog (W-315)", () => {
     expect(srcdoc.includes("javascript:")).toBe(false);
   });
 });
+
+test("a restore refusal goes away when another version is picked (W-561)", async () => {
+  const many = (prefix: string, n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `${prefix}${String(i).padStart(4, "0")}`,
+      type: "text",
+      props: { text: "x" },
+    }));
+  const page = (sections: unknown[]) =>
+    ({
+      schemaVersion: 16,
+      root: { id: "root0001", type: "container", props: {}, children: sections },
+    }) as Layout;
+  // The current page is near the cap; the saved version (under it) still had another section.
+  const big = { id: "biga0001", type: "container", props: {}, children: many("bigx", 1985) };
+  const older = { ...big, children: many("bigx", 1960) };
+  const gone = { id: "gone0001", type: "container", props: {}, children: many("gonx", 20) };
+  const fetcher = async () =>
+    new Response(
+      JSON.stringify({
+        data: {
+          items: [
+            { id: "r1", createdAt: "2026-10-01T10:00:00Z", data: { layout: layoutWith("Old") } },
+            { id: "r2", createdAt: "2026-10-05T10:00:00Z", data: { layout: page([older, gone]) } },
+          ],
+          total: 2,
+        },
+      }),
+      { headers: { "content-type": "application/json" } },
+    );
+  await mount(
+    <TimelineDialog
+      open
+      onOpenChange={() => undefined}
+      fetcher={fetcher}
+      collection="emvb_pages"
+      entryId="01PAGE"
+      current={page([big])}
+      design={emptyDesign()}
+      onApply={() => undefined}
+    />,
+  );
+  await settle();
+  await act(async () =>
+    document.querySelector<HTMLButtonElement>('[data-emvb-restore-section="gone0001"]')?.click(),
+  );
+  const alert = () => document.querySelector(".emvb-timeline-main [role=alert]")?.textContent;
+  expect(alert()).toContain("too many elements");
+  await act(async () =>
+    document.querySelector<HTMLButtonElement>('[data-emvb-version="r1"]')?.click(),
+  );
+  await settle();
+  expect(alert()).toBeUndefined();
+});
