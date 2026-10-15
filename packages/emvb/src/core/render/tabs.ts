@@ -42,8 +42,16 @@ export function renderTabs(
       },
       children: [panel.props.label],
     });
+    // W-598: the panel renders like any element, so its own style, classes and device
+    // visibility reach the page; the tab wiring is added on top.
+    const built = ctx.children([panel], dynamic)[0];
+    const own = built?.attrs ?? {};
     const panelAttrs: Record<string, string> = {
-      class: "emvb-tab-panel",
+      ...own,
+      class: `emvb-tab-panel ${own.class ?? ""}`
+        .split(/\s+/)
+        .filter((c, at, all) => c && all.indexOf(c) === at)
+        .join(" "),
       id: panelDomId,
       role: "tabpanel",
       "aria-labelledby": tabDomId,
@@ -52,7 +60,7 @@ export function renderTabs(
     panelNodes.push({
       tag: "div",
       attrs: panelAttrs,
-      children: ctx.children(panel.children, dynamic),
+      children: built ? built.children : ctx.children(panel.children, dynamic),
     });
   });
   return {
