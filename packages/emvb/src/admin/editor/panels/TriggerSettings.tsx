@@ -2,6 +2,7 @@ import { Input } from "@cloudflare/kumo";
 import * as React from "react";
 import { clampScrollPercent, type PopupOpenTrigger, TRIGGER_LIMITS } from "../../../core/index.ts";
 import { FIELD } from "../../ui.ts";
+import { isCommitEnter } from "../ime.ts";
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
@@ -44,7 +45,7 @@ function NumberField({
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={(event) => {
-        if (event.key === "Enter") commit();
+        if (isCommitEnter(event)) commit();
       }}
     />
   );

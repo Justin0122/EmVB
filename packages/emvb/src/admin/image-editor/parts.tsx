@@ -26,6 +26,7 @@ import {
 import * as React from "react";
 import { useImageEditor } from "./engine.ts";
 import { IMAGE_EDITOR_TOOLS, type ImageEditorToolId } from "./tools.ts";
+import { isCommitEnter } from "../editor/ime.ts";
 
 export const TOOL_ICONS: Record<ImageEditorToolId, Icon> = {
   adjust: SlidersHorizontalIcon,
@@ -417,7 +418,7 @@ export function ValueSlider({
             if (draft !== null) apply(event.currentTarget.value);
           }}
           onKeyDown={(event) => {
-            if (event.key === "Enter") {
+            if (isCommitEnter(event)) {
               event.preventDefault();
               apply(event.currentTarget.value);
             } else if (event.key === "Escape") {

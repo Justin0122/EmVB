@@ -2,6 +2,7 @@ import { Button, Input } from "@cloudflare/kumo";
 import { ArrowCounterClockwiseIcon } from "@phosphor-icons/react";
 import * as React from "react";
 import { BUTTON, FIELD } from "../../../ui.ts";
+import { isCommitEnter } from "../../ime.ts";
 
 /** Range and scale of a plain number field; `scale` converts stored to shown (opacity 0–1 → %). */
 export type NumberSpec = {
@@ -90,7 +91,7 @@ export function NumberField({
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={(event) => {
-        if (event.key === "Enter") commit();
+        if (isCommitEnter(event)) commit();
       }}
     />
   );

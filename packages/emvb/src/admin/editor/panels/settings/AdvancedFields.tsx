@@ -10,6 +10,7 @@ import {
   type AttributeRow,
 } from "./advanced-rules.ts";
 import { QueryStyleRows } from "./QueryStyleRows.tsx";
+import { isCommitEnter } from "../../ime.ts";
 
 /**
  * CSS id: a value the page can't save (bad characters, or another element's id) stays in the
@@ -143,7 +144,7 @@ export function ContainerQueryFields({
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commitMin}
         onKeyDown={(event) => {
-          if (event.key === "Enter") commitMin();
+          if (isCommitEnter(event)) commitMin();
         }}
       />
       <Button

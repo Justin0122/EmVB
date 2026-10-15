@@ -1,6 +1,7 @@
 import { Dialog } from "@cloudflare/kumo";
 import * as React from "react";
 import { filterPalette, type PaletteItem } from "./palette.ts";
+import { isCommitEnter } from "./ime.ts";
 
 /**
  * Ctrl/Cmd+K (W-314): one box to insert an element, jump to a layer, apply a class, or run an
@@ -87,7 +88,7 @@ export function CommandPalette({
       event.preventDefault();
       const step = event.key === "ArrowDown" ? 1 : -1;
       setActive((current + step + shown.length) % Math.max(1, shown.length));
-    } else if (event.key === "Enter") {
+    } else if (isCommitEnter(event)) {
       event.preventDefault();
       run(shown[current]);
     } else if (event.key === "Home" && event.ctrlKey) {

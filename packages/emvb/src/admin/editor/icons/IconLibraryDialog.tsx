@@ -11,6 +11,7 @@ import type { Fetcher } from "../../api.ts";
 import { BUTTON, SOLID_PRIMARY, UI_CSS } from "../../ui.ts";
 import { ALL_ICONS, ICON_SETS, UPLOADS, type LibraryIcon } from "./library.ts";
 import { fmt, useIconLibrary } from "./use-icon-library.ts";
+import { isCommitEnter } from "../ime.ts";
 
 /** Grid geometry, in px. Tiles stretch to fill the row; this is their narrowest. */
 const TILE_MIN_WIDTH = 96;
@@ -221,7 +222,7 @@ function IconGrid({
         if (event.target === event.currentTarget && active < 0 && icons.length > 0) onCursor(0);
       }}
       onKeyDown={(event) => {
-        if (event.key === "Enter") {
+        if (isCommitEnter(event)) {
           const icon = icons[active];
           if (icon) {
             event.preventDefault();

@@ -7,6 +7,7 @@ import { listImages, uploadImage, type MediaLibraryItem } from "../../../media-a
 import { BUTTON, FIELD } from "../../../ui.ts";
 import { ColorControl } from "../ColorControl.tsx";
 import { NumberField, type NumberSpec } from "./NumberRow.tsx";
+import { isCommitEnter } from "../../ime.ts";
 
 type Gradient = NonNullable<StyleProps["gradient"]>;
 type Overlay = NonNullable<StyleProps["overlay"]>;
@@ -170,7 +171,7 @@ export function BackgroundImageControl({
           onChange={(event) => setUrlDraft(event.target.value)}
           onBlur={() => commitUrl(false)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") commitUrl(true);
+            if (isCommitEnter(event)) commitUrl(true);
           }}
         />
         {open && (

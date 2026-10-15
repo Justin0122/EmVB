@@ -25,6 +25,7 @@ import {
 } from "./curve-math.ts";
 import { drawRgbHistogram, useImageEditor, type CurvePoint } from "./engine.ts";
 import { PanelHeader, SectionTabs } from "./parts.tsx";
+import { isCommitEnter } from "../editor/ime.ts";
 
 const SIZE = 240;
 const LABEL: Record<CurvesChannel, string> = { rgb: "RGB", r: "R", g: "G", b: "B" };
@@ -379,7 +380,7 @@ function LevelField({
           if (draft !== null) apply(event.currentTarget.value);
         }}
         onKeyDown={(event) => {
-          if (event.key === "Enter") {
+          if (isCommitEnter(event)) {
             event.preventDefault();
             apply(event.currentTarget.value);
           } else if (event.key === "Escape") {

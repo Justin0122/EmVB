@@ -12,6 +12,7 @@ import {
 } from "./length-units.ts";
 import type { StyleKey } from "./style-sections.ts";
 import { bindKind, boundRef, lengthRef, VariableButton, VariableChip } from "./VariableBinding.tsx";
+import { isCommitEnter } from "../../ime.ts";
 
 const isLiteral = (value: unknown): value is LengthLiteral =>
   typeof value === "object" &&
@@ -147,7 +148,7 @@ export function LengthRow({
               }}
               onBlur={commit}
               onKeyDown={(event) => {
-                if (event.key === "Enter") commit();
+                if (isCommitEnter(event)) commit();
               }}
             />
             <InputGroup.Addon align="end" className="emvb-unit-addon">

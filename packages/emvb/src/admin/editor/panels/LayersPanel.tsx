@@ -584,6 +584,8 @@ function RenameInput({
       onBlur={() => finish(text)}
       onKeyDown={(event) => {
         event.stopPropagation();
+        // Enter or Escape that ends an IME composition only finishes the word (W-606).
+        if (event.nativeEvent.isComposing || event.keyCode === 229) return;
         if (event.key === "Enter") finish(text, true);
         if (event.key === "Escape") finish(null, true);
       }}

@@ -25,6 +25,7 @@ import {
 } from "../../../image-editor/ImageEditButton.tsx";
 import { editableSource } from "../../../image-editor/load.ts";
 import { BUTTON, FIELD } from "../../../ui.ts";
+import { isCommitEnter } from "../../ime.ts";
 
 const propsOf = (node: LayoutNode): Record<string, unknown> =>
   node.props as Record<string, unknown>;
@@ -261,7 +262,7 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
         onChange={(event) => setUrlDraft(event.target.value)}
         onBlur={() => commitUrl(false)}
         onKeyDown={(event) => {
-          if (event.key === "Enter") commitUrl(true);
+          if (isCommitEnter(event)) commitUrl(true);
         }}
       />
       {open && (

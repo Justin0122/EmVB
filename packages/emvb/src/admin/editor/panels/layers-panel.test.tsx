@@ -544,6 +544,24 @@ describe("renaming a layer (W-157)", () => {
     expect(select("head0001").textContent).toContain("Heading");
   });
 
+  test("Enter or Escape that ends an IME composition keeps the name field open (W-606)", async () => {
+    await mountTree(<Live start={layout} />);
+    await act(async () => {
+      select("head0001").dispatchEvent(new KeyboardEvent("keydown", { key: "F2", bubbles: true }));
+    });
+    for (const key of ["Enter", "Escape"]) {
+      await act(async () => {
+        field()?.dispatchEvent(
+          new KeyboardEvent("keydown", { key, isComposing: true, keyCode: 229, bubbles: true }),
+        );
+      });
+      expect(field()).not.toBeNull();
+    }
+    expect(renames).toEqual([]);
+    await typeName("見出し", "Enter");
+    expect(renames).toEqual([["head0001", "見出し"]]);
+  });
+
   test("Enter or Escape in the name field returns focus to the row (W-256)", async () => {
     await mountTree(<Live start={layout} />);
     await act(async () => {

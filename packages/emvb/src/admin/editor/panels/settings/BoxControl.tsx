@@ -20,6 +20,7 @@ import { ResetButton } from "./NumberRow.tsx";
 import { STYLE_LABELS } from "./style-sections.ts";
 import { placeholderOf } from "./StyleRow.tsx";
 import { bindKind, boundRef, VariableButton } from "./VariableBinding.tsx";
+import { isCommitEnter } from "../../ime.ts";
 
 /** Margin's "auto" menu item: auto left and right margins centre a box with a width (W-151). */
 const autoSidesPatch = (group: BoxGroup): Partial<StyleProps> => ({
@@ -260,7 +261,7 @@ function SideBox({
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => onCommit(draft)}
         onKeyDown={(event) => {
-          if (event.key === "Enter") onCommit(draft);
+          if (isCommitEnter(event)) onCommit(draft);
         }}
       />
       <span className="emvb-box-name" aria-hidden="true">

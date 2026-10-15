@@ -23,6 +23,7 @@ import {
 } from "./color-space.ts";
 import { InlineError } from "./inline-error.tsx";
 import { pickerHex, withPreviousAlpha } from "./variable-values.ts";
+import { isCommitEnter } from "../ime.ts";
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 const NONE = "__none__";
@@ -270,7 +271,7 @@ function CustomColor({
           onChange={(event) => setDraft(event.target.value)}
           onBlur={() => commit(draft)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") commit(draft);
+            if (isCommitEnter(event)) commit(draft);
           }}
         />
         <input
@@ -368,7 +369,7 @@ function NotationRow({
           if (draft.trim() !== text) onCommit(draft);
         }}
         onKeyDown={(event) => {
-          if (event.key === "Enter") onCommit(draft);
+          if (isCommitEnter(event)) onCommit(draft);
         }}
       />
       {error && <InlineError>{error}</InlineError>}
@@ -412,7 +413,7 @@ function VariableValue({
         onChange={(event) => setDraft(event.target.value)}
         onBlur={() => void commit()}
         onKeyDown={(event) => {
-          if (event.key === "Enter") void commit();
+          if (isCommitEnter(event)) void commit();
         }}
       />
       {error ? (
@@ -464,7 +465,7 @@ function NewVariable({
         value={hex}
         onChange={(event) => setHex(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === "Enter") void create();
+          if (isCommitEnter(event)) void create();
         }}
       />
       {error && <InlineError>{error}</InlineError>}

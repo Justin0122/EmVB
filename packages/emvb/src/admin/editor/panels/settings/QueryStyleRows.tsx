@@ -3,6 +3,7 @@ import type { LayoutNode } from "../../../../core/index.ts";
 import { FIELD } from "../../../ui.ts";
 import { savableNode } from "./DraftTextField.tsx";
 import { formatStyleValue, parseStyleValue, QUERY_STYLE_KEYS } from "./query-style.ts";
+import { isCommitEnter } from "../../ime.ts";
 
 type QueryStyle = NonNullable<LayoutNode["query"]>["style"];
 
@@ -65,7 +66,7 @@ function QueryStyleRow({
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}
         onKeyDown={(event) => {
-          if (event.key === "Enter") commit();
+          if (isCommitEnter(event)) commit();
         }}
       />
       <button
@@ -161,7 +162,7 @@ export function QueryStyleRows({
           aria-describedby={error ? `${valueId}-error` : undefined}
           onChange={(event) => setNewValue(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") add();
+            if (isCommitEnter(event)) add();
           }}
         />
         <button type="button" className="emvb-link-button" onClick={add}>

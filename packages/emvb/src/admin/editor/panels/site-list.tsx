@@ -3,6 +3,7 @@ import { DotsThreeIcon, PlusIcon, type Icon } from "@phosphor-icons/react";
 import * as React from "react";
 import { slugify } from "../../../core/index.ts";
 import { BUTTON, FIELD, SOLID_PRIMARY } from "../../ui.ts";
+import { isCommitEnter } from "../ime.ts";
 
 /** A slug of `name` (or `fallback`) that no id in `taken` uses yet: `x`, then `x-2`, `x-3`… */
 export function uniqueId(name: string, fallback: string, taken: Iterable<string>): string {
@@ -150,7 +151,7 @@ export function RenameInput({
       autoFocus
       onFocus={(event) => event.currentTarget.select()}
       onKeyDown={(event) => {
-        if (event.key === "Enter") finish(event.currentTarget.value);
+        if (isCommitEnter(event)) finish(event.currentTarget.value);
         else if (event.key === "Escape") {
           event.stopPropagation();
           finish(null);

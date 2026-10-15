@@ -24,6 +24,7 @@ import {
   MAX_SITE_CLASSES,
   type ClassOption,
 } from "./class-suggest.ts";
+import { isCommitEnter } from "../../ime.ts";
 
 type Props = {
   applied: readonly string[] | undefined;
@@ -192,7 +193,7 @@ export function ClassChipInput({
       const step = event.key === "ArrowDown" ? 1 : -1;
       setActive(open && options.length > 0 ? (active + step + options.length) % options.length : 0);
       setOpen(true);
-    } else if (event.key === "Enter") {
+    } else if (isCommitEnter(event)) {
       event.preventDefault();
       if (query.trim() && appliedByName(catalog, ids, query)) {
         setError(`"${query.trim()}" is already on this element.`);
@@ -411,7 +412,7 @@ export function ClassChipInput({
               setError(null);
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter") {
+              if (isCommitEnter(event)) {
                 event.preventDefault();
                 void saveLocal();
               } else if (event.key === "Escape") closeNaming();

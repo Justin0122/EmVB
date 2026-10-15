@@ -45,6 +45,7 @@ import {
   valueText,
   type Length,
 } from "./variable-values.ts";
+import { isCommitEnter } from "../ime.ts";
 
 const VAR_TOKEN: Record<VariableKind, (id: string) => string> = {
   color: (id) => `--emvb-c-${id}`,
@@ -195,7 +196,7 @@ function ValueEditor({
           }}
           onBlur={(event) => commit(event.currentTarget.value)}
           onKeyDown={(event) => {
-            if (event.key === "Enter") commit(event.currentTarget.value);
+            if (isCommitEnter(event)) commit(event.currentTarget.value);
             else if (event.key === "Escape") {
               event.stopPropagation();
               setText(committed.current);

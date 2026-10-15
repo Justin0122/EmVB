@@ -14,6 +14,7 @@ import {
   type ThemePostFields,
 } from "../../../../core/index.ts";
 import { siteOrigin, useLiveData } from "../../live-data.tsx";
+import { isCommitEnter } from "../../ime.ts";
 
 const KEY = /^[A-Za-z][A-Za-z0-9_.-]{0,63}$/;
 const STATIC = "static";
@@ -189,7 +190,7 @@ function BindKeyInput({
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}
         onKeyDown={(event) => {
-          if (event.key === "Enter") commit();
+          if (isCommitEnter(event)) commit();
         }}
       />
       {options.length > 0 && (

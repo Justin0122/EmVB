@@ -12,6 +12,7 @@ import {
 } from "../../../../core/index.ts";
 import { FIELD } from "../../../ui.ts";
 import { propsOf, withProp } from "./node-props.ts";
+import { isCommitEnter } from "../../ime.ts";
 
 const MAX_FIELD_NUMBER = 10_000;
 
@@ -46,7 +47,7 @@ function CommitInput({
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={(event) => {
-        if (event.key === "Enter") commit();
+        if (isCommitEnter(event)) commit();
       }}
     />
   );

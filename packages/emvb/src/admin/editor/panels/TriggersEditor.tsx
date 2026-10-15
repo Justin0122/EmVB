@@ -9,6 +9,7 @@ import {
 } from "../../../core/index.ts";
 import { BUTTON, FIELD } from "../../ui.ts";
 import { TriggerSettings } from "./TriggerSettings.tsx";
+import { isCommitEnter } from "../ime.ts";
 
 type Props = {
   triggers: TriggersDoc | undefined;
@@ -70,7 +71,7 @@ function ShowTimesField({
       onChange={(event) => setDraft(event.target.value)}
       onBlur={commit}
       onKeyDown={(event) => {
-        if (event.key === "Enter") commit();
+        if (isCommitEnter(event)) commit();
       }}
     />
   );
