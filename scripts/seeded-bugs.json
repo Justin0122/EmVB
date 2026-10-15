@@ -18317,8 +18317,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "  const { htmlId: _htmlId, ...rest } = node;",
-          "replace": "  const rest = { ...node };"
+          "search": "  const { htmlId: _htmlId, variant: _variant, ...rest } = node;",
+          "replace": "  const { variant: _variant, ...rest } = node;"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/arrange.test.ts"],
@@ -18359,8 +18359,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/arrange.ts",
-          "search": "  const { htmlId: _htmlId, ...rest } = node;",
-          "replace": "  const rest = { ...node };"
+          "search": "  const { htmlId: _htmlId, variant: _variant, ...rest } = node;",
+          "replace": "  const { variant: _variant, ...rest } = node;"
         }
       ],
       "command": ["bun", "run", "e2e", "e2e/duplicate.e2e.ts", "--project=node", "-g", "W-133"],
