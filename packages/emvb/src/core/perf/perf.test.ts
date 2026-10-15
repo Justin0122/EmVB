@@ -182,4 +182,21 @@ describe("W-671: parts the canvas loaded are weighed", () => {
     expect(report.imageCount).toBe(2);
     expect(report.sections.find((s) => s.id === "sec00001")?.images).toBe(1);
   });
+
+  test("W-674: a part id with stray spaces is found, like the renderer does", () => {
+    const wrap = (children: unknown[]) =>
+      ({
+        schemaVersion: 16,
+        root: { id: "root0001", type: "container", props: {}, children },
+      }) as unknown as Layout;
+    const withParts = wrap([
+      { id: "sec00001", type: "section", props: { partId: " hero " }, children: [] },
+    ]);
+    const hero = wrap([
+      { id: "img00001", type: "image", props: { src: "/hero.jpg", alt: "Hero" } },
+    ]);
+    expect(measurePage(withParts, emptyDesign(), { sectionTemplates: { hero } }).imageCount).toBe(
+      1,
+    );
+  });
 });

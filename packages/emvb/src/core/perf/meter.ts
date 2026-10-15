@@ -89,7 +89,7 @@ function media(
     const props = n.props as { partId?: unknown; itemPartId?: unknown };
     const found =
       n.type === "section" && typeof props.partId === "string"
-        ? dynamic?.sectionTemplates?.[props.partId]
+        ? dynamic?.sectionTemplates?.[props.partId.trim()]
         : n.type === "loop" && typeof props.itemPartId === "string"
           ? dynamic?.loopTemplates?.[props.itemPartId.trim()]
           : undefined;
