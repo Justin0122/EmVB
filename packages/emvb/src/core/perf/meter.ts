@@ -157,8 +157,12 @@ export function measurePage(
   return { bytes, over, scripts, imageCount: all.images, embeds: all.embeds, sections, warnings };
 }
 
+/** W-574: the first image that renders; an Image with no picture yet shows nothing to load. */
 function findFirstImage(node: LayoutNode): LayoutNode | undefined {
-  if (node.type === "image") return node;
+  if (node.type === "image") {
+    const src = (node.props as { src?: unknown }).src;
+    if (typeof src === "string" && src.trim()) return node;
+  }
   if (!isParentNode(node)) return undefined;
   for (const child of node.children) {
     const found = findFirstImage(child);

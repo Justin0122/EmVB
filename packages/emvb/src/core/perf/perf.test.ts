@@ -122,3 +122,15 @@ describe("performance meter (W-310)", () => {
     expect(report.warnings.some((w) => w.includes("video embed"))).toBe(false);
   });
 });
+
+test("W-574: an empty image in the first section isn't flagged as a late hero image", () => {
+  const empty = image("imge0001", { src: "  " });
+  const flagged = (layout: Layout) =>
+    measurePage(layout, emptyDesign()).warnings.some((w) => w.includes("Priority"));
+  expect(flagged(page(box("box00001", [empty])))).toBe(false);
+  // The first image that renders is the one checked.
+  expect(flagged(page(box("box00001", [empty, image("imge0002")])))).toBe(true);
+  expect(flagged(page(box("box00001", [empty, image("imge0002", { priority: true })])))).toBe(
+    false,
+  );
+});
