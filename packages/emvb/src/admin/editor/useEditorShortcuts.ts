@@ -132,6 +132,17 @@ export function useEditorShortcuts({
       runCommand(runners(), "save", null);
       return;
     }
+    // W-622: holding Delete, Ctrl+D or Ctrl+V auto-repeats; each repeat acted on the next selected
+    // element, so a long press emptied whole sections. They act once per press.
+    const destructive =
+      event.key === "Delete" ||
+      event.key === "Backspace" ||
+      ((event.ctrlKey || event.metaKey) && ["d", "v"].includes(shortcutKey(event)));
+    if (event.repeat && destructive) {
+      // A held Backspace in a text field still deletes text as usual.
+      if (!isTextField(event.target) && !inDialog(event.target)) event.preventDefault();
+      return;
+    }
     if (isTextField(event.target) || inDialog(event.target)) return;
     if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === "z") {
       event.preventDefault();
@@ -144,16 +155,6 @@ export function useEditorShortcuts({
       return;
     }
     if (!onCanvasOrLayers(event.target)) return;
-    // W-622: holding Delete, Ctrl+D or Ctrl+V auto-repeats; each repeat acted on the next selected
-    // element, so a long press emptied whole sections. They act once per press.
-    const destructive =
-      event.key === "Delete" ||
-      event.key === "Backspace" ||
-      ((event.ctrlKey || event.metaKey) && ["d", "v"].includes(shortcutKey(event)));
-    if (event.repeat && destructive) {
-      event.preventDefault();
-      return;
-    }
     const layout = latest.current.page.layout;
     const selected = latest.current.selectedId;
     if ((event.ctrlKey || event.metaKey) && shortcutKey(event) === "d" && selected) {
