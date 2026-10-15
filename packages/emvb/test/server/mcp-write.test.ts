@@ -216,6 +216,24 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     });
   });
 
+  test("update_site_styles names ids it can't remove and saves nothing for a no-op (W-564)", async () => {
+    const first = await call<{ revision: string }>("update_site_styles", {
+      variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },
+    });
+    const missing = await fail("update_site_styles", {
+      removeVariables: [{ kind: "colors", id: "nope" }],
+      removeClasses: ["ghost"],
+    });
+    expect(missing.code).toBe("NOT_FOUND");
+    expect(missing.message).toContain("nope");
+    expect(missing.message).toContain("ghost");
+    const same = await call<{ revision: string; summary: string }>("update_site_styles", {
+      variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },
+    });
+    expect(same.revision).toBe(first.revision);
+    expect(same.summary).toContain("Nothing changed");
+  });
+
   test("update_site_styles refuses a font stack the site CSS would drop (W-547)", async () => {
     const error = await fail("update_site_styles", {
       variables: { fonts: [{ id: "agent-font", name: "Agent font", value: "Inter; color: red" }] },

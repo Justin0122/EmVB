@@ -667,6 +667,21 @@ export async function updateSiteStyles(
         changes.push(`${items.length} ${kind}`);
       }
     }
+    // W-564: removing an id the styles don't have "succeeded" with a removed summary.
+    const unknown = [
+      ...(input.removeVariables ?? [])
+        .filter(({ kind, id }) => !(draft.variables[kind] ?? []).some((v) => v.id === id))
+        .map(({ kind, id }) => `${kind} ${id}`),
+      ...(input.removeClasses ?? [])
+        .filter((id) => !(draft.classes ?? []).some((c) => c.id === id))
+        .map((id) => `class ${id}`),
+    ];
+    if (unknown.length > 0) {
+      throw new McpToolError(
+        "NOT_FOUND",
+        `Nothing to remove for ${unknown.join(", ")}. Call get_site_styles for the ids.`,
+      );
+    }
     if (!input.force && (input.removeVariables?.length || input.removeClasses?.length)) {
       const layouts = await allLayouts(ports);
       const inUse = [
@@ -719,6 +734,10 @@ export async function updateSiteStyles(
         "INVALID_INPUT",
         `The site styles would be invalid. ${summarizeIssues(result.issues)}`,
       );
+    }
+    // W-564: the same values again save no new draft revision.
+    if (stableJson(result.design) === stableJson(state.design) && state.revision) {
+      return { revision: state.revision, summary: "Nothing changed in the site styles draft" };
     }
     const saved = await ports.saveDesign(result.design as DesignSystem, state.revision);
     const summary = `Site styles draft: ${changes.join(", ")}`;
