@@ -1,6 +1,7 @@
 import {
   ELEMENT_DESCRIPTORS,
   SECTION_RECIPES,
+  clipText,
   type DesignSystem,
   type ElementType,
   type Layout,
@@ -51,7 +52,8 @@ function textOf(node: LayoutNode): string {
       }
     }
   }
-  return parts.join(" ").replace(/\s+/g, " ").slice(0, 240);
+  // W-556: the whole text, so Find text finds a word near the end of a long paragraph.
+  return parts.join(" ").replace(/\s+/g, " ");
 }
 
 /** Every palette command for the editor's current state (W-314). */
@@ -98,7 +100,7 @@ export function paletteItems(ctx: PaletteActions): PaletteItem[] {
         id: `layer:${node.id}`,
         group: "Jump to",
         label: depth === 0 ? "Page (root)" : name,
-        ...(text ? { hint: `“${text.slice(0, 40)}”` } : {}),
+        ...(text ? { hint: `“${clipText(text, 40)}”` } : {}),
         keywords: `${node.type} ${text}`,
         run: () => ctx.select(node.id),
       });
@@ -106,7 +108,7 @@ export function paletteItems(ctx: PaletteActions): PaletteItem[] {
         items.push({
           id: `find:${node.id}`,
           group: "Find text",
-          label: text.length > 80 ? `${text.slice(0, 77)}…` : text,
+          label: text.length > 80 ? `${clipText(text, 77)}…` : text,
           hint: name,
           keywords: text,
           run: () => ctx.select(node.id),
