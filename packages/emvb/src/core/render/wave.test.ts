@@ -121,6 +121,25 @@ describe("post date and author (W-108)", () => {
     expect(html).toContain(">Oct 2, 2026<");
     expect(html).toContain(">Ada<");
   });
+
+  test("the page's language writes the date in it (W-688)", () => {
+    const layout = page([{ id: "date0001", type: "post-date", props: { format: "long" } }]);
+    const html = renderPage(layout, design, {
+      lang: "fr",
+      dynamic: {
+        post: {
+          id: "p",
+          slug: "p",
+          title: "Hello",
+          excerpt: "",
+          content: "",
+          permalink: "/posts/p",
+          publishedAt: "2026-10-02T12:00:00.000Z",
+        },
+      },
+    }).html;
+    expect(html).toContain(">2 octobre 2026<");
+  });
 });
 
 describe("logical properties (W-109)", () => {

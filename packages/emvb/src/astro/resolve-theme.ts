@@ -400,7 +400,11 @@ export async function resolveThemeParts(
   astro: AstroLike,
   ctx?: ThemeRequestContext,
   /** What the host knows about the visitor: segments and facts Visitors rules use (W-329). */
-  options: { visitor?: HostVisitor } = {},
+  options: {
+    visitor?: HostVisitor;
+    /** The page's language, e.g. "fr-CA", for Post Dates; defaults to Astro's locale (W-688). */
+    lang?: string;
+  } = {},
 ): Promise<ResolvedThemeParts> {
   return resolveThemePartsWith(emdashContent, astro, ctx, options);
 }
@@ -410,7 +414,11 @@ export async function resolveThemePartsWith(
   port: ContentPort,
   astro: AstroLike,
   ctx?: ThemeRequestContext,
-  options: { visitor?: HostVisitor } = {},
+  options: {
+    visitor?: HostVisitor;
+    /** The page's language, e.g. "fr-CA", for Post Dates; defaults to Astro's locale (W-688). */
+    lang?: string;
+  } = {},
 ): Promise<ResolvedThemeParts> {
   const context =
     ctx ??
@@ -501,7 +509,15 @@ export async function resolveThemePartsWith(
         ...Object.values(dynamic?.loopTemplates ?? {}),
       ]),
     );
-    const page = renderStored(stored.layout, design, stored.id, formDefinitions, dynamic, true);
+    const page = renderStored(
+      stored.layout,
+      design,
+      stored.id,
+      formDefinitions,
+      dynamic,
+      true,
+      options.lang ?? astro.currentLocale,
+    );
     rendered.push(page);
     // W-216: a header or footer part is the page's banner or contentinfo landmark (hosts put it
     // straight in <body> instead of their own <header>/<footer>).

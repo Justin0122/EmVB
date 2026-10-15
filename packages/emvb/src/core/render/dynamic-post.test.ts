@@ -147,3 +147,22 @@ describe("an untitled post (W-661)", () => {
     expect(out("post-image", "public")).toContain('alt="Featured image"');
   });
 });
+
+describe("Post Date in the page's language (W-688)", () => {
+  const node = { id: "node0001", type: "post-date", props: { format: "long" } } as LayoutNode;
+  const at = { ...post, publishedAt: "2026-10-06T12:00:00Z" };
+  const text = (lang?: string) => {
+    const vnode = renderDynamicPost(node, {}, at, "public", false, lang);
+    return vnode ? serialize(vnode).match(/>([^<]*)</)?.[1] : null;
+  };
+
+  test("a French page writes the date in French", () => {
+    expect(text("fr-CA")).toBe("6 octobre 2026");
+    expect(text("de")).toBe("6. Oktober 2026");
+  });
+
+  test("no language, or a malformed one, stays English", () => {
+    expect(text()).toBe("October 6, 2026");
+    expect(text("not a tag!")).toBe("October 6, 2026");
+  });
+});

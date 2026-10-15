@@ -38,6 +38,8 @@ export async function resolveEmVBPage(
     slug?: string;
     /** What the host knows about the visitor: segments and facts Visitors rules use (W-329). */
     visitor?: HostVisitor;
+    /** The page's language, e.g. "fr-CA", for Post Dates; defaults to Astro's locale (W-688). */
+    lang?: string;
   } = {},
 ): Promise<ResolvedEmVBPage | null> {
   return resolveEmVBPageWith(emdashContent, astro, options);
@@ -51,6 +53,8 @@ export async function resolveEmVBPageWith(
     param?: string;
     slug?: string;
     visitor?: HostVisitor;
+    /** The page's language, e.g. "fr-CA", for Post Dates; defaults to Astro's locale (W-688). */
+    lang?: string;
   } = {},
 ): Promise<ResolvedEmVBPage | null> {
   const slug = options.slug ?? content.decodeSlug(astro.params[options.param ?? "slug"]);
@@ -105,6 +109,8 @@ export async function resolveEmVBPageWith(
       String(data["id"] ?? slug),
       formDefinitions,
       Object.keys(dynamic).length > 0 ? dynamic : undefined,
+      false,
+      options.lang ?? astro.currentLocale,
     ),
     entry,
     title: typeof data["title"] === "string" ? data["title"] : "",

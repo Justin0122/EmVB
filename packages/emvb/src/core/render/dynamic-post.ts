@@ -70,16 +70,32 @@ type PostField = {
     attrs: Attrs,
     post: ThemePostFields,
     inLoop: boolean,
+    lang?: string,
   ) => VNode | undefined;
 };
 
 type PostDateFormat = (typeof POST_DATE_FORMATS)[number];
 
-/** In UTC on the written day, so the date doesn't move with the server's time zone. */
-function formatPostDate(time: number, format: PostDateFormat): string {
+/** A BCP 47-shaped language tag Intl can use, else English (W-688). */
+function dateLocale(lang: string | undefined): string {
+  if (!lang || !/^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/.test(lang)) return "en";
+  try {
+    return Intl.DateTimeFormat.supportedLocalesOf([lang])[0] ?? "en";
+  } catch {
+    return "en";
+  }
+}
+
+/**
+ * In UTC on the written day, so the date doesn't move with the server's time zone.
+ * W-688: in the page's language ("6 oct. 2026" on a French site); it was always English.
+ */
+function formatPostDate(time: number, format: PostDateFormat, lang?: string): string {
   const date = new Date(time);
   if (format === "numeric") return date.toISOString().slice(0, 10);
-  return new Intl.DateTimeFormat("en", { dateStyle: format, timeZone: "UTC" }).format(date);
+  return new Intl.DateTimeFormat(dateLocale(lang), { dateStyle: format, timeZone: "UTC" }).format(
+    date,
+  );
 }
 
 const props = <T>(node: LayoutNode) => node.props as T;
@@ -183,12 +199,12 @@ const POST_FIELDS = new Map<string, PostField>([
     {
       placeholder: (attrs) => ({ tag: "time", attrs, children: ["Post date"] }),
       has: (post) => !!post.publishedAt?.trim(),
-      render: (node, attrs, post) => {
+      render: (node, attrs, post, _inLoop, lang) => {
         const raw = post.publishedAt?.trim();
         if (!raw) return undefined;
         const parsed = parseIsoDate(raw);
         const format = props<{ format?: PostDateFormat }>(node).format ?? "medium";
-        const text = Number.isNaN(parsed) ? raw.slice(0, 80) : formatPostDate(parsed, format);
+        const text = Number.isNaN(parsed) ? raw.slice(0, 80) : formatPostDate(parsed, format, lang);
         // W-196: `datetime` must be machine-readable, so a date we can't read only shows as text.
         const timeAttrs = Number.isNaN(parsed) ? attrs : { ...attrs, datetime: raw.slice(0, 80) };
         return { tag: "time", attrs: timeAttrs, children: [text] };
@@ -217,11 +233,13 @@ export function renderDynamicPost(
   post: ThemePostFields | undefined,
   mode: RenderMode,
   inLoop = false,
+  /** The page's language, e.g. "fr-CA", for dates (W-688). */
+  lang?: string,
 ): VNode | undefined {
   const field = POST_FIELDS.get(node.type);
   if (!field) return undefined;
   if (!post || field.has?.(post) === false) {
     return mode === "editor" ? field.placeholder(attrs) : undefined;
   }
-  return field.render(node, attrs, post, inLoop);
+  return field.render(node, attrs, post, inLoop, lang);
 }

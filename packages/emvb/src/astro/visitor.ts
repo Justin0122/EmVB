@@ -21,6 +21,8 @@ export type VisitorAstro = {
   };
   response?: { headers: Headers };
   locals?: unknown;
+  /** Astro's i18n locale for this request, e.g. "fr" (W-688). */
+  currentLocale?: string | undefined;
   /** Astro's route cache, when the host configured a provider. */
   cache?: { enabled: boolean; set(input: false): void };
 };

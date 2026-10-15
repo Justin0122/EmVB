@@ -24,6 +24,8 @@ export type RenderContext = {
    * elements and stall the page.
    */
   takeSectionBudget?: (nodes: number) => boolean;
+  /** The page's language, e.g. "fr-CA", for dates (W-688). */
+  lang?: string;
   /** The form whose children are rendering, so each field reads that form's definition. */
   formId?: string;
 };

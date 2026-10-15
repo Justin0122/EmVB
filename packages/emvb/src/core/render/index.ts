@@ -210,6 +210,8 @@ export function renderPage(
      * the page's field. Their generated ids get a suffix from `scope` (W-527).
      */
     partIds?: boolean;
+    /** The page's language, e.g. "fr-CA": Post Dates are written in it (W-688). */
+    lang?: string;
   } = {},
 ): RenderResult {
   const mode = opts.mode ?? "public";
@@ -252,6 +254,7 @@ export function renderPage(
       return true;
     },
     mode,
+    ...(opts.lang ? { lang: opts.lang } : {}),
     definitions: opts.formDefinitions ?? new Map(),
     children: (nodes, dynamic) =>
       nodes
@@ -496,6 +499,7 @@ export function renderPage(
           resolvePostForRender(dynamic, mode),
           mode,
           dynamic?.inLoopItem === true,
+          ctx.lang,
         ),
       );
     }
