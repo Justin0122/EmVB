@@ -58,6 +58,29 @@ function lines(rects: Rect[], row: boolean): number[][] {
   return result;
 }
 
+/** The computed style a container's children flow by (see `flowDirection`). */
+export type FlowStyle = { display: string; flexDirection: string; direction: string };
+
+/**
+ * W-559: how a container's children run on the canvas, from its computed style, so classes,
+ * tablet and mobile styles and grids count, not just the element's own `flexDirection`. A row in
+ * an RTL page runs right to left, which the drop maths treats as a reversed row.
+ */
+export function flowDirection(style: FlowStyle): Direction {
+  const display = style.display;
+  let direction: Direction = display.includes("flex")
+    ? ((["row", "row-reverse", "column", "column-reverse"] as const).find(
+        (d) => d === style.flexDirection,
+      ) ?? "row")
+    : display.includes("grid")
+      ? "row"
+      : "column";
+  if (style.direction === "rtl" && direction.startsWith("row")) {
+    direction = direction === "row" ? "row-reverse" : "row";
+  }
+  return direction;
+}
+
 /**
  * The insertion index for a pointer over a flex container, given its children's rects in document
  * order: before the first child whose middle (along the main axis) is past the pointer.
@@ -130,11 +153,13 @@ export function edgeDrop(
   rect: Rect,
   point: Point,
   accepts: Accepts = anyParent,
+  /** The parent's direction as shown (`flowDirection`); else its own style's. */
+  shown?: Direction,
 ): { parentId: string; index: number } | null {
   const parentId = parentOf(layout, container.id);
   const parent = parentId ? findNode(layout, parentId) : undefined;
   if (!parent || !isParentNode(parent) || !accepts(parent)) return null;
-  const direction = parent.style?.flexDirection ?? "column";
+  const direction = shown ?? parent.style?.flexDirection ?? "column";
   const row = direction.startsWith("row");
   const span = along(rect, row);
   const zone = Math.min(EDGE_ZONE, (span.end - span.start) / 4);

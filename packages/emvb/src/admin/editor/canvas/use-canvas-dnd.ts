@@ -3,6 +3,7 @@ import {
   canDrop,
   findNode,
   isParentNode,
+  parentOf,
   REASONS,
   type DragSource,
   type Layout,
@@ -13,9 +14,11 @@ import {
   dropIndex,
   edgeDrop,
   EXISTING_ELEMENT_MIME,
+  flowDirection,
   idAt,
   NEW_ELEMENT_MIME,
   transferKinds,
+  type Direction,
   type Rect,
 } from "../dnd/drop-target.ts";
 import { dragStash } from "../dnd/drag-stash.ts";
@@ -25,10 +28,29 @@ import { dropLineBox } from "./drop-line.ts";
 import type { Box, DropTarget, InvalidDrop } from "./SelectionOverlay.tsx";
 import { boxOf, type CanvasSelection } from "./use-canvas-session.ts";
 
-const directionOf = (node: LayoutNode) =>
+const ownDirection = (node: LayoutNode) =>
   (isParentNode(node) ? node.style?.flexDirection : undefined) ?? "column";
 
 const childrenOf = (node: LayoutNode): LayoutNode[] => (isParentNode(node) ? node.children : []);
+
+/**
+ * W-559: the direction the canvas shows for `node`'s children, read from the element that
+ * actually lays them out (a Section's inner box, a Menu's list), so classes, tablet and mobile
+ * styles, grids and RTL count. Its own style when nothing is rendered.
+ */
+const directionOf = (doc: Document, node: LayoutNode): Direction => {
+  const find = (id: string) => doc.querySelector(`[data-emvb-id="${CSS.escape(id)}"]`);
+  const first = childrenOf(node)[0];
+  const box = (first && find(first.id)?.parentElement) || find(node.id);
+  const view = doc.defaultView;
+  return box && view ? flowDirection(view.getComputedStyle(box)) : ownDirection(node);
+};
+
+const parentShown = (doc: Document, layout: Layout, id: string): Direction | undefined => {
+  const parentId = parentOf(layout, id);
+  const parent = parentId ? findNode(layout, parentId) : undefined;
+  return parent ? directionOf(doc, parent) : undefined;
+};
 
 /** Refusals that end the walk to an accepting ancestor, so the user sees why (W-128). */
 const STOPS = new Set<string>([REASONS.intoItself, REASONS.tooDeep, REASONS.tooMany]);
@@ -118,10 +140,17 @@ export function useCanvasDnD({
       const hoveredBox = rectOf(currentDoc, hovered.id);
       const edge =
         hoveredBox && hovered.id !== current.root.id
-          ? edgeDrop(current, hovered, hoveredBox, point, (parent) => verdict(parent).ok)
+          ? edgeDrop(
+              current,
+              hovered,
+              hoveredBox,
+              point,
+              (parent) => verdict(parent).ok,
+              parentShown(currentDoc, current, hovered.id),
+            )
           : null;
       const container = (edge && findNode(current, edge.parentId)) || hovered;
-      const direction = directionOf(container);
+      const direction = directionOf(currentDoc, container);
       const kids = childrenOf(container);
       const rects = kids.map((child) => {
         const rect = rectOf(currentDoc, child.id);
