@@ -72,6 +72,8 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
   const [state, setState] = useState<AgentsState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // A failed save keeps the page on screen; only a failed load replaces it (W-624).
+  const [saveError, setSaveError] = useState<string | null>(null);
   const isAdmin = role.state === "ready" && role.role >= ADMIN_ROLE;
 
   useEffect(() => {
@@ -108,11 +110,12 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
   const change = async (patch: Partial<AgentSettings>) => {
     const settings = { ...state.settings, ...patch };
     setSaving(true);
+    setSaveError(null);
     try {
       const revision = await saveAgentSettings(fetcher, settings, state.revision);
       setState({ ...state, settings, revision });
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      setSaveError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
@@ -133,6 +136,14 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
           {settings.mcpEnabled ? "Agents on" : "Agents off"}
         </span>
       </header>
+      {saveError && (
+        <Banner
+          variant="error"
+          icon={<WarningCircleIcon aria-hidden="true" />}
+          title="Couldn't save the AI agent settings"
+          description={saveError}
+        />
+      )}
       <section
         className="emvb-surface-card emvb-agents-section"
         aria-labelledby="emvb-agents-access"

@@ -95,3 +95,23 @@ describe("AI agents page (W-463)", () => {
     expect(host.querySelector("[data-emvb-access=denied]")).not.toBeNull();
   });
 });
+
+test("a failed save keeps the page and says the save failed, not the load (W-624)", async () => {
+  const api = fakeApi(50);
+  const fetcher: Fetcher = async (path, init) =>
+    path.endsWith("/agents/save")
+      ? Response.json(
+          { error: { code: "CONFLICT", message: "Changed elsewhere" } },
+          { status: 409 },
+        )
+      : api.fetcher(path, init);
+  const host = await mount(<AgentsPage fetcher={fetcher} />);
+  await settle();
+  await settle();
+  const toggle = [...host.querySelectorAll("button[role=switch]")][0] as HTMLButtonElement;
+  await act(async () => toggle.click());
+  await settle();
+  expect(host.querySelector("[data-emvb-agents=ready]")).not.toBeNull();
+  expect(host.textContent).not.toContain("Couldn't load");
+  expect(host.textContent).toContain("Couldn't save");
+});
