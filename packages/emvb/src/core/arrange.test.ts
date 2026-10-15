@@ -243,6 +243,26 @@ describe("addNodeNear (Add falls back to the nearest ancestor, W-175)", () => {
 });
 
 describe("duplicateNode", () => {
+  test("a copy of an A/B arm, or of a box holding one, is outside the test (W-629)", () => {
+    const arm = {
+      ...heading("arm00001"),
+      variant: { test: "t1", arm: "a" as const },
+    } as LayoutNode;
+    const layout: Layout = {
+      schemaVersion: 16,
+      root: container("root0001", [
+        arm,
+        container("box00009", [{ ...arm, id: "arm00002" } as LayoutNode]),
+      ]) as Layout["root"],
+    };
+    for (const id of ["arm00001", "box00009"]) {
+      const result = duplicateNode(layout, id);
+      if (!result.ok) throw new Error("expected a copy");
+      const copy = findNode(result.layout, result.selected);
+      expect(JSON.stringify(copy)).not.toContain("variant");
+    }
+  });
+
   test("puts a deep copy with fresh ids right after the original", () => {
     const result = duplicateNode(page(), "box00001");
     const layout = layoutOf(result);

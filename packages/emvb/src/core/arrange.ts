@@ -266,7 +266,8 @@ export const CSS_ID_KEPT = "The CSS id stays on the original: CSS ids must be un
 /** `node` without the CSS id on it or any descendant; returns how many it dropped. */
 function withoutHtmlIds(node: LayoutNode): { node: LayoutNode; dropped: number } {
   let dropped = node.htmlId ? 1 : 0;
-  const { htmlId: _htmlId, ...rest } = node;
+  // A copy is never part of an A/B test: it would join the original's test as an extra arm (W-629).
+  const { htmlId: _htmlId, variant: _variant, ...rest } = node;
   const kids = nodeChildren(node);
   if (kids.length === 0) return { node: rest as LayoutNode, dropped };
   const children = kids.map((child) => {
