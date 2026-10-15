@@ -20,7 +20,7 @@ const fail = async (tool: string, input: unknown) => {
   return result.error as { code: string; message: string };
 };
 const newPage = async () => {
-  const created = (await t.savePage({ title: "Home", layout: s1Page() })) as {
+  const created = (await t.savePage({ title: "Home", layout: s1Page() })) as unknown as {
     data: { item: { id: string; data: { layout: { root: { id: string } } } } };
   };
   return created.data.item;
