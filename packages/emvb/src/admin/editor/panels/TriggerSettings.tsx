@@ -62,7 +62,7 @@ function NumberField({
  * W-613: why a click selector can't be saved (or never matches), shown under the field instead
  * of failing the popup's save.
  */
-export function selectorError(selector: string): string | null {
+function selectorError(selector: string): string | null {
   if (!selector.trim()) return "Enter a CSS selector, such as .open-popup.";
   if (!isSafeClickSelector(selector)) {
     return "Use a simple CSS selector: letters, numbers, spaces and . # [ ] = : ( ) > + ~ * , \" ' | / - _";
