@@ -26371,8 +26371,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/tokens.ts",
-          "search": "  const added = tokens.filter((t) => !have.has(t.id))",
-          "replace": "  const added = tokens.filter((t) => t.id)"
+          "search": "    .filter((t) => !have.has(t.id))",
+          "replace": "    .filter((t) => t.id)"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/design/tokens.test.ts"],
