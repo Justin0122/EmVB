@@ -3269,8 +3269,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/pages/list-kit.tsx",
-          "search": "{iso ? formatter.format(new Date(iso)) : \"\"}",
-          "replace": "{formatter.format(new Date(iso || 0))}"
+          "search": "const time = iso ? Date.parse(iso) : Number.NaN;",
+          "replace": "const time = Date.parse(iso || new Date(0).toISOString());"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/pages/lists.test.tsx"],
