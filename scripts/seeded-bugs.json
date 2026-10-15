@@ -20083,8 +20083,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/ColorControl.tsx",
-          "search": "variant={error?.field === \"hex\" ? \"error\" : undefined}",
-          "replace": "variant={error ? \"error\" : undefined}"
+          "search": "emvb-mono${error?.field === \"hex\" ? INVALID : \"\"}",
+          "replace": "emvb-mono${error ? INVALID : \"\"}"
         }
       ],
       "command": [
