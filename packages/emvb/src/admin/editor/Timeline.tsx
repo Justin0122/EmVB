@@ -212,6 +212,10 @@ export function TimelineDialog({
   const [pickedId, setPickedId] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const [who, setWho] = React.useState<Who>("all");
+  // A refusal belongs to the visit it happened in; closing the timeline clears it (W-623).
+  React.useEffect(() => {
+    if (!open) setError(null);
+  }, [open]);
   const all = revisions.kind === "ready" ? revisions.versions : [];
   const hasAgents = all.some((v) => v.agent);
   const versions = all.filter((v) =>

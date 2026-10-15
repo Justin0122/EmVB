@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { act } from "react";
 import { emptyDesign, type Layout } from "../../core/index.ts";
-import { cleanup, mount, settle } from "../../../test/dom/mount.ts";
+import { cleanup, mount, rerender, settle } from "../../../test/dom/mount.ts";
 import { NO_REVISIONS, revisionLayout, TimelineDialog } from "./Timeline.tsx";
 
 afterEach(cleanup);
@@ -258,6 +258,59 @@ test("a restore refusal goes away when another version is picked (W-561)", async
   await act(async () =>
     document.querySelector<HTMLButtonElement>('[data-emvb-version="r1"]')?.click(),
   );
+  await settle();
+  expect(alert()).toBeUndefined();
+});
+
+test("a restore refusal is gone after closing and reopening the timeline (W-623)", async () => {
+  const many = (prefix: string, n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      id: `${prefix}${String(i).padStart(4, "0")}`,
+      type: "text",
+      props: { text: "x" },
+    }));
+  const page = (sections: unknown[]) =>
+    ({
+      schemaVersion: 16,
+      root: { id: "root0001", type: "container", props: {}, children: sections },
+    }) as Layout;
+  const big = { id: "biga0001", type: "container", props: {}, children: many("bigx", 1985) };
+  const older = { ...big, children: many("bigx", 1960) };
+  const gone = { id: "gone0001", type: "container", props: {}, children: many("gonx", 20) };
+  const fetcher = async () =>
+    new Response(
+      JSON.stringify({
+        data: {
+          items: [
+            { id: "r2", createdAt: "2026-10-05T10:00:00Z", data: { layout: page([older, gone]) } },
+          ],
+          total: 1,
+        },
+      }),
+      { headers: { "content-type": "application/json" } },
+    );
+  const dialog = (open: boolean) => (
+    <TimelineDialog
+      open={open}
+      onOpenChange={() => undefined}
+      fetcher={fetcher}
+      collection="emvb_pages"
+      entryId="01PAGE"
+      current={page([big])}
+      design={emptyDesign()}
+      onApply={() => undefined}
+    />
+  );
+  await mount(dialog(true));
+  await settle();
+  await act(async () =>
+    document.querySelector<HTMLButtonElement>('[data-emvb-restore-section="gone0001"]')?.click(),
+  );
+  const alert = () => document.querySelector(".emvb-timeline-main [role=alert]")?.textContent;
+  expect(alert()).toContain("too many elements");
+  await rerender(dialog(false));
+  await settle();
+  await rerender(dialog(true));
   await settle();
   expect(alert()).toBeUndefined();
 });
