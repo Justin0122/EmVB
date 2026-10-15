@@ -72,3 +72,18 @@ describe("crop frame maths (W-483, from photocn)", () => {
     expect(end.ox).toBeCloseTo(-50);
   });
 });
+
+describe("a locked ratio keeps both sides at the minimum from an edge handle (W-693)", () => {
+  const start = { x: 0, y: 0, w: 320, h: 180 };
+  test("a wide ratio dragged in from the right keeps the height at least the minimum", () => {
+    const out = resizeRect(start, "e", -1000, 0, 16 / 9, 32);
+    expect(out.h).toBeGreaterThanOrEqual(32);
+    expect(out.w / out.h).toBeCloseTo(16 / 9);
+  });
+  test("a tall ratio dragged up from the bottom keeps the width at least the minimum", () => {
+    const tall = { x: 0, y: 0, w: 90, h: 160 };
+    const out = resizeRect(tall, "s", 0, -1000, 9 / 16, 32);
+    expect(out.w).toBeGreaterThanOrEqual(32);
+    expect(out.w / out.h).toBeCloseTo(9 / 16);
+  });
+});

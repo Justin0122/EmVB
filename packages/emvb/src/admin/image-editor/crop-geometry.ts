@@ -134,12 +134,13 @@ export function resizeRect(
     x = west ? start.x + start.w - w : start.x;
     y = north ? start.y + start.h - h : start.y;
   } else if (east || west) {
-    w = Math.max(min, start.w + (east ? dx : -dx));
+    // W-693: the other side keeps the minimum too (a wide ratio made a sliver of a height).
+    w = Math.max(min, min * ratio, start.w + (east ? dx : -dx));
     h = w / ratio;
     x = west ? start.x + start.w - w : start.x;
     y = start.y + start.h / 2 - h / 2;
   } else {
-    h = Math.max(min, start.h + (south ? dy : -dy));
+    h = Math.max(min, min / ratio, start.h + (south ? dy : -dy));
     w = h * ratio;
     y = north ? start.y + start.h - h : start.y;
     x = start.x + start.w / 2 - w / 2;
