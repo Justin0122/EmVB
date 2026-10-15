@@ -189,6 +189,8 @@ export function generateCss({
                 withInheritedLayers(cls.devices?.mobile, { ...cls.style, ...cls.devices?.tablet }),
               ).declarations,
               hiddenOn: cls.hiddenOn,
+              // W-571: the page root is never hidden (W-567), not even by a class.
+              hideSelector: `.${className}:not(.emvb-root)`,
             },
           ]
         : [];
@@ -220,7 +222,7 @@ export function generateCss({
       .flatMap((rule) =>
         "figure" in rule && rule.figure
           ? [rule.selector, `.emvb-figure:has(>${rule.selector},>a>${rule.selector})`]
-          : [rule.selector],
+          : ["hideSelector" in rule && rule.hideSelector ? rule.hideSelector : rule.selector],
       );
     return forDevices(
       [device],
