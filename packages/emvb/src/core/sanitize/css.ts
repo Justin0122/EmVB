@@ -52,6 +52,15 @@ const FAMILY = String.raw`(?:'[\p{L}\p{N} _.-]+'|"[\p{L}\p{N} _.-]+"|[\p{L}\p{N}
 const FONT_STACK = new RegExp(String.raw`^${FAMILY}(?:\s*,\s*${FAMILY})*$`, "u");
 
 /**
+ * A font stack that can be written as a `font-family` declaration (W-648): `!important` would let
+ * a class's font beat the element's own, and control characters aren't part of any family name.
+ * Checked on output only, so a layout saved with one still loads; the declaration is dropped.
+ */
+function isEmittableFontStack(value: string): boolean {
+  return !/[!\p{Cc}]/u.test(value) && isSafeFontStack(value);
+}
+
+/**
  * A comma-separated font stack whose family names may be quoted. Quoted names hold only letters,
  * digits, spaces, `_`, `.` and `-`, so a quote can never open or close anything else.
  */
@@ -700,7 +709,7 @@ export function styleDeclarations(style: unknown): {
     const value = entry?.toValue(raw);
     const safe =
       value !== undefined &&
-      (entry?.css === "font-family" ? isSafeFontStack(value) : isSafeCssValue(value));
+      (entry?.css === "font-family" ? isEmittableFontStack(value) : isSafeCssValue(value));
     if (entry && safe) {
       declarations.push({ property: entry.css, value });
       if (key === "entrance") {
