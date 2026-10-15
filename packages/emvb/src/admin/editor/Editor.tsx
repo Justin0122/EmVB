@@ -51,7 +51,7 @@ import {
 } from "./useEditorData.ts";
 import { EDITOR_MIN_WIDTH_QUERY, useMediaQuery } from "./useMediaQuery.ts";
 import { usePartTemplates } from "./section-templates.ts";
-import { useCollectionPreviews } from "./collection-previews.ts";
+import { useCollectionPreviews, withPartLayouts } from "./collection-previews.ts";
 import { useRemoteChange } from "./remote-change.ts";
 import { A11yScoreButton } from "./A11yCopilot.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
@@ -211,7 +211,15 @@ function EditorApp({
   // W-307: bound fields show live values on the canvas (site settings, preview URL parameters).
   const live = useLiveData();
   // W-308: collection Loops show real entries on the canvas.
-  const collections = useCollectionPreviews(state.page.layout, fetcher);
+  const previewLayout = React.useMemo(
+    () =>
+      withPartLayouts(state.page.layout, [
+        ...Object.values(sectionTemplates),
+        ...Object.values(loopTemplates),
+      ]),
+    [state.page.layout, sectionTemplates, loopTemplates],
+  );
+  const collections = useCollectionPreviews(previewLayout, fetcher);
   const rendered = React.useMemo(
     () =>
       state.page.layout

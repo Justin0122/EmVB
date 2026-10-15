@@ -71,6 +71,16 @@ const ORDER: Record<string, string> = {
 };
 
 /**
+ * W-667: the page plus the synced sections and Loop Item parts it shows, so a collection Loop
+ * inside one of those gets real entries on the canvas like it does on the published page.
+ */
+export function withPartLayouts(layout: Layout | null, parts: readonly Layout[]): Layout | null {
+  if (!layout || parts.length === 0) return layout;
+  const children = [...layout.root.children, ...parts.flatMap((part) => part.root.children)];
+  return { ...layout, root: { ...layout.root, children } };
+}
+
+/**
  * Real entries for collection Loops on the canvas (W-308), read through the content API. A
  * collection the role can't read, or that doesn't exist, keeps the sample entries.
  */
