@@ -8430,6 +8430,26 @@ exports[`element panel markup (W-021, W-086 M16) pagination renders the same con
         span
           "Posts archive title"
       input.emvb-field id="id-13" data-emvb-field="archiveTitle" value="" aria-labelledby="id-12"
+    div
+      label id="id-14" for="id-15"
+        span
+          "Screen reader name"
+      input.emvb-field id="id-15" data-emvb-field="navLabel" value="" aria-labelledby="id-14"
+    div
+      label id="id-16" for="id-17"
+        span
+          "Page number name"
+      input.emvb-field id="id-17" data-emvb-field="pageLabel" value="" aria-labelledby="id-16"
+    div
+      label id="id-18" for="id-19"
+        span
+          "Previous name"
+      input.emvb-field id="id-19" data-emvb-field="prevLabel" value="" aria-labelledby="id-18"
+    div
+      label id="id-20" for="id-21"
+        span
+          "Next name"
+      input.emvb-field id="id-21" data-emvb-field="nextLabel" value="" aria-labelledby="id-20"
     section.emvb-bind data-emvb-audience-editor="" aria-labelledby="emvb-aud-bi1nwpcq-title"
       h3.emvb-bind-title id="emvb-aud-bi1nwpcq-title"
         "Visitors"
