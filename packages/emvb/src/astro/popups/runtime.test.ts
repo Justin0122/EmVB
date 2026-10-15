@@ -267,6 +267,17 @@ describe("public popup keyboard and focus (S7b, W-081)", () => {
     expect(key(first, "Tab").defaultPrevented).toBe(false);
   });
 
+  test("W-553: Shift+Tab right after opening (focus on the dialog) goes to the last control", () => {
+    const { dialog, open } = openablePopup(
+      "k3b",
+      '<a href="/terms">Terms</a><button>Join</button>',
+    );
+    open();
+    expect(document.activeElement === dialog).toBe(true);
+    expect(key(dialog, "Tab", true).defaultPrevented).toBe(true);
+    expect(document.activeElement === dialog.querySelector("button")).toBe(true);
+  });
+
   test("a popup with nothing to focus keeps Tab on its dialog", () => {
     const { dialog, open } = openablePopup("k4", "<p>Just text</p>");
     open();

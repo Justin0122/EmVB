@@ -208,7 +208,11 @@ function bindA11y(ctrl: Controller): void {
     const first = items[0];
     const last = items[items.length - 1];
     if (!first || !last) return;
-    if (event.shiftKey && document.activeElement === first) {
+    // W-553: opening focuses the dialog itself; Shift+Tab from there left for the page behind.
+    if (
+      event.shiftKey &&
+      (document.activeElement === first || document.activeElement === ctrl.dialog)
+    ) {
       event.preventDefault();
       last.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
