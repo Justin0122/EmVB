@@ -230,6 +230,7 @@ export function renderPage(
     ? new Set(headingAnchors(layout.root).map((h) => h.node))
     : undefined;
   const renderedHeadings: { id: string; text: string }[] = [];
+  const emittedIds = new Set<string>();
   const tocNodes: { node: LayoutNode; vnode: VNode }[] = [];
   const knownVariables = new Set(design.variables.colors.map((c) => c.id));
   let backgroundVideo = false;
@@ -415,8 +416,18 @@ export function renderPage(
     }
     const attrs: Record<string, string> = { class: classes.join(" "), ...customAttributes(node) };
     if (mode === "editor" && id) attrs["data-emvb-id"] = id;
-    if (node.htmlId && HTML_ID.test(node.htmlId)) attrs.id = node.htmlId;
-    else if (node.type === "heading" && id && layoutHasToc) attrs.id = `emvb-h-${id}`;
+    const htmlId =
+      node.htmlId && HTML_ID.test(node.htmlId)
+        ? node.htmlId
+        : node.type === "heading" && id && layoutHasToc
+          ? `emvb-h-${id}`
+          : undefined;
+    // W-649: a Loop renders its item design once per entry; an id repeated on the page is invalid
+    // and every Table of contents link or label would point at the first copy only.
+    if (htmlId && !emittedIds.has(htmlId)) {
+      emittedIds.add(htmlId);
+      attrs.id = htmlId;
+    }
     // W-230: the site's text direction on the root, also a fallback when the host's <html> has none.
     if (node.dir === "ltr" || node.dir === "rtl" || node.dir === "auto") attrs.dir = node.dir;
     else if (isRoot && design.direction) attrs.dir = design.direction;
