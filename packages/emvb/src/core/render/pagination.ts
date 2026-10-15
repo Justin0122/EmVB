@@ -56,7 +56,10 @@ export function renderPagination(
             class: "emvb-pagination-prev",
             href: href(item.href),
             rel: "prev",
-            ...nameIfSymbols(label(node.props.prevText, "Previous"), "Previous page"),
+            ...nameIfSymbols(
+              label(node.props.prevText, "Previous"),
+              label(node.props.prevLabel, "Previous page"),
+            ),
           },
           children: [label(node.props.prevText, "Previous")],
         };
@@ -67,7 +70,10 @@ export function renderPagination(
             class: "emvb-pagination-next",
             href: href(item.href),
             rel: "next",
-            ...nameIfSymbols(label(node.props.nextText, "Next"), "Next page"),
+            ...nameIfSymbols(
+              label(node.props.nextText, "Next"),
+              label(node.props.nextLabel, "Next page"),
+            ),
           },
           children: [label(node.props.nextText, "Next")],
         };
@@ -84,7 +90,11 @@ export function renderPagination(
             class: "emvb-pagination-page",
             href: href(item.href),
             // W-426: a bare "2" says nothing out of context; screen readers hear "Page 2".
-            "aria-label": `Page ${item.n}`,
+            // W-689: in the site's language when "Page number name" is set.
+            "aria-label": label(node.props.pageLabel, "Page {page}").replaceAll(
+              "{page}",
+              String(item.n),
+            ),
             ...(item.current ? { "aria-current": "page" } : {}),
           },
           children: [String(item.n)],
@@ -99,5 +109,9 @@ export function renderPagination(
       children: [pageCountText(data, node.props.countText)],
     });
   }
-  return { tag: "nav", attrs: { ...attrs, "aria-label": "Pagination" }, children };
+  return {
+    tag: "nav",
+    attrs: { ...attrs, "aria-label": label(node.props.navLabel, "Pagination") },
+    children,
+  };
 }

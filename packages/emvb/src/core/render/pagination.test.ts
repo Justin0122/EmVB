@@ -123,3 +123,36 @@ describe("arrow-only Previous and Next are named (W-433)", () => {
     expect(named({})).toEqual([null, null]);
   });
 });
+
+describe("Pagination screen reader names in the site's language (W-689)", () => {
+  test("the nav, numbers and arrow links take the set names", () => {
+    const props = {
+      prevText: "←",
+      nextText: "→",
+      navLabel: "Navigation des pages",
+      pageLabel: "Page {page} sur le site",
+      prevLabel: "Page précédente",
+      nextLabel: "Page suivante",
+    };
+    expect(validateLayout(page(props)).ok).toBe(true);
+    const { html } = renderPage(page(props), design, {
+      dynamic: { pagination: { page: 2, hasMore: true, basePath: "/posts" } },
+    });
+    const host = parse(html);
+    expect(host.querySelector("nav")?.getAttribute("aria-label")).toBe("Navigation des pages");
+    expect(host.querySelector("a[aria-current]")?.getAttribute("aria-label")).toBe(
+      "Page 2 sur le site",
+    );
+    expect(host.querySelector("a[rel=prev]")?.getAttribute("aria-label")).toBe("Page précédente");
+    expect(host.querySelector("a[rel=next]")?.getAttribute("aria-label")).toBe("Page suivante");
+  });
+
+  test("unset names stay English", () => {
+    const { html } = renderPage(page({ prevText: "←" }), design, {
+      dynamic: { pagination: { page: 2, hasMore: true, basePath: "/posts" } },
+    });
+    const host = parse(html);
+    expect(host.querySelector("a[aria-current]")?.getAttribute("aria-label")).toBe("Page 2");
+    expect(host.querySelector("a[rel=prev]")?.getAttribute("aria-label")).toBe("Previous page");
+  });
+});

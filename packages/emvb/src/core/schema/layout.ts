@@ -651,6 +651,13 @@ export const PaginationNode = leafNode(
      */
     titleText: z.string().max(60).optional(),
     archiveTitle: z.string().max(60).optional(),
+    /** W-689: screen reader names in the site's language. Unset = "Pagination". */
+    navLabel: z.string().max(60).optional(),
+    /** Each number's name; `{page}` is filled in. Unset = "Page {page}". */
+    pageLabel: z.string().max(60).optional(),
+    /** Previous / Next names when their text is only an arrow. Unset = "Previous page" / "Next page". */
+    prevLabel: z.string().max(60).optional(),
+    nextLabel: z.string().max(60).optional(),
   }),
 );
 

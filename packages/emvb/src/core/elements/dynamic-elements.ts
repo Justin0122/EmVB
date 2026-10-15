@@ -326,6 +326,36 @@ export const pagination: ElementDefinition<PaginationNode> = {
         message:
           "Replaces \"Posts\" as the posts archive's title, in the site's language. Category and tag archives use the term's name.",
       },
+      {
+        key: "navLabel",
+        kind: "text",
+        label: "Screen reader name",
+        optional: true,
+        message:
+          'What screen readers call the links, in the site\'s language. Unset is "Pagination".',
+      },
+      {
+        key: "pageLabel",
+        kind: "text",
+        label: "Page number name",
+        optional: true,
+        message:
+          'What screen readers call each number. {page} is filled in; unset is "Page {page}".',
+      },
+      {
+        key: "prevLabel",
+        kind: "text",
+        label: "Previous name",
+        optional: true,
+        message: 'Read out when Previous text is only an arrow. Unset is "Previous page".',
+      },
+      {
+        key: "nextLabel",
+        kind: "text",
+        label: "Next name",
+        optional: true,
+        message: 'Read out when Next text is only an arrow. Unset is "Next page".',
+      },
     ],
   },
   // Rendered by core/render/pagination.ts from the archive's page data (W-222).
