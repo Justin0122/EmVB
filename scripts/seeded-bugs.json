@@ -4056,7 +4056,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/sanitize/css.ts",
-          "search": "(entry?.css === \"font-family\" ? isSafeFontStack(value) : isSafeCssValue(value))",
+          "search": "(entry?.css === \"font-family\" ? isEmittableFontStack(value) : isSafeCssValue(value))",
           "replace": "isSafeCssValue(value)"
         }
       ],
@@ -27803,8 +27803,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/index.ts",
-          "search": "    else if (node.type === \"heading\" && id && layoutHasToc) attrs.id = `emvb-h-${id}`;\n",
-          "replace": "\n"
+          "search": "        : node.type === \"heading\" && id && layoutHasToc\n",
+          "replace": "        : false\n"
         }
       ],
       "command": [
