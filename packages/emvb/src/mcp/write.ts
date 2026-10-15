@@ -15,6 +15,7 @@ import {
   type Layout,
   type LayoutNode,
 } from "../core/index.ts";
+import { stableJson } from "../core/stable-json.ts";
 import { addNode, moveNode, withFreshIds } from "../core/arrange.ts";
 import { ELEMENT_DESCRIPTORS } from "../core/elements/index.ts";
 import { nodeChildren, pageSlug, removeNode, starterLayout, updateNode } from "../core/tree-ops.ts";
@@ -113,6 +114,11 @@ async function mutatePage(
       const next = apply(current.layout);
       refuseUnsafeImageSources(current.layout, next.layout);
       const layout = checkLayout(next.layout);
+      // W-562: a write that changes nothing (an empty set, the same value, a move to its own
+      // spot) saved a new version and rev anyway, cluttering the timeline and the agent log.
+      if (stableJson(layout) === stableJson(current.layout)) {
+        return { pageId, rev: page.rev, changed: [], summary: `Nothing changed (${tool})` };
+      }
       try {
         const saved = await ports.savePage(pageId, { layout }, page.rev);
         await ports.log({

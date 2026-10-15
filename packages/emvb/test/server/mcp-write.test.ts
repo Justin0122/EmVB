@@ -157,6 +157,37 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect((await fail("create_page", { title: "🎉🎉" })).code).toBe("REFUSED");
   });
 
+  test("a write that changes nothing saves no version and keeps the rev (W-562)", async () => {
+    const pageId = await newPage();
+    const before = await layoutOf(pageId);
+    const versions = async () =>
+      (await call<{ versions: unknown[] }>("list_versions", { pageId })).versions.length;
+    const count = await versions();
+    const heading = before.layout.root.children?.[0]?.id ?? "";
+    for (const input of [
+      { pageId, nodeId: heading },
+      { pageId, nodeId: heading, set: {} },
+      { pageId, nodeId: heading, set: { props: { text: "Welcome" } } },
+    ]) {
+      // oxlint-disable-next-line no-await-in-loop -- one write at a time
+      const out = await call<{ rev: string; changed: string[]; summary: string }>(
+        "update_element",
+        input,
+      );
+      expect(out.rev).toBe(before.rev);
+      expect(out.changed).toEqual([]);
+      expect(out.summary).toContain("Nothing changed");
+    }
+    const moved = await call<{ rev: string }>("move_element", {
+      pageId,
+      nodeId: heading,
+      parentId: before.layout.root.id,
+      index: 0,
+    });
+    expect(moved.rev).toBe(before.rev);
+    expect(await versions()).toBe(count);
+  });
+
   test("update_site_styles refuses a font stack the site CSS would drop (W-547)", async () => {
     const error = await fail("update_site_styles", {
       variables: { fonts: [{ id: "agent-font", name: "Agent font", value: "Inter; color: red" }] },
