@@ -36,3 +36,21 @@ describe("site styles merge keeps names unique (W-620)", () => {
     expect(merged.design.classes?.map((c) => c.id)).toEqual(["b1", "a1"]);
   });
 });
+
+describe("site styles merge respects the 100-class limit (W-647)", () => {
+  test("two tabs that each add classes past the limit report the extra as conflicts", () => {
+    const mk = (prefix: string, n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `${prefix}${i}`,
+        name: `${prefix}-${i}`,
+        style: {},
+      }));
+    const base = { ...emptyDesign(), classes: mk("base", 90) };
+    const ours = { ...base, classes: [...base.classes, ...mk("ours", 8)] };
+    const theirs = { ...base, classes: [...base.classes, ...mk("theirs", 8)] };
+    const merged = mergeDesign(base as never, ours as never, theirs as never);
+    expect(merged.design.classes?.length).toBe(100);
+    expect(merged.conflicts.length).toBe(6);
+    expect(merged.design.classes?.filter((c) => c.id.startsWith("theirs")).length).toBe(8);
+  });
+});

@@ -31,6 +31,7 @@ export function mergeDesign(
         theirs.variables.colors,
         conflicts,
         "variable",
+        200,
       ),
       fonts: mergeList(
         from.variables.fonts,
@@ -38,6 +39,7 @@ export function mergeDesign(
         theirs.variables.fonts,
         conflicts,
         "variable",
+        50,
       ),
       fontSizes: mergeList(
         from.variables.fontSizes,
@@ -45,6 +47,7 @@ export function mergeDesign(
         theirs.variables.fontSizes,
         conflicts,
         "variable",
+        50,
       ),
       spacings: mergeList(
         from.variables.spacings,
@@ -52,9 +55,10 @@ export function mergeDesign(
         theirs.variables.spacings,
         conflicts,
         "variable",
+        100,
       ),
     },
-    classes: mergeList(from.classes, ours.classes, theirs.classes, conflicts, "class"),
+    classes: mergeList(from.classes, ours.classes, theirs.classes, conflicts, "class", 100),
     fluidRange: pickSetting(
       from.fluidRange,
       ours.fluidRange,
@@ -75,6 +79,32 @@ export function mergeDesign(
 }
 
 function mergeList<T extends Named>(
+  base: T[] | undefined,
+  ours: T[] | undefined,
+  theirs: T[] | undefined,
+  conflicts: DesignConflict[],
+  kind: "variable" | "class",
+  /** The list's limit in schema/design.ts. */
+  max: number,
+): T[] {
+  const merged = mergeListUncapped(base, ours, theirs, conflicts, kind);
+  if (merged.length <= max) return merged;
+  // W-647: both tabs added items and together they pass the limit, so the save would be refused.
+  // The server's items stay; this tab's new ones past the limit are reported as conflicts.
+  const theirIds = new Set((theirs ?? []).map((item) => item.id));
+  let over = merged.length - max;
+  const dropped = new Set<string>();
+  for (const item of merged.toReversed()) {
+    if (over === 0) break;
+    if (theirIds.has(item.id)) continue;
+    dropped.add(item.id);
+    conflicts.push({ kind, name: item.name });
+    over--;
+  }
+  return merged.filter((item) => !dropped.has(item.id));
+}
+
+function mergeListUncapped<T extends Named>(
   base: T[] | undefined,
   ours: T[] | undefined,
   theirs: T[] | undefined,
