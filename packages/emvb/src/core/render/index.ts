@@ -1,3 +1,4 @@
+import { MAX_NODES } from "../limits.ts";
 import { loneAbTests, variantShows } from "../audience/variants.ts";
 import { audienceShows, audienceSummary } from "../audience/rules.ts";
 import { generateCss } from "../css/generate.ts";
@@ -189,6 +190,9 @@ function renameIds(vnode: VNode, base: string, next: string): VNode {
   };
 }
 
+/** Elements synced sections may add to one render, all copies together (W-653): 20 full pages. */
+const MAX_SECTION_ELEMENTS = 20 * MAX_NODES;
+
 export function renderPage(
   layout: Layout,
   design: DesignSystem,
@@ -240,7 +244,13 @@ export function renderPage(
   // W-253: runtimes follow what renders, including synced section and loop item contents,
   // which the page's own layout doesn't hold.
   const rendered = { form: false, tabs: false, menuDropdown: false };
+  let sectionBudget = MAX_SECTION_ELEMENTS;
   const ctx: RenderContext = {
+    takeSectionBudget: (nodes) => {
+      if (nodes > sectionBudget) return false;
+      sectionBudget -= nodes;
+      return true;
+    },
     mode,
     definitions: opts.formDefinitions ?? new Map(),
     children: (nodes, dynamic) =>

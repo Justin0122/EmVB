@@ -18,6 +18,12 @@ export type RenderContext = {
    * stay with their own copy.
    */
   uniqueId: (base: string) => string;
+  /**
+   * W-653: claims `nodes` elements from this render's synced-section budget; false once spent.
+   * Sections nested in sections multiply, so a few small parts could expand to millions of
+   * elements and stall the page.
+   */
+  takeSectionBudget?: (nodes: number) => boolean;
   /** The form whose children are rendering, so each field reads that form's definition. */
   formId?: string;
 };

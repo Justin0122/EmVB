@@ -6,6 +6,23 @@ import type { VNode } from "./vnode.ts";
 
 const MAX_SECTION_DEPTH = 8;
 
+const sizes = new WeakMap<object, number>();
+/** Elements in a part's layout, counted once per layout object. */
+function partSize(nodes: readonly { children?: unknown }[]): number {
+  const cached = sizes.get(nodes);
+  if (cached !== undefined) return cached;
+  let count = 0;
+  const stack: unknown[] = [...nodes];
+  while (stack.length > 0) {
+    const node = stack.pop() as { children?: unknown } | null;
+    if (!node || typeof node !== "object") continue;
+    count++;
+    if (Array.isArray(node.children)) for (const child of node.children) stack.push(child);
+  }
+  sizes.set(nodes, count);
+  return count;
+}
+
 /**
  * A section with `partId` renders that theme part's children.
  * A missing part stays empty on the public site (local children would drift from the source).
@@ -23,7 +40,13 @@ export function renderSection(
   if (!partId) {
     return ELEMENTS.section.build(node as never, attrs, ctx.children(node.children, dynamic));
   }
-  if (!template || stack.includes(partId) || stack.length >= MAX_SECTION_DEPTH) {
+  if (
+    !template ||
+    stack.includes(partId) ||
+    stack.length >= MAX_SECTION_DEPTH ||
+    // W-653: past the render's budget a copy renders like a missing part.
+    (ctx.takeSectionBudget && !ctx.takeSectionBudget(partSize(template.root.children)))
+  ) {
     if (ctx.mode !== "editor") return ELEMENTS.section.build(node as never, attrs, []);
     return { tag: "div", attrs, children: ["Synced section"] };
   }
