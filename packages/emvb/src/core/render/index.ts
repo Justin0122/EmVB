@@ -1,4 +1,4 @@
-import { variantShows } from "../audience/variants.ts";
+import { loneAbTests, variantShows } from "../audience/variants.ts";
 import { audienceShows, audienceSummary } from "../audience/rules.ts";
 import { generateCss } from "../css/generate.ts";
 import { printCss } from "../css/print.ts";
@@ -223,6 +223,7 @@ export function renderPage(
     queryMin?: number;
   }[] = [];
   const layoutHasToc = treeHasType(layout.root, "toc");
+  const loneTests = loneAbTests(layout);
   // W-384: a table of contents lists the page's headings that actually render, with their
   // rendered text, so a hidden A/B arm or audience heading is not a dead link.
   const pageHeadings = layoutHasToc
@@ -430,7 +431,7 @@ export function renderPage(
     // W-307: bound fields read their live value; the typed value is the fallback.
     const node = stored.bind ? applyBindings(stored, bindingData(dynamic)) : stored;
     // W-312: only the visitor's arm of an A/B test renders; the editor shows every arm.
-    if (mode === "public" && !variantShows(stored, dynamic?.abArms)) return undefined;
+    if (mode === "public" && !variantShows(stored, dynamic?.abArms, loneTests)) return undefined;
     // W-313: visitor-aware elements render only for their audience; the editor shows them all.
     if (mode === "public" && !audienceShows(stored, dynamic?.visitor)) return undefined;
     const id = ID.test(node.id) ? node.id : undefined;

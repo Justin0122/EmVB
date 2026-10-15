@@ -82,3 +82,31 @@ describe("edge A/B variants (W-312)", () => {
     expect(findNode(ended.layout, "head0001")).toBeUndefined();
   });
 });
+
+test("a test missing one arm is not run and its remaining arm shows to everyone (W-625)", () => {
+  const page = (arm: "a" | "b") =>
+    ({
+      schemaVersion: 16,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [
+          {
+            id: "head0001",
+            type: "heading",
+            props: { text: "Only arm", level: 1 },
+            variant: { test: "hero", arm },
+          },
+        ],
+      },
+    }) as Layout;
+  for (const arm of ["a", "b"] as const) {
+    expect(collectAbTests(page(arm))).toEqual([]);
+    for (const abArms of [undefined, { hero: "a" as const }, { hero: "b" as const }]) {
+      expect(renderPage(page(arm), emptyDesign(), { dynamic: { abArms } as never }).html).toContain(
+        "Only arm",
+      );
+    }
+  }
+});
