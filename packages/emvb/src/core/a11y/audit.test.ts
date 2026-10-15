@@ -165,3 +165,37 @@ test("W-637: contrast reads colours set by global classes, the element's own sty
   // The element's own colour wins over the class.
   expect(issues(text(["pale"], { color: "#111111" }))).toEqual([]);
 });
+
+test("W-638: large text and opacity set by global classes count in the contrast check", () => {
+  const design = {
+    ...emptyDesign(),
+    classes: [
+      { id: "big", name: "big", style: { fontSize: { value: 32, unit: "px" } } },
+      { id: "faint", name: "faint", style: { opacity: 0.3 } },
+    ],
+  } as ReturnType<typeof emptyDesign>;
+  const text = (classes: string[], color: string) =>
+    ({
+      id: "text0001",
+      type: "text",
+      props: { text: "Hi" },
+      classes,
+      style: { color },
+    }) as LayoutNode;
+  const report = (child: LayoutNode) =>
+    auditPage(
+      page(h("head0001", 1), {
+        id: "box00001",
+        type: "container",
+        props: {},
+        style: { backgroundColor: "#ffffff" },
+        children: [child],
+      } as LayoutNode),
+      design,
+    ).issues;
+  // #888 on white is 3.5:1: too low for body text, enough for large text from a class.
+  expect(report(text([], "#888888")).map((i) => i.rule)).toEqual(["contrast"]);
+  expect(report(text(["big"], "#888888"))).toEqual([]);
+  // Near-black text faded to 30% by a class is flagged.
+  expect(report(text(["faint"], "#111111")).map((i) => i.rule)).toEqual(["contrast"]);
+});

@@ -129,9 +129,24 @@ function px(value: unknown): number | undefined {
   return undefined;
 }
 
+/** Global classes apply first, in stylesheet order, then the element's own style (W-637, W-638). */
+function effectiveStyle(
+  node: LayoutNode,
+  design: DesignSystem,
+): Record<string, unknown> | undefined {
+  const classIds = new Set(node.classes ?? []);
+  if (classIds.size === 0) return node.style as Record<string, unknown> | undefined;
+  const fromClasses = (design.classes ?? [])
+    .filter((c) => classIds.has(c.id))
+    .reduce<Record<string, unknown>>((acc, c) => Object.assign(acc, c.style), {});
+  return { ...fromClasses, ...(node.style as Record<string, unknown> | undefined) };
+}
+
 /** Large text (24 px, or 18.66 px bold) needs 3:1; other text 4.5:1. */
-function largeText(node: LayoutNode): boolean {
-  const style = node.style as { fontSize?: unknown; fontWeight?: unknown } | undefined;
+function largeText(node: LayoutNode, design: DesignSystem): boolean {
+  const style = effectiveStyle(node, design) as
+    | { fontSize?: unknown; fontWeight?: unknown }
+    | undefined;
   const size = px(style?.fontSize) ?? (node.type === "heading" ? 24 : 16);
   const weight =
     typeof style?.fontWeight === "number" ? style.fontWeight : node.type === "heading" ? 700 : 400;
@@ -174,7 +189,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     const before = variant?.arm === "b" ? beforeA.get(variant.test) : undefined;
     if (before) [h1s, lastLevel] = [[...before[0]], before[1]];
     const outerFade = fade;
-    const opacity = (node.style as { opacity?: unknown } | undefined)?.opacity;
+    const opacity = effectiveStyle(node, design)?.opacity;
     if (typeof opacity === "number" && opacity >= 0 && opacity < 1) fade *= opacity;
     const outerShown = shownOn;
     shownOn = shownOn.map((shown, i) => shown && !node.hiddenOn?.includes(DEVICES[i] ?? "desktop"));
@@ -187,12 +202,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   };
   const visitNode = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     const props = node.props as Record<string, unknown>;
-    // Global classes apply first, in stylesheet order, then the element's own style (W-637).
-    const classIds = new Set(node.classes ?? []);
-    const fromClasses = (design.classes ?? [])
-      .filter((c) => classIds.has(c.id))
-      .reduce<Record<string, unknown>>((acc, c) => Object.assign(acc, c.style), {});
-    const style = (classIds.size > 0 ? { ...fromClasses, ...node.style } : node.style) as
+    const style = effectiveStyle(node, design) as
       | {
           backgroundColor?: unknown;
           color?: unknown;
@@ -388,7 +398,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     }
     if (TEXT_TYPES.has(node.type) && nextColor && nextBg && nextBg !== "unknown") {
       const ratio = contrastRatio(over(nextColor, nextBg, fade), nextBg);
-      const needed = largeText(node) ? 3 : 4.5;
+      const needed = largeText(node, design) ? 3 : 4.5;
       if (ratio < needed) {
         const black = contrastRatio("#000000", nextBg);
         const white = contrastRatio("#ffffff", nextBg);
