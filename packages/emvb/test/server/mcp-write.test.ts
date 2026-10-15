@@ -145,6 +145,18 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(error.message).toContain("taken");
   });
 
+  test("create_page takes non-Latin titles and checks the slug EmDash makes (W-554)", async () => {
+    const jp = await call<{ slug: string }>("create_page", { title: "日本語のページ" });
+    expect(jp.slug).toBe("日本語のページ");
+    const ar = await call<{ slug: string }>("create_page", { title: "مرحبا بالعالم" });
+    expect(ar.slug).toBe("مرحبا-بالعالم");
+    await call("create_page", { title: "Café crème" });
+    // The same title typed with combining accents makes the same slug, so it's taken.
+    const error = await fail("create_page", { title: "Cafe\u0301 cre\u0300me" });
+    expect(error.message).toContain("taken");
+    expect((await fail("create_page", { title: "🎉🎉" })).code).toBe("REFUSED");
+  });
+
   test("update_site_styles refuses a font stack the site CSS would drop (W-547)", async () => {
     const error = await fail("update_site_styles", {
       variables: { fonts: [{ id: "agent-font", name: "Agent font", value: "Inter; color: red" }] },

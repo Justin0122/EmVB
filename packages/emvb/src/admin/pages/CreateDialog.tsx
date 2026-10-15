@@ -1,6 +1,6 @@
 import { Button, Dialog, Input } from "@cloudflare/kumo";
 import * as React from "react";
-import { slugify } from "../../core/index.ts";
+import { pageSlug } from "../../core/index.ts";
 import { ApiError } from "../api.ts";
 import { slugTakenMessage } from "../editor/useSave.ts";
 import { BUTTON, FIELD, SOLID_PRIMARY, UI_CSS } from "../ui.ts";
@@ -63,13 +63,13 @@ export function CreateDialog({
   slugEditedRef.current = slugEdited;
   React.useEffect(() => {
     if (!slugEditedRef.current && titleRef.current) {
-      setSlug(slugify(`${slugPrefix}${titleRef.current}`));
+      setSlug(pageSlug(`${slugPrefix}${titleRef.current}`));
     }
   }, [slugPrefix]);
 
   const submit = async () => {
     const cleanTitle = title.trim();
-    const cleanSlug = slugify(slug);
+    const cleanSlug = pageSlug(slug);
     if (!cleanTitle) return setError({ field: "title", message: emptyTitle });
     if (!cleanSlug) {
       return setError({ field: "slug", message: "Enter a slug using letters, digits or -." });
@@ -106,7 +106,7 @@ export function CreateDialog({
             error={error?.field === "title" ? error.message : undefined}
             onChange={(event) => {
               setTitle(event.target.value);
-              if (!slugEdited) setSlug(slugify(`${slugPrefix}${event.target.value}`));
+              if (!slugEdited) setSlug(pageSlug(`${slugPrefix}${event.target.value}`));
             }}
           />
           <Input

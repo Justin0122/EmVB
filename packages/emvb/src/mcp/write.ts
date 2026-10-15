@@ -17,7 +17,7 @@ import {
 } from "../core/index.ts";
 import { addNode, moveNode, withFreshIds } from "../core/arrange.ts";
 import { ELEMENT_DESCRIPTORS } from "../core/elements/index.ts";
-import { nodeChildren, removeNode, slugify, starterLayout, updateNode } from "../core/tree-ops.ts";
+import { nodeChildren, pageSlug, removeNode, starterLayout, updateNode } from "../core/tree-ops.ts";
 import { isSafeFontStack } from "../core/sanitize/css.ts";
 import { sanitizeMediaUrl } from "../core/sanitize/media-url.ts";
 import { McpToolError } from "./errors.ts";
@@ -253,7 +253,7 @@ async function slugTaken(ports: EmvbPorts, slug: string): Promise<boolean> {
 
 export async function createPage(ports: EmvbPorts, input: z.infer<typeof CreatePageInput>) {
   // EmDash derives the slug from the title; refuse a title whose slug is already taken.
-  const slug = slugify(input.title);
+  const slug = pageSlug(input.title);
   if (!slug) refused("Give the page a title with letters or digits.");
   const { design } = await ports.getDesign();
   let layout = starterLayout(input.title);

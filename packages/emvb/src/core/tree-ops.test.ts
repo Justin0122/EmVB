@@ -9,6 +9,7 @@ import {
   newNodeId,
   nodeIdAtPath,
   removeNode,
+  pageSlug,
   slugify,
   someNode,
   starterLayout,
@@ -90,6 +91,26 @@ describe("new pages", () => {
     ["a".repeat(100), "a".repeat(80)],
   ])("slugify(%p) = %p", (input, slug) => {
     expect(slugify(input)).toBe(slug);
+  });
+
+  // W-554: page slugs are made the way EmDash makes them, so other scripts keep their letters.
+  test.each([
+    ["About Us", "about-us"],
+    ["  Hello, World! ", "hello-world"],
+    ["Café crème", "café-crème"],
+    ["Cafe\u0301 cre\u0300me", "café-crème"],
+    ["日本語のページ", "日本語のページ"],
+    ["مرحبا بالعالم", "مرحبا-بالعالم"],
+    ["snake_case title", "snake-case-title"],
+    ["ＦＵＬＬ　ｗｉｄｔｈ", "full-width"],
+    ["🎉🎉", ""],
+    ["---", ""],
+    ["\u200b", ""],
+    ["a".repeat(100), "a".repeat(80)],
+    [`${"a".repeat(79)}é`, `${"a".repeat(79)}é`],
+    [`${"a".repeat(79)}e\u0301`, `${"a".repeat(79)}é`],
+  ])("pageSlug(%p) = %p", (input, slug) => {
+    expect(pageSlug(input)).toBe(slug);
   });
 });
 

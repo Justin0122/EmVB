@@ -183,6 +183,33 @@ export function starterLayout(title: string, random?: () => number): Layout {
   };
 }
 
+/**
+ * W-554: a page's URL slug from its title, made the way EmDash makes entry slugs: NFKC,
+ * lowercase, spaces and underscores to hyphens, and letters, digits and marks of any script
+ * kept, cut to 80 characters as people see them. Empty when nothing usable is left (EmDash
+ * would then name it `untitled-…`). Class and variable ids keep `slugify`'s ASCII.
+ */
+export function pageSlug(text: string, max = 80): string {
+  const slug = text
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/[\s_]+/gu, "-")
+    .replace(/[^\p{L}\p{N}\p{M}-]+/gu, "")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  if (!/[\p{L}\p{N}]/u.test(slug)) return "";
+  let out = "";
+  let count = 0;
+  for (const { segment } of new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(
+    slug,
+  )) {
+    if (count >= max) break;
+    out += segment;
+    count++;
+  }
+  return out.replace(/-+$/g, "");
+}
+
 /** A URL slug from a title: lowercase ASCII letters, digits and single hyphens. */
 export function slugify(text: string): string {
   return text

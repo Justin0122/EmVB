@@ -255,6 +255,7 @@ export {
   nodeIdAtPath,
   newNodeId,
   starterLayout,
+  pageSlug,
   slugify,
   type Removed,
 } from "./tree-ops.ts";
