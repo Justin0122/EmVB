@@ -405,7 +405,7 @@ function DefaultsSection({
   onSave,
 }: {
   design: DesignSystem;
-  onSave: (design: DesignSystem) => Promise<void>;
+  onSave: (design: DesignSystem) => Promise<boolean | void>;
 }) {
   const [tag, setTag] = React.useState<DefaultStyleTag>("p");
   const style = design.defaults?.[tag];
@@ -444,7 +444,7 @@ function DefaultsSection({
           style={style}
           design={design}
           onPatch={patch}
-          onDesignChange={onSave}
+          onDesignChange={async (next) => void (await onSave(next))}
         />
       ))}
     </>

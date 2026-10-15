@@ -125,7 +125,7 @@ function ClassStyleEditor({
                 : patchClassState(design, cls.id, state, patch),
             )
           }
-          onDesignChange={onSave}
+          onDesignChange={async (next) => void (await onSave(next))}
         />
       ))}
     </div>
