@@ -47,4 +47,24 @@ describe("synced sections inside synced sections (W-653)", () => {
     });
     expect(html.match(/>leaf</g)?.length).toBe(50);
   });
+
+  test("the editor says why a copy past the budget is missing (W-657)", () => {
+    const parts = ["pa", "pb", "pc", "pd", "pe"];
+    const sectionTemplates: Record<string, unknown> = {};
+    parts.forEach((part, k) => {
+      const next = parts[k + 1];
+      sectionTemplates[part] = layoutOf(
+        next
+          ? Array.from({ length: 20 }, (_, i) =>
+              sectionRef(`n${k}x${String(i).padStart(4, "0")}`, next),
+            )
+          : [leaf],
+      );
+    });
+    const { html } = renderPage(layoutOf([sectionRef("top00001", "pa")]) as never, emptyDesign(), {
+      mode: "editor",
+      dynamic: { sectionTemplates } as never,
+    } as never);
+    expect(html).toContain("too many synced copies");
+  });
 });

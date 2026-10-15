@@ -40,15 +40,19 @@ export function renderSection(
   if (!partId) {
     return ELEMENTS.section.build(node as never, attrs, ctx.children(node.children, dynamic));
   }
-  if (
-    !template ||
-    stack.includes(partId) ||
-    stack.length >= MAX_SECTION_DEPTH ||
-    // W-653: past the render's budget a copy renders like a missing part.
-    (ctx.takeSectionBudget && !ctx.takeSectionBudget(partSize(template.root.children)))
-  ) {
+  if (!template || stack.includes(partId) || stack.length >= MAX_SECTION_DEPTH) {
     if (ctx.mode !== "editor") return ELEMENTS.section.build(node as never, attrs, []);
     return { tag: "div", attrs, children: ["Synced section"] };
+  }
+  // W-653: past the render's budget a copy renders like a missing part. W-657: the editor
+  // says why, instead of the same placeholder a deleted part shows.
+  if (ctx.takeSectionBudget && !ctx.takeSectionBudget(partSize(template.root.children))) {
+    if (ctx.mode !== "editor") return ELEMENTS.section.build(node as never, attrs, []);
+    return {
+      tag: "div",
+      attrs,
+      children: ["Synced section not shown: this page already holds too many synced copies."],
+    };
   }
   const templateNodes = template.root.children;
   const next: ThemeDynamicData = {
