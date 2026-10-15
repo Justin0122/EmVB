@@ -464,3 +464,83 @@ describe("an image field keeps the image's size (W-335)", () => {
     }
   });
 });
+
+describe("list items are marked and edited from the canvas (W-336)", () => {
+  const usePage = (values: Record<string, unknown>) =>
+    ({
+      schemaVersion: 12,
+      root: {
+        id: "root0001",
+        type: "container",
+        props: {},
+        children: [{ id: "use00001", type: "component", props: { partId: "c1", values } }],
+      },
+    }) as unknown as Layout;
+  const render = (values: Record<string, unknown>, mode?: "editor") =>
+    renderPage(usePage(values), emptyDesign(), {
+      ...(mode ? { mode } : {}),
+      dynamic: { componentTemplates: { c1: template } },
+    }).html;
+
+  test("each repeated element names its list and stored position, in the editor only", () => {
+    const values = { buttons: ["oops", { label: "A" }, { label: "B" }] };
+    expect(render(values, "editor").match(/data-emvb-item="([^"]+)"/g)).toEqual([
+      'data-emvb-item="use00001|buttons|1"',
+      'data-emvb-item="use00001|buttons|2"',
+    ]);
+    expect(render(values)).not.toContain("data-emvb-item");
+  });
+
+  test("a list's field is found by its path, also inside a list item", async () => {
+    const { listFieldAt } = await import("./component.ts");
+    const nested: ComponentField[] = [
+      // Lists hold no lists today; the path walk handles one anyway.
+      { key: "groups", label: "Groepen", kind: "list", fields: [...FIELDS] as never },
+    ];
+    expect(listFieldAt(FIELDS, "buttons")?.max).toBe(3);
+    expect(listFieldAt(nested, "groups.0.buttons")?.label).toBe("Knoppen");
+    expect(listFieldAt(FIELDS, "title")).toBeUndefined();
+    expect(listFieldAt(nested, "groups.x.buttons")).toBeUndefined();
+  });
+
+  test("items are added empty, duplicated, moved and removed, copying the values", async () => {
+    const { editListItem } = await import("./component.ts");
+    const values = { title: "Een", buttons: [{ label: "A" }, { label: "B" }] };
+    expect(editListItem(values, "buttons", 0, "add-after")).toEqual({
+      values: { title: "Een", buttons: [{ label: "A" }, {}, { label: "B" }] },
+      index: 1,
+    });
+    const copied = editListItem(values, "buttons", 1, "duplicate")?.values["buttons"] as unknown[];
+    expect(copied).toEqual([{ label: "A" }, { label: "B" }, { label: "B" }]);
+    expect(copied[2]).not.toBe(values.buttons[1]);
+    expect(editListItem(values, "buttons", 0, "move-on")?.values["buttons"]).toEqual([
+      { label: "B" },
+      { label: "A" },
+    ]);
+    expect(editListItem(values, "buttons", 1, "remove")).toEqual({
+      values: { title: "Een", buttons: [{ label: "A" }] },
+      index: 0,
+    });
+    expect(editListItem(values, "buttons", 0, "append")?.index).toBe(2);
+    expect(values.buttons).toHaveLength(2);
+  });
+
+  test("a full list takes no more, and an end item moves no further", async () => {
+    const { editListItem } = await import("./component.ts");
+    const values = { buttons: [{ label: "A" }, { label: "B" }] };
+    expect(editListItem(values, "buttons", 0, "append", 2)).toBeNull();
+    expect(editListItem(values, "buttons", 0, "duplicate", 2)).toBeNull();
+    expect(editListItem(values, "buttons", 0, "move-back")).toBeNull();
+    expect(editListItem(values, "buttons", 1, "move-on")).toBeNull();
+    expect(editListItem(values, "buttons", 5, "remove")).toBeNull();
+    expect(editListItem({}, "buttons", 0, "append")?.values).toEqual({ buttons: [{}] });
+  });
+
+  test("a nested list is edited in its item", async () => {
+    const { editListItem } = await import("./component.ts");
+    const values = { groups: [{ buttons: [{ label: "A" }] }] };
+    expect(editListItem(values, "groups.0.buttons", 0, "add-after")?.values).toEqual({
+      groups: [{ buttons: [{ label: "A" }, {}] }],
+    });
+  });
+});

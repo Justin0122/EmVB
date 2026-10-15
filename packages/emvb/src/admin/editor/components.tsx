@@ -3,6 +3,8 @@ import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from "@phosphor-icons
 import * as React from "react";
 import {
   collectComponentPartIds,
+  editListItem,
+  type ListItemOp,
   emptyComponentFields,
   validateComponentFields,
   validateLayout,
@@ -27,6 +29,13 @@ export type ComponentSummary = { id: string; title: string };
 type ComponentsState = { list: ComponentSummary[]; templates: Record<string, ComponentTemplate> };
 
 export const ComponentsContext = React.createContext<ComponentsState>({ list: [], templates: {} });
+
+/** W-336: the list item chosen on the canvas; the Content tab opens it. */
+export type FocusedListItem = { useId: string; path: string; index: number };
+export const ListItemFocusContext = React.createContext<FocusedListItem | null>(null);
+
+/** Where a field sits: the use, and its path in the use's values ("cards", "cards.0.title"). */
+type FieldAt = { useId: string; path: string };
 
 const MAX_DEPTH = 6;
 
@@ -119,6 +128,35 @@ type Values = Record<string, unknown>;
 const record = (value: unknown): Values =>
   value && typeof value === "object" && !Array.isArray(value) ? (value as Values) : {};
 
+/** An image field's value as the image element the media picker edits (W-312, W-337). */
+export function imageFieldNode(value: unknown): LayoutNode {
+  const image = record(value);
+  return {
+    id: "component-image",
+    type: "image",
+    props: { src: image["src"] ?? "", alt: image["alt"] ?? "" },
+  } as LayoutNode;
+}
+
+/** The image field value of what the media picker chose; null when it was cleared. */
+export function imageFieldValue(picked: LayoutNode): Values | null {
+  const p = picked.props as {
+    src?: string;
+    alt?: string;
+    mediaId?: string;
+    width?: number;
+    height?: number;
+  };
+  if (!p.src) return null;
+  return {
+    src: p.src,
+    ...(p.alt ? { alt: p.alt } : {}),
+    ...(p.mediaId ? { mediaId: p.mediaId } : {}),
+    // W-335: the picked image's size travels with it.
+    ...(p.width && p.height ? { width: p.width, height: p.height } : {}),
+  };
+}
+
 /** The fields form of one component use (Content tab). */
 export function ComponentFieldsForm({
   node,
@@ -165,6 +203,7 @@ export function ComponentFieldsForm({
           <FieldInput
             key={field.key}
             field={field}
+            at={{ useId: node.id, path: field.key }}
             value={values[field.key]}
             fetcher={fetcher}
             onChange={(value) => setValues({ ...values, [field.key]: value })}
@@ -177,11 +216,13 @@ export function ComponentFieldsForm({
 
 function FieldInput({
   field,
+  at,
   value,
   fetcher,
   onChange,
 }: {
   field: ComponentField;
+  at: FieldAt;
   value: unknown;
   fetcher: Fetcher;
   onChange: (value: unknown) => void;
@@ -220,33 +261,8 @@ function FieldInput({
           <MediaPicker
             label={field.label}
             fetcher={fetcher}
-            node={
-              {
-                id: "component-image",
-                type: "image",
-                props: { src: image["src"] ?? "", alt: image["alt"] ?? "" },
-              } as LayoutNode
-            }
-            onChange={(next) => {
-              const p = next.props as {
-                src?: string;
-                alt?: string;
-                mediaId?: string;
-                width?: number;
-                height?: number;
-              };
-              onChange(
-                p.src
-                  ? {
-                      src: p.src,
-                      ...(p.alt ? { alt: p.alt } : {}),
-                      ...(p.mediaId ? { mediaId: p.mediaId } : {}),
-                      // W-335: the picked image's size travels with it.
-                      ...(p.width && p.height ? { width: p.width, height: p.height } : {}),
-                    }
-                  : null,
-              );
-            }}
+            node={imageFieldNode(image)}
+            onChange={(next) => onChange(imageFieldValue(next))}
           />
           {help}
         </div>
@@ -309,17 +325,21 @@ function FieldInput({
         </div>
       );
     case "list":
-      return <ListInput field={field} value={value} fetcher={fetcher} onChange={onChange} />;
+      return (
+        <ListInput field={field} at={at} value={value} fetcher={fetcher} onChange={onChange} />
+      );
   }
 }
 
 function ListInput({
   field,
+  at,
   value,
   fetcher,
   onChange,
 }: {
   field: Extract<ComponentField, { kind: "list" }>;
+  at: FieldAt;
   value: unknown;
   fetcher: Fetcher;
   onChange: (value: unknown) => void;
@@ -327,12 +347,13 @@ function ListInput({
   const items = Array.isArray(value) ? (value.map(record) as Values[]) : [];
   const max = field.max ?? 50;
   const set = (next: Values[]) => onChange(next);
-  const move = (from: number, to: number) => {
-    const next = [...items];
-    const [item] = next.splice(from, 1);
-    if (item) next.splice(to, 0, item);
-    set(next);
+  // The same edits as the canvas's list item toolbar (W-336).
+  const edit = (index: number, op: ListItemOp) => {
+    const next = editListItem({ items }, "items", index, op, max);
+    if (next) set(next.values["items"] as Values[]);
   };
+  const focus = React.useContext(ListItemFocusContext);
+  const focused = focus && focus.useId === at.useId && focus.path === at.path ? focus.index : null;
   const title = (item: Values, index: number) => {
     const first = field.fields.find((f) => f.kind === "text");
     const text = first ? item[first.key] : undefined;
@@ -342,13 +363,18 @@ function ListInput({
     <fieldset className="emvb-component-list" data-emvb-field-kind="list">
       <legend className="emvb-field-label">{field.label}</legend>
       {items.map((item, index) => (
-        <details key={index} className="emvb-component-item" open={items.length <= 2}>
-          <summary>{title(item, index)}</summary>
+        <ListItemDetails
+          key={index}
+          open={items.length <= 2 || focused === index}
+          focused={focused === index}
+          summary={title(item, index)}
+        >
           <div className="emvb-component-item-body">
             {field.fields.map((sub) => (
               <FieldInput
                 key={sub.key}
                 field={sub}
+                at={{ useId: at.useId, path: `${at.path}.${index}.${sub.key}` }}
                 value={item[sub.key]}
                 fetcher={fetcher}
                 onChange={(next) =>
@@ -364,7 +390,7 @@ function ListInput({
                 aria-label="Move up"
                 disabled={index === 0}
                 icon={<ArrowUpIcon aria-hidden="true" />}
-                onClick={() => move(index, index - 1)}
+                onClick={() => edit(index, "move-back")}
               />
               <Button
                 variant="secondary"
@@ -373,7 +399,7 @@ function ListInput({
                 aria-label="Move down"
                 disabled={index === items.length - 1}
                 icon={<ArrowDownIcon aria-hidden="true" />}
-                onClick={() => move(index, index + 1)}
+                onClick={() => edit(index, "move-on")}
               />
               <Button
                 variant="secondary"
@@ -381,21 +407,53 @@ function ListInput({
                 shape="square"
                 aria-label="Remove item"
                 icon={<TrashIcon aria-hidden="true" />}
-                onClick={() => set(items.filter((_, i) => i !== index))}
+                onClick={() => edit(index, "remove")}
               />
             </div>
           </div>
-        </details>
+        </ListItemDetails>
       ))}
       <Button
         variant="secondary"
         className={BUTTON}
         icon={<PlusIcon aria-hidden="true" />}
         disabled={items.length >= max}
-        onClick={() => set([...items, {}])}
+        onClick={() => edit(items.length - 1, "append")}
       >
         Add {field.label.toLocaleLowerCase()}
       </Button>
     </fieldset>
+  );
+}
+
+/** One list item in the form; the one chosen on the canvas opens and scrolls into view (W-336). */
+function ListItemDetails({
+  open,
+  focused,
+  summary,
+  children,
+}: {
+  open: boolean;
+  focused: boolean;
+  summary: string;
+  children: React.ReactNode;
+}) {
+  const ref = React.useRef<HTMLDetailsElement>(null);
+  React.useEffect(() => {
+    const element = ref.current;
+    if (!focused || !element) return;
+    element.open = true;
+    element.scrollIntoView?.({ block: "nearest" });
+  }, [focused]);
+  return (
+    <details
+      ref={ref}
+      className="emvb-component-item"
+      open={open}
+      data-emvb-list-item-focused={focused ? "" : undefined}
+    >
+      <summary>{summary}</summary>
+      {children}
+    </details>
   );
 }

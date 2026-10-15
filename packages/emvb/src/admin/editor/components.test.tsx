@@ -6,6 +6,7 @@ import { cleanup, mount } from "../../../test/dom/mount.ts";
 import {
   ComponentFieldsForm,
   ComponentsContext,
+  ListItemFocusContext,
   componentTitle,
   loadComponent,
 } from "./components.tsx";
@@ -147,5 +148,28 @@ describe("a component use's name (W-312)", () => {
         context.list,
       ),
     ).toBeUndefined();
+  });
+});
+
+describe("the list item chosen on the canvas opens in the Content tab (W-336)", () => {
+  test("its section opens; the others stay as they were", async () => {
+    const node = {
+      id: "use00001",
+      type: "component",
+      props: {
+        partId: "c1",
+        values: { buttons: [{ label: "Een" }, { label: "Twee" }, { label: "Drie" }] },
+      },
+    } as unknown as LayoutNode;
+    const host = await mount(
+      <ComponentsContext.Provider value={context}>
+        <ListItemFocusContext.Provider value={{ useId: "use00001", path: "buttons", index: 2 }}>
+          <ComponentFieldsForm node={node} fetcher={noFetch} onChange={() => undefined} />
+        </ListItemFocusContext.Provider>
+      </ComponentsContext.Provider>,
+    );
+    const items = [...host.querySelectorAll<HTMLDetailsElement>("details.emvb-component-item")];
+    expect(items.map((item) => item.open)).toEqual([false, false, true]);
+    expect(items[2]?.hasAttribute("data-emvb-list-item-focused")).toBe(true);
   });
 });

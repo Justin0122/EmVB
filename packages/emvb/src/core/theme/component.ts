@@ -179,6 +179,22 @@ const BOUND = new WeakMap<LayoutNode, BoundField>();
 export const boundFieldOf = (node: LayoutNode): BoundField | undefined => BOUND.get(node);
 
 /**
+ * W-336: an element made once per list item: the list's path in the use's values ("cards",
+ * "groups.0.items") and the item's stored position there. The canvas edits items through it.
+ */
+export type ListItemMark = { path: string; index: number };
+
+const ITEMS = new WeakMap<LayoutNode, ListItemMark>();
+
+const IMAGES = new WeakMap<LayoutNode, string>();
+
+/** W-337: the image field (its path in the use's values) an image made by `applyComponent` shows. */
+export const boundImageOf = (node: LayoutNode): string | undefined => IMAGES.get(node);
+
+/** The list item an element made by `applyComponent` repeats, if any (W-336). */
+export const listItemOf = (node: LayoutNode): ListItemMark | undefined => ITEMS.get(node);
+
+/**
  * Props that are an element's whole text. A FAQ item's question (`summary`) or a tab's `label`
  * belongs to the item around it, where a click opens it, so those aren't edited in place (W-327).
  */
@@ -279,10 +295,11 @@ function applyNodes(
       const stored = componentValueAt(scopes[0]?.values, found.path);
       items.forEach((item, index) => {
         const at = Array.isArray(stored) ? stored.indexOf(item) : -1;
+        const position = at < 0 ? index : at;
         const itemScope: Scope = {
           values: item,
           fields: found.field.kind === "list" ? found.field.fields : [],
-          path: `${found.path}.${at < 0 ? index : at}.`,
+          path: `${found.path}.${position}.`,
         };
         const copy = applyNode(
           { ...node, bind: withoutKey(bind, "repeat") },
@@ -290,7 +307,10 @@ function applyNodes(
           `${suffix}-${index + 1}`,
           depth,
         );
-        if (copy) out.push(copy);
+        if (copy) {
+          ITEMS.set(copy, { path: found.path, index: position });
+          out.push(copy);
+        }
       });
       continue;
     }
@@ -317,6 +337,7 @@ function applyNode(
   const props = { ...(node.props as Record<string, unknown>) };
   let classes = node.classes;
   let bound: BoundField | undefined;
+  let image: string | undefined;
   for (const [target, key] of Object.entries(bind)) {
     if (target === "show" || target === "repeat") continue;
     const found = lookup(key, scopes);
@@ -332,6 +353,9 @@ function applyNode(
       found.field.kind === "text"
     ) {
       bound = { path: found.path, kind: "text", on: "summary" };
+    }
+    if (target === "src" && node.type === "image" && found.field.kind === "image") {
+      image = found.path;
     }
     if (target === "classes") {
       if (found.field.kind === "select" && typeof found.value === "string") {
@@ -349,6 +373,7 @@ function applyNode(
     ...(classes ? { classes } : {}),
   } as LayoutNode;
   if (bound) BOUND.set(next, bound);
+  if (image) IMAGES.set(next, image);
   if (isParentNode(next)) {
     (next as { children: LayoutNode[] }).children = applyNodes(
       next.children,
@@ -408,4 +433,74 @@ export function withComponentValue(
     value,
   );
   return { ...base, [head]: items };
+}
+
+type ListField = Extract<ComponentField, { kind: "list" }>;
+
+/** W-336: the list field a path in a use's values names ("cards", "groups.0.items"). */
+export function listFieldAt(
+  fields: readonly ComponentField[],
+  path: string,
+): ListField | undefined {
+  const parts = path.split(".");
+  let current = fields;
+  for (let i = 0; i < parts.length; i += 2) {
+    const field = current.find((f) => f.key === parts[i]);
+    if (!field || field.kind !== "list") return undefined;
+    if (i === parts.length - 1) return field;
+    if (!/^\d+$/.test(parts[i + 1] ?? "")) return undefined;
+    current = field.fields;
+  }
+  return undefined;
+}
+
+/** What the canvas and the sidebar do to one item of a component's list (W-336). */
+export type ListItemOp = "append" | "add-after" | "duplicate" | "remove" | "move-back" | "move-on";
+
+/**
+ * W-336: the use's values with one list item added (empty), duplicated, removed or moved one
+ * place, and where that item (or the one now in its place) ends up; null when the list is full
+ * or the item can't move further. `index` is the item's stored position; `max` the field's cap.
+ */
+export function editListItem(
+  values: Record<string, unknown> | undefined,
+  path: string,
+  index: number,
+  op: ListItemOp,
+  max = 50,
+): { values: Record<string, unknown>; index: number } | null {
+  const stored = componentValueAt(values, path);
+  const list = Array.isArray(stored) ? [...stored] : [];
+  const full = list.filter(isRecord).length >= max;
+  const has = Number.isInteger(index) && index >= 0 && index < list.length;
+  let at = index;
+  switch (op) {
+    case "append":
+      if (full) return null;
+      list.push({});
+      at = list.length - 1;
+      break;
+    case "add-after":
+    case "duplicate": {
+      if (full || !has) return null;
+      const copy = op === "duplicate" && isRecord(list[index]) ? structuredClone(list[index]) : {};
+      list.splice(index + 1, 0, copy);
+      at = index + 1;
+      break;
+    }
+    case "remove":
+      if (!has) return null;
+      list.splice(index, 1);
+      at = Math.min(index, list.length - 1);
+      break;
+    case "move-back":
+    case "move-on": {
+      const to = op === "move-back" ? index - 1 : index + 1;
+      if (!has || to < 0 || to >= list.length) return null;
+      [list[index], list[to]] = [list[to], list[index]];
+      at = to;
+      break;
+    }
+  }
+  return { values: withComponentValue(values, path, list), index: at };
 }

@@ -211,6 +211,18 @@ export const EDITOR_CSS = `${UI_CSS}
 .emvb-overlay-action { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: inherit; cursor: pointer; pointer-events: auto; }
 .emvb-overlay-action:hover { background: var(--color-kumo-brand-hover); }
 .emvb-overlay-action:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+.emvb-overlay-action:disabled { opacity: 0.45; cursor: default; }
+.emvb-overlay-action:disabled:hover { background: transparent; }
+.emvb-item-outline { position: absolute; box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-kumo-brand) 70%, transparent); outline: 1px dashed color-mix(in oklab, var(--color-kumo-brand) 60%, transparent); outline-offset: -3px; }
+.emvb-item-outline-selected { box-shadow: inset 0 0 0 1.5px var(--color-kumo-brand); outline: 0; }
+.emvb-item-toolbar { background: var(--color-kumo-elevated, #fff); color: var(--text-color-kumo-default); box-shadow: 0 0 0 1px var(--color-kumo-brand), var(--emvb-elevation-s); }
+.emvb-item-toolbar .emvb-overlay-action:hover { background: color-mix(in oklab, var(--color-kumo-brand) 14%, transparent); }
+.emvb-list-add { position: absolute; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 999px; background: var(--color-kumo-brand); color: #fff; cursor: pointer; pointer-events: auto; box-shadow: var(--emvb-elevation-s); }
+.emvb-list-add:hover { background: var(--color-kumo-brand-hover); }
+.emvb-list-add:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: 2px; }
+.emvb-image-pick { position: absolute; z-index: 5; box-sizing: border-box; padding: 8px 10px 10px; border-radius: 8px; background: var(--color-kumo-elevated, #fff); color: var(--text-color-kumo-default); box-shadow: 0 0 0 1px var(--color-kumo-line), var(--emvb-elevation-m, 0 8px 24px rgb(0 0 0 / 0.18)); pointer-events: auto; }
+.emvb-image-pick-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-weight: 600; font-size: 13px; }
+.emvb-image-pick-head .emvb-overlay-action:hover { background: var(--color-kumo-tint, #eee); }
 .emvb-empty-canvas { display: flex; align-items: center; justify-content: center; height: 100%; padding: 24px; }
 .emvb-empty-prompt { display: inline-flex; align-items: center; gap: 8px; padding: 24px; border: 1px dashed var(--color-kumo-line); border-radius: 6px; background: var(--emvb-glass-strong); -webkit-backdrop-filter: blur(var(--emvb-glass-blur)); backdrop-filter: blur(var(--emvb-glass-blur)); color: var(--text-color-kumo-default); font: inherit; cursor: pointer; box-shadow: var(--emvb-elevation-s); }
 .emvb-state { display: flex; align-items: center; justify-content: center; min-height: 0; padding: 24px; background: var(--color-kumo-elevated); }

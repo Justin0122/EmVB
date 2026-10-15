@@ -31,6 +31,8 @@ import {
   type DropTarget,
   type InvalidDrop,
 } from "./SelectionOverlay.tsx";
+import { ListItemOverlay, type ListItemRef } from "./ListItemOverlay.tsx";
+import { ImagePickPopover, type ImagePick } from "./ImagePickPopover.tsx";
 import { applyStatePreview, type StatePreview } from "./state-preview.ts";
 import { revealInAccordions, revealInMenus, revealInTabs } from "./tab-reveal.ts";
 import { canvasEditFor, type CanvasEdit } from "./canvas-edit.ts";
@@ -55,6 +57,8 @@ const DROP_BOXES = [
 ]
   .map((type) => `.emvb-${type}:empty`)
   .join(",");
+/** W-337: a component's insides take no drops, so they show no placeholder. */
+const OWN = ":not(.emvb-component *)";
 /**
  * Empty boxes whose display the page controls (a hidden tab panel stays hidden), so the
  * placeholder must not set it (W-130).
@@ -71,16 +75,16 @@ const HINT = "color:#64748b;font:13px/1.4 system-ui,sans-serif;pointer-events:no
  */
 const EDITOR_CANVAS_CSS =
   // The 48 px floor is in :where() so a min-height the user set always wins (W-145).
-  `:where(${DROP_BOXES}){min-height:48px}` +
-  `:is(${DROP_BOXES}){outline:1px dashed #94a3b8;outline-offset:-1px;display:flex;align-items:center;justify-content:center}` +
-  `:is(${DROP_BOXES})::after{content:"Drop elements here";${HINT}}` +
-  `:where(${DROP_BODIES}){min-height:48px}` +
-  `:is(${DROP_BODIES}){outline:1px dashed #94a3b8;outline-offset:-1px}` +
-  `:is(${DROP_BODIES})::after{content:"Drop elements here";display:block;line-height:48px;text-align:center;${HINT}}` +
-  `:where(${NO_ITEMS}){min-height:48px}` +
-  `:is(${NO_ITEMS}){outline:1px dashed #94a3b8;outline-offset:-1px}` +
-  `:is(${NO_ITEMS})::after{content:"No items yet: add them in this element's Content settings";display:block;line-height:48px;text-align:center;${HINT}}` +
-  ".emvb-image-missing{display:inline-block;min-width:48px;min-height:48px;background:var(--color-kumo-tint, #eee)}[data-emvb-editing]{color:transparent !important}[data-emvb-canvas-rte] .ProseMirror{outline:none;min-height:1em}[data-emvb-canvas-rte] .ProseMirror>:first-child{margin-top:0}[data-emvb-canvas-rte] .ProseMirror>:last-child{margin-bottom:0}[data-emvb-canvas-rte] .ProseMirror img.ProseMirror-selectednode{outline:2px solid #2f6feb}[data-emvb-canvas-rte] .selectedCell{background:rgba(47,111,235,.15)}[data-emvb-bound]{cursor:text}";
+  `:where(${DROP_BOXES})${OWN}{min-height:48px}` +
+  `:is(${DROP_BOXES})${OWN}{outline:1px dashed #94a3b8;outline-offset:-1px;display:flex;align-items:center;justify-content:center}` +
+  `:is(${DROP_BOXES})${OWN}::after{content:"Drop elements here";${HINT}}` +
+  `:where(${DROP_BODIES})${OWN}{min-height:48px}` +
+  `:is(${DROP_BODIES})${OWN}{outline:1px dashed #94a3b8;outline-offset:-1px}` +
+  `:is(${DROP_BODIES})${OWN}::after{content:"Drop elements here";display:block;line-height:48px;text-align:center;${HINT}}` +
+  `:where(${NO_ITEMS})${OWN}{min-height:48px}` +
+  `:is(${NO_ITEMS})${OWN}{outline:1px dashed #94a3b8;outline-offset:-1px}` +
+  `:is(${NO_ITEMS})${OWN}::after{content:"No items yet: add them in this element's Content settings";display:block;line-height:48px;text-align:center;${HINT}}` +
+  ".emvb-image-missing{display:inline-block;min-width:48px;min-height:48px;background:var(--color-kumo-tint, #eee)}[data-emvb-editing]{color:transparent !important}[data-emvb-canvas-rte] .ProseMirror{outline:none;min-height:1em}[data-emvb-canvas-rte] .ProseMirror>:first-child{margin-top:0}[data-emvb-canvas-rte] .ProseMirror>:last-child{margin-bottom:0}[data-emvb-canvas-rte] .ProseMirror img.ProseMirror-selectednode{outline:2px solid #2f6feb}[data-emvb-canvas-rte] .selectedCell{background:rgba(47,111,235,.15)}[data-emvb-bound]{cursor:text}[data-emvb-bound-image]{cursor:pointer}";
 
 /**
  * Tablet and Mobile previews scroll without a visible scrollbar (W-140), as phones and tablets
@@ -228,6 +232,8 @@ export function CanvasFrame({
   onDropNew,
   onMove,
   onUpdateNode,
+  onListItemRemoved,
+  onFocusListItem,
   fetcher,
 }: {
   vnode: VNode | null;
@@ -246,8 +252,12 @@ export function CanvasFrame({
   refusal?: PasteRefusal | null;
   onDropNew: (elementType: string, parentId: string, index: number) => void;
   onMove: (id: string, parentId: string, index: number) => void;
-  /** Stores a canvas text edit (W-097, W-324). */
+  /** Stores a canvas text edit (W-097, W-324) or a list item edit (W-336). */
   onUpdateNode: (id: string, update: (node: LayoutNode) => LayoutNode) => void;
+  /** A component's list item was removed on the canvas (W-336). */
+  onListItemRemoved?: (label: string) => void;
+  /** The list item the canvas works on, for the Content tab (W-336). */
+  onFocusListItem?: (item: ListItemRef | null) => void;
   /** For the rich text toolbar's image library (W-324). */
   fetcher?: Fetcher;
 }) {
@@ -286,17 +296,42 @@ export function CanvasFrame({
   const [editing, setEditing] = React.useState<CanvasEdit | null>(null);
   const editingId = editing?.id ?? null;
   const handlers = React.useRef<
-    CanvasSelection & { onEditText?: (id: string, target: EventTarget | null) => void }
+    CanvasSelection & {
+      onEditText?: (id: string, target: EventTarget | null) => void;
+      onClickSelected?: (id: string, target: EventTarget | null) => void;
+    }
   >(selection);
+  // W-337: a component's image being chosen on the canvas: its use, field path and element.
+  const [picking, setPicking] = React.useState<ImagePick | null>(null);
   const layoutRef = React.useRef(layout);
   layoutRef.current = layout;
+  const startEdit = (id: string, target: EventTarget | null) => {
+    const edit = doc ? canvasEditFor(doc, layoutRef.current, id, target) : null;
+    if (!edit) return false;
+    selection.onSelect(id);
+    setPicking(null);
+    setEditing(edit);
+    return true;
+  };
   handlers.current = {
     ...selection,
     onEditText: (id, target) => {
-      const edit = doc ? canvasEditFor(doc, layoutRef.current, id, target) : null;
-      if (!edit) return;
-      selection.onSelect(id);
-      setEditing(edit);
+      startEdit(id, target);
+    },
+    // W-337: inside a selected component, one more click on a text edits it and on a picture
+    // chooses another; other elements keep the double-click.
+    onClickSelected: (id, target) => {
+      const node = layoutRef.current ? findNode(layoutRef.current, id) : undefined;
+      if (node?.type !== "component" || editing) return;
+      const element = target && (target as Node).nodeType === 1 ? (target as Element) : null;
+      const image = element?.closest<HTMLElement>("[data-emvb-bound-image]");
+      if (image) {
+        const [use, path = ""] = (image.getAttribute("data-emvb-bound-image") ?? "").split("|");
+        if (use === id && path) setPicking({ useId: id, path, element: image });
+        return;
+      }
+      if (element?.closest("[data-emvb-bound]")) startEdit(id, target);
+      else setPicking(null);
     },
   };
   const commitEdit = (value: string) => {
@@ -536,6 +571,27 @@ export function CanvasFrame({
           invalid={zoomInvalid(invalid ?? refused, scale)}
           editing={!!editingId && editingId === selectedId}
         />
+        {picking && picking.useId === selectedId && picking.element.isConnected && (
+          <ImagePickPopover
+            pick={picking}
+            box={zoomBox(boxOfElement(picking.element), scale)}
+            layout={layout}
+            fetcher={fetcher}
+            onUpdateNode={onUpdateNode}
+            onClose={() => setPicking(null)}
+          />
+        )}
+        {!editingLive && (
+          <ListItemOverlay
+            doc={doc}
+            layout={layout}
+            selectedId={selectedId}
+            scale={scale}
+            onUpdateNode={onUpdateNode}
+            onRemoved={onListItemRemoved}
+            onFocusItem={onFocusListItem}
+          />
+        )}
         {editingLive?.kind === "rich" && editingBox && (
           <CanvasRichTextEdit
             key={`${editingLive.id}:${editingLive.value.length}`}

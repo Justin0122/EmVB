@@ -30,7 +30,7 @@ import {
 } from "../sanitize/css.ts";
 import { STYLE_STATES } from "../schema/state-names.ts";
 import { resolveEmbedUrl } from "../sanitize/embed-url.ts";
-import { boundFieldOf } from "../theme/component.ts";
+import { boundFieldOf, boundImageOf, listItemOf } from "../theme/component.ts";
 import { resolvePostForRender, type ThemeDynamicData } from "../theme/dynamic.ts";
 import type { FormDefinitions } from "../forms/definition.ts";
 import type { PopupDevice } from "../theme/popup-rules.ts";
@@ -343,6 +343,13 @@ export function renderPage(
       const marker = bound.on === "summary" ? "data-emvb-summary-bound" : "data-emvb-bound";
       attrs[marker] = `${boundUse}|${bound.path}|${bound.kind}`;
     }
+    // W-336: in the editor, an element repeated per list item names the item, for the canvas's
+    // add, duplicate, move and remove.
+    const item = insideComponent && mode === "editor" && boundUse ? listItemOf(node) : undefined;
+    if (item) attrs["data-emvb-item"] = `${boundUse}|${item.path}|${item.index}`;
+    // W-337: an image showing a use's image field names it, so a click on the canvas picks one.
+    const image = insideComponent && mode === "editor" && boundUse ? boundImageOf(node) : undefined;
+    if (image) attrs["data-emvb-bound-image"] = `${boundUse}|${image}`;
     // W-325: on the site in edit mode, the layout's own texts name their element.
     if (inlineEdit && ownNode && id) {
       if (node.type === "rich-text") attrs["data-emvb-text"] = `${id}|rich`;
