@@ -115,6 +115,21 @@ describe("W-600 a gap never stands for a single page", () => {
   test("page 5 without a total shows 2 instead of '…'", () => {
     expect(shape({ page: 5, hasMore: false, basePath: "/p" })).toEqual(["prev", 1, 2, 3, 4, 5]);
   });
+  test("with a total, the hole before the last page is filled too", () => {
+    expect(shape({ page: 6, hasMore: true, basePath: "/p", totalPages: 10 })).toEqual([
+      "prev",
+      1,
+      "gap",
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      "next",
+    ]);
+  });
   test("with a total, both ends fill a one-page hole", () => {
     expect(shape({ page: 4, hasMore: true, basePath: "/p", totalPages: 7 })).toEqual([
       "prev",

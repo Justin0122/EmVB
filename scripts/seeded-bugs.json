@@ -21173,6 +21173,34 @@
       "expect": "\\(fail\\)"
     },
     {
+      "id": "W-600/one-page-gap",
+      "requirement": "W-600",
+      "description": "Pagination shows a gap that hides only one page (1 \u2026 3).",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/pagination.ts",
+          "search": "  if (to === total - 2) items.push(page(total - 1));\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/theme/pagination.test.ts"],
+      "expect": "\\(fail\\)"
+    },
+    {
+      "id": "W-601/heading-in-ul",
+      "requirement": "W-601",
+      "description": "A non-item straight in a Menu lands inside its ul.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/elements/menu.ts",
+          "search": "groupItems(stampGroup(children, `emvb-menu-${node.id}`), \"emvb-menu__list\")",
+          "replace": "[{ tag: \"ul\", attrs: { class: \"emvb-menu__list\" }, children: stampGroup(children, `emvb-menu-${node.id}`) }]"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/elements/menu.test.ts"],
+      "expect": "\\(fail\\)"
+    },
+    {
       "id": "W-602/blank-items",
       "requirement": "W-602",
       "description": "A Loop with no item design lists blank items (empty cards) on the page.",
