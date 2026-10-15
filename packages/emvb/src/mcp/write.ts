@@ -21,6 +21,8 @@ import { ELEMENT_DESCRIPTORS } from "../core/elements/index.ts";
 import { nodeChildren, pageSlug, removeNode, starterLayout, updateNode } from "../core/tree-ops.ts";
 import { isSafeFontStack } from "../core/sanitize/css.ts";
 import { sanitizeMediaUrl } from "../core/sanitize/media-url.ts";
+import { sanitizeHref } from "../core/sanitize/href.ts";
+import { clipText } from "../core/limits.ts";
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts } from "./ports.ts";
 import { queued } from "./queue.ts";
@@ -113,6 +115,7 @@ async function mutatePage(
       }
       const next = apply(current.layout);
       refuseUnsafeImageSources(current.layout, next.layout);
+      refuseUnsafeLinks(current.layout, next.layout);
       const layout = checkLayout(next.layout);
       // W-562: a write that changes nothing (an empty set, the same value, a move to its own
       // spot) saved a new version and rev anyway, cluttering the timeline and the agent log.
@@ -141,6 +144,39 @@ async function mutatePage(
 const refused = (reason: string): never => {
   throw new McpToolError("REFUSED", reason);
 };
+
+/** Link props (the element's `href` fields) on each node, keyed by node and prop. */
+function linkValues(root: LayoutNode): Map<string, string> {
+  const found = new Map<string, string>();
+  const walk = (node: LayoutNode) => {
+    const fields = ELEMENT_DESCRIPTORS.find((d) => d.type === node.type)?.fields ?? [];
+    const props = node.props as Record<string, unknown>;
+    for (const field of fields) {
+      const value = props[field.key];
+      if (field.kind === "href" && typeof value === "string")
+        found.set(`${node.id}.${field.key}`, value);
+    }
+    for (const child of nodeChildren(node)) walk(child);
+  };
+  walk(root);
+  return found;
+}
+
+/**
+ * W-563: as W-499 for images, a `javascript:` (or other unsafe) link passed validation and the
+ * page published the element without it, with nothing telling the agent. Links the write adds
+ * or changes must pass the page's link check; ones already stored are left alone.
+ */
+function refuseUnsafeLinks(before: Layout, after: Layout) {
+  const old = linkValues(before.root);
+  for (const [key, href] of linkValues(after.root)) {
+    if (href.trim() === "" || old.get(key) === href || sanitizeHref(href) !== undefined) continue;
+    const [id, prop] = key.split(".");
+    refused(
+      `Element ${id} has the ${prop} ${JSON.stringify(clipText(href, 80))}, which pages can't link to. Use an https:// URL, a path on this site such as /pricing, #section, mailto: or tel:.`,
+    );
+  }
+}
 
 /** Image sources (src and srcset widths) on a node, keyed for comparison. */
 function imageSources(root: LayoutNode): Map<string, string[]> {

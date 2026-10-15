@@ -188,6 +188,34 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(await versions()).toBe(count);
   });
 
+  test("a link the page would drop is refused with the reason (W-563)", async () => {
+    const pageId = await newPage();
+    const { layout } = await layoutOf(pageId);
+    const error = await fail("add_element", {
+      pageId,
+      parentId: layout.root.id,
+      element: { type: "button", props: { text: "Go", href: "javascript:alert(1)" } },
+    });
+    expect(error.code).toBe("REFUSED");
+    expect(error.message).toContain("javascript:alert(1)");
+    const heading = layout.root.children?.[0]?.id ?? "";
+    expect(
+      (
+        await fail("update_element", {
+          pageId,
+          nodeId: heading,
+          set: { props: { href: "vbscript:x" } },
+        })
+      ).code,
+    ).toBe("REFUSED");
+    await call("update_element", { pageId, nodeId: heading, set: { props: { href: "/pricing" } } });
+    await call("add_element", {
+      pageId,
+      parentId: layout.root.id,
+      element: { type: "button", props: { text: "Mail", href: "mailto:hi@example.com" } },
+    });
+  });
+
   test("update_site_styles refuses a font stack the site CSS would drop (W-547)", async () => {
     const error = await fail("update_site_styles", {
       variables: { fonts: [{ id: "agent-font", name: "Agent font", value: "Inter; color: red" }] },
