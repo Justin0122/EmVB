@@ -237,6 +237,25 @@ describe("public popup keyboard and focus (S7b, W-081)", () => {
     expect(document.activeElement === outside).toBe(true);
   });
 
+  test("W-580: Escape in an open menu dropdown inside the popup closes the dropdown, not the popup", () => {
+    const { root, dialog, open } = openablePopup(
+      "k580",
+      '<nav class="emvb-menu"><ul><li class="emvb-menu-item"><details class="emvb-menu-item__disclosure" open><summary>Shop</summary><a href="/a">A</a></details></li></ul></nav>',
+    );
+    open();
+    const details = dialog.querySelector("details") as HTMLDetailsElement;
+    details.open = true; // opened by the visitor after the popup (opening focuses the dialog)
+    const link = dialog.querySelector("a") as HTMLElement;
+    link.focus();
+    const escape = key(link, "Escape");
+    expect(escape.defaultPrevented).toBe(true);
+    expect(details.open).toBe(false);
+    expect(root.hidden).toBe(false);
+    expect(document.activeElement === details.querySelector("summary")).toBe(true);
+    key(details.querySelector("summary") as Element, "Escape");
+    expect(root.hidden).toBe(true);
+  });
+
   test("a click inside a dismiss control closes the popup; other clicks don't", () => {
     const { root, dialog, open } = openablePopup(
       "k2",

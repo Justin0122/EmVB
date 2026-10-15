@@ -195,6 +195,18 @@ function bindA11y(ctrl: Controller): void {
   ctrl.dialog.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
       event.preventDefault();
+      // W-580: Escape in an open menu dropdown inside the popup closes that dropdown first (the
+      // menu runtime saw the event already handled, so the whole popup closed instead).
+      const active = document.activeElement;
+      const menu =
+        active instanceof Element
+          ? active.closest<HTMLDetailsElement>("details.emvb-menu-item__disclosure[open]")
+          : null;
+      if (menu && ctrl.dialog.contains(menu)) {
+        menu.open = false;
+        menu.querySelector<HTMLElement>(":scope > summary")?.focus({ preventScroll: true });
+        return;
+      }
       ctrl.close();
       return;
     }
