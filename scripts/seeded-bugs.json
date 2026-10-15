@@ -12762,7 +12762,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/content-api.ts",
-          "search": "    title: draft.seoTitle || null,",
+          "search": "    title: draft.seoTitle.trim() || null,",
           "replace": "    title: null,"
         }
       ],
