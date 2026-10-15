@@ -102,6 +102,15 @@ Public HTML stays JS-free (R-031) except in two cases: a matching popup loads `e
 
 **Page template:** a `page_template` part is a starting layout. The new-page dialog copies it onto the page with fresh ids, so later edits stay on that page.
 
+## Component fields: Terms and Cards (W-339)
+
+A Component's design can list a collection with a Loop and let editors choose which entries it shows:
+
+- **Terms** (`kind: "terms"`, `taxonomy`, plus `collectionField` or `collection`): a tag picker. It offers the terms that the chosen collection's published entries use, with their counts, and stores comma-separated term slugs. Bind it to the Loop's `terms`.
+- **Cards** (`kind: "cards"`): bind it to the Loop's `overrides`. The editor lists the entries the Loop's query returns (up to 50, in the Loop's order: newest or oldest by publish date, or by title). Editors move cards up or down, hide them, or change a card's title, summary, link and button. Empty inputs keep the entry's own text, shown as placeholders.
+
+List items can't hold either kind. The editor loads entries and terms through the plugin routes `loop/entries` (a Loop query, loaded as the page loads it) and `loop/terms` (`collection`, `taxonomy`). Both need `content:edit_any`. The canvas uses `loop/entries` too, so collection Loops show real cards instead of samples.
+
 ## Public render
 
 Hosts call `resolveThemeParts(Astro, ctx)` from `emvb/astro`. Return value:

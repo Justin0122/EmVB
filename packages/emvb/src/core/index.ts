@@ -43,6 +43,9 @@ export {
   FormNode,
   LoopNode,
   LOOP_ORDERS,
+  CardOverride,
+  CardOverrides,
+  MAX_CARD_OVERRIDES,
   SectionNode,
   TextInputNode,
   TextareaNode,
@@ -376,12 +379,16 @@ export {
   type ComponentTemplate,
 } from "./theme/component.ts";
 export {
+  arrangeEntries,
+  cardOverrideOf,
   collectLoopQueries,
   DEFAULT_LOOP_LIMIT,
+  loopLoadLimit,
   loopQueryKey,
   loopQueryOf,
   type LoopQuery,
   pinEntries,
+  withCardOverride,
 } from "./theme/loop-queries.ts";
 
 export { layoutHasMenuDropdown, layoutHasTabs } from "./tabs/presence.ts";

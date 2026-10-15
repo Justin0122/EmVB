@@ -544,3 +544,41 @@ describe("list items are marked and edited from the canvas (W-336)", () => {
     });
   });
 });
+
+describe("Terms and Cards fields (W-339)", () => {
+  const fields: ComponentField[] = [
+    { key: "tags", label: "Tags", kind: "terms", taxonomy: "tag", collectionField: "list" },
+    { key: "cards", label: "Cards", kind: "cards" },
+  ];
+  const nodes = [
+    n({
+      id: "loop0001",
+      type: "loop",
+      props: { collection: "news", taxonomy: "tag" },
+      bind: { terms: "tags", overrides: "cards" },
+      children: [],
+    }),
+  ];
+  const listing: ComponentTemplate = { nodes, fields };
+
+  test("a Loop takes the terms and the card changes", () => {
+    const overrides = { order: ["e2", "e1"], cards: { e1: { hidden: true } } };
+    const [node] = applyComponent(listing, { tags: "kantbanken,nieuws", cards: overrides });
+    expect(node?.props).toMatchObject({ terms: "kantbanken,nieuws", overrides });
+  });
+
+  test("card changes that don't fit the schema are dropped", () => {
+    const [node] = applyComponent(listing, { cards: { order: ["bad id"] } });
+    expect((node?.props as { overrides?: unknown } | undefined)?.overrides).toBeUndefined();
+  });
+
+  test("the fields validate; list items can't hold them", () => {
+    expect(validateComponentFields({ schemaVersion: 1, fields }).ok).toBe(true);
+    expect(
+      validateComponentFields({
+        schemaVersion: 1,
+        fields: [{ key: "items", label: "Items", kind: "list", fields: [fields[1]] }],
+      }).ok,
+    ).toBe(false);
+  });
+});

@@ -26,10 +26,15 @@ const KIND_LABELS: Record<ComponentFieldKind, string> = {
   link: "Link",
   select: "Choice",
   toggle: "Yes / no",
+  terms: "Terms (tags)",
+  cards: "Cards of a Loop",
   list: "List of items",
 };
 type LeafKind = Exclude<ComponentFieldKind, "list">;
-const LEAF_KINDS = COMPONENT_FIELD_KINDS.filter((k): k is LeafKind => k !== "list");
+/** A list item's fields: Terms and Cards belong to the whole use, beside its Loop. */
+const LEAF_KINDS = COMPONENT_FIELD_KINDS.filter(
+  (k): k is LeafKind => k !== "list" && k !== "terms" && k !== "cards",
+);
 
 /** A key from a label: lowercase letters, digits and underscores, starting with a letter. */
 export function keyFromLabel(label: string, taken: readonly string[]): string {
@@ -54,6 +59,8 @@ function newField(kind: ComponentFieldKind, taken: readonly string[]): Component
     return { key, label, kind, options: [{ value: "option-1", label: "Option 1" }] };
   if (kind === "list")
     return { key, label: "Items", kind, fields: [{ key: "title", label: "Title", kind: "text" }] };
+  if (kind === "terms") return { key, label: "Tags", kind, taxonomy: "tag" };
+  if (kind === "cards") return { key, label: "Cards", kind };
   return { key, label, kind } as ComponentField;
 }
 
@@ -229,6 +236,61 @@ function FieldEditor({
           onChange={(options) => onChange({ ...field, options })}
         />
       )}
+      {field.kind === "terms" && (
+        <>
+          <Input
+            label="Taxonomy"
+            className={`${FIELD} emvb-mono`}
+            value={field.taxonomy}
+            description="The taxonomy's name, such as tag or category."
+            onChange={(event) =>
+              onChange({
+                ...field,
+                taxonomy: event.target.value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9_]/g, "")
+                  .slice(0, 63),
+              })
+            }
+          />
+          <Input
+            label="Collection from field"
+            className={`${FIELD} emvb-mono`}
+            value={field.collectionField ?? ""}
+            description="The key of the field that picks the collection; its terms are offered."
+            onChange={(event) => {
+              const collectionField = event.target.value
+                .toLowerCase()
+                .replace(/[^a-z0-9_]/g, "")
+                .slice(0, 40);
+              const { collectionField: _old, ...rest } = field;
+              onChange(collectionField ? { ...rest, collectionField } : rest);
+            }}
+          />
+          {!field.collectionField && (
+            <Input
+              label="Collection"
+              className={`${FIELD} emvb-mono`}
+              value={field.collection ?? ""}
+              description="Or always this collection's terms."
+              onChange={(event) => {
+                const collection = event.target.value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9_]/g, "")
+                  .slice(0, 63);
+                const { collection: _old, ...rest } = field;
+                onChange(collection ? { ...rest, collection } : rest);
+              }}
+            />
+          )}
+        </>
+      )}
+      {field.kind === "cards" && (
+        <p className="emvb-helper">
+          Bind a Loop&apos;s Card changes to this field. Editors then see the Loop&apos;s entries
+          and can reorder, hide or change each card.
+        </p>
+      )}
       {field.kind === "list" && (
         <fieldset className="emvb-component-list">
           <legend className="emvb-field-label">Fields of each item</legend>
@@ -347,8 +409,10 @@ const BINDABLE: Record<string, { prop: string; label: string; kinds: ComponentFi
   ],
   loop: [
     { prop: "collection", label: "Collection", kinds: ["select", "text"] },
-    { prop: "terms", label: "Terms", kinds: ["select", "text"] },
+    { prop: "terms", label: "Terms", kinds: ["terms", "select", "text"] },
+    { prop: "order", label: "Order", kinds: ["select"] },
     { prop: "pinned", label: "Entries first", kinds: ["text"] },
+    { prop: "overrides", label: "Card changes", kinds: ["cards"] },
     // W-331: number settings take a choice whose values are numbers.
     { prop: "slidesInView", label: "Slides in view", kinds: ["select"] },
   ],

@@ -17,6 +17,7 @@ import { THEME_PARTS_COLLECTION } from "../../constants.ts";
 import { requestJson, type Fetcher } from "../api.ts";
 import { listThemeParts } from "../theme-api.ts";
 import { BUTTON, FIELD } from "../ui.ts";
+import { CardsInput, TermsInput, type UseContext } from "./loop-fields.tsx";
 import { MediaPicker } from "./panels/settings/MediaPicker.tsx";
 import { RichTextEditor } from "./rich-text/RichTextEditor.tsx";
 
@@ -204,6 +205,7 @@ export function ComponentFieldsForm({
             key={field.key}
             field={field}
             at={{ useId: node.id, path: field.key }}
+            use={{ template, values }}
             value={values[field.key]}
             fetcher={fetcher}
             onChange={(value) => setValues({ ...values, [field.key]: value })}
@@ -217,12 +219,15 @@ export function ComponentFieldsForm({
 function FieldInput({
   field,
   at,
+  use,
   value,
   fetcher,
   onChange,
 }: {
   field: ComponentField;
   at: FieldAt;
+  /** W-339: the whole use, for fields that read its other values (Terms, Cards). */
+  use?: UseContext;
   value: unknown;
   fetcher: Fetcher;
   onChange: (value: unknown) => void;
@@ -323,6 +328,14 @@ function FieldInput({
           />
           {help}
         </div>
+      );
+    case "terms":
+      return (
+        <TermsInput field={field} use={use} value={value} fetcher={fetcher} onChange={onChange} />
+      );
+    case "cards":
+      return (
+        <CardsInput field={field} use={use} value={value} fetcher={fetcher} onChange={onChange} />
       );
     case "list":
       return (

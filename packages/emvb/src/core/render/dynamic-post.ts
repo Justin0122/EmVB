@@ -115,6 +115,7 @@ const POST_FIELDS = new Map<string, PostField>([
         children: ["Post link"],
       }),
       render: (node, attrs, post) => {
+        if (post.linkHidden) return undefined;
         const href = sanitizeHref(post.permalink);
         if (!href) return undefined;
         const { text, newTab } = props<{ text?: string; newTab?: boolean }>(node);
@@ -126,7 +127,7 @@ const POST_FIELDS = new Map<string, PostField>([
         return {
           tag: "a",
           attrs: linkAttrs,
-          children: [text?.trim() || post.title || post.permalink],
+          children: [post.linkLabel?.trim() || text?.trim() || post.title || post.permalink],
         };
       },
     },

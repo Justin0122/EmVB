@@ -520,6 +520,41 @@ button.emvb-media-preview:hover .emvb-media-thumb { box-shadow: 0 0 0 2px var(--
   .emvb-media-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
 }
 
+.emvb-terms { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.emvb-terms-box { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-height: 30px; padding: 3px 4px; border: 1px solid var(--color-kumo-line); border-radius: 6px; background: var(--color-kumo-base, #fff); }
+.emvb-terms-box:focus-within { border-color: var(--color-kumo-brand); box-shadow: 0 0 0 1px var(--color-kumo-brand); }
+.emvb-terms-chip { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; padding: 2px 4px 2px 8px; border-radius: 999px; background: var(--color-kumo-tint, #eee); color: var(--text-color-kumo-default); font-size: 12px; line-height: 18px; }
+.emvb-terms-chip button { display: flex; padding: 2px; border: 0; border-radius: 50%; background: none; color: var(--text-color-kumo-subtle); cursor: pointer; }
+.emvb-terms-chip button:hover { background: var(--color-kumo-line); color: var(--text-color-kumo-default); }
+.emvb-terms-search { flex: 1; display: flex; align-items: center; gap: 4px; min-width: 90px; padding-left: 4px; color: var(--text-color-kumo-subtle); }
+.emvb-terms-search input { flex: 1; min-width: 0; height: 22px; border: 0; background: none; color: var(--text-color-kumo-default); font: inherit; font-size: 13px; outline: none; }
+.emvb-terms-menu { position: absolute; top: calc(100% - 2px); left: 0; right: 0; z-index: 20; max-height: 220px; overflow: auto; margin: 0; padding: 4px; list-style: none; border-radius: 8px; background: var(--color-kumo-elevated, #fff); box-shadow: 0 0 0 1px var(--color-kumo-line), 0 8px 24px rgb(0 0 0 / 0.18); }
+.emvb-terms-menu .emvb-helper { padding: 6px 8px; }
+.emvb-terms-menu button { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 8px; border: 0; border-radius: 4px; background: none; color: var(--text-color-kumo-default); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.emvb-terms-menu button:hover { background: var(--color-kumo-tint); }
+.emvb-cards { display: flex; flex-direction: column; gap: 6px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.emvb-cards-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 8px; }
+.emvb-cards-links { display: flex; gap: 8px; }
+.emvb-cards-links button { padding: 0; border: 0; background: none; color: var(--color-kumo-brand); font: inherit; font-size: 12px; cursor: pointer; }
+.emvb-cards-links button:hover { text-decoration: underline; }
+.emvb-cards-list { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.emvb-cards-row { border: 1px solid var(--color-kumo-hairline); border-radius: 6px; background: var(--color-kumo-base, #fff); }
+.emvb-cards-row[data-changed] { border-left: 3px solid var(--color-kumo-brand); }
+.emvb-cards-row[data-hidden] .emvb-cards-row-head { opacity: 0.55; }
+.emvb-cards-row-head { display: flex; align-items: center; gap: 6px; padding: 4px; }
+.emvb-cards-toggle { flex: none; display: flex; padding: 4px; border: 0; border-radius: 4px; background: none; color: var(--text-color-kumo-subtle); cursor: pointer; }
+.emvb-cards-toggle[aria-expanded="true"] svg { transform: rotate(90deg); }
+.emvb-cards-thumb { flex: none; width: 40px; height: 30px; overflow: hidden; border-radius: 4px; background: var(--color-kumo-tint, #eee); }
+.emvb-cards-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.emvb-cards-text { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 0; border: 0; background: none; color: var(--text-color-kumo-default); font: inherit; text-align: left; cursor: pointer; }
+.emvb-cards-title { display: flex; align-items: center; gap: 4px; overflow: hidden; font-size: 12px; font-weight: 600; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.emvb-cards-meta { overflow: hidden; color: var(--text-color-kumo-subtle); font-size: 11px; line-height: 15px; text-overflow: ellipsis; white-space: nowrap; }
+.emvb-cards-move { flex: none; display: flex; flex-direction: column; gap: 2px; }
+.emvb-cards-move .emvb-btn { width: 22px; height: 18px; min-height: 0; }
+.emvb-cards-body { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px 10px; border-top: 1px solid var(--color-kumo-hairline); }
+.emvb-cards-area { display: flex; flex-direction: column; gap: 4px; }
+.emvb-cards-area textarea { box-sizing: border-box; width: 100%; padding: 6px 8px; border: 1px solid var(--color-kumo-line); border-radius: 6px; background: var(--color-kumo-base, #fff); color: var(--text-color-kumo-default); font: inherit; font-size: 13px; resize: vertical; }
+
 .emvb-icon-current { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .emvb-icon-current-preview { flex: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--color-kumo-hairline); border-radius: 8px; background: var(--emvb-glass-strong); color: var(--text-color-kumo-default); cursor: pointer; }
 .emvb-icon-current-preview:hover { border-color: var(--color-kumo-brand); }

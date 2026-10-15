@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { COMPONENT_FIELD_KEY, type LayoutNode } from "../schema/layout.ts";
+import { CardOverrides, COMPONENT_FIELD_KEY, type LayoutNode } from "../schema/layout.ts";
 import { isParentNode } from "../schema/layout.ts";
 
 /**
@@ -15,6 +15,8 @@ export const COMPONENT_FIELD_KINDS = [
   "link",
   "select",
   "toggle",
+  "terms",
+  "cards",
   "list",
 ] as const;
 export type ComponentFieldKind = (typeof COMPONENT_FIELD_KINDS)[number];
@@ -53,6 +55,26 @@ const LeafField = z.discriminatedUnion("kind", [
     default: z.string().max(40).optional(),
   }),
   z.strictObject({ ...FieldBase, kind: z.literal("toggle"), default: z.boolean().optional() }),
+  /**
+   * W-339: terms of a taxonomy, picked from those its entries use: comma-separated term slugs,
+   * as a Loop's `terms` takes them. `collectionField` names the field that picks the collection
+   * (else `collection` fixes it), so only that collection's terms are offered.
+   */
+  z.strictObject({
+    ...FieldBase,
+    kind: z.literal("terms"),
+    taxonomy: z.string().regex(/^[a-z][a-z0-9_]{0,62}$/, "Use a taxonomy name such as tag"),
+    collectionField: Key.optional(),
+    collection: z
+      .string()
+      .regex(/^[a-z][a-z0-9_]{0,63}$/)
+      .optional(),
+  }),
+  /**
+   * W-339: a collection Loop's cards arranged by hand: the editor lists the entries the Loop
+   * bound to it (`overrides`) shows, to reorder, hide or change one by one.
+   */
+  z.strictObject({ ...FieldBase, kind: z.literal("cards") }),
 ]);
 
 const ComponentField = z.union([
@@ -60,8 +82,14 @@ const ComponentField = z.union([
   z.strictObject({
     ...FieldBase,
     kind: z.literal("list"),
-    /** The fields of each item; a list doesn't hold lists. */
-    fields: z.array(LeafField).min(1).max(12),
+    /** The fields of each item; a list doesn't hold lists, or Terms and Cards (W-339). */
+    fields: z
+      .array(LeafField)
+      .min(1)
+      .max(12)
+      .refine((fields) => fields.every((f) => f.kind !== "terms" && f.kind !== "cards"), {
+        message: "List items can't have Terms or Cards fields",
+      }),
     /** The most items one use may have. */
     max: z.number().int().min(1).max(50).optional(),
   }),
@@ -148,6 +176,12 @@ export function fieldValue(field: LeafField, raw: unknown): unknown {
     }
     case "toggle":
       return typeof raw === "boolean" ? raw : (field.default ?? false);
+    case "terms":
+      return str(raw, 1000);
+    case "cards": {
+      const parsed = CardOverrides.safeParse(raw);
+      return parsed.success ? parsed.data : undefined;
+    }
   }
 }
 
@@ -251,6 +285,11 @@ function bindProp(
     const link = value as LinkValue;
     props[target] = link.href;
     if (link.newTab) props["newTab"] = true;
+    return;
+  }
+  // W-339: a Loop's hand-made card order and changes.
+  if (field.kind === "cards") {
+    if (target === "overrides" && isRecord(value)) props[target] = value;
     return;
   }
   // W-331: a choice bound to a number setting (columns, slides in view) sets it as a number.

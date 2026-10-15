@@ -1,4 +1,11 @@
-import type { Layout, LayoutNode, LoopNode, LoopOrder } from "../schema/layout.ts";
+import type {
+  CardOverride,
+  CardOverrides,
+  Layout,
+  LayoutNode,
+  LoopNode,
+  LoopOrder,
+} from "../schema/layout.ts";
 import { isParentNode } from "../schema/layout.ts";
 import { applyComponent, type ComponentTemplate } from "./component.ts";
 
@@ -17,7 +24,8 @@ const MAX_COMPONENT_DEPTH = 6;
 /**
  * What a collection Loop asks for: one load per distinct query, shared by Loops that match.
  * W-318: `taxonomy` and `terms` keep only entries with one of those terms. W-334: `pinned` entry
- * slugs come first, in that order.
+ * slugs come first, in that order. W-339: `first` entry ids come before those, by hand; `hidden`
+ * entry ids are left out (the Loop still fills its limit with the next ones).
  */
 export type LoopQuery = {
   collection: string;
@@ -26,6 +34,8 @@ export type LoopQuery = {
   taxonomy?: string;
   terms?: string[];
   pinned?: string[];
+  first?: string[];
+  hidden?: string[];
 };
 
 /** The slugs of a comma-separated list, trimmed, without blanks or repeats, at most `max`. */
@@ -49,10 +59,17 @@ export function loopQueryOf(node: LoopNode): LoopQuery | null {
   const taxonomy = node.props.taxonomy?.trim();
   const terms = slugList(node.props.terms, MAX_LOOP_TERMS);
   const pinned = slugList(node.props.pinned, MAX_LOOP_PINS);
+  const first = [...new Set(node.props.overrides?.order ?? [])];
+  const hidden = Object.entries(node.props.overrides?.cards ?? {})
+    .filter(([, card]) => card.hidden)
+    .map(([id]) => id)
+    .toSorted();
   return {
     ...query,
     ...(taxonomy && terms.length > 0 ? { taxonomy, terms } : {}),
     ...(pinned.length > 0 ? { pinned } : {}),
+    ...(first.length > 0 ? { first } : {}),
+    ...(hidden.length > 0 ? { hidden } : {}),
   };
 }
 
@@ -60,7 +77,71 @@ export function loopQueryOf(node: LoopNode): LoopQuery | null {
 export const loopQueryKey = (query: LoopQuery) =>
   `${query.collection}|${query.limit}|${query.order}${
     query.taxonomy ? `|${query.taxonomy}:${(query.terms ?? []).join(",")}` : ""
-  }${query.pinned ? `|pinned:${query.pinned.join(",")}` : ""}`;
+  }${query.pinned ? `|pinned:${query.pinned.join(",")}` : ""}${
+    query.first ? `|first:${query.first.join(",")}` : ""
+  }${query.hidden ? `|hidden:${query.hidden.join(",")}` : ""}`;
+
+/**
+ * How many entries to load for a query: room beyond the limit for the ones it moves to the front
+ * or leaves out, which `arrangeEntries` cuts back to the limit.
+ */
+export const loopLoadLimit = (query: LoopQuery) =>
+  query.limit +
+  (query.pinned?.length ?? 0) +
+  (query.first?.length ?? 0) +
+  (query.hidden?.length ?? 0);
+
+/**
+ * W-339: a query's entries as its Loop shows them: hidden ones left out, the hand-made order
+ * (`first`, by id) before the pinned slugs (W-334), then the rest in the Loop's own order, at
+ * most `limit`.
+ */
+export function arrangeEntries<T extends { id: string; slug: string }>(
+  entries: readonly T[],
+  query: Pick<LoopQuery, "limit" | "pinned" | "first" | "hidden">,
+): T[] {
+  const hidden = new Set(query.hidden ?? []);
+  const shown = entries.filter((entry) => !hidden.has(entry.id));
+  const byId = new Map(shown.map((entry) => [entry.id, entry]));
+  const first = (query.first ?? []).flatMap((id) => byId.get(id) ?? []);
+  const rest = shown.filter((entry) => !first.includes(entry));
+  return [...first, ...pinEntries(rest, query.pinned, rest.length)].slice(0, query.limit);
+}
+
+/** A change's text, unless it is blank. */
+const setText = (value: string | undefined) => (value?.trim() ? value.trim() : undefined);
+
+/**
+ * W-339: a post with its card's changes: another title, summary or link; its Post Link hidden
+ * (`button: false`) or labelled. Blank changes keep the entry's own.
+ */
+export function withCardOverride<
+  T extends {
+    title: string;
+    excerpt: string;
+    permalink: string;
+    linkLabel?: string;
+    linkHidden?: boolean;
+  },
+>(post: T, override: CardOverride | undefined): T {
+  if (!override) return post;
+  const title = setText(override.title);
+  const excerpt = setText(override.excerpt);
+  const link = setText(override.link);
+  const label = setText(override.buttonLabel);
+  return {
+    ...post,
+    ...(title ? { title } : {}),
+    ...(excerpt ? { excerpt } : {}),
+    ...(link ? { permalink: link } : {}),
+    ...(label ? { linkLabel: label } : {}),
+    ...(override.button === false ? { linkHidden: true } : {}),
+  };
+}
+
+/** The changes of one card of a Loop's overrides (W-339). */
+export const cardOverrideOf = (overrides: CardOverrides | undefined, id: string) =>
+  overrides?.cards?.[id];
 
 /**
  * W-334: the entries with the pinned ones first, in the pinned order, then the rest in their own

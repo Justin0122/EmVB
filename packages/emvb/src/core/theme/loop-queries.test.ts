@@ -4,7 +4,14 @@ import { emptyDesign } from "../schema/design.ts";
 import type { Layout, LayoutNode, LoopNode } from "../schema/layout.ts";
 import { validateLayout } from "../validate.ts";
 import { SAMPLE_POST, type ThemePostFields } from "./dynamic.ts";
-import { collectLoopQueries, loopQueryKey, loopQueryOf, pinEntries } from "./loop-queries.ts";
+import {
+  arrangeEntries,
+  collectLoopQueries,
+  loopQueryKey,
+  loopQueryOf,
+  pinEntries,
+  withCardOverride,
+} from "./loop-queries.ts";
 
 const title = { id: "ptitle01", type: "post-title", props: { level: 3 } } as LayoutNode;
 const loop = (id: string, props: Record<string, unknown>, children: LayoutNode[] = [title]) =>
@@ -222,5 +229,84 @@ describe("a Loop with pinned entries (W-334)", () => {
       "c",
     ]);
     expect(pinEntries(entries, undefined, 2).map((e) => e.slug)).toEqual(["a", "b"]);
+  });
+});
+
+describe("cards arranged by hand (W-339)", () => {
+  const link = { id: "plink001", type: "post-link", props: { text: "Lees meer" } } as LayoutNode;
+  const cards = (overrides: unknown, limit = 3) =>
+    loop("loop0001", { collection: "news", limit, overrides }, [title, link]);
+
+  test("the query names the moved and hidden entries, so its key changes with them", () => {
+    const query = loopQueryOf(
+      cards({
+        order: ["n3", "n1", "n3"],
+        cards: { n2: { hidden: true }, n1: { title: "X" } },
+      }) as LoopNode,
+    );
+    expect(query).toEqual({
+      collection: "news",
+      limit: 3,
+      order: "newest",
+      first: ["n3", "n1"],
+      hidden: ["n2"],
+    });
+    expect(query && loopQueryKey(query)).toBe("news|3|newest|first:n3,n1|hidden:n2");
+  });
+
+  test("hidden entries are left out and the Loop fills up; moved ones come first", () => {
+    const shown = arrangeEntries(news(6), {
+      limit: 3,
+      first: ["n5", "gone", "n1"],
+      hidden: ["n2"],
+    });
+    expect(shown.map((n) => n.id)).toEqual(["n5", "n1", "n3"]);
+    // Pinned slugs (W-334) still follow the hand-made order.
+    const pinned = arrangeEntries(news(6), { limit: 4, first: ["n6"], pinned: ["news-4"] });
+    expect(pinned.map((n) => n.id)).toEqual(["n6", "n1", "n2", "n3"]);
+  });
+
+  test("a card's title, summary, link and button change; blanks keep the entry's own", () => {
+    const [post] = news(1);
+    if (!post) throw new Error("no post");
+    expect(withCardOverride(post, { title: "  ", excerpt: "Kort", link: "/elders" })).toMatchObject(
+      {
+        title: "News 1",
+        excerpt: "Kort",
+        permalink: "/elders",
+      },
+    );
+    expect(withCardOverride(post, { buttonLabel: "Bekijk" }).linkLabel).toBe("Bekijk");
+    expect(withCardOverride(post, { button: false }).linkHidden).toBe(true);
+    expect(withCardOverride(post, undefined)).toBe(post);
+  });
+
+  test("the page renders the cards in their order, with their changes", () => {
+    const overrides = {
+      order: ["n3"],
+      cards: {
+        n1: { hidden: true },
+        n3: { title: "Eerst", buttonLabel: "Bekijk" },
+        n2: { button: false },
+      },
+    };
+    const layout = page(cards(overrides, 2));
+    const query = loopQueryOf(cards(overrides, 2) as LoopNode);
+    if (!query) throw new Error("no query");
+    const { html } = renderPage(layout, emptyDesign(), {
+      dynamic: { collectionLoops: { [loopQueryKey(query)]: news(4) } },
+    });
+    const titles = [...html.matchAll(/<h3[^>]*>([^<]*)<\/h3>/g)].map((m) => m[1]);
+    expect(titles).toEqual(["Eerst", "News 2"]);
+    const links = [...html.matchAll(/<a[^>]*>([^<]*)<\/a>/g)].map((m) => m[1]);
+    expect(links).toEqual(["Bekijk"]);
+  });
+
+  test("the schema keeps overrides to entry ids and known changes", () => {
+    expect(validateLayout(page(cards({ order: ["n1"], cards: { n1: { hidden: true } } }))).ok).toBe(
+      true,
+    );
+    expect(validateLayout(page(cards({ order: ["bad id"] }))).ok).toBe(false);
+    expect(validateLayout(page(cards({ cards: { n1: { colour: "red" } } }))).ok).toBe(false);
   });
 });

@@ -21,6 +21,10 @@ export type ThemePostFields = {
   authorName?: string;
   /** W-338: the entry's other text fields by name (texts and numbers), for Post Field. */
   fields?: Readonly<Record<string, string>>;
+  /** W-339: a card's Post Link label instead of the element's own text. */
+  linkLabel?: string;
+  /** W-339: the card's Post Link is left out. */
+  linkHidden?: boolean;
 };
 
 /** Data passed into `renderPage` when resolving Single Post / Archive / Loop Item. */

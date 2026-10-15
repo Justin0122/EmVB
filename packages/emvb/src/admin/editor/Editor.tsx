@@ -46,6 +46,7 @@ import {
   useComponents,
   type FocusedListItem,
 } from "./components.tsx";
+import { useCollectionLoops } from "./loop-fields.tsx";
 import { ComponentDesignContext } from "./component-design.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
 import { useEditorCommands } from "./useEditorCommands.ts";
@@ -237,18 +238,28 @@ function EditorApp({
     () => (state.page.partType === "component" ? (state.page.componentFields?.fields ?? []) : null),
     [state.page.partType, state.page.componentFields],
   );
+  // W-339: the collection Loops' real entries, so the canvas shows the cards the page will.
+  const collectionLoops = useCollectionLoops(state.page.layout, componentTemplates, fetcher);
   const rendered = React.useMemo(() => {
     if (!state.page.layout) return null;
     const dynamic = {
       ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
       ...(Object.keys(componentTemplates).length > 0 ? { componentTemplates } : {}),
+      ...(Object.keys(collectionLoops).length > 0 ? { collectionLoops } : {}),
     };
     return renderPage(state.page.layout, state.design, {
       mode: "editor",
       dynamic: Object.keys(dynamic).length > 0 ? dynamic : undefined,
       previewDevice: device,
     });
-  }, [state.page.layout, state.design, sectionTemplates, componentTemplates, device]);
+  }, [
+    state.page.layout,
+    state.design,
+    sectionTemplates,
+    componentTemplates,
+    collectionLoops,
+    device,
+  ]);
   const selectedNode =
     state.selectedId && state.page.layout ? findNode(state.page.layout, state.selectedId) : null;
 

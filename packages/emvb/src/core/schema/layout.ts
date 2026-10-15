@@ -499,6 +499,41 @@ export const PostFieldNode = leafNode(
 export const LOOP_ORDERS = ["newest", "oldest", "title"] as const;
 export type LoopOrder = (typeof LOOP_ORDERS)[number];
 
+/** Most cards one Loop's overrides name: its order and per-card changes. */
+export const MAX_CARD_OVERRIDES = 50;
+
+/** An entry id as EmDash makes them. */
+const EntryId = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/, "Use an entry id");
+
+/**
+ * One card of a collection Loop changed by hand (W-339): left out, or another title, summary
+ * or link than its entry's; its Post Link hidden or labelled differently.
+ */
+export const CardOverride = z.strictObject({
+  hidden: z.literal(true).optional(),
+  title: z.string().max(300).optional(),
+  excerpt: z.string().max(2000).optional(),
+  /** false hides the card's Post Link. */
+  button: z.boolean().optional(),
+  buttonLabel: z.string().max(120).optional(),
+  link: z.string().max(2000).optional(),
+});
+export type CardOverride = z.infer<typeof CardOverride>;
+
+/**
+ * W-339: a collection Loop's cards as arranged by hand: `order` lists entry ids that come
+ * first, in that order (the rest follow in the Loop's own order); `cards` changes single cards
+ * by entry id.
+ */
+export const CardOverrides = z.strictObject({
+  order: z.array(EntryId).max(MAX_CARD_OVERRIDES).optional(),
+  cards: z
+    .record(EntryId, CardOverride)
+    .refine((cards) => Object.keys(cards).length <= MAX_CARD_OVERRIDES, "At most 50 cards")
+    .optional(),
+});
+export type CardOverrides = z.infer<typeof CardOverrides>;
+
 export const LoopNode = parentNode(
   "loop",
   z.strictObject({
@@ -525,6 +560,8 @@ export const LoopNode = parentNode(
     terms: z.string().max(1000).optional(),
     /** W-334: these entries first (comma-separated slugs), in this order; the rest follow. */
     pinned: z.string().max(2000).optional(),
+    /** W-339: cards arranged, hidden or changed by hand, by entry id. */
+    overrides: CardOverrides.optional(),
     /** W-315: show the items as a carousel, this many in view (per device). Unset = a list. */
     slidesInView: z.number().int().min(1).max(6).optional(),
     slidesInViewTablet: z.number().int().min(1).max(6).optional(),
@@ -940,6 +977,7 @@ export type LoopNode = {
     taxonomy?: string;
     terms?: string;
     pinned?: string;
+    overrides?: CardOverrides;
     slidesInView?: number;
     slidesInViewTablet?: number;
     slidesInViewMobile?: number;

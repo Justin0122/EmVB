@@ -6,7 +6,13 @@ import {
   type ThemeDynamicData,
   type ThemePostFields,
 } from "../theme/dynamic.ts";
-import { loopQueryKey, loopQueryOf } from "../theme/loop-queries.ts";
+import {
+  arrangeEntries,
+  cardOverrideOf,
+  loopQueryKey,
+  loopQueryOf,
+  withCardOverride,
+} from "../theme/loop-queries.ts";
 
 /** In the editor, a collection Loop shows this many sample items at most. */
 const EDITOR_SAMPLES = 3;
@@ -23,7 +29,11 @@ function loopItems(
   const query = loopQueryOf(node);
   if (!query) return resolvePostsForLoop(dynamic, mode);
   const entries = dynamic?.collectionLoops?.[loopQueryKey(query)];
-  if (entries && entries.length > 0) return entries.slice(0, query.limit);
+  // W-339: the cards as arranged by hand, each with its own changes.
+  if (entries && entries.length > 0)
+    return arrangeEntries(entries, query).map((post) =>
+      withCardOverride(post, cardOverrideOf(node.props.overrides, post.id)),
+    );
   if (mode !== "editor") return [];
   return Array.from({ length: Math.min(query.limit, EDITOR_SAMPLES) }, (_, i) => ({
     ...SAMPLE_POST,
