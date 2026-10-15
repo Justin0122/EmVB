@@ -24,7 +24,7 @@ import {
   MAX_SITE_CLASSES,
   type ClassOption,
 } from "./class-suggest.ts";
-import { isCommitEnter } from "../../ime.ts";
+import { isCancelEscape, isCommitEnter } from "../../ime.ts";
 
 type Props = {
   applied: readonly string[] | undefined;
@@ -200,7 +200,7 @@ export function ClassChipInput({
         return;
       }
       choose(current);
-    } else if (event.key === "Escape") {
+    } else if (isCancelEscape(event)) {
       if (open) setOpen(false);
       else reset();
     } else if (event.key === "Backspace" && query === "" && ids.length > 0) {
@@ -415,7 +415,7 @@ export function ClassChipInput({
               if (isCommitEnter(event)) {
                 event.preventDefault();
                 void saveLocal();
-              } else if (event.key === "Escape") closeNaming();
+              } else if (isCancelEscape(event)) closeNaming();
             }}
           />
           <div className="emvb-save-local-actions">

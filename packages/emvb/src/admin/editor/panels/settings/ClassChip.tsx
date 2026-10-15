@@ -11,7 +11,7 @@ import {
 } from "@phosphor-icons/react";
 import * as React from "react";
 import { StateDot } from "./StateSwitcher.tsx";
-import { isCommitEnter } from "../../ime.ts";
+import { isCancelEscape, isCommitEnter } from "../../ime.ts";
 
 /** Keys the chip box handles itself, so the editor's window shortcuts (delete, arrange) don't. */
 export const stopEditorShortcuts = (event: React.KeyboardEvent) => {
@@ -80,7 +80,7 @@ export function ClassChip(props: Props) {
           onFocus={(event) => event.currentTarget.select()}
           onKeyDown={(event) => {
             if (isCommitEnter(event)) finish(event.currentTarget.value);
-            else if (event.key === "Escape") finish(null);
+            else if (isCancelEscape(event)) finish(null);
           }}
           onBlur={(event) => finish(event.currentTarget.value)}
         />

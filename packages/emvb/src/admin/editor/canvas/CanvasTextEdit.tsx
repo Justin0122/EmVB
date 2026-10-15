@@ -1,7 +1,7 @@
 import * as React from "react";
 import { commitPlainText } from "../../../core/index.ts";
 import type { Box } from "./SelectionOverlay.tsx";
-import { isCommitEnter } from "../ime.ts";
+import { isCancelEscape, isCommitEnter } from "../ime.ts";
 
 /** Edits one element's plain text over its canvas box (W-097). The iframe stays script-free. */
 export function CanvasTextEdit({
@@ -80,7 +80,7 @@ export function CanvasTextEdit({
       onBlur={() => finish(commitPlainText(draft, multiline))}
       onKeyDown={(event) => {
         event.stopPropagation();
-        if (event.key === "Escape") {
+        if (isCancelEscape(event)) {
           event.preventDefault();
           finish(null);
         } else if (isCommitEnter(event) && !multiline) {

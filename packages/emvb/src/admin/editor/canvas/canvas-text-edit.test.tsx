@@ -102,3 +102,33 @@ test("the field takes an RTL or uppercase element's direction and case (W-560)",
   expect(field?.style.textTransform).toBe("uppercase");
   heading.remove();
 });
+
+test("W-681: Escape that drops an IME composition doesn't cancel the edit; a plain Escape does", async () => {
+  const heading = document.createElement("h1");
+  heading.textContent = "東京";
+  document.body.append(heading);
+  let cancelled = 0;
+  await mount(
+    <CanvasTextEdit
+      element={heading}
+      box={BOX}
+      text="東京"
+      multiline={false}
+      onCommit={() => undefined}
+      onCancel={() => void cancelled++}
+    />,
+  );
+  const field = document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Edit text"]');
+  const press = async (init: KeyboardEventInit) => {
+    await act(async () => {
+      field?.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true, ...init }),
+      );
+    });
+  };
+  await press({ isComposing: true });
+  expect(cancelled).toBe(0);
+  await press({});
+  expect(cancelled).toBe(1);
+  heading.remove();
+});
