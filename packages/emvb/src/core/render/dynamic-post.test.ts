@@ -100,6 +100,19 @@ describe("Post Date format and Post Excerpt length (W-177)", () => {
     expect(html("post-excerpt", {}, excerpt)).toBe("<p>One two  three\nfour five</p>");
   });
 
+  test("W-660: a Japanese or Thai excerpt is cut by words, and a blank one renders nothing", () => {
+    const ja = { excerpt: "私は東京で新しい仕事を始めました。毎日とても楽しいです。" };
+    const cut = html("post-excerpt", { maxWords: 3 }, ja);
+    expect(cut.endsWith("…</p>")).toBe(true);
+    expect(cut.length).toBeLessThan(html("post-excerpt", {}, ja).length);
+    const th = { excerpt: "สวัสดีครับ วันนี้อากาศดีมาก" };
+    expect(html("post-excerpt", { maxWords: 1 }, th)).toBe("<p>สวัสดี…</p>");
+    expect(html("post-excerpt", { maxWords: 2 }, { excerpt: "Hello 世界の人々" })).toBe(
+      "<p>Hello 世界…</p>",
+    );
+    expect(html("post-excerpt", {}, { excerpt: "   " })).toBeNull();
+  });
+
   test("the settings are optional props the schema checks", () => {
     const parse = (type: string, props: Record<string, unknown>) =>
       (type === "post-date" ? PostDateNode : PostExcerptNode).safeParse({

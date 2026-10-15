@@ -7,6 +7,39 @@ import { portableTextToVNodes, type ThemePostFields } from "../theme/dynamic.ts"
 import type { RenderMode } from "./context.ts";
 import type { VNode } from "./vnode.ts";
 
+/** Scripts written without spaces between words; a space-separated chunk holds many words. */
+const UNSPACED =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Thai}\p{Script=Lao}\p{Script=Khmer}\p{Script=Myanmar}]/u;
+let wordSegmenter: Intl.Segmenter | undefined;
+
+/**
+ * The first `max` words, then "…". W-660: Japanese, Chinese or Thai text has no spaces between
+ * words, so splitting on spaces counted a whole excerpt as one word and never shortened it.
+ * Those chunks are split into words; spaced text is counted by spaces as before.
+ */
+function limitWords(text: string, max: number | undefined): string {
+  if (!max || max < 1) return text;
+  let count = 0;
+  for (const chunk of text.matchAll(/\S+/g)) {
+    const start = chunk.index ?? 0;
+    if (!UNSPACED.test(chunk[0])) {
+      count++;
+      if (count === max) return finish(text, start + chunk[0].length);
+      continue;
+    }
+    wordSegmenter ??= new Intl.Segmenter(undefined, { granularity: "word" });
+    for (const piece of wordSegmenter.segment(chunk[0])) {
+      if (!piece.isWordLike) continue;
+      count++;
+      if (count === max) return finish(text, start + piece.index + piece.segment.length);
+    }
+  }
+  return text;
+}
+
+const finish = (text: string, end: number) =>
+  text.slice(end).trim() === "" ? text : `${text.slice(0, end).trim().replace(/\s+/g, " ")}…`;
+
 /**
  * W-196: only an ISO date (`2026-10-06`, optionally with a time) is read as a date. `Date.parse`
  * also takes text like "Spring 2026" (as Jan 1) or "2026-02-30", which would show a wrong date.
@@ -68,10 +101,8 @@ const POST_FIELDS = new Map<string, PostField>([
     {
       placeholder: (attrs) => ({ tag: "p", attrs, children: ["Post excerpt…"] }),
       render: (node, attrs, post) => {
-        if (!post.excerpt) return undefined;
-        const max = props<{ maxWords?: number }>(node).maxWords;
-        const words = post.excerpt.trim().split(/\s+/);
-        const text = max && words.length > max ? `${words.slice(0, max).join(" ")}…` : post.excerpt;
+        if (!post.excerpt?.trim()) return undefined;
+        const text = limitWords(post.excerpt, props<{ maxWords?: number }>(node).maxWords);
         return { tag: "p", attrs, children: [text] };
       },
     },
