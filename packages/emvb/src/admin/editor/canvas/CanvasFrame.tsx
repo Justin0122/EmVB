@@ -84,7 +84,10 @@ const EDITOR_CANVAS_CSS =
   `:where(${NO_ITEMS})${OWN}{min-height:48px}` +
   `:is(${NO_ITEMS})${OWN}{outline:1px dashed #94a3b8;outline-offset:-1px}` +
   `:is(${NO_ITEMS})${OWN}::after{content:"No items yet: add them in this element's Content settings";display:block;line-height:48px;text-align:center;${HINT}}` +
-  ".emvb-image-missing{display:inline-block;min-width:48px;min-height:48px;background:var(--color-kumo-tint, #eee)}[data-emvb-editing]{color:transparent !important}[data-emvb-canvas-rte] .ProseMirror{outline:none;min-height:1em}[data-emvb-canvas-rte] .ProseMirror>:first-child{margin-top:0}[data-emvb-canvas-rte] .ProseMirror>:last-child{margin-bottom:0}[data-emvb-canvas-rte] .ProseMirror img.ProseMirror-selectednode{outline:2px solid #2f6feb}[data-emvb-canvas-rte] .selectedCell{background:rgba(47,111,235,.15)}[data-emvb-bound]{cursor:text}[data-emvb-bound-image]{cursor:pointer}";
+  ".emvb-image-missing{display:inline-block;min-width:48px;min-height:48px;background:var(--color-kumo-tint, #eee)}[data-emvb-editing]{color:transparent !important}[data-emvb-canvas-rte] .ProseMirror{outline:none;min-height:1em}[data-emvb-canvas-rte] .ProseMirror>:first-child{margin-top:0}[data-emvb-canvas-rte] .ProseMirror>:last-child{margin-bottom:0}[data-emvb-canvas-rte] .ProseMirror img.ProseMirror-selectednode{outline:2px solid #2f6feb}[data-emvb-canvas-rte] .selectedCell{background:rgba(47,111,235,.15)}[data-emvb-bound]{cursor:text}[data-emvb-bound-image]{cursor:pointer}" +
+  // The canvas runs no scripts, so carousels show their arrows as a page shows them at first:
+  // Previous dimmed at the start, Next ready (the runtime would unhide them).
+  ".emvb-carousel-arrow[hidden]{display:flex}.emvb-carousel-prev[hidden]{opacity:.35}";
 
 /**
  * Tablet and Mobile previews scroll without a visible scrollbar (W-140), as phones and tablets

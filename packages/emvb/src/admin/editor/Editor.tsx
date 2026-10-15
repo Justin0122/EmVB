@@ -47,6 +47,7 @@ import {
   type FocusedListItem,
 } from "./components.tsx";
 import { useCollectionLoops } from "./loop-fields.tsx";
+import { useSiteCss } from "../site-css.ts";
 import { ComponentDesignContext } from "./component-design.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
 import { useEditorCommands } from "./useEditorCommands.ts";
@@ -240,6 +241,8 @@ function EditorApp({
   );
   // W-339: the collection Loops' real entries, so the canvas shows the cards the page will.
   const collectionLoops = useCollectionLoops(state.page.layout, componentTemplates, fetcher);
+  // The site's own stylesheet, after EmVB's, as on its pages: blocks look the same while editing.
+  const siteCss = useSiteCss(fetcher);
   const rendered = React.useMemo(() => {
     if (!state.page.layout) return null;
     const dynamic = {
@@ -418,7 +421,7 @@ function EditorApp({
                       {rendered ? (
                         <CanvasFrame
                           vnode={rendered.vnode}
-                          css={rendered.css}
+                          css={siteCss ? `${rendered.css}\n${siteCss}` : rendered.css}
                           layout={state.page.layout}
                           device={device}
                           zoom={zoom}

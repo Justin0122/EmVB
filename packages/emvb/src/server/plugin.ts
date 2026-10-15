@@ -7,10 +7,11 @@ import {
   designSaveRoute,
 } from "./design-routes.ts";
 import { iconUploadRoute, iconsRoute } from "./icon-routes.ts";
+import { canvasCssRoute, type CanvasCssOptions } from "./canvas-css-route.ts";
 import { loopEntriesRoute, loopTermsRoute } from "./loop-routes.ts";
 import { beforeSave } from "./hooks.ts";
 
-export function createPlugin() {
+export function createPlugin(options: CanvasCssOptions = {}) {
   return definePlugin({
     id: PLUGIN_ID,
     version: PLUGIN_VERSION,
@@ -41,6 +42,7 @@ export function createPlugin() {
       "icons/upload": iconUploadRoute,
       "loop/entries": loopEntriesRoute,
       "loop/terms": loopTermsRoute,
+      "canvas-css": canvasCssRoute(options),
     },
   });
 }
