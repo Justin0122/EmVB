@@ -175,6 +175,13 @@ describe("playground backend: pages", () => {
     expect((await loadEntry(fetcher, LANDING)).status).toBe("published");
   });
 
+  test("W-590 a slug in any script is accepted, as EmDash and the create dialog make them", async () => {
+    const { fetcher } = createBackend();
+    const { rev } = await loadEntry(fetcher, LANDING);
+    await savePage(fetcher, LANDING, { ...(await draftOf(fetcher)), slug: "привет-мир" }, rev);
+    expect((await draftOf(fetcher)).slug).toBe("привет-мир");
+  });
+
   test("a taken slug is SLUG_CONFLICT, so the editor points at the slug field", async () => {
     const { fetcher } = createBackend();
     const { rev } = await loadEntry(fetcher, LANDING);

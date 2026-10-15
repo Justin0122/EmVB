@@ -275,7 +275,8 @@ type Route = {
   form: FormData | null;
 };
 
-const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+/** W-590: letters, digits and marks of any script, single dashes (as EmDash and `pageSlug`). */
+const SLUG = /^[\p{Ll}\p{Lo}\p{Lm}\p{N}\p{M}]+(?:-[\p{Ll}\p{Lo}\p{Lm}\p{N}\p{M}]+)*$/u;
 
 const checkRev = (entry: StoredEntry, rev: unknown) => {
   if (typeof rev === "string" && rev !== revOf(entry)) {
@@ -423,7 +424,7 @@ export function createBackend(options: BackendOptions = {}): PlaygroundBackend {
       throw new HttpError(
         400,
         "VALIDATION_ERROR",
-        "Slugs use lowercase letters, digits and dashes.",
+        "Slugs use lowercase letters, digits and single dashes.",
       );
     }
     if (slugTaken(collection, slug, except)) {
