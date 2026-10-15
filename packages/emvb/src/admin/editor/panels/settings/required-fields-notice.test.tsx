@@ -72,3 +72,55 @@ describe("Form required-fields notice (W-511)", () => {
     expect(document.querySelector("[data-emvb-required-fields]")).toBeNull();
   });
 });
+
+describe("Form control-kind notice (W-579)", () => {
+  const withOptions: Fetcher = async () =>
+    new Response(
+      JSON.stringify({
+        data: {
+          pages: [
+            {
+              fields: [
+                {
+                  name: "topic",
+                  type: "select",
+                  label: "Topic",
+                  required: false,
+                  options: [{ label: "Sales", value: "sales" }],
+                },
+                { name: "note", type: "text", label: "Note", required: false },
+              ],
+            },
+          ],
+        },
+      }),
+      { status: 200 },
+    );
+
+  test("a Text input bound to a field with a list of options is flagged", async () => {
+    const node = form([
+      {
+        id: "box00001",
+        type: "container",
+        props: {},
+        children: [{ id: "inp00001", type: "text-input", props: { field: "topic", label: "T" } }],
+      },
+      { id: "inp00002", type: "text-input", props: { field: "note", label: "Note" } },
+    ]);
+    await mount(<RequiredFieldsNotice node={node} fetcher={withOptions} />);
+    await flush();
+    const items = document.querySelectorAll("[data-emvb-kind-issue]");
+    expect(items.length).toBe(1);
+    expect(items[0]?.textContent).toContain("Topic");
+    expect(items[0]?.textContent).toContain("Select or Radio");
+  });
+
+  test("a Select bound to it is fine", async () => {
+    const node = form([
+      { id: "sel00001", type: "select", props: { field: "topic", label: "Topic" } },
+    ]);
+    await mount(<RequiredFieldsNotice node={node} fetcher={withOptions} />);
+    await flush();
+    expect(document.querySelector("[data-emvb-kind-issue]")).toBeNull();
+  });
+});

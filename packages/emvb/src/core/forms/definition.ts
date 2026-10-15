@@ -64,3 +64,45 @@ export function impossibleRangeFields(
   }
   return found;
 }
+
+/**
+ * W-579: a control that can't send any answer its field accepts. A field with a fixed list of
+ * options (select, radio, checkbox group) is refused by the forms plugin unless the value is one
+ * of them, so a Text input, Textarea or Checkbox bound to it makes the form unsendable.
+ */
+export type MismatchedControl = { nodeId: string; name: string; label: string; fieldType: string };
+
+const OPTION_TYPES = new Set(["select", "radio", "checkbox-group"]);
+const FREE_CONTROLS = new Set(["text-input", "textarea", "checkbox"]);
+
+type ControlLike = { id: string; type: string; props: unknown; children?: readonly ControlLike[] };
+
+export function mismatchedControls(
+  form: ControlLike,
+  fields: ReadonlyArray<{
+    name: string;
+    type: string;
+    label: string;
+    options?: readonly unknown[];
+  }>,
+): MismatchedControl[] {
+  const byName = new Map(fields.map((field) => [field.name, field]));
+  const found: MismatchedControl[] = [];
+  const visit = (node: ControlLike) => {
+    if (FREE_CONTROLS.has(node.type)) {
+      const name = (node.props as { field?: unknown }).field;
+      const field = typeof name === "string" ? byName.get(name) : undefined;
+      if (field && OPTION_TYPES.has(field.type) && (field.options?.length ?? 0) > 0) {
+        found.push({
+          nodeId: node.id,
+          name: field.name,
+          label: field.label.trim() || field.name,
+          fieldType: field.type,
+        });
+      }
+    }
+    for (const child of node.children ?? []) visit(child);
+  };
+  for (const child of form.children ?? []) visit(child);
+  return found;
+}

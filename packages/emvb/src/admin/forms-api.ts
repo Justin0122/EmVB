@@ -66,6 +66,7 @@ export type DefinitionField = {
   type: string;
   label: string;
   required: boolean;
+  options?: ReadonlyArray<{ label: string; value: string }>;
   validation?: { minLength?: number; maxLength?: number; min?: number; max?: number };
 };
 

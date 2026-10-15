@@ -5,6 +5,7 @@ import type { Fetcher } from "../../../api.ts";
 import { loadFormFields, type DefinitionField } from "../../../forms-api.ts";
 import {
   impossibleRangeFields,
+  mismatchedControls,
   requiredFieldIssues,
   requiredFieldIssueText,
   type LayoutNode,
@@ -42,7 +43,32 @@ export function RequiredFieldsNotice({ node, fetcher }: { node: LayoutNode; fetc
   }, [fetcher, formId]);
   const issues = fields ? requiredFieldIssues(node, fields) : [];
   const ranges = fields ? impossibleRangeFields(fields) : [];
-  if (issues.length === 0 && ranges.length === 0) return null;
+  const kinds = fields ? mismatchedControls(node, fields) : [];
+  if (issues.length === 0 && ranges.length === 0 && kinds.length === 0) return null;
+  // W-579: a free-text or checkbox control on a field with a list of options sends a value the
+  // forms plugin refuses, so the form fails with "has an invalid selection".
+  const kindBanner =
+    kinds.length > 0 ? (
+      <Banner
+        variant="alert"
+        icon={<WarningIcon aria-hidden="true" />}
+        title={
+          kinds.length === 1
+            ? "A field needs a choice element"
+            : `${kinds.length} fields need a choice element`
+        }
+        description={
+          <ul className="emvb-required-notice__list">
+            {kinds.map((kind) => (
+              <li key={kind.nodeId} data-emvb-kind-issue={kind.fieldType}>
+                <strong>{kind.label}</strong> only accepts one of its options in Forms, so typed or
+                ticked answers are refused. Use a Select or Radio element for it.
+              </li>
+            ))}
+          </ul>
+        }
+      />
+    ) : null;
   const rangeBanner =
     ranges.length > 0 ? (
       <Banner
@@ -71,6 +97,7 @@ export function RequiredFieldsNotice({ node, fetcher }: { node: LayoutNode; fetc
   if (issues.length === 0) {
     return (
       <div className="emvb-required-notice" data-emvb-range-fields="">
+        {kindBanner}
         {rangeBanner}
       </div>
     );
@@ -81,6 +108,7 @@ export function RequiredFieldsNotice({ node, fetcher }: { node: LayoutNode; fetc
       : `${issues.length} required fields can't be filled in`;
   return (
     <div className="emvb-required-notice" data-emvb-required-fields="">
+      {kindBanner}
       {rangeBanner}
       <Banner
         variant="alert"
