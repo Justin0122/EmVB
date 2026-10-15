@@ -622,3 +622,25 @@ test("W-610: a create whose save fails keeps the create row and the typed name",
   expect(saved.length).toBe(2);
   expect(inputs("Name").at(-1)?.value).toBe("Fresh");
 });
+
+test("W-616: a rename whose save fails reopens the field with the typed name", async () => {
+  const failing = async (next: DesignSystem) => {
+    saved.push(next);
+    return false;
+  };
+  await mount(
+    <VariableSection
+      title="Colors"
+      kind="color"
+      design={design}
+      layout={layout}
+      onSave={failing}
+      onAskDelete={onAskDelete}
+    />,
+  );
+  await press(varRow("ink"), "F2");
+  await renameTo("Charcoal", "Enter");
+  await settle();
+  expect(saved.length).toBe(1);
+  expect(renameField()?.value).toBe("Charcoal");
+});

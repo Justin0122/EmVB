@@ -251,6 +251,8 @@ export function VariableSection({
   const [nameError, setNameError] = React.useState<string | null>(null);
   const [open, setOpen] = React.useState<string | null>(null);
   const [renaming, setRenaming] = React.useState<string | null>(null);
+  // W-616: what was typed in a rename whose save failed, so the reopened field keeps it.
+  const [renameDraft, setRenameDraft] = React.useState<string | null>(null);
   const [copied, setCopied] = React.useState<string | null>(null);
   const rows = React.useRef(new Map<string, HTMLButtonElement>());
 
@@ -299,15 +301,21 @@ export function VariableSection({
     setValue(NEW_VALUE[kind]);
   };
 
-  const rename = (id: string, next: string | null) => {
+  const rename = async (id: string, next: string | null) => {
     setRenaming(null);
+    setRenameDraft(null);
     requestAnimationFrame(() => rows.current.get(id)?.focus());
     if (next && variableNameTaken(design, kind, next, id)) {
       setNameError(variableNameTakenMessage(next));
       return;
     }
     setNameError(null);
-    if (next) void onSave(renameVariable(design, id, kind, next));
+    if (!next) return;
+    const renamed = renameVariable(design, id, kind, next);
+    if (renamed !== design && (await onSave(renamed)) === false) {
+      setRenameDraft(next);
+      setRenaming(id);
+    }
   };
 
   const copy = (id: string, token: string) => {
@@ -374,8 +382,9 @@ export function VariableSection({
                     <Preview kind={kind} value={item.value} />
                     <RenameInput
                       name={item.name}
+                      initial={renameDraft ?? undefined}
                       label={`Rename ${item.name}`}
-                      onDone={(next) => rename(item.id, next)}
+                      onDone={(next) => void rename(item.id, next)}
                     />
                   </span>
                 ) : (

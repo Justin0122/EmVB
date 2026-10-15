@@ -127,10 +127,13 @@ export function SiteSearch({
  */
 export function RenameInput({
   name,
+  initial,
   label,
   onDone,
 }: {
   name: string;
+  /** Text to start with instead of the name, e.g. a rename whose save failed (W-616). */
+  initial?: string;
   label: string;
   onDone: (next: string | null) => void;
 }) {
@@ -145,7 +148,7 @@ export function RenameInput({
     <input
       className="emvb-site-rename"
       aria-label={label}
-      defaultValue={name}
+      defaultValue={initial ?? name}
       maxLength={60}
       // oxlint-disable-next-line jsx-a11y/no-autofocus -- the user asked to rename; focus moves into the field
       autoFocus
