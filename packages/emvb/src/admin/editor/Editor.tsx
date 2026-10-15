@@ -50,7 +50,7 @@ import {
   type LoadedDesign,
 } from "./useEditorData.ts";
 import { EDITOR_MIN_WIDTH_QUERY, useMediaQuery } from "./useMediaQuery.ts";
-import { useSectionTemplates } from "./section-templates.ts";
+import { usePartTemplates } from "./section-templates.ts";
 import { useCollectionPreviews } from "./collection-previews.ts";
 import { useRemoteChange } from "./remote-change.ts";
 import { A11yScoreButton } from "./A11yCopilot.tsx";
@@ -207,7 +207,7 @@ function EditorApp({
     if (chrome.leaving) exit();
   }, [chrome.leaving, exit]);
 
-  const sectionTemplates = useSectionTemplates(state.page.layout, fetcher);
+  const { sectionTemplates, loopTemplates } = usePartTemplates(state.page.layout, fetcher);
   // W-307: bound fields show live values on the canvas (site settings, preview URL parameters).
   const live = useLiveData();
   // W-308: collection Loops show real entries on the canvas.
@@ -221,6 +221,7 @@ function EditorApp({
             scope: state.id,
             dynamic: {
               ...(Object.keys(sectionTemplates).length > 0 ? { sectionTemplates } : {}),
+              ...(Object.keys(loopTemplates).length > 0 ? { loopTemplates } : {}),
               site: live.site,
               params: live.params,
               ...(siteOrigin() ? { origin: siteOrigin() } : {}),
@@ -233,6 +234,7 @@ function EditorApp({
       state.page.layout,
       state.design,
       sectionTemplates,
+      loopTemplates,
       device,
       live.site,
       live.params,
