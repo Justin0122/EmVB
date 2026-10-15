@@ -16654,8 +16654,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/css/generate.ts",
-          "search": "css += block(`:where(.emvb-root) ${tag}`, declarations);",
-          "replace": "css += block(tag, declarations);"
+          "search": "const selector = `:where(.emvb-root) ${tag}`;",
+          "replace": "const selector = tag;"
         }
       ],
       "command": [
