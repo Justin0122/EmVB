@@ -8,7 +8,7 @@ const MAX_SECTION_DEPTH = 8;
 
 const sizes = new WeakMap<object, number>();
 /** Elements in a part's layout, counted once per layout object. */
-function partSize(nodes: readonly { children?: unknown }[]): number {
+function partSize(nodes: readonly object[]): number {
   const cached = sizes.get(nodes);
   if (cached !== undefined) return cached;
   let count = 0;
