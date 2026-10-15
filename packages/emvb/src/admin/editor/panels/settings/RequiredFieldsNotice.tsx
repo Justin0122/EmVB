@@ -86,7 +86,9 @@ export function RequiredFieldsNotice({ node, fetcher }: { node: LayoutNode; fetc
                 <strong>{range.label}</strong>{" "}
                 {range.kind === "length"
                   ? "has a minimum length above its maximum length"
-                  : "has a minimum value above its maximum"}
+                  : range.kind === "both"
+                    ? "has a minimum length above its maximum length and a minimum value above its maximum"
+                    : "has a minimum value above its maximum"}
                 , so no answer is accepted. Fix the limits in Forms.
               </li>
             ))}

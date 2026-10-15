@@ -16,3 +16,13 @@ describe("fields no answer can satisfy (W-577)", () => {
     ]);
   });
 });
+
+describe("both impossible ranges on one field (W-589)", () => {
+  test("a field with bad length and bad value limits reports both", () => {
+    expect(
+      impossibleRangeFields([
+        { name: "x", label: "Age", validation: { minLength: 9, maxLength: 1, min: 9, max: 1 } },
+      ]),
+    ).toEqual([{ name: "x", label: "Age", kind: "both" }]);
+  });
+});

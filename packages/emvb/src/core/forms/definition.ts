@@ -45,7 +45,11 @@ export function fieldByName(
 }
 
 /** W-577: a field whose limits no answer can meet (min above max), so the form can't be sent. */
-export type ImpossibleRangeField = { name: string; label: string; kind: "length" | "value" };
+export type ImpossibleRangeField = {
+  name: string;
+  label: string;
+  kind: "length" | "value" | "both";
+};
 
 const above = (lo: unknown, hi: unknown) =>
   typeof lo === "number" && typeof hi === "number" && lo > hi;
@@ -59,8 +63,13 @@ export function impossibleRangeFields(
     if (!v || typeof v !== "object") continue;
     const { minLength, maxLength, min, max } = v as Record<string, unknown>;
     const label = field.label.trim() || field.name;
-    if (above(minLength, maxLength)) found.push({ name: field.name, label, kind: "length" });
-    else if (above(min, max)) found.push({ name: field.name, label, kind: "value" });
+    const badLength = above(minLength, maxLength);
+    const badValue = above(min, max);
+    // W-589: report both problems together so fixing one doesn't reveal the other later.
+    if (badLength || badValue) {
+      const kind = badLength && badValue ? "both" : badLength ? "length" : "value";
+      found.push({ name: field.name, label, kind });
+    }
   }
   return found;
 }
