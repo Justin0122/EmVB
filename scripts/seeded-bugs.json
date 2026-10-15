@@ -3241,8 +3241,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/pages/CreateDialog.tsx",
-          "search": "if (!slugEdited) setSlug(slugify(",
-          "replace": "setSlug(slugify("
+          "search": "if (!slugEdited) setSlug(pageSlug(",
+          "replace": "setSlug(pageSlug("
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/pages/create-dialogs.test.tsx"],
