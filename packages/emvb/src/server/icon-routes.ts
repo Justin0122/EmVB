@@ -36,7 +36,20 @@ const store = (ctx: RouteContext<unknown>) => ctx.storage["icons"] as unknown as
 export const UPLOAD_LIST_LIMIT = 100;
 
 /** An icon's label as typed: trimmed and capped (W-655: a rename may hold a slash, as in "AC/DC"). */
-const iconLabel = (name: string) => clipText(name.trim(), 80).trim() || "Uploaded icon";
+// W-656: control characters become spaces and invisible or direction-changing marks go, so a
+// name like "evil\u202Egvs.exe" can't show reversed in the picker.
+const iconLabel = (name: string) =>
+  clipText(
+    Array.from(name.normalize("NFC"), (ch) => {
+      const code = ch.charCodeAt(0);
+      return code < 32 || (code >= 127 && code <= 159) ? " " : ch;
+    })
+      .join("")
+      .replace(/[\u200B\u2060\uFEFF\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, "")
+      .replace(/ {2,}/g, " ")
+      .trim(),
+    80,
+  ).trim() || "Uploaded icon";
 
 /** A file name without its folder or extension, as the icon's label. */
 export const uploadName = (name: string) =>

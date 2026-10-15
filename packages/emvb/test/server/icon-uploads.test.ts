@@ -142,6 +142,12 @@ describe("icon upload routes (W-239)", () => {
     expect(uploadName(".svg")).toBe("Uploaded icon");
     expect(uploadName("x".repeat(300)).length).toBe(80);
   });
+
+  test("control and direction-changing characters leave the label (W-656)", () => {
+    expect(uploadName("evil\u202Egvs.exe.svg")).toBe("evilgvs.exe");
+    expect(uploadName("a\u0000b\u200Bc\nd.svg")).toBe("a bc d");
+    expect(uploadName("\u2066\u2069.svg")).toBe("Uploaded icon");
+  });
 });
 
 describe("renaming a stored upload (W-390)", () => {
