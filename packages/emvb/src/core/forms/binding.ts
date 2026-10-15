@@ -40,8 +40,10 @@ export function findMissingRequiredFields(
     const definition = definitions.get(node.props.formId);
     if (!definition) return;
     const bound = boundFields(node);
+    // W-595: a hidden field is sent by the form itself, with no control.
+    for (const field of fieldsOf(definition)) if (field.type === "hidden") bound.add(field.name);
     for (const field of fieldsOf(definition)) {
-      if (field.required && field.type !== "hidden" && !bound.has(field.name)) {
+      if (field.required && !bound.has(field.name)) {
         missing.push({ formNodeId: node.id, formId: node.props.formId, field: field.name });
       }
     }
