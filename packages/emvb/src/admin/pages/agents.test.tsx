@@ -116,6 +116,26 @@ test("a failed save keeps the page and says the save failed, not the load (W-624
   expect(host.textContent).toContain("Couldn't save");
 });
 
+test("a conflict says the latest settings are shown, not to reload (W-634)", async () => {
+  const api = fakeApi(50);
+  const fetcher: Fetcher = async (path, init) =>
+    path.endsWith("/agents/save")
+      ? Response.json(
+          { error: { code: "CONFLICT", message: "The agent settings changed somewhere else." } },
+          { status: 409 },
+        )
+      : api.fetcher(path, init);
+  const host = await mount(<AgentsPage fetcher={fetcher} />);
+  await settle();
+  await settle();
+  const toggle = [...host.querySelectorAll("button[role=switch]")][0] as HTMLButtonElement;
+  await act(async () => toggle.click());
+  await settle();
+  await settle();
+  expect(host.textContent).toContain("The latest settings are shown now");
+  expect(host.textContent).not.toContain("Reload");
+});
+
 test("after a conflict the page picks up the saved revision, so the next save works (W-630)", async () => {
   const api = fakeApi(50);
   let conflicted = false;

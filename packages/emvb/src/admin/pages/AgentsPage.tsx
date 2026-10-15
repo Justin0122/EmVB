@@ -115,10 +115,15 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
       const revision = await saveAgentSettings(fetcher, settings, state.revision);
       setState({ ...state, settings, revision });
     } catch (e) {
-      setSaveError(e instanceof Error ? e.message : String(e));
+      const message = e instanceof Error ? e.message : String(e);
+      setSaveError(message);
       // Pick up what is saved now and its revision, so the next save isn't refused again (W-630).
+      // The page reloads by itself, so say so instead of asking for a reload (W-634).
       await loadAgents(fetcher)
-        .then(setState)
+        .then((fresh) => {
+          setState(fresh);
+          setSaveError(`${message} The latest settings are shown now; make your change again.`);
+        })
         .catch(() => undefined);
     } finally {
       setSaving(false);

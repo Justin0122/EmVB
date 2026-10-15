@@ -122,7 +122,7 @@ export const agentsSaveRoute: PluginRoute<z.infer<typeof SaveInput>> = {
       ctx.input.settings,
     );
     if (!write.applied) {
-      throw PluginRouteError.conflict("The agent settings changed somewhere else. Reload them.");
+      throw PluginRouteError.conflict("The agent settings changed somewhere else.");
     }
     const s = ctx.input.settings;
     await appendAgentLog(agentLog(ctx), {
