@@ -214,9 +214,31 @@ export function portableTextToVNodes(value: unknown): VNode[] {
     const tag = style === "normal" ? "p" : style;
     out.push({ tag, attrs: {}, children: inline });
   }
-  return out.filter((node) =>
-    node.tag !== "ul" && node.tag !== "ol" ? true : node.children.length > 0,
-  );
+  return pruneEmptyLists(out);
+}
+
+/**
+ * Lists with no items dropped at every depth (W-585): a blank nested item used to leave an empty
+ * `<ul>` inside its parent item, or an `<li>` holding only that empty list.
+ */
+function pruneEmptyLists(nodes: VNode[]): VNode[] {
+  const isList = (n: VNode) => n.tag === "ul" || n.tag === "ol";
+  const keep: VNode[] = [];
+  for (const node of nodes) {
+    if (isList(node)) {
+      const items: VNode[] = [];
+      for (const li of node.children) {
+        if (typeof li === "string") continue;
+        li.children = li.children.flatMap((c) =>
+          typeof c !== "string" && isList(c) ? pruneEmptyLists([c]) : [c],
+        );
+        if (li.children.length > 0) items.push(li);
+      }
+      node.children = items;
+      if (items.length > 0) keep.push(node);
+    } else keep.push(node);
+  }
+  return keep;
 }
 
 /** Collect `loop.itemPartId` values so hosts can load Loop Item templates. */

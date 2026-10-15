@@ -132,3 +132,32 @@ describe("Line breaks inside formatted text (W-525)", () => {
     expect(html([linked])).toBe('<p><a href="https://example.com">Go<br>now</a></p>');
   });
 });
+
+describe("W-585: an empty nested list item leaves no empty list", () => {
+  test("blank level-2 bullet under an item adds no <ul>", () => {
+    const blocks = [
+      { _type: "block", listItem: "bullet", level: 1, children: [{ _type: "span", text: "A" }] },
+      { _type: "block", listItem: "bullet", level: 2, children: [{ _type: "span", text: "  " }] },
+      { _type: "block", style: "normal", children: [{ _type: "span", text: "After" }] },
+    ];
+    const out = portableTextToVNodes(blocks);
+    expect(JSON.stringify(out)).toBe(
+      JSON.stringify([
+        { tag: "ul", attrs: {}, children: [{ tag: "li", attrs: {}, children: ["A"] }] },
+        { tag: "p", attrs: {}, children: ["After"] },
+      ]),
+    );
+  });
+  test("a blank level-2 item with no parent item adds no empty <li>", () => {
+    const blocks = [
+      { _type: "block", listItem: "bullet", level: 2, children: [{ _type: "span", text: "" }] },
+      { _type: "block", listItem: "bullet", level: 1, children: [{ _type: "span", text: "B" }] },
+    ];
+    const out = portableTextToVNodes(blocks);
+    expect(JSON.stringify(out)).toBe(
+      JSON.stringify([
+        { tag: "ul", attrs: {}, children: [{ tag: "li", attrs: {}, children: ["B"] }] },
+      ]),
+    );
+  });
+});
