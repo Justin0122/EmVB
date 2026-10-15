@@ -80,3 +80,22 @@ describe("design tokens (W-316)", () => {
     expect(DesignSystem.safeParse(bad).success).toBe(false);
   });
 });
+
+test("W-640: applying a scale keeps renamed tokens' names and never adds a second variable with a name", () => {
+  const start = {
+    ...emptyDesign(),
+    variables: {
+      ...emptyDesign().variables,
+      fontSizes: [
+        { id: "display", name: "Display", value: { value: 60, unit: "px" } },
+        { id: "fs-m", name: "Body", value: { value: 16, unit: "px" } },
+      ],
+    },
+  } as DesignSystem;
+  const next = applyTokens(start, "fontSizes", typeScale({ base: 18, ratio: 1.25 }));
+  const sizes = next.variables.fontSizes ?? [];
+  expect(sizes.find((v) => v.id === "fs-m")).toMatchObject({ name: "Body", value: { value: 18 } });
+  expect(sizes.find((v) => v.id === "fs-4xl")?.name).toBe("Display 2");
+  const names = sizes.map((v) => v.name.toLowerCase());
+  expect(new Set(names).size).toBe(names.length);
+});

@@ -119,9 +119,23 @@ export function applyTokens(
 ): DesignSystem {
   const current = design.variables[list] ?? [];
   const byId = new Map(tokens.map((t) => [t.id, t]));
-  const replaced = current.map((v) => byId.get(v.id) ?? v);
+  // W-640: an updated token keeps the name the site gave it.
+  const replaced = current.map((v) => {
+    const t = byId.get(v.id);
+    return t ? { ...t, name: v.name } : v;
+  });
   const have = new Set(current.map((v) => v.id));
   const limit = list === "fontSizes" ? 50 : 100;
-  const added = tokens.filter((t) => !have.has(t.id)).slice(0, Math.max(0, limit - current.length));
+  // W-640: a new token whose name another variable has gets "Display 2", so pickers can tell them apart.
+  const taken = new Set(current.map((v) => v.name.trim().toLowerCase()));
+  const added = tokens
+    .filter((t) => !have.has(t.id))
+    .slice(0, Math.max(0, limit - current.length))
+    .map((t) => {
+      let name = t.name;
+      for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${t.name} ${n}`;
+      taken.add(name.toLowerCase());
+      return name === t.name ? t : { ...t, name };
+    });
   return { ...design, variables: { ...design.variables, [list]: [...replaced, ...added] } };
 }
