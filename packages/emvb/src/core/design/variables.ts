@@ -312,7 +312,7 @@ export function variableNameTaken(
 ): boolean {
   const wanted = cleanClassName(name).toLowerCase();
   return (design.variables[KIND_TO_LIST[kind]] ?? []).some(
-    (v) => v.id !== exceptId && v.name.toLowerCase() === wanted,
+    (v) => v.id !== exceptId && cleanClassName(v.name).toLowerCase() === wanted,
   );
 }
 

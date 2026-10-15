@@ -96,10 +96,14 @@ export const MAX_CLASSES = 100;
 
 /** A class name as saved: control characters gone, trimmed, at most 60 characters (W-218). */
 export function cleanClassName(name: string): string {
-  const spaced = Array.from(name, (ch) => {
+  // W-568: one form for accents, C1 controls spaced like C0, and invisible marks (zero-width
+  // space, word joiner, BOM, bidi overrides) dropped so two names that look alike compare alike.
+  const spaced = Array.from(name.normalize("NFC"), (ch) => {
     const code = ch.charCodeAt(0);
-    return code < 32 || code === 127 ? " " : ch;
-  }).join("");
+    return code < 32 || (code >= 127 && code <= 159) ? " " : ch;
+  })
+    .join("")
+    .replace(/[\u200B\u2060\uFEFF\u200E\u200F\u202A-\u202E\u2066-\u2069]/g, "");
   const spacedTrim = spaced.replace(/ {2,}/g, " ").trim();
   return clipText(spacedTrim, 60).trim();
 }
@@ -176,7 +180,7 @@ export function duplicateClass(
  */
 export function classNameTaken(design: DesignSystem, name: string, exceptId?: string): boolean {
   const wanted = cleanClassName(name).toLowerCase();
-  return (design.classes ?? []).some((c) => c.id !== exceptId && c.name.toLowerCase() === wanted);
+  return (design.classes ?? []).some((c) => c.id !== exceptId && cleanClassName(c.name).toLowerCase() === wanted);
 }
 
 /** The message shown when a new or renamed class would take another class's name (W-277). */
