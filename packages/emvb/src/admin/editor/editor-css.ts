@@ -272,6 +272,9 @@ export const EDITOR_CSS = `${UI_CSS}
   box-shadow: 0 0 0 1px var(--color-kumo-line), 0 2px 6px var(--color-kumo-shadow-drop);
 }
 .emvb-element-tile:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: 2px; }
+.emvb-element-tile-thumb { justify-content: flex-start; padding: 6px 6px 8px; }
+.emvb-element-tile-thumb img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 4px; background: var(--color-kumo-tint, #eee); pointer-events: none; }
+.emvb-component-thumbnail img { display: block; width: 100%; max-width: 240px; aspect-ratio: 16 / 10; object-fit: cover; border: 1px solid var(--color-kumo-hairline); border-radius: 6px; }
 .emvb-element-tile:active { cursor: grabbing; }
 .emvb-drop-line { position: absolute; background: var(--color-kumo-brand); pointer-events: none; z-index: 2; height: auto; min-height: 3px; min-width: 3px; box-shadow: 0 0 0 1px var(--color-kumo-base, #fff); border-radius: 2px; }
 /* W-128: the container a drop goes into is tinted and named. */

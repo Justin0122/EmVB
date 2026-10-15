@@ -2,6 +2,7 @@ import { Button, Input, Select } from "@cloudflare/kumo";
 import { ArrowDownIcon, ArrowUpIcon, PlusIcon, TrashIcon } from "@phosphor-icons/react";
 import * as React from "react";
 import {
+  componentThumbnail,
   COMPONENT_FIELD_KINDS,
   type ComponentField,
   type ComponentFieldKind,
@@ -9,7 +10,9 @@ import {
   type Layout,
   type LayoutNode,
 } from "../../core/index.ts";
+import type { Fetcher } from "../api.ts";
 import { BUTTON, FIELD } from "../ui.ts";
+import { MediaPicker } from "./panels/settings/MediaPicker.tsx";
 
 /**
  * W-316: designing a Component in Theme Builder: its field list (in the part's settings) and,
@@ -67,13 +70,19 @@ function newField(kind: ComponentFieldKind, taken: readonly string[]): Component
 /** The Component's field list (theme part settings). */
 export function ComponentFieldsEditor({
   value,
+  fetcher,
   onChange,
 }: {
   value: ComponentFieldsDoc | undefined;
+  fetcher?: Fetcher;
   onChange: (doc: ComponentFieldsDoc) => void;
 }) {
   const fields = value?.fields ?? [];
-  const set = (next: ComponentField[]) => onChange({ schemaVersion: 1, fields: next });
+  const thumbnail = value?.thumbnail;
+  const set = (next: ComponentField[]) =>
+    onChange({ schemaVersion: 1, fields: next, ...(thumbnail ? { thumbnail } : {}) });
+  const setThumbnail = (next: string | undefined) =>
+    onChange({ schemaVersion: 1, fields, ...(next ? { thumbnail: next } : {}) });
   return (
     <section className="emvb-component-design" data-emvb-component-design="">
       <h3 className="emvb-section-title">Fields</h3>
@@ -82,7 +91,55 @@ export function ComponentFieldsEditor({
         Content tab.
       </p>
       <FieldList fields={fields} kinds={COMPONENT_FIELD_KINDS} onChange={set} />
+      <ThumbnailEditor value={thumbnail} fetcher={fetcher} onChange={setThumbnail} />
     </section>
+  );
+}
+
+/**
+ * W-340: the picture on the component's Add panel tile: an image from the media library, an
+ * upload or a URL. A drawing stored as a data URI (as an import sets it) shows here too.
+ */
+function ThumbnailEditor({
+  value,
+  fetcher,
+  onChange,
+}: {
+  value: string | undefined;
+  fetcher?: Fetcher;
+  onChange: (value: string | undefined) => void;
+}) {
+  const drawing = value?.startsWith("data:") === true;
+  return (
+    <div className="emvb-component-thumbnail" data-emvb-component-thumbnail="">
+      <h3 className="emvb-section-title">Thumbnail</h3>
+      <p className="emvb-helper">Shown on this component&apos;s tile in the Add panel.</p>
+      {drawing && <img src={value} alt="" />}
+      {fetcher && (
+        <MediaPicker
+          label=""
+          fetcher={fetcher}
+          node={
+            {
+              id: "thumb001",
+              type: "image",
+              props: { src: drawing ? "" : (value ?? ""), alt: "" },
+            } as LayoutNode
+          }
+          onChange={(node) => onChange(componentThumbnail((node.props as { src?: string }).src))}
+        />
+      )}
+      {value && (
+        <Button
+          variant="secondary"
+          className={BUTTON}
+          icon={<TrashIcon aria-hidden="true" />}
+          onClick={() => onChange(undefined)}
+        >
+          Remove thumbnail
+        </Button>
+      )}
+    </div>
   );
 }
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sanitizeMediaUrl } from "../sanitize/media-url.ts";
 import { CardOverrides, COMPONENT_FIELD_KEY, type LayoutNode } from "../schema/layout.ts";
 import { isParentNode } from "../schema/layout.ts";
 
@@ -97,11 +98,36 @@ const ComponentField = z.union([
 export type ComponentField = z.infer<typeof ComponentField>;
 type LeafField = z.infer<typeof LeafField>;
 
+/** The longest component thumbnail: a media URL, or a small drawing as a data URI. */
+export const MAX_COMPONENT_THUMBNAIL = 100_000;
+const IMAGE_DATA_URI = /^data:image\/(?:svg\+xml|png|webp|jpeg)(?:;base64)?,/;
+
+/**
+ * W-340: a component thumbnail the Add panel can show in an `<img>`: an allowed media URL, or an
+ * image as a data URI (an SVG drawing in an `<img>` runs no scripts). Else undefined.
+ */
+export function componentThumbnail(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const value = raw.trim();
+  if (!value || value.length > MAX_COMPONENT_THUMBNAIL) return undefined;
+  if (IMAGE_DATA_URI.test(value)) return value;
+  return value.startsWith("data:") ? undefined : sanitizeMediaUrl(value);
+}
+
 export const COMPONENT_FIELDS_VERSION = 1;
 const ComponentFieldsDoc = z
   .strictObject({
     schemaVersion: z.literal(COMPONENT_FIELDS_VERSION),
     fields: z.array(ComponentField).max(30),
+    /** W-340: the picture of the component on its Add panel tile. */
+    thumbnail: z
+      .string()
+      .max(MAX_COMPONENT_THUMBNAIL)
+      .refine(
+        (value) => componentThumbnail(value) !== undefined,
+        "Use an image URL or an image data URI",
+      )
+      .optional(),
   })
   .refine((doc) => new Set(doc.fields.map((f) => f.key)).size === doc.fields.length, {
     message: "Field keys must be unique",

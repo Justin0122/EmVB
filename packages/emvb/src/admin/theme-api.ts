@@ -1,4 +1,5 @@
 import {
+  componentThumbnail,
   CONTENT_THEME_PART_TYPES,
   defaultConditionsFor,
   defaultFloatSettings,
@@ -37,6 +38,8 @@ export type ThemePartSummary = {
   status: string;
   updatedAt: string;
   conditionsSummary: string;
+  /** W-340: a component's Add panel picture, when it has one. */
+  thumbnail?: string;
 };
 
 export type ThemePartDraft = {
@@ -143,7 +146,25 @@ export async function listThemeParts(fetcher: Fetcher): Promise<ThemePartSummary
     status: entryStatus(item),
     updatedAt: item.updatedAt ?? "",
     conditionsSummary: summarizeConditions(item.data?.["conditions"]),
+    ...thumbnailOf(item.data?.["component_fields"]),
   }));
+}
+
+/** W-340: the thumbnail in a component's fields doc (stored as JSON or a JSON string). */
+function thumbnailOf(raw: unknown): { thumbnail?: string } {
+  let doc = raw;
+  if (typeof doc === "string") {
+    try {
+      doc = JSON.parse(doc) as unknown;
+    } catch {
+      return {};
+    }
+  }
+  const thumbnail =
+    doc && typeof doc === "object"
+      ? componentThumbnail((doc as { thumbnail?: unknown }).thumbnail)
+      : undefined;
+  return thumbnail ? { thumbnail } : {};
 }
 
 /** Parts that are the page's main content (or become a page) keep the page's H1. */

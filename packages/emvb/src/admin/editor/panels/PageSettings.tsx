@@ -62,6 +62,7 @@ export function PageSettings({
         {page.partType === "component" ? (
           <ComponentFieldsEditor
             value={page.componentFields}
+            fetcher={fetcher}
             onChange={(componentFields) => onChange({ componentFields })}
           />
         ) : (

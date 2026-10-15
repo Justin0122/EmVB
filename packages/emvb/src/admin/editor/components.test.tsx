@@ -48,6 +48,19 @@ describe("adding a component (W-312)", () => {
     expect(added).toEqual(["component:c1"]);
   });
 
+  test("a component with a thumbnail shows it on its tile", async () => {
+    const host = await mount(
+      <ComponentsContext.Provider
+        value={{ ...context, list: [{ id: "c1", title: "Tekst en beeld", thumbnail: "/t.png" }] }}
+      >
+        <AddPanel onAdd={() => {}} />
+      </ComponentsContext.Provider>,
+    );
+    const tile = host.querySelector('[data-emvb-add-tile="component:c1"]');
+    expect(tile?.querySelector("img")?.getAttribute("src")).toBe("/t.png");
+    expect(tile?.textContent).toBe("Tekst en beeld");
+  });
+
   test("a component tile becomes a use with empty values", () => {
     const node = newElement("component:c1", () => 0.5);
     expect(node?.type).toBe("component");

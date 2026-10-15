@@ -26,7 +26,8 @@ import { RichTextEditor } from "./rich-text/RichTextEditor.tsx";
  * Add panel lists the site's components; selecting a use shows its fields as a form.
  */
 
-export type ComponentSummary = { id: string; title: string };
+/** W-340: `thumbnail` is the component's picture on its Add panel tile. */
+export type ComponentSummary = { id: string; title: string; thumbnail?: string };
 type ComponentsState = { list: ComponentSummary[]; templates: Record<string, ComponentTemplate> };
 
 export const ComponentsContext = React.createContext<ComponentsState>({ list: [], templates: {} });
@@ -75,7 +76,11 @@ export function useComponents(layout: Layout | null, fetcher: Fetcher): Componen
           setList(
             parts
               .filter((p) => p.partType === "component")
-              .map((p) => ({ id: p.id, title: p.title })),
+              .map((p) => ({
+                id: p.id,
+                title: p.title,
+                ...(p.thumbnail ? { thumbnail: p.thumbnail } : {}),
+              })),
           );
         }
       })

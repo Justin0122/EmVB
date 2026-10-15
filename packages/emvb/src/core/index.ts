@@ -369,6 +369,7 @@ export {
   type ListItemMark,
   type ListItemOp,
   COMPONENT_FIELD_KINDS,
+  componentThumbnail,
   COMPONENT_FIELDS_VERSION,
   type ComponentFieldsDoc,
   emptyComponentFields,

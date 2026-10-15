@@ -6,6 +6,7 @@ import { validateLayout } from "../validate.ts";
 import {
   applyComponent,
   collectComponentPartIds,
+  componentThumbnail,
   validateComponentFields,
   type ComponentField,
   type ComponentTemplate,
@@ -579,6 +580,29 @@ describe("Terms and Cards fields (W-339)", () => {
         schemaVersion: 1,
         fields: [{ key: "items", label: "Items", kind: "list", fields: [fields[1]] }],
       }).ok,
+    ).toBe(false);
+  });
+});
+
+describe("component thumbnails (W-340)", () => {
+  test("a media URL or an image data URI is kept; scripts and other data are refused", () => {
+    expect(componentThumbnail("/_emdash/api/media/file/a.png")).toBe(
+      "/_emdash/api/media/file/a.png",
+    );
+    expect(componentThumbnail("data:image/svg+xml,%3Csvg%3E%3C/svg%3E")).toBe(
+      "data:image/svg+xml,%3Csvg%3E%3C/svg%3E",
+    );
+    expect(componentThumbnail("javascript:alert(1)")).toBeUndefined();
+    expect(componentThumbnail("data:text/html,<script>")).toBeUndefined();
+    expect(componentThumbnail(`data:image/png;base64,${"a".repeat(100_001)}`)).toBeUndefined();
+  });
+
+  test("the fields doc takes a thumbnail", () => {
+    expect(
+      validateComponentFields({ schemaVersion: 1, fields: [], thumbnail: "/media/t.png" }).ok,
+    ).toBe(true);
+    expect(
+      validateComponentFields({ schemaVersion: 1, fields: [], thumbnail: "javascript:x" }).ok,
     ).toBe(false);
   });
 });

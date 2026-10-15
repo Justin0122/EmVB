@@ -128,7 +128,7 @@ export function AddPanel({
                 <button
                   key={c.id}
                   type="button"
-                  className="emvb-element-tile"
+                  className={`emvb-element-tile${c.thumbnail ? " emvb-element-tile-thumb" : ""}`}
                   data-emvb-add-tile={type}
                   draggable
                   onDragStart={(event) => {
@@ -138,7 +138,11 @@ export function AddPanel({
                   }}
                   onClick={() => onAdd(type)}
                 >
-                  <PuzzlePieceIcon size={20} aria-hidden="true" />
+                  {c.thumbnail ? (
+                    <img src={c.thumbnail} alt="" draggable={false} data-emvb-tile-thumbnail="" />
+                  ) : (
+                    <PuzzlePieceIcon size={20} aria-hidden="true" />
+                  )}
                   <span>{c.title}</span>
                 </button>
               );
