@@ -307,7 +307,8 @@ describe("Accordion and Tabs item editing (W-130)", () => {
     fire(rows[0], "dragstart");
     expect(fire(rows[1], "dragover").defaultPrevented).toBe(true);
     expect(fire(rows[1], "drop").defaultPrevented).toBe(true);
-    expect(calls.changed.at(-1)?.children?.map((c) => c.id)).toEqual(["itm00002", "itm00001"]);
+    const last = calls.changed.at(-1) as { children?: LayoutNode[] } | undefined;
+    expect(last?.children?.map((child) => child.id)).toEqual(["itm00002", "itm00001"]);
   });
 });
 
