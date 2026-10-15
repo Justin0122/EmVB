@@ -16,6 +16,24 @@ import type { Box } from "./SelectionOverlay.tsx";
 export type ImagePick = { useId: string; path: string; element: HTMLElement };
 
 const WIDTH = 320;
+const GAP = 8;
+
+/**
+ * Under the picture's top, or above the picture when the popover would run past the canvas's
+ * bottom; never past its edges.
+ */
+function place(box: Box, height: number, area: { width: number; height: number }) {
+  let top = box.top + Math.min(box.height, 48);
+  if (top + height > area.height - GAP) {
+    const above = box.top - height - GAP;
+    top = above >= GAP ? above : Math.max(GAP, area.height - height - GAP);
+  }
+  const left = Math.min(
+    Math.max(GAP, box.left + box.width / 2 - WIDTH / 2),
+    Math.max(GAP, area.width - WIDTH - GAP),
+  );
+  return { top, left };
+}
 
 /**
  * W-337: the media picker for one image field of a component use, under the picture clicked on
@@ -37,6 +55,22 @@ export function ImagePickPopover({
   onUpdateNode: (id: string, update: (node: LayoutNode) => LayoutNode) => void;
   onClose: () => void;
 }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [height, setHeight] = React.useState(0);
+  const [area, setArea] = React.useState({ width: Infinity, height: Infinity });
+  React.useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const measure = () => {
+      const parent = element.offsetParent as HTMLElement | null;
+      setHeight(element.offsetHeight);
+      if (parent) setArea({ width: parent.clientWidth, height: parent.clientHeight });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   React.useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -51,13 +85,10 @@ export function ImagePickPopover({
     <div
       className="emvb-image-pick"
       data-emvb-image-pick={pick.path}
+      ref={ref}
       role="dialog"
       aria-label="Choose image"
-      style={{
-        top: box.top + Math.min(box.height, 48),
-        left: Math.max(0, box.left + box.width / 2 - WIDTH / 2),
-        width: WIDTH,
-      }}
+      style={{ ...place(box, height, area), width: WIDTH }}
     >
       <div className="emvb-image-pick-head">
         <span>Image</span>
@@ -72,7 +103,7 @@ export function ImagePickPopover({
         </button>
       </div>
       <MediaPicker
-        label="Image"
+        label=""
         fetcher={fetcher}
         node={imageFieldNode(componentValueAt(values, pick.path))}
         onChange={(picked) =>

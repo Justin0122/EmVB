@@ -448,26 +448,53 @@ export const EDITOR_CSS = `${UI_CSS}
 .emvb-panel [data-emvb-panel] .emvb-helper { margin-top: -2px; }
 
 .emvb-media-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.emvb-media-preview { display: flex; flex-direction: column; gap: 4px; }
-.emvb-media-thumb { display: block; max-width: 100%; max-height: 96px; border-radius: 6px; object-fit: contain; background: var(--color-kumo-canvas); }
+.emvb-media-preview { display: flex; flex-direction: column; align-items: stretch; gap: 4px; width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; }
+button.emvb-media-preview { cursor: pointer; }
+button.emvb-media-preview:hover .emvb-media-thumb { box-shadow: 0 0 0 2px var(--color-kumo-brand); }
+.emvb-media-thumb { display: block; width: 100%; height: 120px; border-radius: 6px; object-fit: contain; background: repeating-conic-gradient(var(--color-kumo-canvas) 0 25%, var(--color-kumo-tint, #eee) 0 50%) 0 0 / 16px 16px; }
+.emvb-media-preview-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.emvb-media-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgb(0 0 0 / 0.4); }
 .emvb-media-dialog {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px;
-  border: 1px solid var(--color-kumo-hairline);
-  border-radius: 6px;
-  background: var(--emvb-glass-elevated);
-  -webkit-backdrop-filter: blur(var(--emvb-glass-blur));
-  backdrop-filter: blur(var(--emvb-glass-blur));
-  box-shadow: var(--emvb-elevation-m);
+  gap: 12px;
+  box-sizing: border-box;
+  width: min(1040px, 100%);
+  height: min(760px, 100%);
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--color-kumo-elevated, #fff);
+  color: var(--text-color-kumo-default);
+  box-shadow: 0 0 0 1px var(--color-kumo-line), 0 24px 64px rgb(0 0 0 / 0.3);
 }
-.emvb-media-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.emvb-media-grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 256px; overflow: auto; }
-.emvb-media-card { display: flex; flex-direction: column; gap: 4px; width: 100%; padding: 4px; border: 1px solid var(--color-kumo-hairline); border-radius: 6px; background: var(--emvb-glass-strong); color: var(--text-color-kumo-default); font: inherit; font-size: 11px; line-height: 14px; text-align: left; cursor: pointer; }
-.emvb-media-card:hover { background: var(--color-kumo-tint); }
-.emvb-media-card img { display: block; width: 100%; height: 64px; object-fit: cover; border-radius: 4px; background: var(--color-kumo-canvas); }
-.emvb-media-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.emvb-media-dialog[data-dragging]::after { content: "Drop to upload"; position: absolute; inset: 8px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--color-kumo-brand); border-radius: 10px; background: color-mix(in srgb, var(--color-kumo-elevated, #fff) 85%, transparent); color: var(--color-kumo-brand); font-weight: 600; pointer-events: none; }
+.emvb-media-dialog-head { display: flex; align-items: center; gap: 8px; }
+.emvb-media-dialog-head .emvb-panel-title { margin: 0 auto 0 0; font-size: 16px; }
+.emvb-media-dialog-head .emvb-btn { display: inline-flex; align-items: center; gap: 6px; }
+.emvb-media-search { width: min(280px, 40vw); }
+.emvb-media-search label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.emvb-media-error { margin: 0; color: var(--text-color-kumo-danger); }
+.emvb-media-body { flex: 1; min-height: 0; overflow: auto; margin: 0 -4px; padding: 4px; }
+.emvb-media-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; height: 100%; color: var(--text-color-kumo-subtle); }
+.emvb-media-grid { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.emvb-media-card { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 6px; border: 1px solid var(--color-kumo-hairline); border-radius: 8px; background: var(--color-kumo-base, #fff); color: var(--text-color-kumo-default); font: inherit; font-size: 12px; line-height: 16px; text-align: left; cursor: pointer; }
+.emvb-media-card:hover { border-color: var(--color-kumo-brand); }
+.emvb-media-card:focus-visible { outline: 2px solid var(--color-kumo-brand); outline-offset: 2px; }
+.emvb-media-card[data-current] { border-color: var(--color-kumo-brand); box-shadow: 0 0 0 1px var(--color-kumo-brand); }
+.emvb-media-card-image { position: relative; display: block; margin-bottom: 4px; aspect-ratio: 4 / 3; border-radius: 4px; overflow: hidden; background: repeating-conic-gradient(var(--color-kumo-canvas) 0 25%, var(--color-kumo-tint, #eee) 0 50%) 0 0 / 16px 16px; }
+.emvb-media-card-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.emvb-media-card-check { position: absolute; top: 6px; right: 6px; display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--color-kumo-brand); color: #fff; }
+.emvb-media-card-name, .emvb-media-card-meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.emvb-media-card-meta { color: var(--text-color-kumo-subtle); font-size: 11px; }
+.emvb-media-foot { display: flex; align-items: center; gap: 12px; min-height: 28px; }
+.emvb-media-foot .emvb-btn { margin-left: auto; }
+@media (max-width: 640px) {
+  .emvb-media-backdrop { padding: 8px; }
+  .emvb-media-dialog-head { flex-wrap: wrap; }
+  .emvb-media-search { order: 3; width: 100%; }
+  .emvb-media-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+}
 
 .emvb-icon-current { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .emvb-icon-current-preview { flex: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 1px solid var(--color-kumo-hairline); border-radius: 8px; background: var(--emvb-glass-strong); color: var(--text-color-kumo-default); cursor: pointer; }
@@ -656,8 +683,6 @@ export const EDITOR_CSS = `${UI_CSS}
   .emvb-empty-prompt,
   .emvb-element-tile,
   .emvb-layer-menu-list,
-  .emvb-media-dialog,
-  .emvb-media-card,
   .emvb-icon-current-preview,
   .emvb-site-confirm,
   .emvb-invalid-label {
@@ -665,7 +690,6 @@ export const EDITOR_CSS = `${UI_CSS}
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-  .emvb-media-dialog,
   .emvb-site-confirm {
     background: var(--color-kumo-elevated);
   }

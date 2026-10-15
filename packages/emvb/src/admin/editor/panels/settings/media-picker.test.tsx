@@ -126,6 +126,7 @@ describe("leaving the URL field (W-092)", () => {
   });
 });
 
+// The library is a dialog portaled over the editor (to the body here), so it is found in the document.
 describe("media library (W-091)", () => {
   test("opening it asks for up to 40 images and lists them", async () => {
     const view = await picker(
@@ -135,13 +136,13 @@ describe("media library (W-091)", () => {
     await view.openLibrary();
     expect(view.paths).toHaveLength(1);
     expect(view.paths[0]).toContain("limit=40");
-    expect(view.host.querySelector('[data-emvb-media-id="m2"]')?.textContent).toBe("cat.png");
+    expect(document.querySelector('[data-emvb-media-id="m2"]')?.textContent).toBe("cat.png");
   });
 
   test("an empty library says so", async () => {
     const view = await picker(image({ src: "", alt: "Image" }), ok([]));
     await view.openLibrary();
-    expect(view.text()).toContain("No images yet. Upload one to get started.");
+    expect(document.body.textContent ?? "").toContain("No images yet. Upload one to get started.");
   });
 
   test("a library that fails to load shows its error", async () => {
@@ -152,14 +153,88 @@ describe("media library (W-091)", () => {
       ),
     );
     await view.openLibrary();
-    expect(view.text()).toContain("Not allowed here.");
+    expect(document.body.textContent ?? "").toContain("Not allowed here.");
   });
 
   test("Close hides the library", async () => {
     const view = await picker(image({ src: "", alt: "Image" }), ok([]));
     await view.openLibrary();
-    const close = [...view.host.querySelectorAll("button")].find((b) => b.textContent === "Close");
+    const close = [...document.querySelectorAll("button")].find((b) => b.textContent === "Close");
     await act(async () => close?.click());
-    expect(view.host.querySelector("[data-emvb-media-dialog]")?.outerHTML ?? null).toBeNull();
+    expect(document.querySelector("[data-emvb-media-dialog]")?.outerHTML ?? null).toBeNull();
+  });
+});
+
+describe("media library dialog", () => {
+  test("marks the image in use, searches by name and pages on with the cursor", async () => {
+    const view = await picker(image({ src: "/media/cat.png", alt: "A", mediaId: "m2" }), () =>
+      Response.json({
+        data: {
+          items: [
+            {
+              id: "m1",
+              filename: "dog.png",
+              url: "/media/dog.png",
+              status: "ready",
+              width: 800,
+              height: 600,
+              size: 20480,
+            },
+            { id: "m2", filename: "cat.png", url: "/media/cat.png", status: "ready" },
+          ],
+          nextCursor: "next-1",
+          totalCount: 3,
+        },
+      }),
+    );
+    await view.openLibrary();
+    expect(document.querySelector('[data-emvb-media-id="m2"]')?.hasAttribute("data-current")).toBe(
+      true,
+    );
+    expect(document.querySelector('[data-emvb-media-id="m1"]')?.hasAttribute("data-current")).toBe(
+      false,
+    );
+    expect(document.querySelector('[data-emvb-media-id="m1"]')?.textContent).toBe(
+      "dog.png800 × 600 · 20 KB",
+    );
+    expect(document.body.textContent).toContain("2 of 3 images");
+
+    await act(async () => document.querySelector<HTMLElement>("[data-emvb-media-more]")?.click());
+    await settle();
+    expect(view.paths.at(-1)).toContain("cursor=next-1");
+
+    const search = document.querySelector<HTMLInputElement>("[data-emvb-media-search]");
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+        search,
+        "cat",
+      );
+      search?.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 300)));
+    await settle();
+    expect(view.paths.at(-1)).toContain("q=cat");
+    expect(view.paths.at(-1)).not.toContain("cursor=");
+  });
+
+  test("picking an image applies it and closes the dialog; Escape closes it too", async () => {
+    const view = await picker(
+      image({ src: "", alt: "Image" }),
+      ok([{ id: "m2", filename: "cat.png", url: "/media/cat.png", status: "ready" }]),
+    );
+    await view.openLibrary();
+    await act(async () =>
+      document.querySelector<HTMLElement>('[data-emvb-media-id="m2"]')?.click(),
+    );
+    expect(view.sent.map((n) => n.props.src)).toEqual(["/media/cat.png"]);
+    expect(document.querySelector("[data-emvb-media-dialog]")).toBeNull();
+
+    await view.openLibrary();
+    await act(async () => {
+      document
+        .querySelector("[data-emvb-media-dialog]")
+        ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(document.querySelector("[data-emvb-media-dialog]")).toBeNull();
   });
 });
