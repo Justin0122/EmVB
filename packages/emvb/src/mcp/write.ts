@@ -24,11 +24,11 @@ import { isSafeFontStack } from "../core/sanitize/css.ts";
 import { sanitizeMediaUrl } from "../core/sanitize/media-url.ts";
 import { sanitizeHref } from "../core/sanitize/href.ts";
 import { isSafeSvgMarkup } from "../core/sanitize/svg.ts";
-import { clipText } from "../core/limits.ts";
+import { clipText, MAX_DEPTH } from "../core/limits.ts";
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts } from "./ports.ts";
 import { queued } from "./queue.ts";
-import { resolveDesignRefs } from "./refs.ts";
+import { nestsDeeperThan, resolveDesignRefs } from "./refs.ts";
 import {
   findVariableUsages,
   findVariableUsagesInDesign,
@@ -261,6 +261,23 @@ const ElementSpec: z.ZodType<ElementSpecT> = z.lazy(() =>
 );
 type ElementSpecT = { type: string; props?: Record<string, unknown>; children?: ElementSpecT[] };
 
+/**
+ * W-652: the recursive spec is checked by recursion, so an element nested a few thousand levels
+ * overflowed the stack while the input was validated and the call failed as an internal error.
+ * Pages allow 24 levels of elements; anything past a generous bound is refused up front.
+ */
+const BoundedElementSpec = z.preprocess((value, ctx) => {
+  if (nestsDeeperThan(value, MAX_DEPTH * 8)) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Elements can be nested at most ${MAX_DEPTH} levels deep.`,
+      input: value,
+    });
+    return z.NEVER;
+  }
+  return value;
+}, ElementSpec);
+
 function buildNode(spec: ElementSpecT): LayoutNode {
   if (!KNOWN_TYPES.has(spec.type)) {
     refused(`Unknown element type ${spec.type}. Call list_element_types.`);
@@ -374,7 +391,7 @@ export const AddElementInput = z.strictObject({
   pageId: PageId,
   parentId: NodeIdInput,
   index: z.number().int().min(0).optional(),
-  element: ElementSpec,
+  element: BoundedElementSpec,
   expectedRev: Rev.optional(),
 });
 

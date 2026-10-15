@@ -10,6 +10,21 @@ const KINDS: [keyof DesignSystem["variables"], From][] = [
   ["spacings", "spacing"],
 ];
 
+/** True when `value` nests objects or arrays more than `max` levels, checked without recursion. */
+export function nestsDeeperThan(value: unknown, max: number): boolean {
+  const stack: [unknown, number][] = [[value, 1]];
+  while (stack.length > 0) {
+    const [item, depth] = stack.pop() as [unknown, number];
+    if (typeof item !== "object" || item === null) continue;
+    if (depth > max) return true;
+    for (const child of Object.values(item)) stack.push([child, depth + 1]);
+  }
+  return false;
+}
+
+/** Deeper than any element spec or style the tools accept; refused before the walk below recurses (W-652). */
+const MAX_INPUT_NESTING = 256;
+
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
 
@@ -23,6 +38,9 @@ const isRef = (v: Record<string, unknown>) =>
  * Class names in `classes` are checked the same way.
  */
 export function resolveDesignRefs<T>(value: T, design: DesignSystem): T {
+  if (nestsDeeperThan(value, MAX_INPUT_NESTING)) {
+    throw new McpToolError("INVALID_INPUT", "This input nests too deeply.");
+  }
   const kinds = new Map<string, From[]>();
   for (const [key, from] of KINDS) {
     for (const v of design.variables[key] ?? [])
