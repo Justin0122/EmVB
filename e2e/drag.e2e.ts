@@ -356,3 +356,45 @@ test("with a container selected, clicking an Add tile puts the element inside it
   const stored = await storedLayout<{ root: Tree }>(request, id);
   expect(childTypes(stored.root, "innr0001")).toEqual(["heading"]);
 });
+
+test("in a right-to-left row a drop left of the first heading goes after it (W-559)", async ({
+  page,
+  request,
+}) => {
+  const layout = {
+    schemaVersion: 16,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      dir: "rtl",
+      style: { flexDirection: "column" },
+      children: [
+        {
+          id: "row00001",
+          type: "container",
+          props: {},
+          style: { flexDirection: "row", gap: { value: 40, unit: "px" } },
+          children: [
+            { id: "head0001", type: "heading", props: { text: "Alpha", level: 1 } },
+            { id: "head0002", type: "heading", props: { text: "Beta", level: 2 } },
+          ],
+        },
+      ],
+    },
+  };
+  const id = await createPage(request, "RTL drag", layout, `drag-rtl-${unique()}`);
+  await openEditor(page, id, "Alpha");
+  const alpha = await canvas(page).getByRole("heading", { name: "Alpha" }).boundingBox();
+  const beta = await canvas(page).getByRole("heading", { name: "Beta" }).boundingBox();
+  if (!alpha || !beta) throw new Error("headings have no box");
+  // RTL: Alpha is on the right, Beta to its left.
+  expect(beta.x).toBeLessThan(alpha.x);
+  // Just inside Alpha's left (trailing) half: between Alpha and Beta.
+  await dragTileTo(page, "heading", alpha.x + 6, alpha.y + alpha.height / 2);
+  await expect(canvas(page).getByRole("heading", { name: "Heading" })).toBeVisible();
+  await saveDraft(page);
+  const stored = await storedLayout<{ root: Tree }>(request, id);
+  const row = stored.root.children?.[0];
+  expect(row?.children?.map((child) => child.props?.text)).toEqual(["Alpha", "Heading", "Beta"]);
+});
