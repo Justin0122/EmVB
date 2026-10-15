@@ -218,3 +218,18 @@ describe("length field messages for other units (W-262)", () => {
     });
   });
 });
+
+test("W-603 a unitless line height can be typed over (the draft isn't reset each render)", async () => {
+  await row("lineHeight", { lineHeight: 1.5 });
+  expect(input()?.value).toBe("1.5");
+  const field = input();
+  await act(async () => {
+    field?.focus();
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setter?.call(field, "1.8");
+    field?.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  expect(input()?.value).toBe("1.8");
+  await act(async () => field?.blur());
+  expect(patches).toEqual([{ lineHeight: 1.8 }]);
+});

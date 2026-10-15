@@ -53,11 +53,12 @@ export function LengthRow({
 }) {
   const units = unitsFor(styleKey);
   // W-213: a plain number is a unitless line height, shown with the `x` unit.
-  const literal: { value: number; unit: NumericUnit } | undefined = isLiteral(value)
-    ? value
-    : typeof value === "number"
-      ? { value, unit: "x" }
-      : undefined;
+  // W-603: memoized, so a plain number doesn't make a new object each render; the effect below
+  // would reset the draft on every keystroke and nothing typed over a unitless value would stick.
+  const literal = React.useMemo<{ value: number; unit: NumericUnit } | undefined>(
+    () => (isLiteral(value) ? value : typeof value === "number" ? { value, unit: "x" } : undefined),
+    [value],
+  );
   const numericUnit = literal?.unit ?? firstNumeric(units);
   const [draft, setDraft] = React.useState(literal ? String(literal.value) : "");
   const [unit, setUnit] = React.useState<UnitChoice>(value === "auto" ? "auto" : numericUnit);

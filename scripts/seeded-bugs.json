@@ -21201,6 +21201,24 @@
       "expect": "\\(fail\\)"
     },
     {
+      "id": "W-603/draft-reset",
+      "requirement": "W-603",
+      "description": "Typing over a unitless line height snaps back to the old value.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/LengthRow.tsx",
+          "search": "    [value],\n  );\n  const numericUnit",
+          "replace": "    [value, {}],\n  );\n  const numericUnit"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/length-row.test.tsx"
+      ],
+      "expect": "\\(fail\\)"
+    },
+    {
       "id": "W-602/blank-items",
       "requirement": "W-602",
       "description": "A Loop with no item design lists blank items (empty cards) on the page.",
