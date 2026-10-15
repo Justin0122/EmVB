@@ -133,3 +133,22 @@ describe("time zone field (W-438)", () => {
 test("UK is read as GB, the code visitors' countries use (W-544)", () => {
   expect(parseCountries("uk, gb fr")).toEqual(["GB", "FR"]);
 });
+
+test("selecting another element clears the last one's segment error (W-608)", async () => {
+  const a = { ...heading, audience: { segments: ["member"] } } as LayoutNode;
+  const b = { ...heading, id: "head0002", audience: { segments: ["pro"] } } as LayoutNode;
+  await mount(<AudienceEditor node={a} isRoot={false} onChange={() => undefined} />);
+  const input = q("[data-emvb-audience-segments]") as HTMLInputElement;
+  await act(async () => change(input, "no!pe"));
+  await act(async () => input.dispatchEvent(new FocusEvent("focusout", { bubbles: true })));
+  expect(document.querySelector("[data-emvb-audience-segment-error]")).not.toBeNull();
+  await rerender(<AudienceEditor node={b} isRoot={false} onChange={() => undefined} />);
+  expect(document.querySelector("[data-emvb-audience-segment-error]")).toBeNull();
+  expect((q("[data-emvb-audience-segments]") as HTMLInputElement).value).toBe("pro");
+});
+
+test("Everyone except, with no rule yet, warns that every visitor is hidden (W-608)", async () => {
+  const node = { ...heading, audience: { hide: true } } as LayoutNode;
+  await mount(<AudienceEditor node={node} isRoot={false} onChange={() => undefined} />);
+  expect(q("[data-emvb-audience-empty]").textContent).toContain("hidden from every visitor");
+});

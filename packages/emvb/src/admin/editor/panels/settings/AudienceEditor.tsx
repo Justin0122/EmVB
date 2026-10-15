@@ -91,6 +91,8 @@ export function AudienceEditor({
     setSegmentText(node.audience?.segments?.join(", ") ?? "");
     setZoneText(node.audience?.timeZone ?? "");
     setZoneError(null);
+    // W-608: another element's rejected segment name isn't this one's error.
+    setSegmentError(null);
   }, [node.id]);
   if (isRoot) return null;
   const audience = node.audience;
@@ -224,9 +226,12 @@ export function AudienceEditor({
               </span>
             )}
           </label>
-          {mode === "only" && ruleCount(base) === 0 && (
+          {ruleCount(base) === 0 && (
             <p className="emvb-helper" data-emvb-audience-empty="">
-              Add a country, device, segment, or time. Until then, everyone sees this.
+              {mode === "only"
+                ? "Add a country, device, segment, or time. Until then, everyone sees this."
+                : // W-608: with no rule every visitor matches, so "except" hides it from all.
+                  "Add a country, device, segment, or time. Until then, this is hidden from every visitor."}
             </p>
           )}
           <div className="emvb-bind-row">
