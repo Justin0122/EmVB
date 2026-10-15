@@ -81,3 +81,9 @@ test("the spam trap is hidden without an off-screen offset, so RTL pages don't s
   // left:-9999px put the trap 10,000px off to the left; in an RTL page that is scrollable.
   expect(rule).not.toMatch(/(?:^|;)(?:left|right|inset[a-z-]*):/);
 });
+
+describe("W-597: a field the forms client hides", () => {
+  test("stays hidden even though the field wrapper is display:flex", () => {
+    expect(form.baseCss).toContain(".emvb-form-field[hidden]{display:none!important}");
+  });
+});

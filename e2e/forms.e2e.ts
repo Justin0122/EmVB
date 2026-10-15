@@ -87,3 +87,100 @@ test("published form fields have a bordered default look that a field style and 
   await page.addStyleTag({ content: "input{border-radius:0}" });
   expect((await look('input[name="email"]')).radius).toBe("0px");
 });
+
+test("hidden and conditional definition fields work in a live submit (W-595, W-596)", async ({
+  page,
+  request,
+}) => {
+  const slug = `form-cond-${unique()}`;
+  const created = await api(request, "POST", "/_emdash/api/plugins/emdash-forms/forms/create", {
+    name: `EmVB ${slug}`,
+    slug,
+    pages: [
+      {
+        fields: [
+          {
+            id: "f_email",
+            type: "email",
+            label: "Email",
+            name: "email",
+            required: true,
+            width: "full",
+          },
+          {
+            id: "f_topic",
+            type: "select",
+            label: "Topic",
+            name: "topic",
+            required: true,
+            width: "full",
+            options: [
+              { label: "Sales", value: "sales" },
+              { label: "Other", value: "other" },
+            ],
+          },
+          {
+            id: "f_other",
+            type: "text",
+            label: "Other",
+            name: "other",
+            required: true,
+            width: "full",
+            condition: { field: "topic", op: "eq", value: "other" },
+          },
+          {
+            id: "f_src",
+            type: "hidden",
+            label: "Source",
+            name: "source",
+            required: false,
+            width: "full",
+            defaultValue: "emvb-e2e",
+          },
+        ],
+      },
+    ],
+    settings: {
+      confirmationMessage: "Thanks — EmVB received your message.",
+      spamProtection: "none",
+      submitLabel: "Send",
+      notifyEmails: [],
+      digestEnabled: false,
+      digestHour: 9,
+      retentionDays: 0,
+    },
+  });
+  expect(created.status, JSON.stringify(created.json)).toBe(200);
+  const formId = (created.json?.["data"] as { id: string }).id;
+  const layout = formPageLayout(formId);
+  layout.root.children[0]!.children = [
+    { id: "inp00001", type: "text-input", props: { field: "email", label: "Email" } },
+    { id: "sel00001", type: "select", props: { field: "topic", label: "Topic" } },
+    { id: "inp00002", type: "text-input", props: { field: "other", label: "Other" } },
+    { id: "sub00001", type: "submit", props: { label: "Send" } },
+  ] as never;
+  const pageId = await createPage(request, "Form Cond", layout, `page-${slug}`);
+  await publishPage(request, pageId);
+
+  await page.goto(`/page-${slug}`);
+  await expect(page.locator("[data-ec-form][data-ec-initialized]")).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.locator('input[name="other"]')).toBeHidden();
+  await page.locator('input[name="email"]').fill(`cond-${slug}@example.com`);
+  await page.locator('select[name="topic"]').selectOption("sales");
+  await page.locator(".ec-form-submit").click();
+  await expect(page.locator("[data-form-status]")).toContainText(/EmVB received/, {
+    timeout: 15_000,
+  });
+
+  const listed = await api(request, "POST", "/_emdash/api/plugins/emdash-forms/submissions/list", {
+    formId,
+    limit: 20,
+  });
+  const items = (listed.json?.["data"] as { items: Array<{ data: Record<string, unknown> }> })
+    .items;
+  const mine = items.find((i) => i.data["email"] === `cond-${slug}@example.com`);
+  expect(mine?.data["topic"]).toBe("sales");
+  expect(mine?.data["source"]).toBe("emvb-e2e");
+});
