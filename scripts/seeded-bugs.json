@@ -19709,7 +19709,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/loop.ts",
-          "search": "posts.length === 0 || (ctx.mode === \"editor\" && templateNodes.length === 0)",
+          "search": "posts.length === 0 || templateNodes.length === 0",
           "replace": "posts.length === 0"
         }
       ],
@@ -21170,6 +21170,20 @@
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/dynamic-post.test.ts"],
+      "expect": "\\(fail\\)"
+    },
+    {
+      "id": "W-602/blank-items",
+      "requirement": "W-602",
+      "description": "A Loop with no item design lists blank items (empty cards) on the page.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/loop.ts",
+          "search": "posts.length === 0 || templateNodes.length === 0",
+          "replace": "posts.length === 0 || (ctx.mode === \"editor\" && templateNodes.length === 0)"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/render/collection-loop.test.ts"],
       "expect": "\\(fail\\)"
     },
     {
