@@ -216,6 +216,33 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     });
   });
 
+  test("SVG markup the page would drop is refused with the reason (W-566)", async () => {
+    const pageId = await newPage();
+    const { layout } = await layoutOf(pageId);
+    const bad = '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><circle r="4"/></svg>';
+    const error = await fail("add_element", {
+      pageId,
+      parentId: layout.root.id,
+      element: { type: "svg", props: { markup: bad } },
+    });
+    expect(error.code).toBe("REFUSED");
+    expect(error.message).toContain("SVG");
+    const icon = await fail("add_element", {
+      pageId,
+      parentId: layout.root.id,
+      element: { type: "icon", props: { iconSvg: bad } },
+    });
+    expect(icon.code).toBe("REFUSED");
+    await call("add_element", {
+      pageId,
+      parentId: layout.root.id,
+      element: {
+        type: "svg",
+        props: { markup: '<svg xmlns="http://www.w3.org/2000/svg"><circle r="4"/></svg>' },
+      },
+    });
+  });
+
   test("update_site_styles names ids it can't remove and saves nothing for a no-op (W-564)", async () => {
     const first = await call<{ revision: string }>("update_site_styles", {
       variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },

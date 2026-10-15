@@ -22,6 +22,7 @@ import { nodeChildren, pageSlug, removeNode, starterLayout, updateNode } from ".
 import { isSafeFontStack } from "../core/sanitize/css.ts";
 import { sanitizeMediaUrl } from "../core/sanitize/media-url.ts";
 import { sanitizeHref } from "../core/sanitize/href.ts";
+import { isSafeSvgMarkup } from "../core/sanitize/svg.ts";
 import { clipText } from "../core/limits.ts";
 import { McpToolError } from "./errors.ts";
 import type { EmvbPorts } from "./ports.ts";
@@ -116,6 +117,7 @@ async function mutatePage(
       const next = apply(current.layout);
       refuseUnsafeImageSources(current.layout, next.layout);
       refuseUnsafeLinks(current.layout, next.layout);
+      refuseUnsafeSvg(current.layout, next.layout);
       const layout = checkLayout(next.layout);
       // W-562: a write that changes nothing (an empty set, the same value, a move to its own
       // spot) saved a new version and rev anyway, cluttering the timeline and the agent log.
@@ -174,6 +176,36 @@ function refuseUnsafeLinks(before: Layout, after: Layout) {
     const [id, prop] = key.split(".");
     refused(
       `Element ${id} has the ${prop} ${JSON.stringify(clipText(href, 80))}, which pages can't link to. Use an https:// URL, a path on this site such as /pricing, #section, mailto: or tel:.`,
+    );
+  }
+}
+
+/** SVG markup props (an SVG element's `markup`, an icon's `iconSvg`), keyed by node and prop. */
+function svgValues(root: LayoutNode): Map<string, string> {
+  const found = new Map<string, string>();
+  const walk = (node: LayoutNode) => {
+    const props = node.props as Record<string, unknown>;
+    if (node.type === "svg" && typeof props["markup"] === "string")
+      found.set(`${node.id}.markup`, props["markup"]);
+    if (typeof props["iconSvg"] === "string") found.set(`${node.id}.iconSvg`, props["iconSvg"]);
+    for (const child of nodeChildren(node)) walk(child);
+  };
+  walk(root);
+  return found;
+}
+
+/**
+ * W-566: SVG with an `onload` handler (or a script, foreignObject, style…) was stored as given and
+ * the page then rendered nothing for it, with nothing telling the agent. Markup the write adds or
+ * changes must pass the same check the renderer uses; ones already stored are left alone.
+ */
+function refuseUnsafeSvg(before: Layout, after: Layout) {
+  const old = svgValues(before.root);
+  for (const [key, markup] of svgValues(after.root)) {
+    if (markup.trim() === "" || old.get(key) === markup || isSafeSvgMarkup(markup)) continue;
+    const [id, prop] = key.split(".");
+    refused(
+      `Element ${id} has ${prop} the page can't show. Use plain SVG: no scripts, event handlers such as onload, foreignObject, style blocks, links or external images.`,
     );
   }
 }
