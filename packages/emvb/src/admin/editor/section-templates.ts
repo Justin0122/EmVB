@@ -52,6 +52,13 @@ export interface PartTemplates {
 
 const MAX_PARTS = 64;
 
+function partRefs(part: Layout): Array<[string, "section" | "loop_item"]> {
+  return [
+    ...collectSectionPartIds(part).map((id) => [id, "section"] as [string, "section"]),
+    ...collectLoopItemPartIds(part).map((id) => [id, "loop_item"] as [string, "loop_item"]),
+  ];
+}
+
 /**
  * W-658: synced sections and Loop Item parts referenced by the open layout, following parts nested
  * in either kind (a Loop inside a section, a section or Loop inside a loop item). The canvas used to
@@ -65,11 +72,7 @@ export async function loadPartTemplates(
 ): Promise<PartTemplates> {
   const out: PartTemplates = { sectionTemplates: {}, loopTemplates: {} };
   const seen = new Set<string>();
-  const refs = (part: Layout): Array<[string, "section" | "loop_item"]> => [
-    ...collectSectionPartIds(part).map((id) => [id, "section"] as [string, "section"]),
-    ...collectLoopItemPartIds(part).map((id) => [id, "loop_item"] as [string, "loop_item"]),
-  ];
-  let next = refs(layout);
+  let next = partRefs(layout);
   for (let depth = 0; depth <= MAX_DEPTH && next.length > 0; depth++) {
     const pending = next.filter(([id, kind]) => {
       const key = `${kind}\0${id}`;
@@ -77,6 +80,8 @@ export async function loadPartTemplates(
       seen.add(key);
       return true;
     });
+    // Each depth waits on the one before it: its ids come from the parts just read.
+    // oxlint-disable-next-line no-await-in-loop
     const loaded = await Promise.all(
       pending.map(async ([id, kind]) => {
         try {
@@ -90,7 +95,7 @@ export async function loadPartTemplates(
     for (const [id, kind, part] of loaded) {
       if (!part) continue;
       (kind === "section" ? out.sectionTemplates : out.loopTemplates)[id] = part;
-      next.push(...refs(part));
+      next.push(...partRefs(part));
     }
   }
   return out;
