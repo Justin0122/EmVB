@@ -311,6 +311,11 @@ function cleanNode(
     next = { ...next };
     delete next.htmlId;
   }
+  if (next.variant) {
+    // A pasted copy is never part of an A/B test, like a duplicate (W-632).
+    next = { ...next };
+    delete next.variant;
+  }
   const kids = nodeChildren(next);
   if (kids.length === 0) return next;
   return {

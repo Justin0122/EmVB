@@ -180,6 +180,18 @@ describe("preparing a pasted element (W-093)", () => {
     expect(pasted.ok && validateLayout(pasted.layout).ok).toBe(true);
   });
 
+  test("a pasted A/B arm, or a box holding one, is outside the test (W-632)", () => {
+    const arm = {
+      ...heading("head0001"),
+      variant: { test: "t1", arm: "a" as const },
+    } as LayoutNode;
+    const box: LayoutNode = { id: "box00001", type: "container", props: {}, children: [arm] };
+    for (const source of [arm, box]) {
+      const { node } = prepareElement(source, page([arm]), design(), counter);
+      expect(JSON.stringify(node)).not.toContain("variant");
+    }
+  });
+
   test("classes the design doesn't have are dropped and counted; known ones stay", () => {
     const node = { ...heading(), classes: ["card", "gone", "also-gone"] };
     const { node: out, dropped } = prepareElement(node, page([]), design());
