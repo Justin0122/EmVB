@@ -56,3 +56,18 @@ describe("file names with spaces in srcset (W-428)", () => {
     expect(srcset({ sources: [{ src: "/a.png 1w, /b.png", width: 400 }] })).toBeUndefined();
   });
 });
+
+describe("one candidate per width (W-541)", () => {
+  test("a repeated width keeps the first source, and the main image keeps its own", () => {
+    expect(
+      srcset({
+        width: 1600,
+        sources: [
+          { src: "/b.png", width: 400 },
+          { src: "/c.png", width: 400 },
+        ],
+      }),
+    ).toBe("/b.png 400w, /a.png 1600w");
+    expect(srcset({ width: 400, sources: [{ src: "/b.png", width: 400 }] })).toBeUndefined();
+  });
+});

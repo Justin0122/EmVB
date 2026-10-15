@@ -504,25 +504,33 @@ function imageSources(
   width: number | undefined,
 ): string | undefined {
   if (!sources || sources.length === 0) return undefined;
-  const parts: string[] = [];
-  const seen = new Set<string>();
+  const main = srcsetUrl(src);
   let srcWidth: number | undefined;
   for (const source of sources) {
-    const url = srcsetUrl(sanitizeMediaUrl(source.src));
     if (!validSourceWidth(source.width)) continue;
-    if (url === srcsetUrl(src)) {
-      srcWidth ??= source.width;
-      continue;
+    if (srcsetUrl(sanitizeMediaUrl(source.src)) === main) {
+      srcWidth = source.width;
+      break;
     }
+  }
+  srcWidth ??= validSourceWidth(width) ? width : undefined;
+  const mainListed = srcWidth !== undefined && main !== undefined && !/[\s,]/.test(main);
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  // W-541: two candidates with one width make the whole srcset invalid; the first wins, and the
+  // main image's width is kept for the main image.
+  const widths = new Set<number>(mainListed ? [srcWidth as number] : []);
+  for (const source of sources) {
+    const url = srcsetUrl(sanitizeMediaUrl(source.src));
+    if (!validSourceWidth(source.width) || url === main) continue;
     // A comma or space is another srcset candidate, so one field would request a second host.
-    if (!url || /[\s,]/.test(url) || seen.has(url)) continue;
+    if (!url || /[\s,]/.test(url) || seen.has(url) || widths.has(source.width)) continue;
     seen.add(url);
+    widths.add(source.width);
     parts.push(`${url} ${source.width}w`);
   }
   if (parts.length === 0) return undefined;
-  srcWidth ??= validSourceWidth(width) ? width : undefined;
-  const main = srcsetUrl(src);
-  if (srcWidth !== undefined && main && !/[\s,]/.test(main)) parts.push(`${main} ${srcWidth}w`);
+  if (mainListed) parts.push(`${main} ${srcWidth}w`);
   return parts.join(", ");
 }
 
