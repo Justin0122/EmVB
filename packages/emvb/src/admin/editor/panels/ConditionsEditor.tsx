@@ -66,7 +66,7 @@ const GROUP_OPTIONS = [
 ] as const;
 
 /** The menu value that keeps a rule the menu can't build (one entry, one term, another collection). */
-export const CURRENT_RULE = "current";
+const CURRENT_RULE = "current";
 
 const arg = (rule: ConditionRule, key: string) =>
   typeof rule.args[key] === "string" ? (rule.args[key] as string) : "";
@@ -75,7 +75,7 @@ const arg = (rule: ConditionRule, key: string) =>
  * W-694: what a rule the menu has no option for reads as, e.g. "Tag: news". Such rules (from MCP,
  * an import or an older EmVB) showed as "Entire site", and touching the menu replaced them.
  */
-export function currentRuleLabel(rule: ConditionRule): string {
+function currentRuleLabel(rule: ConditionRule): string {
   const where = `${rule.group}:${rule.name}`;
   const taxonomy = arg(rule, "taxonomy");
   const slug = arg(rule, "slug");
@@ -92,7 +92,7 @@ export function currentRuleLabel(rule: ConditionRule): string {
 }
 
 /** The menu value for a rule: its option, or CURRENT_RULE when no option builds it exactly. */
-export function menuValue(rule: ConditionRule): string {
+function menuValue(rule: ConditionRule): string {
   const value = optionValue(rule);
   const option = GROUP_OPTIONS.find((o) => o.value === value);
   if (!option) return CURRENT_RULE;
