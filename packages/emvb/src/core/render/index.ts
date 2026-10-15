@@ -80,8 +80,11 @@ export type RenderResult = {
 const ID = /^[A-Za-z0-9_-]{4,24}$/;
 const HTML_ID = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 
-// Canvas iframe has no allow-scripts (D-011): live YouTube/Vimeo players fail there.
+// Canvas iframe has no allow-scripts (D-011): live YouTube/Vimeo players fail there. A video with
+// a poster shows it with its play button, as the page does before a click (W-332).
 function videoPreview(node: LayoutNode, attrs: Record<string, string>): VNode | undefined {
+  const { poster, background } = node.props as { poster?: string; background?: boolean };
+  if (poster?.trim() && background !== true) return undefined;
   const target = resolveEmbedUrl((node.props as { url: string }).url);
   if (target?.kind !== "iframe") return undefined;
   const label =

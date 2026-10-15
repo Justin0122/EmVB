@@ -280,6 +280,21 @@ describe("video element (W-026, R-013)", () => {
     expect(pub.html).toContain("<iframe");
   });
 
+  test("editor mode shows a video's poster and play button, as the page does before a click", () => {
+    const node = {
+      ...defaultElement("video", "vid00005"),
+      props: {
+        url: "https://vimeo.com/1144801160",
+        title: "Demo clip",
+        poster: "/_emdash/api/media/file/poster.png",
+      },
+    };
+    const html = renderPage(page(node), design, { mode: "editor" }).html;
+    expect(html).not.toContain("data-emvb-video-preview");
+    expect(html).toContain('class="emvb-video-poster" src="/_emdash/api/media/file/poster.png"');
+    expect(html).toContain('aria-label="Play: Demo clip"');
+  });
+
   test("non-allowlisted URLs render a missing placeholder", () => {
     const bad = {
       ...defaultElement("video", "vid00003"),
