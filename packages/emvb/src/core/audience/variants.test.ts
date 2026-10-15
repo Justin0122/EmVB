@@ -125,10 +125,11 @@ describe("each new A/B test gets its own name (W-701)", () => {
     // Ending the first test leaves the second test's two elements alone.
     const ended = endAbTest(layout, "featurecard01");
     if (!ended.ok) throw new Error(ended.reason);
+    const other = names[1] ?? "";
     expect(ended.layout.root.children.map((c) => c.variant?.test ?? "none")).toEqual([
       "none",
-      names[1],
-      names[1],
+      other,
+      other,
     ]);
   });
 
