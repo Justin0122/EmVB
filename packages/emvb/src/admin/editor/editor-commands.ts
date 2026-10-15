@@ -248,7 +248,8 @@ function shown(id: string, input: CommandInput): boolean {
 function blocked(id: string, input: CommandInput): boolean {
   if (id === "paste" || id === "paste-inside") return !!input.runners.pasteBlocked;
   if (id === "paste-style") return !!input.runners.pasteStyleBlocked;
-  if (id === "hide-on-device") return !input.targetId;
+  // W-567: the root is the page itself and the page never hides it.
+  if (id === "hide-on-device") return !input.targetId || !!input.isRoot;
   return false;
 }
 

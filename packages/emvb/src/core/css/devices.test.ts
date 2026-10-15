@@ -57,7 +57,8 @@ describe("per-device styles (W-096)", () => {
     expect(css).toContain(
       `@media ${DEVICE_MEDIA.hideDesktop}{.emvb-e-${heading.id}{display:none}}`,
     );
-    expect(css).toContain(`@media ${DEVICE_MEDIA.hideMobile}{.emvb-e-root0001{display:none}}`);
+    // W-567: the root is never hidden.
+    expect(css).not.toContain(`@media ${DEVICE_MEDIA.hideMobile}{.emvb-e-root0001{display:none}}`);
   });
 
   test("a device override drops with the variable it uses, and an empty device is removed", () => {
@@ -104,7 +105,7 @@ describe("per-device styles (W-096)", () => {
     expect(mobile.indexOf(`${h}{color:#222222}`)).toBeGreaterThan(
       mobile.indexOf(`${h}{color:#111111}`),
     );
-    expect(mobile).toContain(".emvb-e-root0001{display:none}");
+    expect(mobile).not.toContain(".emvb-e-root0001{display:none}");
     expect(mobile).not.toContain(`${h}{display:none}`);
   });
 

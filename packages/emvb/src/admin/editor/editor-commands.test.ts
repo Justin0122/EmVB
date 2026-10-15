@@ -57,6 +57,8 @@ describe("editor command catalog (W-362)", () => {
     expect(hide[0]?.surfaces.includes("palette")).toBe(false);
     const none = editorCommands(base({ surface: "device", targetId: null }));
     expect(none[0]?.disabled).toBe(true);
+    const root = editorCommands(base({ surface: "device", targetId: "root0001", isRoot: true }));
+    expect(root[0]?.disabled).toBe(true);
   });
 
   test("layers and the overlay keep their own labels and only their own commands", () => {

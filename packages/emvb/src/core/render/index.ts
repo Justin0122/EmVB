@@ -362,7 +362,8 @@ export function renderPage(
         warnings.push({ nodeId, code: "unknown-variable", detail: color.var });
       }
     }
-    const hiddenOn = node.hiddenOn;
+    // W-567: the root is the page itself; hiding it on a device blanked the whole page there.
+    const hiddenOn = isRoot ? undefined : node.hiddenOn;
     const responsive =
       tablet.declarations.length > 0 ||
       mobile.declarations.length > 0 ||
