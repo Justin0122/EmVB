@@ -485,8 +485,9 @@ describe("W-584 blank taxonomy slug", () => {
   });
 
   it("scores a blank slug like no slug (it matches every tag)", () => {
-    const blank = part("blank", "", "2026-01-01T00:00:00Z").conditions.rules[0]!;
-    const none = part("none", undefined, "2026-01-01T00:00:00Z").conditions.rules[0]!;
+    const blank = part("blank", "", "2026-01-01T00:00:00Z").conditions.rules[0];
+    const none = part("none", undefined, "2026-01-01T00:00:00Z").conditions.rules[0];
+    if (!blank || !none) throw new Error("missing rule");
     expect(conditionSpecificity(blank)).toBe(conditionSpecificity(none));
   });
 
