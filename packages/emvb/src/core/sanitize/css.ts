@@ -795,7 +795,7 @@ const ANIMATION_KEYS = ["entrance", "scrollMotion"] as const;
  * A style that sets an entrance or scroll motion keeps the other one it inherits from a wider
  * device or its classes (W-319): both are one `animation` list in CSS.
  */
-export function withInheritedAnimation(style: unknown, inherited: unknown): unknown {
+function withInheritedAnimation(style: unknown, inherited: unknown): unknown {
   if (!isRecord(style) || !isRecord(inherited)) return style;
   if (!ANIMATION_KEYS.some((key) => style[key] !== undefined)) return style;
   const next: Record<string, unknown> = { ...style };

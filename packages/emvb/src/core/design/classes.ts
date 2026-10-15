@@ -180,7 +180,9 @@ export function duplicateClass(
  */
 export function classNameTaken(design: DesignSystem, name: string, exceptId?: string): boolean {
   const wanted = cleanClassName(name).toLowerCase();
-  return (design.classes ?? []).some((c) => c.id !== exceptId && cleanClassName(c.name).toLowerCase() === wanted);
+  return (design.classes ?? []).some(
+    (c) => c.id !== exceptId && cleanClassName(c.name).toLowerCase() === wanted,
+  );
 }
 
 /** The message shown when a new or renamed class would take another class's name (W-277). */

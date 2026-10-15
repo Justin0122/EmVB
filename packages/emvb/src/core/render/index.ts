@@ -25,7 +25,6 @@ import {
   stateDeclarations,
   styleClassName,
   styleDeclarations,
-  withInheritedAnimation,
   withInheritedLayers,
   type Declaration,
   type StateDeclarations,
@@ -280,12 +279,31 @@ export function renderPage(
       ...(fromClasses.entrance ? { entrance: fromClasses.entrance } : {}),
       ...(fromClasses.scrollMotion ? { scrollMotion: fromClasses.scrollMotion } : {}),
     };
+    // W-569: and an own image, gradient or overlay keeps the layers its classes draw, as they
+    // share one background-image stack and the local rule would otherwise replace them.
+    const classLayers = {
+      ...classAnimation,
+      ...Object.fromEntries(
+        (
+          [
+            "backgroundImage",
+            "gradient",
+            "overlay",
+            "backgroundSize",
+            "backgroundPosition",
+            "backgroundRepeat",
+          ] as const
+        )
+          .filter((key) => fromClasses[key] !== undefined)
+          .map((key) => [key, fromClasses[key]]),
+      ),
+    };
     const own = node.style
-      ? (withInheritedAnimation(node.style, classAnimation) as typeof node.style)
+      ? (withInheritedLayers(node.style, classLayers) as typeof node.style)
       : undefined;
     const { declarations, rejected } = styleDeclarations(own);
     // W-210: a device that sets one background layer keeps the layers it inherits.
-    const base = { ...classAnimation, ...own };
+    const base = { ...classLayers, ...own };
     const tabletStyle = node.devices?.tablet;
     const tablet = styleDeclarations(withInheritedLayers(tabletStyle, base));
     const mobile = styleDeclarations(
