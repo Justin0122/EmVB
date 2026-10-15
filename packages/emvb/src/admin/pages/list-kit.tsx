@@ -67,10 +67,16 @@ export function StatusBadge({ status }: { status: string }) {
 
 const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
+/** W-685: a time the browser can't read showed "Invalid time value" by throwing, which blanked the list. */
+const readableTime = (iso: string) => {
+  const time = iso ? Date.parse(iso) : Number.NaN;
+  return Number.isNaN(time) ? "" : formatter.format(time);
+};
+
 export function EditedTime({ iso }: { iso: string }) {
   return (
     <time dateTime={iso} title={iso} className="emvb-tabular">
-      {iso ? formatter.format(new Date(iso)) : ""}
+      {readableTime(iso)}
     </time>
   );
 }

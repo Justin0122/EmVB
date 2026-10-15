@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { act } from "react";
 import { cleanup, mount } from "../../../test/dom/mount.ts";
 import type { Fetcher } from "../api.ts";
-import { matchesSearch } from "./list-kit.tsx";
+import { EditedTime, matchesSearch } from "./list-kit.tsx";
 import { PageList } from "./PageList.tsx";
 
 afterEach(cleanup);
@@ -46,4 +46,9 @@ describe("list search (W-207)", () => {
     await type("zzz");
     expect(document.querySelector("[data-emvb-no-matches]")?.textContent).toContain("zzz");
   });
+});
+
+test("W-685: an unreadable edited time shows nothing instead of breaking the list", async () => {
+  const host = await mount(<EditedTime iso="not a date" />);
+  expect(host.querySelector("time")?.textContent).toBe("");
 });
