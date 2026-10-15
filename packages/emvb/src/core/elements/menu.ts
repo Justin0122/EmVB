@@ -66,6 +66,9 @@ const MENU_CSS = [
   ".emvb-menu-item__toggle{display:inline-flex;align-items:center;justify-content:center;width:1.75rem;height:1.75rem;padding:0;cursor:pointer;list-style:none}",
   ".emvb-menu-item__toggle::-webkit-details-marker{display:none}",
   ".emvb-menu-item__toggle::before{content:'';width:.4rem;height:.4rem;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-1px)}",
+  // W-614: the text toggle reads "Shop ⌄": text first, the chevron after it.
+  ".emvb-menu-item__toggle--label{width:auto;gap:.6rem;padding-inline-end:.35rem}",
+  ".emvb-menu-item__toggle--label::before{order:1}",
   ".emvb-menu-panel{display:none;position:absolute;z-index:30;top:100%;inset-inline-start:0;min-width:12rem;padding:.75rem;background:canvas;color:canvastext;border:1px solid #00000014;box-shadow:0 12px 32px #00000029}",
   ".emvb-menu-item__disclosure[open]>.emvb-menu-panel{display:block}",
   "@media (hover:hover) and (pointer:fine){.emvb-menu-item:hover>.emvb-menu-item__bar>.emvb-menu-item__disclosure>.emvb-menu-panel,.emvb-menu-item:focus-within>.emvb-menu-item__bar>.emvb-menu-item__disclosure>.emvb-menu-panel{display:block}}",
@@ -160,18 +163,27 @@ export const menuItem: ElementDefinition<MenuItemNode> = {
           children: [node.props.text],
         }
       : { tag: "span", attrs: { class: "emvb-menu-item__label" }, children: [node.props.text] };
-    const bar: VNode["children"] = [label];
+    // W-614: with no link, the item's text is the dropdown's toggle, so tapping "Shop" opens it
+    // (the chevron alone was a 28 px target, and the text did nothing on touch screens).
+    const textToggle = !href && children.length > 0;
+    const bar: VNode["children"] = textToggle ? [] : [label];
     if (children.length > 0) {
       const panelClass = wide ? "emvb-menu-panel emvb-menu-panel--wide" : "emvb-menu-panel";
       bar.push({
         tag: "details",
         attrs: { class: "emvb-menu-item__disclosure" },
         children: [
-          {
-            tag: "summary",
-            attrs: { class: "emvb-menu-item__toggle", "aria-label": `Open ${node.props.text}` },
-            children: [],
-          },
+          textToggle
+            ? {
+                tag: "summary",
+                attrs: { class: "emvb-menu-item__toggle emvb-menu-item__toggle--label" },
+                children: [node.props.text],
+              }
+            : {
+                tag: "summary",
+                attrs: { class: "emvb-menu-item__toggle", "aria-label": `Open ${node.props.text}` },
+                children: [],
+              },
           {
             tag: "div",
             attrs: { class: panelClass },

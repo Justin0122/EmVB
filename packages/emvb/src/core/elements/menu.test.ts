@@ -72,11 +72,34 @@ describe("menu", () => {
     expect(html).toContain("emvb-menu--column");
     expect(html).toContain("emvb-menu-item--wide");
     expect(html).toContain("emvb-menu-panel--wide");
-    expect(html).toContain('class="emvb-menu-item__label"');
+    // W-614: with no usable link, the item's own text is the dropdown toggle.
+    expect(html).toContain(
+      '<summary class="emvb-menu-item__toggle emvb-menu-item__toggle--label">More</summary>',
+    );
     expect(html.includes("javascript:")).toBe(false);
     expect(html).toContain('aria-label="Menu"');
     expect(css).toContain(".emvb-menu-panel{");
     expect(css).toContain("flex-direction:inherit");
+  });
+
+  test("a label-only item with a dropdown opens it from its text; a plain label stays a span (W-614)", () => {
+    const menu: LayoutNode = {
+      id: "menu0001",
+      type: "menu",
+      props: { direction: "row" },
+      children: [
+        item("item0001", "Shop", { children: [item("item0002", "Hats", { href: "/hats" })] }),
+        item("item0003", "Note"),
+      ],
+    };
+    const { html, css } = renderPage(page(menu), design);
+    expect(html).toContain(
+      '<summary class="emvb-menu-item__toggle emvb-menu-item__toggle--label">Shop</summary>',
+    );
+    expect(html).not.toContain('aria-label="Open Shop"');
+    expect(html).not.toContain('<span class="emvb-menu-item__label">Shop</span>');
+    expect(html).toContain('<span class="emvb-menu-item__label">Note</span>');
+    expect(css).toContain(".emvb-menu-item__toggle--label{");
   });
 
   test("a menu item only drops inside a menu", () => {
