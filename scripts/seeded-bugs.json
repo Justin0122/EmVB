@@ -23628,8 +23628,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/restore-deleted.ts",
-          "search": "      classes.splice(Math.min(deletion.index, classes.length), 0, deletion.cls);",
-          "replace": "      classes.push(deletion.cls);"
+          "search": "      classes.splice(Math.min(deletion.index, classes.length), 0, cls);",
+          "replace": "      classes.push(cls);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/restore-deleted.test.ts"],

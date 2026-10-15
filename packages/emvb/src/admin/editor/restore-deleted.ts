@@ -1,4 +1,6 @@
 import type { DesignSystem, Layout, VariableKind } from "../../core/index.ts";
+import { nameKey } from "../../core/design/classes.ts";
+import { clipText } from "../../core/limits.ts";
 
 type Variables = DesignSystem["variables"];
 type ListKey = keyof Variables;
@@ -44,6 +46,19 @@ export function deletionOf(
 }
 
 /**
+ * W-575: `name`, or "name 2", "name 3"… when another item in `list` has it now (made after the
+ * delete). Two classes or two colours with one name can't be told apart in the pickers.
+ */
+function freeName(name: string, list: readonly { name: string }[]): string {
+  const taken = new Set(list.map((item) => nameKey(item.name)));
+  let candidate = name;
+  // Names are at most 60 characters; the stem is cut so the number still fits.
+  const stem = clipText(name, 56).trim();
+  for (let n = 2; taken.has(nameKey(candidate)) && n < 1000; n++) candidate = `${stem} ${n}`;
+  return candidate;
+}
+
+/**
  * W-252: Site styles changes aren't undo steps, but deleting a variable or class also clears its
  * uses on the page, which is one. Undoing that brought the uses back with nothing defining them.
  * When the page is again exactly the one from before a deletion (undo restores that object), the
@@ -61,13 +76,15 @@ export function restoreOnUndo(
     if (deletion.before !== layout) continue;
     if (deletion.kind === "class") {
       if (classes.some((c) => c.id === deletion.cls.id)) continue;
-      classes.splice(Math.min(deletion.index, classes.length), 0, deletion.cls);
+      const cls = { ...deletion.cls, name: freeName(deletion.cls.name, classes) };
+      classes.splice(Math.min(deletion.index, classes.length), 0, cls);
       classRestored = true;
     } else {
       const key = LIST[deletion.variableKind];
       const list = variables[key] ?? [...(design.variables[key] ?? [])];
       if (list.some((v) => v.id === deletion.variable.id)) continue;
-      list.splice(Math.min(deletion.index, list.length), 0, deletion.variable);
+      const variable = { ...deletion.variable, name: freeName(deletion.variable.name, list) };
+      list.splice(Math.min(deletion.index, list.length), 0, variable);
       variables[key] = list;
     }
   }

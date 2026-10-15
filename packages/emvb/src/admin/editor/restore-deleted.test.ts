@@ -83,3 +83,39 @@ describe("restoreOnUndo (W-252)", () => {
     expect(history.present.page.layout).toBe(page);
   });
 });
+
+test("W-575: a restored class or variable whose name was taken meanwhile comes back renamed", () => {
+  const cls = deletionOf(design, page, { kind: "class", id: "card" });
+  const brand = deletionOf(design, page, { kind: "variable", id: "brand", variableKind: "color" });
+  if (!cls || !brand) throw new Error("no deletion");
+  // After both deletes, a new "card" class and a "BRAND" colour were made.
+  const now: DesignSystem = {
+    ...design,
+    variables: {
+      ...design.variables,
+      colors: [
+        { id: "ink", name: "Ink", value: "#111111" },
+        { id: "brand2", name: "BRAND", value: "#00ff00" },
+        { id: "paper", name: "Paper", value: "#ffffff" },
+      ],
+    },
+    classes: [
+      { id: "tint", name: "Tint", style: {} },
+      { id: "card2", name: "card", style: {} },
+    ],
+  };
+  const restored = restoreOnUndo(now, page, [cls, brand]);
+  expect(restored?.classes?.find((c) => c.id === "card")?.name).toBe("Card 2");
+  expect(restored?.variables.colors.find((v) => v.id === "brand")?.name).toBe("Brand 2");
+  // A free name is kept as it was.
+  const plain = restoreOnUndo({ ...design, classes: [] }, page, [cls]);
+  expect(plain?.classes?.[0]?.name).toBe("Card");
+  // A 60-character name still fits with its number.
+  const long = "L".repeat(60);
+  if (cls.kind !== "class") throw new Error("not a class");
+  const longCls = { ...cls, cls: { ...cls.cls, name: long } };
+  const taken = { ...design, classes: [{ id: "x", name: long, style: {} }] };
+  expect(restoreOnUndo(taken, page, [longCls])?.classes?.find((c) => c.id === "card")?.name).toBe(
+    `${"L".repeat(56)} 2`,
+  );
+});
