@@ -217,6 +217,9 @@ function repeatsARiskyGroup(pattern: string): boolean {
     }
     if (ch === "(") {
       stack.push({ risky: false });
+      // W-594: the `?` of `(?:`, `(?=`, `(?!`, `(?<=`, `(?<!` or `(?<name>` is not a quantifier.
+      const prefix = /^\?(?::|=|!|<=|<!|<[A-Za-z_$][\w$]*>)/.exec(pattern.slice(i + 1));
+      if (prefix) i += prefix[0].length;
       continue;
     }
     if (ch === ")") {

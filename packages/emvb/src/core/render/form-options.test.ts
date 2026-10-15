@@ -254,6 +254,37 @@ describe("form fields take the definition's type and limits (W-297)", () => {
     }
   });
 
+  test("a repeated non-capturing or lookahead group is kept (W-594)", () => {
+    const render = (pattern: string) =>
+      renderPage(typedLayout, emptyDesign(), {
+        formDefinitions: new Map([
+          [
+            "contact",
+            {
+              ...typed,
+              pages: [
+                {
+                  fields: [
+                    {
+                      name: "email",
+                      type: "email",
+                      label: "Email",
+                      required: false,
+                      validation: { pattern },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        ]),
+      }).html;
+    expect(render("(?:ab)+")).toContain('pattern="(?:ab)+"');
+    expect(render("(?=.*\\d)(?:ab)+")).toContain("pattern=");
+    expect(render("(?:a+)+")).not.toContain("pattern=");
+    expect(render("(?:a|aa)+")).not.toContain("pattern=");
+  });
+
   test("an alternating form pattern that can hang the browser is left off the control", () => {
     const bad: PublicFormDefinition = {
       ...typed,
