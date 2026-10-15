@@ -27839,8 +27839,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/elements/index.ts",
-          "search": "    if (!url || /[\\s,]/.test(url) || seen.has(url)) continue;\n",
-          "replace": "    if (!url || /\\s/.test(url) || seen.has(url)) continue;\n"
+          "search": "    if (!url || /[\\s,]/.test(url) || seen.has(url) || widths.has(source.width)) continue;\n",
+          "replace": "    if (!url || /\\s/.test(url) || seen.has(url) || widths.has(source.width)) continue;\n"
         }
       ],
       "command": [
