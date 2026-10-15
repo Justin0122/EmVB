@@ -37,7 +37,8 @@ type Size = { width: number; height: number };
 export function cappedWidth(full: Size, maxSide = DEFAULT_MAX_SIDE): number | null {
   const longest = Math.max(full.width, full.height);
   if (longest <= maxSide) return null;
-  return Math.max(1, Math.round((full.width * maxSide) / longest));
+  // W-581: floor, so rounding never pushes the following height past the cap (tall strips).
+  return Math.max(1, Math.floor((full.width * maxSide) / longest));
 }
 
 /** Output size for a chosen width (null = full size); the height follows the crop. */

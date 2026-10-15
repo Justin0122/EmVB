@@ -32,6 +32,15 @@ describe("export settings (W-485)", () => {
     expect(cappedWidth({ width: 2560, height: 100 })).toBeNull();
     expect(outputSize({ width: 4000, height: 3000 }, 2560)).toEqual({ width: 2560, height: 1920 });
     expect(outputSize({ width: 640, height: 480 }, null)).toEqual({ width: 640, height: 480 });
+    // W-581: a tall strip's height must stay within the cap after rounding the width.
+    for (const full of [
+      { width: 100, height: 10000 },
+      { width: 7, height: 9001 },
+      { width: 1001, height: 3000 },
+    ]) {
+      const out = outputSize(full, cappedWidth(full));
+      expect(Math.max(out.width, out.height)).toBeLessThanOrEqual(2560);
+    }
   });
   test("copies are named after the original, without stacking -edited", () => {
     expect(editedFileName("garden.jpg", "webp")).toBe("garden-edited.webp");
