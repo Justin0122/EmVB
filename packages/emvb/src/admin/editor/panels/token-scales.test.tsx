@@ -40,4 +40,64 @@ describe("Scales in Site styles (W-316)", () => {
       true,
     );
   });
+
+  const type = async (selector: string, value: string) => {
+    const field = document.querySelector(selector) as HTMLInputElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(field, value);
+      field.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  };
+  const apply = async () => {
+    await act(async () => {
+      (document.querySelector("[data-emvb-tokens-apply]") as HTMLButtonElement).click();
+    });
+  };
+  const status = () => document.querySelector('[role="status"]')?.textContent ?? null;
+
+  test("a save that fails doesn't report the scale as added (W-609)", async () => {
+    await mount(<TokenScales design={emptyDesign()} onSave={async () => false} />);
+    await apply();
+    expect(status()).toBeNull();
+  });
+
+  test("the count says what fit under the list's limit (W-609)", async () => {
+    const design = emptyDesign();
+    const spacings = Array.from({ length: 95 }, (_, i) => ({
+      id: `gap${i}`,
+      name: `Gap ${i}`,
+      value: { value: i + 1, unit: "px" as const },
+    }));
+    await mount(
+      <TokenScales
+        design={{ ...design, variables: { ...design.variables, spacings } }}
+        onSave={async () => undefined}
+      />,
+    );
+    await act(async () => {
+      const kind = document.querySelector("[data-emvb-tokens-kind]") as HTMLSelectElement;
+      kind.value = "space";
+      kind.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await apply();
+    expect(status()).toBe("5 added in Spacing. 4 didn't fit: Spacing holds up to 100.");
+  });
+
+  test("a small-screen size out of range says the sizes won't be fluid (W-609)", async () => {
+    await mount(<TokenScales design={emptyDesign()} onSave={async () => undefined} />);
+    await type("[data-emvb-tokens-min]", "4");
+    expect(document.querySelector("[data-emvb-tokens-min-error]")?.textContent).toContain(
+      "8 to 64 px",
+    );
+    await type("[data-emvb-tokens-min]", "14");
+    expect(document.querySelector("[data-emvb-tokens-min-error]")).toBeNull();
+  });
+
+  test("changing a number clears the last Added message (W-609)", async () => {
+    await mount(<TokenScales design={emptyDesign()} onSave={async () => undefined} />);
+    await apply();
+    expect(status()).toBe("8 added in Font sizes.");
+    await type("[data-emvb-tokens-base]", "20");
+    expect(status()).toBeNull();
+  });
 });

@@ -25,7 +25,8 @@ export function TokenScales({
   onSave,
 }: {
   design: DesignSystem;
-  onSave: (design: DesignSystem) => Promise<void>;
+  /** Resolves false when the save failed (the drawer shows why). */
+  onSave: (design: DesignSystem) => Promise<boolean | void>;
 }) {
   const [kind, setKind] = React.useState<"type" | "space">("type");
   const [base, setBase] = React.useState("18");
@@ -33,6 +34,12 @@ export function TokenScales({
   const [fluid, setFluid] = React.useState(true);
   const [ratio, setRatio] = React.useState(String(SCALE_RATIOS[2].value));
   const [done, setDone] = React.useState<string | null>(null);
+  // W-609: an "added" message is about the scale as it was; editing the numbers clears it.
+  const edit =
+    (setter: (value: string) => void) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      setter(event.currentTarget.value);
+      setDone(null);
+    };
   const input = {
     base: num(base) ?? Number.NaN,
     ...(fluid && num(minBase) !== undefined ? { minBase: num(minBase) } : {}),
@@ -46,6 +53,9 @@ export function TokenScales({
         })
       : spaceScale(input);
   const range = design.fluidRange;
+  const [lo, hi] = kind === "type" ? [8, 64] : [2, 64];
+  const minValue = num(minBase);
+  const minOff = fluid && !(minValue !== undefined && minValue >= lo && minValue <= hi);
   const list = kind === "type" ? "fontSizes" : "spacings";
   const updating = tokens.filter((t) =>
     (design.variables[list] ?? []).some((v) => v.id === t.id),
@@ -77,7 +87,7 @@ export function TokenScales({
             inputMode="decimal"
             value={base}
             data-emvb-tokens-base=""
-            onChange={(event) => setBase(event.currentTarget.value)}
+            onChange={edit(setBase)}
           />
         </label>
         {kind === "type" && (
@@ -114,9 +124,15 @@ export function TokenScales({
               inputMode="decimal"
               value={minBase}
               data-emvb-tokens-min=""
-              onChange={(event) => setMinBase(event.currentTarget.value)}
+              onChange={edit(setMinBase)}
+              aria-invalid={minOff ? true : undefined}
             />
           </label>
+        )}
+        {minOff && (
+          <p className="emvb-helper" data-emvb-tokens-min-error="">
+            {`Use a small-screen size from ${lo} to ${hi} px. Until then the sizes aren't fluid.`}
+          </p>
         )}
       </div>
       {tokens.length === 0 ? (
@@ -151,11 +167,20 @@ export function TokenScales({
         disabled={tokens.length === 0}
         data-emvb-tokens-apply=""
         onClick={() => {
-          void onSave(applyTokens(design, list, tokens)).then(() =>
+          const next = applyTokens(design, list, tokens);
+          const label = kind === "type" ? "Font sizes" : "Spacing";
+          // W-609: count what landed under the list's limit, not what was generated.
+          const added = (next.variables[list] ?? []).length - (design.variables[list] ?? []).length;
+          const left = tokens.length - updating - added;
+          void onSave(next).then((ok) => {
+            if (ok === false) return;
             setDone(
-              `${tokens.length - updating} added${updating ? `, ${updating} updated` : ""} in ${kind === "type" ? "Font sizes" : "Spacing"}.`,
-            ),
-          );
+              `${added} added${updating ? `, ${updating} updated` : ""} in ${label}.` +
+                (left > 0
+                  ? ` ${left} didn't fit: ${label} holds up to ${list === "fontSizes" ? 50 : 100}.`
+                  : ""),
+            );
+          });
         }}
       >
         {updating > 0 ? "Update the scale in site styles" : "Add the scale to site styles"}

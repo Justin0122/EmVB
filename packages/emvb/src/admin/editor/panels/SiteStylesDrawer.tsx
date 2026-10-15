@@ -87,12 +87,14 @@ export function SiteStylesDrawer({
     renamed: ImportRename[];
   } | null>(null);
 
-  const save = async (next: DesignSystem) => {
+  const save = async (next: DesignSystem): Promise<boolean> => {
     setError(null);
     try {
       await onDesignChange(next);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't save site styles. Try again.");
+      return false;
     }
   };
 
