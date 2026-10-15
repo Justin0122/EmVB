@@ -20,6 +20,13 @@ describe("portableTextToVNodes", () => {
     expect(portableTextToVNodes("Hello")).toEqual([{ tag: "p", attrs: {}, children: ["Hello"] }]);
   });
 
+  test("W-662: plain-text content keeps its paragraphs and line breaks", () => {
+    expect(portableTextToVNodes("One\r\n\r\nTwo\nlines\n  \n\n")).toEqual([
+      { tag: "p", attrs: {}, children: ["One"] },
+      { tag: "p", attrs: {}, children: ["Two", { tag: "br", attrs: {}, children: [] }, "lines"] },
+    ]);
+  });
+
   test("portable text blocks become escaped structure tags", () => {
     const blocks = [
       {

@@ -172,8 +172,14 @@ const hasText = (nodes: readonly (VNode | string)[]): boolean =>
  */
 export function portableTextToVNodes(value: unknown): VNode[] {
   if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed ? [{ tag: "p", attrs: {}, children: [trimmed] }] : [];
+    // W-662: plain-text content kept its blank lines and line breaks as raw newlines, which
+    // the page collapses, so every paragraph ran together into one.
+    return value
+      .replaceAll("\r\n", "\n")
+      .split(/\n[ \t]*\n/)
+      .map((para) => para.trim())
+      .filter(Boolean)
+      .map((para) => ({ tag: "p", attrs: {}, children: withBreaks(para) }));
   }
   if (!Array.isArray(value)) return [];
   const out: VNode[] = [];
