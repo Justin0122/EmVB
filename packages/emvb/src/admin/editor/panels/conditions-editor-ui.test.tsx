@@ -172,3 +172,48 @@ describe("the condition limit (W-092)", () => {
     expect(validateConditions(view.sent[0]).ok).toBe(true);
   });
 });
+
+describe("rules the menu can't build show as themselves (W-694)", () => {
+  const doc = (rule: Record<string, unknown>): ConditionsDoc =>
+    ({
+      schemaVersion: CONDITIONS_SCHEMA_VERSION,
+      rules: [{ id: "r1", op: "include", args: {}, ...rule }],
+    }) as ConditionsDoc;
+  const shown = async (rule: Record<string, unknown>) => {
+    const sent: ConditionsDoc[] = [];
+    const host = await mount(
+      <ConditionsEditor conditions={doc(rule)} onChange={(d) => sent.push(d)} />,
+    );
+    const select = host.querySelector<HTMLSelectElement>(".emvb-condition-where");
+    return { text: select?.selectedOptions[0]?.textContent, sent };
+  };
+
+  test("the Archive part's default reads All archives, not Entire site", async () => {
+    expect((await shown({ group: "archive", name: "all" })).text).toBe("All archives");
+  });
+
+  test("one tag, one entry and another collection keep their own label", async () => {
+    expect(
+      (await shown({ group: "archive", name: "taxonomy", args: { taxonomy: "tag", slug: "news" } }))
+        .text,
+    ).toBe("Tag: news");
+    expect(
+      (
+        await shown({
+          group: "singular",
+          name: "entry",
+          args: { collection: "posts", id: "01ABC" },
+        })
+      ).text,
+    ).toBe("One entry (posts 01ABC)");
+    expect(
+      (await shown({ group: "singular", name: "collection", args: { collection: "docs" } })).text,
+    ).toBe("docs (all)");
+  });
+
+  test("a plain rule still shows its option", async () => {
+    expect(
+      (await shown({ group: "archive", name: "taxonomy", args: { taxonomy: "tag" } })).text,
+    ).toBe("All tags");
+  });
+});
