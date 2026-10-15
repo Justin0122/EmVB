@@ -15,4 +15,10 @@ describe("links as people type them", () => {
     expect(sanitizeHref("mailto:a@x.com?subject=a\tb")).toBeUndefined();
     expect(sanitizeHref("/a b")).toBe("/a b");
   });
+  test("W-683: a page link in another script, like a Unicode page slug, is kept", () => {
+    expect(sanitizeHref("über-uns")).toBe("über-uns");
+    expect(sanitizeHref("контакты#форма")).toBe("контакты#форма");
+    expect(sanitizeHref("お問い合わせ")).toBe("お問い合わせ");
+    expect(sanitizeHref("\u202Eevil")).toBeUndefined();
+  });
 });

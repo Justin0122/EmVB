@@ -20,7 +20,8 @@ export function sanitizeUrl(value: string, schemes: ReadonlySet<string>): string
     // second address hides in the same string.
     if (/[^\S ]|\\/.test(trimmed)) return undefined;
     // Relative: /path, ./path, ../path, ?query, #hash, or bare path segment
-    if (/^(?:[/?#.]|[A-Za-z0-9._~-])/.test(trimmed)) return trimmed;
+    // W-683: or one that starts in another script ("über-uns", "контакты"), like page slugs (W-554).
+    if (/^(?:[/?#.]|[\p{L}\p{N}._~-])/u.test(trimmed)) return trimmed;
     return undefined;
   }
 
