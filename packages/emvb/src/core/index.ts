@@ -452,6 +452,7 @@ export {
 export {
   abCookieName,
   collectAbTests,
+  loneAbTests,
   pickArm,
   variantShows,
   type AbArm,

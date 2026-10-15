@@ -16,11 +16,14 @@ const NO_VARIANT = new Set(["tab-panel", "accordion-item", "loop-empty", "option
 export function VariantEditor({
   node,
   isRoot,
+  lone = false,
   onChange,
   onArrange,
 }: {
   node: LayoutNode;
   isRoot: boolean;
+  /** W-627: the test's other arm is gone, so this one shows to every visitor. */
+  lone?: boolean;
   onChange: (node: LayoutNode) => void;
   onArrange?: (run: (layout: Layout) => Arranged) => void;
 }) {
@@ -50,7 +53,13 @@ export function VariantEditor({
             Variant {v.arm.toUpperCase()} of test <b>{v.test}</b>. The canvas shows every variant;
             visitors see one.
           </p>
-          {v.arm === "b" && (
+          {lone && (
+            <p className="emvb-helper" data-emvb-variant-lone="">
+              Variant {v.arm === "a" ? "B" : "A"} was removed, so every visitor sees this one. End
+              the test to tidy it up.
+            </p>
+          )}
+          {v.arm === "b" && !lone && (
             <label className="emvb-bind-row">
               <span className="emvb-bind-label">Visitors who see B (%)</span>
               <input

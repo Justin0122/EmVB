@@ -25,6 +25,7 @@ import {
   localStylesToClass,
   localToClassRefusal,
   isFormNode,
+  loneAbTests,
   type DesignSystem,
   type ElementDescriptor,
   type Layout,
@@ -501,6 +502,7 @@ function KnownElementPanel({
           <VariantEditor
             node={node}
             isRoot={layout?.root.id === node.id}
+            lone={Boolean(layout && node.variant && loneAbTests(layout).has(node.variant.test))}
             onChange={onChange}
             onArrange={onArrange}
           />

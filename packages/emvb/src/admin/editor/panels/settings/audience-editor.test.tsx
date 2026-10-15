@@ -165,3 +165,33 @@ test("clearing one hour field keeps the other one (W-615)", async () => {
   await act(async () => change(q("[data-emvb-audience-from]"), ""));
   expect(node.audience?.hours).toBeUndefined();
 });
+
+test("an arm whose partner is gone says every visitor sees it (W-627)", async () => {
+  const arm = {
+    id: "head0001",
+    type: "heading",
+    props: { text: "Hi", level: 2 },
+    variant: { test: "hero", arm: "a" },
+  } as LayoutNode;
+  await mount(
+    <VariantEditor
+      node={arm}
+      isRoot={false}
+      lone
+      onChange={() => undefined}
+      onArrange={() => undefined}
+    />,
+  );
+  expect(document.querySelector("[data-emvb-variant-lone]")?.textContent).toContain(
+    "Variant B was removed",
+  );
+  await rerender(
+    <VariantEditor
+      node={arm}
+      isRoot={false}
+      onChange={() => undefined}
+      onArrange={() => undefined}
+    />,
+  );
+  expect(document.querySelector("[data-emvb-variant-lone]")).toBeNull();
+});
