@@ -152,7 +152,7 @@ describe("form fields take the definition's type and limits (W-297)", () => {
       '<input type="email" class="ec-form-input" id="emvb-field-text0001" name="email" required="" minlength="5" maxlength="80" pattern=".+@example.com">',
     );
     expect(html).toContain(
-      '<input type="number" class="ec-form-input" id="emvb-field-text0002" name="age" min="18" max="99">',
+      '<input type="number" class="ec-form-input" id="emvb-field-text0002" name="age" min="18" max="99" step="any">',
     );
     expect(html).toContain(
       '<input type="date" class="ec-form-input" id="emvb-field-text0003" name="when">',
@@ -166,6 +166,12 @@ describe("form fields take the definition's type and limits (W-297)", () => {
     expect(marks).toBe(3);
     // W-441: the checkbox's mark is hidden from screen readers too, not a plain " *".
     expect(html).toContain('I agree<span class="emvb-form-required" aria-hidden="true"> *</span>');
+  });
+
+  test("W-578: a number field takes decimals, as the forms plugin's server does", () => {
+    // Without step="any" the browser's step of 1 (counted from min) refused 2.5, and with a
+    // min of 0.5 it refused every whole number, so the forms client blocked valid answers.
+    expect(html).toMatch(/name="age"[^>]*step="any"/);
   });
 
   test("a field the definition doesn't have keeps a plain, optional text input", () => {

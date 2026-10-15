@@ -329,6 +329,9 @@ function withFieldMeta(vnode: VNode, node: LayoutNode, meta: PublicFormField): V
     if (kind === "number") {
       if (rules.min !== undefined) limits.min = String(rules.min);
       if (rules.max !== undefined) limits.max = String(rules.max);
+      // W-578: the forms plugin accepts any number; the browser's default step of 1 refused
+      // decimals (and, counted from a fractional min, every whole number).
+      limits.step = "any";
     }
     if (node.type === "text-input" && kind !== "number" && kind !== "date" && rules.pattern) {
       const pattern = safeInputPattern(rules.pattern);
