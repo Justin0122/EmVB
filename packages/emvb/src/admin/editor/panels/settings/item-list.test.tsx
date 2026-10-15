@@ -273,16 +273,17 @@ describe("Accordion and Tabs item editing (W-130)", () => {
     const store = new Map<string, string>();
     const transfer = {
       types: [] as string[],
-      setData(type: string, value: string) {
-        store.set(type, value);
+      setData(format: string, value: string) {
+        store.set(format, value);
         this.types = [...store.keys()];
       },
-      getData: (type: string) => store.get(type) ?? "",
+      getData: (format: string) => store.get(format) ?? "",
       effectAllowed: "all",
       dropEffect: "none",
     };
-    const fire = (target: Element, type: string) => {
-      const event = new Event(type, { bubbles: true, cancelable: true });
+    const fire = (target: Element | undefined, kind: string) => {
+      if (!target) throw new Error(`no target for ${kind}`);
+      const event = new Event(kind, { bubbles: true, cancelable: true });
       Object.defineProperty(event, "dataTransfer", { value: transfer });
       act(() => {
         target.dispatchEvent(event);
@@ -292,20 +293,20 @@ describe("Accordion and Tabs item editing (W-130)", () => {
     const inputs = [...document.querySelectorAll<HTMLInputElement>("[data-emvb-item] input")];
     // The browser puts the selected text on the transfer; the row must not replace it with its id.
     transfer.setData("text/plain", "Fir");
-    fire(inputs[0]!, "dragstart");
+    fire(inputs[0], "dragstart");
     expect(transfer.getData("text/plain")).toBe("Fir");
     // Dropping the text onto the other field is left to the browser, not taken as a reorder.
-    const over = fire(inputs[1]!, "dragover");
+    const over = fire(inputs[1], "dragover");
     expect(over.defaultPrevented).toBe(false);
     transfer.setData("text/plain", "itm00001");
-    const drop = fire(inputs[1]!, "drop");
+    const drop = fire(inputs[1], "drop");
     expect(drop.defaultPrevented).toBe(false);
     expect(calls.changed.length).toBe(0);
     // Dragging the row itself still reorders.
     const rows = [...document.querySelectorAll("[data-emvb-item]")];
-    fire(rows[0]!, "dragstart");
-    expect(fire(rows[1]!, "dragover").defaultPrevented).toBe(true);
-    expect(fire(rows[1]!, "drop").defaultPrevented).toBe(true);
+    fire(rows[0], "dragstart");
+    expect(fire(rows[1], "dragover").defaultPrevented).toBe(true);
+    expect(fire(rows[1], "drop").defaultPrevented).toBe(true);
     expect(calls.changed.at(-1)?.children?.map((c) => c.id)).toEqual(["itm00002", "itm00001"]);
   });
 });

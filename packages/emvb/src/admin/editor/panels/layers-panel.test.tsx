@@ -549,14 +549,16 @@ describe("renaming a layer (W-157)", () => {
     await act(async () => {
       select("head0001").dispatchEvent(new KeyboardEvent("keydown", { key: "F2", bubbles: true }));
     });
-    for (const key of ["Enter", "Escape"]) {
+    const composeKey = async (key: string) => {
       await act(async () => {
         field()?.dispatchEvent(
           new KeyboardEvent("keydown", { key, isComposing: true, keyCode: 229, bubbles: true }),
         );
       });
       expect(field()).not.toBeNull();
-    }
+    };
+    await composeKey("Enter");
+    await composeKey("Escape");
     expect(renames).toEqual([]);
     await typeName("見出し", "Enter");
     expect(renames).toEqual([["head0001", "見出し"]]);
