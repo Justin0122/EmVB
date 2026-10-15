@@ -261,6 +261,32 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(same.summary).toContain("Nothing changed");
   });
 
+  test("update_site_styles refuses a class or variable name another one has (W-573)", async () => {
+    await call("update_site_styles", {
+      classes: [{ id: "card", name: "Café card", style: {} }],
+      variables: { colors: [{ id: "brand", name: "Brand", value: "#0055ff" }] },
+    });
+    const cls = await fail("update_site_styles", {
+      classes: [{ id: "card-2", name: "cafe\u0301 CARD", style: {} }],
+    });
+    expect(cls.code).toBe("INVALID_INPUT");
+    expect(cls.message).toContain("Café card");
+    const twice = await fail("update_site_styles", {
+      variables: {
+        colors: [
+          { id: "a", name: "Accent", value: "#111111" },
+          { id: "b", name: "accent", value: "#222222" },
+        ],
+      },
+    });
+    expect(twice.message).toContain("Accent");
+    // Renaming in place and other kinds sharing a name are fine.
+    await call("update_site_styles", {
+      classes: [{ id: "card", name: "Café card", style: { color: "#000000" } }],
+      variables: { spacings: [{ id: "brand", name: "Brand", value: { value: 8, unit: "px" } }] },
+    });
+  });
+
   test("update_site_styles refuses a font stack the site CSS would drop (W-547)", async () => {
     const error = await fail("update_site_styles", {
       variables: { fonts: [{ id: "agent-font", name: "Agent font", value: "Inter; color: red" }] },

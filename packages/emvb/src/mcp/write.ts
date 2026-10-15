@@ -4,6 +4,7 @@ import {
   defaultElement,
   findNode,
   MAX_LAYOUT_BYTES,
+  nameKey,
   nestingIssues,
   recipeNode,
   SECTION_RECIPES,
@@ -758,6 +759,30 @@ export async function updateSiteStyles(
     if (input.direction) {
       draft["direction"] = input.direction;
       changes.push(`direction ${input.direction}`);
+    }
+    // W-573: the editor keeps class names, and variable names within a kind, unique (W-277,
+    // W-278); an agent's new or renamed one can't take another's name either.
+    const clash = (list: Item[] | undefined, touched: unknown[] | undefined, what: string) => {
+      const ids = new Set((touched ?? []).map((item) => (item as { id?: unknown }).id));
+      const seen = new Map<string, Item>();
+      for (const item of list ?? []) {
+        const name = (item as { name?: unknown }).name;
+        if (typeof name !== "string") continue;
+        const key = nameKey(name);
+        const other = seen.get(key);
+        if (other && (ids.has(item.id) || ids.has(other.id))) {
+          const taken = String((other as { name?: unknown }).name);
+          throw new McpToolError(
+            "INVALID_INPUT",
+            `${what} ${item.id} and ${other.id} would both be named "${taken}". Pick another name.`,
+          );
+        }
+        if (!other) seen.set(key, item);
+      }
+    };
+    clash(draft.classes, input.classes, "Classes");
+    for (const kind of VARIABLE_KINDS) {
+      clash(draft.variables[kind], input.variables?.[kind], `Variables (${kind})`);
     }
     if (changes.length === 0) refused("Nothing to change.");
     const result = validateDesign(draft);
