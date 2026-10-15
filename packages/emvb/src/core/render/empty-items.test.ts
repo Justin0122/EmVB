@@ -38,3 +38,28 @@ describe("W-275 empty Tabs and blank list items", () => {
     expect(renderPage(page(blank), design).html).toContain('<ul class="emvb-list"></ul>');
   });
 });
+
+describe("W-664 blank Tab and Accordion titles", () => {
+  test("a tab label of only spaces gets a numbered name", () => {
+    const tabs = {
+      id: "tabs0003",
+      type: "tabs",
+      props: {},
+      children: [
+        { id: "tabp0002", type: "tab-panel", props: { label: "One" }, children: [] },
+        { id: "tabp0003", type: "tab-panel", props: { label: "   " }, children: [] },
+      ],
+    } as LayoutNode;
+    expect(renderPage(page(tabs), design).html).toMatch(/role="tab"[^>]*>Tab 2<\/label>/);
+  });
+
+  test("an accordion title of only spaces still names its toggle", () => {
+    const item = {
+      id: "acci0001",
+      type: "accordion-item",
+      props: { summary: "  " },
+      children: [],
+    } as LayoutNode;
+    expect(renderPage(page(item), design).html).toContain("<summary>Details</summary>");
+  });
+});

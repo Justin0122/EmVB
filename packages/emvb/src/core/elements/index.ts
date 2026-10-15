@@ -1088,7 +1088,9 @@ const accordionItem: ElementDefinition<AccordionItemNode> = {
     ],
   },
   build: (node, attrs, children) => {
-    const summary: VNode = { tag: "summary", attrs: {}, children: [node.props.summary] };
+    // W-664: a title of only spaces left a blank, unnamed toggle.
+    const title = node.props.summary.trim() || "Details";
+    const summary: VNode = { tag: "summary", attrs: {}, children: [title] };
     const body: VNode = { tag: "div", attrs: { class: "emvb-accordion-body" }, children };
     return {
       tag: "details",

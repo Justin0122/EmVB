@@ -40,7 +40,8 @@ export function renderTabs(
         "aria-controls": panelDomId,
         tabindex: i === 0 ? "0" : "-1",
       },
-      children: [panel.props.label],
+      // W-664: a label of only spaces made a zero-width tab nobody could click or hear.
+      children: [panel.props.label.trim() || `Tab ${i + 1}`],
     });
     // W-598: the panel renders like any element, so its own style, classes and device
     // visibility reach the page; the tab wiring is added on top.
