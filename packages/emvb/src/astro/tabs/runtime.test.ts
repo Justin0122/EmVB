@@ -173,6 +173,25 @@ describe("tabs runtime (W-078)", () => {
     expect(state(root)[2]).toBe("checked true 0 false focused");
   });
 
+  test("W-675: Alt+Arrow (browser Back/Forward) and Ctrl/Cmd shortcuts are left to the browser", () => {
+    const root = threeTabs("tabs-mod");
+    initTabs(document);
+    const before = state(root);
+    for (const mod of ["altKey", "ctrlKey", "metaKey"] as const) {
+      for (const key of ["ArrowLeft", "ArrowRight", "Home", "End"]) {
+        const event = new KeyboardEvent("keydown", {
+          key,
+          [mod]: true,
+          bubbles: true,
+          cancelable: true,
+        });
+        root.querySelector(":scope > .emvb-tab-list")?.dispatchEvent(event);
+        expect(event.defaultPrevented).toBe(false);
+      }
+    }
+    expect(state(root)).toEqual(before);
+  });
+
   test("choosing a radio directly keeps ARIA in step", () => {
     const root = threeTabs("tabs-c");
     initTabs(document);
