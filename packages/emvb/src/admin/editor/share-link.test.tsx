@@ -72,4 +72,17 @@ describe("W-321 Share as a playground link", () => {
   test("W-321 counts only site-only media", () => {
     expect(siteOnlyMedia(layout)).toBe(1);
   });
+
+  test("site-only backgrounds in device and hover styles count too (W-631)", () => {
+    const box = {
+      id: "box00001",
+      type: "container",
+      props: {},
+      devices: { mobile: { backgroundImage: "/uploads/m.png" } },
+      states: { hover: { backgroundImage: "/uploads/h.png" } },
+      children: [],
+    };
+    const page = { ...layout, root: { ...layout.root, children: [box] } } as unknown as Layout;
+    expect(siteOnlyMedia(page)).toBe(2);
+  });
 });

@@ -18,12 +18,17 @@ const siteOnly = (value: unknown) =>
 export function siteOnlyMedia(layout: Layout): number {
   let count = 0;
   const visit = (node: LayoutNode) => {
-    const props = node.props as Record<string, unknown>;
-    const style = (node.style ?? {}) as Record<string, unknown>;
-    for (const key of MEDIA_KEYS) {
-      const raw = props[key] ?? style[key];
-      const url = typeof raw === "object" && raw !== null ? (raw as { url?: unknown }).url : raw;
-      if (siteOnly(url)) count += 1;
+    const devices = (node.devices ?? {}) as Record<string, unknown>;
+    const states = (node.states ?? {}) as Record<string, unknown>;
+    // Device and hover/focus/active styles can carry a background too (W-631).
+    const sources = [node.props, node.style, ...Object.values(devices), ...Object.values(states)];
+    for (const source of sources) {
+      if (typeof source !== "object" || source === null) continue;
+      for (const key of MEDIA_KEYS) {
+        const raw = (source as Record<string, unknown>)[key];
+        const url = typeof raw === "object" && raw !== null ? (raw as { url?: unknown }).url : raw;
+        if (siteOnly(url)) count += 1;
+      }
     }
     const kids = (node as { children?: LayoutNode[] }).children;
     if (Array.isArray(kids)) for (const child of kids) visit(child);
