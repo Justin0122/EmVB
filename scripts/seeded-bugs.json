@@ -3761,7 +3761,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/settings/DraftTextField.tsx",
-          "search": "        if (event.key === \"Enter\") commit();",
+          "search": "        if (isCommitEnter(event)) commit();",
           "replace": "        if (event.key === \"Tab\") commit();"
         }
       ],
@@ -7291,7 +7291,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/settings/NumberRow.tsx",
-          "search": "        if (event.key === \"Enter\") commit();\n      }}\n    />\n  );\n}",
+          "search": "        if (isCommitEnter(event)) commit();\n      }}\n    />\n  );\n}",
           "replace": "        if (event.key === \"Escape\") commit();\n      }}\n    />\n  );\n}"
         }
       ],
@@ -12712,7 +12712,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/ColorControl.tsx",
-          "search": "if (event.key === \"Enter\") void create();\n        }}\n      />\n      {error",
+          "search": "if (isCommitEnter(event)) void create();\n        }}\n      />\n      {error",
           "replace": "if (event.key === \"Escape\") void create();\n        }}\n      />\n      {error"
         }
       ],
@@ -22956,8 +22956,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/icons/IconLibraryDialog.tsx",
-          "search": "        if (event.key === \"Enter\") {",
-          "replace": "        if (event.key === \"Enter\" && event.shiftKey) {"
+          "search": "        if (isCommitEnter(event)) {",
+          "replace": "        if (isCommitEnter(event) && event.shiftKey) {"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/icons/icon-library.test.tsx"],
