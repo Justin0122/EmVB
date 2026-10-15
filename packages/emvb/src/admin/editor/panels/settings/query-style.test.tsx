@@ -169,3 +169,20 @@ test("an inherited object name is not a style property (W-542)", () => {
     expect(parseStyleValue(key, "1")).toEqual({ error: `${key} isn't a style property.` });
   }
 });
+
+describe("container-query values read numbers like the Style tab (W-695)", () => {
+  test("a leading dot, a plus sign, a space before the unit and a trailing dot", () => {
+    expect(parseStyleValue("paddingTop", ".5rem")).toEqual({ value: { value: 0.5, unit: "rem" } });
+    expect(parseStyleValue("paddingTop", "+2px")).toEqual({ value: { value: 2, unit: "px" } });
+    expect(parseStyleValue("paddingTop", "1.5 rem")).toEqual({
+      value: { value: 1.5, unit: "rem" },
+    });
+    expect(parseStyleValue("paddingTop", ".5")).toEqual({ value: { value: 0.5, unit: "px" } });
+  });
+
+  test("a comma decimal says to use a dot", () => {
+    expect(parseStyleValue("paddingTop", "1,5rem")).toEqual({
+      error: "Use a dot for decimals, such as 1.5.",
+    });
+  });
+});

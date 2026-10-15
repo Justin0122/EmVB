@@ -24,14 +24,20 @@ export function formatStyleValue(value: unknown): string {
   return JSON.stringify(value);
 }
 
+// W-695: numbers read as in the Style tab's length fields: ".5rem", "+2px", "1.5 rem" and "2."
+// were refused here though the Style tab takes them.
+const NUMBER = String.raw`[+-]?(?:\d+(?:\.\d*)?|\.\d+)`;
+const LENGTH = new RegExp(String.raw`^(${NUMBER})\s*([a-z%]+)$`, "i");
+const BARE = new RegExp(`^${NUMBER}$`);
+
 /** Readings of `text` to try, most specific first. */
 function candidates(text: string): unknown[] {
   const out: unknown[] = [];
-  const length = /^(-?\d+(?:\.\d+)?)([a-z%]+)$/i.exec(text);
+  const length = LENGTH.exec(text);
   if (length) out.push({ value: Number(length[1]), unit: (length[2] as string).toLowerCase() });
   const variable = /^var\(--([a-z0-9-]{1,40})\)$/.exec(text);
   if (variable) out.push({ var: variable[1] });
-  if (/^-?\d+(?:\.\d+)?$/.test(text)) {
+  if (BARE.test(text)) {
     out.push(Number(text));
     // W-404: a bare number on a length property means px, as in the Style tab.
     out.push({ value: Number(text), unit: "px" });
@@ -61,6 +67,8 @@ export function parseStyleValue(key: string, text: string): { value: unknown } |
   if (!schema) return { error: `${key} isn't a style property.` };
   const trimmed = text.trim();
   if (trimmed === "") return { error: "Enter a value." };
+  if (/^[+-]?\d*,\d+\s*[a-z%]*$/i.test(trimmed))
+    return { error: "Use a dot for decimals, such as 1.5." };
   for (const candidate of candidates(trimmed)) {
     if (candidate !== undefined && schema.safeParse(candidate).success) return { value: candidate };
   }
