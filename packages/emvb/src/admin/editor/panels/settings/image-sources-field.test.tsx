@@ -91,3 +91,10 @@ describe("pasted srcset and width spellings (W-423)", () => {
     expect("error" in parseSources("/a.jpg 2x")).toBe(true);
   });
 });
+
+test("a site path with a space keeps its width (W-545)", () => {
+  expect(parseSources("/uploads/my photo-400.jpg 400w")).toEqual({
+    sources: [{ src: "/uploads/my photo-400.jpg", width: 400 }],
+  });
+  expect("error" in parseSources("https://cdn.example/my photo.jpg 400")).toBe(true);
+});

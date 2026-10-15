@@ -33,7 +33,9 @@ export function parseSources(text: string): { sources: Source[] } | { error: str
   if (lines.length > MAX_SOURCES) return { error: `Up to ${MAX_SOURCES} extra sources.` };
   const sources: Source[] = [];
   for (const line of lines) {
-    const match = /^(\S+)\s+(\d{1,4})\s*(?:w|px)?$/i.exec(line);
+    // W-545: a site path may hold a space ("/uploads/my photo-400.jpg 400"); the width is the
+    // last word.
+    const match = /^(\S(?:.*\S)?)\s+(\d{1,4})\s*(?:w|px)?$/i.exec(line);
     const width = match ? Number(match[2]) : Number.NaN;
     if (!match || !Number.isInteger(width) || width < 1 || width > 8000) {
       return {
