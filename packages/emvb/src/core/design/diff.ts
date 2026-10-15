@@ -18,6 +18,12 @@ export function designChanges(published: DesignSystem, draft: DesignSystem): Des
   listChanges(published.variables.fontSizes, draft.variables.fontSizes, "variable", changes);
   listChanges(published.variables.spacings, draft.variables.spacings, "variable", changes);
   listChanges(published.classes, draft.classes, "class", changes);
+  // W-641: class order is the cascade order, so a reorder alone changes how the page looks.
+  const kept = new Set((draft.classes ?? []).map((c) => c.id));
+  const before = (published.classes ?? []).map((c) => c.id).filter((id) => kept.has(id));
+  const had = new Set(before);
+  const after = (draft.classes ?? []).map((c) => c.id).filter((id) => had.has(id));
+  if (!same(before, after)) changes.push({ kind: "changed", what: "setting", name: "Class order" });
   if (!same(published.direction, draft.direction)) {
     changes.push({ kind: "changed", what: "setting", name: "Direction" });
   }
