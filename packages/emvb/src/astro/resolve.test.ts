@@ -170,3 +170,48 @@ describe("resolveEmVBPage(Astro, { visitor }) (W-329)", () => {
     expect(guest?.html).toContain("Hello");
   });
 });
+
+describe("Loop Item parts on a page (W-666)", () => {
+  test("a Visitors rule inside a Loop Item part sees the visitor", async () => {
+    const itemPart = {
+      id: "LIPART1",
+      data: {
+        id: "LIPART1",
+        title: "Team card",
+        part_type: "loop_item",
+        layout: layout(
+          { id: "ptit0001", type: "post-title", props: { level: 3 } },
+          {
+            id: "head0003",
+            type: "heading",
+            props: { text: "Members see this", level: 4 },
+            audience: { segments: ["member"] },
+          },
+        ),
+      },
+    };
+    const original = content.getCollection;
+    content.getCollection = (async (collection: string) =>
+      collection === "emvb_theme_parts"
+        ? { entries: [itemPart] }
+        : collection === "team"
+          ? { entries: [{ id: "e1", slug: "ann", data: { id: "e1", title: "Ann", slug: "ann" } }] }
+          : { entries: [] }) as never;
+    try {
+      const loop = {
+        id: "loop0001",
+        type: "loop",
+        props: { collection: "team", itemPartId: "LIPART1" },
+        children: [],
+      } as unknown as LayoutNode;
+      lookup = async () => page({ title: "Team", layout: layout(loop) });
+      const resolved = await resolveEmVBPage(astro({ slug: "team" }), {
+        visitor: { segments: ["member"] },
+      });
+      expect(resolved?.html).toContain("Ann");
+      expect(resolved?.html).toContain("Members see this");
+    } finally {
+      content.getCollection = original;
+    }
+  });
+});

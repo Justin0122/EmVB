@@ -91,7 +91,9 @@ export async function resolveEmVBPageWith(
       layout,
       astro.url,
       astro,
-      Object.values(sectionTemplates),
+      // W-666: Loop Item parts too. A Visitors rule, A/B test, bound field or collection Loop in
+      // one was never seen, so the visitor was never read and "only for" elements stayed hidden.
+      [...Object.values(sectionTemplates), ...Object.values(loopTemplates)],
       options.visitor ? { visitor: options.visitor } : {},
       content,
     )),
