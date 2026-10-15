@@ -62,8 +62,9 @@ export const BUNDLED_ICONS: readonly BundledIcon[] = [
     label: "Circle Alert",
     children: [
       { tag: "circle", attrs: { cx: "12", cy: "12", r: "10" } },
-      { tag: "line", attrs: {} },
-      { tag: "line", attrs: {} },
+      // W-699: the mark's two lines had no coordinates, so the icon drew an empty circle.
+      { tag: "line", attrs: { x1: "12", x2: "12", y1: "8", y2: "12" } },
+      { tag: "line", attrs: { x1: "12", x2: "12.01", y1: "16", y2: "16" } },
     ],
   },
   {
