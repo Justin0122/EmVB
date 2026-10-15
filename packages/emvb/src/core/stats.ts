@@ -12,7 +12,8 @@ export function summarizeLayout(input: unknown): LayoutSummary | undefined {
     if (typeof node !== "object" || node === null) continue;
     nodes++;
     const children = (node as { children?: unknown }).children;
-    if (Array.isArray(children)) stack.push(...children);
+    // No spread: a huge children list would overflow the call stack (W-646).
+    if (Array.isArray(children)) for (const child of children) stack.push(child);
   }
   return { nodes, schemaVersion };
 }
