@@ -124,7 +124,8 @@ function mergeList<T extends Named>(
     const other = theirNames.get(nameKey(item.name));
     return other !== undefined && other !== item.id;
   });
-  if (clashes.length === 0) return result;
+  if (clashes.length === 0)
+    return inOurOrder(baseItems, ourItems, theirItems, result, conflicts, kind);
   for (const item of clashes) conflicts.push({ kind, name: item.name });
   // The server copy stays, as in any conflict: their version of a renamed item, nothing for a new one.
   const clashed = new Set(clashes.map((item) => item.id));
@@ -148,4 +149,39 @@ function pickSetting<T>(
   if (!theyChanged || same(ours, theirs)) return ours;
   conflicts.push({ kind: "setting", name });
   return theirs;
+}
+
+/** The ids both lists share, in `list`'s order. */
+const sharedOrder = (list: Named[], other: Set<string>) =>
+  list.filter((item) => other.has(item.id)).map((item) => item.id);
+
+/**
+ * W-621: class order is the cascade order, so a reorder here was lost when the other tab
+ * changed anything. Our order wins when only we reordered; both reordering is a conflict.
+ */
+function inOurOrder<T extends Named>(
+  base: T[],
+  ours: T[],
+  theirs: T[],
+  result: T[],
+  conflicts: DesignConflict[],
+  kind: "variable" | "class",
+): T[] {
+  const baseIds = new Set(base.map((item) => item.id));
+  const ourIds = new Set(ours.map((item) => item.id));
+  const theirIds = new Set(theirs.map((item) => item.id));
+  const inAll = new Set([...baseIds].filter((id) => ourIds.has(id) && theirIds.has(id)));
+  const baseOrder = sharedOrder(base, inAll).join("\n");
+  const ourOrder = sharedOrder(ours, inAll).join("\n");
+  const theirOrder = sharedOrder(theirs, inAll).join("\n");
+  if (ourOrder === baseOrder || ourOrder === theirOrder) return result;
+  if (theirOrder !== baseOrder) {
+    conflicts.push({ kind: "setting", name: kind === "class" ? "Class order" : "Variable order" });
+    return result;
+  }
+  const rank = new Map(ours.map((item, index) => [item.id, index]));
+  const keptOurs = result.filter((item) => rank.has(item.id));
+  keptOurs.sort((a, b) => (rank.get(a.id) as number) - (rank.get(b.id) as number));
+  let next = 0;
+  return result.map((item) => (rank.has(item.id) ? (keptOurs[next++] as T) : item));
 }
