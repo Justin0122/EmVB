@@ -317,7 +317,7 @@
     },
     {
       "rule": "archive-taxonomy-{\"taxonomy\":\"category\",\"slug\":\"\"}",
-      "specificity": 40,
+      "specificity": 35,
       "valid": true,
       "matches": {
         "front": [false, 0],
@@ -329,8 +329,8 @@
         "post": [false, 0],
         "otherPost": [false, 0],
         "postsArchive": [false, 0],
-        "category": [true, 40],
-        "otherCategory": [true, 40],
+        "category": [true, 35],
+        "otherCategory": [true, 35],
         "tag": [false, 0],
         "other": [false, 0],
         "singularNoCollection": [false, 0]
