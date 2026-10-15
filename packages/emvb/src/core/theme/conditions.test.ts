@@ -458,7 +458,7 @@ describe("S7c content part types", () => {
 });
 
 describe("W-584 blank taxonomy slug", () => {
-  const ctx = {
+  const ctx: ThemeRequestContext = {
     path: "/tag/news",
     isFront: false,
     is404: false,
@@ -466,7 +466,7 @@ describe("W-584 blank taxonomy slug", () => {
     kind: "archive" as const,
     taxonomy: { type: "tag" as const, slug: "news" },
   };
-  const part = (id: string, slug: string | undefined, updatedAt: string) => ({
+  const part = (id: string, slug: string | undefined, updatedAt: string): ThemePartCandidate => ({
     id,
     partType: "archive" as const,
     updatedAt,
@@ -478,7 +478,7 @@ describe("W-584 blank taxonomy slug", () => {
           op: "include" as const,
           group: "archive" as const,
           name: "taxonomy",
-          args: slug === undefined ? { taxonomy: "tag" } : { taxonomy: "tag", slug },
+          args: slug === undefined ? { taxonomy: "tag" } : { taxonomy: "tag", slug: slug },
         },
       ],
     },
