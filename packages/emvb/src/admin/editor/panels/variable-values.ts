@@ -51,7 +51,12 @@ export function parseValue(
   const trimmed = text.trim();
   if (isLengthKind(kind)) {
     const length = parseLength(trimmed);
-    return length ? { ok: true, value: length } : { ok: false, error: ERRORS[kind] };
+    if (length) return { ok: true, value: length };
+    // W-687: as in the style fields (W-262), "1,5rem" gets the reason, not the general hint.
+    if (/^\d*,\d+\s*[a-z%]*$/i.test(trimmed)) {
+      return { ok: false, error: "Use a dot for decimals, such as 1.5." };
+    }
+    return { ok: false, error: ERRORS[kind] };
   }
   if (kind === "color") {
     // W-434: "1a2b3c" without "#", as design tools copy it, is accepted.

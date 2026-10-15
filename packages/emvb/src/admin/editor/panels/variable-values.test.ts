@@ -62,3 +62,14 @@ test("a font stack the site CSS would drop is refused (W-547)", () => {
     value: '"Open Sans", system-ui, sans-serif',
   });
 });
+
+test("W-687: a comma decimal in a size variable says to use a dot, like the style fields", () => {
+  expect(parseValue("fontSize", "1,5rem")).toEqual({
+    ok: false,
+    error: "Use a dot for decimals, such as 1.5.",
+  });
+  expect(parseValue("spacing", "2,25")).toEqual({
+    ok: false,
+    error: "Use a dot for decimals, such as 1.5.",
+  });
+});
