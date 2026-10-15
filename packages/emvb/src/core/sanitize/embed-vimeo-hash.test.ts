@@ -37,6 +37,15 @@ describe("more video link shapes (W-215)", () => {
     );
   });
 
+  test("YouTube Music and Vimeo showcase links (W-546)", () => {
+    expect(src("https://music.youtube.com/watch?v=dQw4w9WgXcQ&feature=share")).toBe(
+      "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+    );
+    expect(src("https://vimeo.com/showcase/1234567/video/76979871")).toBe(
+      "https://player.vimeo.com/video/76979871",
+    );
+  });
+
   test("the hash reaches the page's iframe", () => {
     const layout = {
       schemaVersion: 16,

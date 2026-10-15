@@ -13,6 +13,8 @@ const YT_HOSTS = new Set([
   "youtube.com",
   "www.youtube.com",
   "m.youtube.com",
+  // W-546: YouTube Music links play the same video ids.
+  "music.youtube.com",
   "youtu.be",
   "www.youtu.be",
   "youtube-nocookie.com",
@@ -56,7 +58,9 @@ function vimeoId(parsed: URL): string | undefined {
       : 0
     : parts[0] === "channels"
       ? 2
-      : parts[0] === "groups" && parts[2] === "videos"
+      : (parts[0] === "groups" && parts[2] === "videos") ||
+          // W-546: a video opened from a showcase.
+          (parts[0] === "showcase" && parts[2] === "video")
         ? 3
         : 0;
   const id = matching(parts[at], VIMEO_ID);
@@ -117,7 +121,7 @@ const PROVIDERS = [
 // W-448: "youtube.com/watch?v=…" typed without https:// was taken for a video file path on this
 // site, so the page showed a broken player. Known video hosts get their scheme.
 const BARE_VIDEO_HOST =
-  /^(?:(?:www\.|m\.)?youtube\.com|youtu\.be|(?:www\.|player\.)?vimeo\.com)\//i;
+  /^(?:(?:www\.|m\.|music\.)?youtube\.com|youtu\.be|(?:www\.|player\.)?vimeo\.com)\//i;
 
 export function resolveEmbedUrl(value: string): EmbedTarget | undefined {
   const typed = value.trim();
