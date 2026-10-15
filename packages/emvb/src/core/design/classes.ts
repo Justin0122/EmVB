@@ -178,6 +178,9 @@ export function duplicateClass(
  * W-277: whether another class already has this name (case-insensitive). Two classes with one
  * name can't be told apart in the class picker or the Site styles list.
  */
+/** W-570: the form two class or variable names are compared in (cleaned, any case). */
+export const nameKey = (name: string) => cleanClassName(name).toLowerCase();
+
 export function classNameTaken(design: DesignSystem, name: string, exceptId?: string): boolean {
   const wanted = cleanClassName(name).toLowerCase();
   return (design.classes ?? []).some(

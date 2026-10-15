@@ -33,3 +33,14 @@ describe("W-568: class and variable names compare as they look", () => {
     expect(variableNameTaken(d, "color", "Cafe\u0301")).toBe(true);
   });
 });
+
+describe("W-570: the class picker and Import compare names the same way", () => {
+  test("Import renames a name that only differs by accent form", async () => {
+    const { uniqueImportNames } = await import("./transfer.ts");
+    const out = uniqueImportNames({
+      ...design,
+      classes: [...(design.classes ?? []), { id: "cafe2", name: "Cafe\u0301", style: {} }],
+    });
+    expect(out.renamed.length).toBe(1);
+  });
+});

@@ -3,7 +3,7 @@ import { DesignSystem as DesignSystemSchema, DESIGN_SCHEMA_VERSION } from "../sc
 import type { DesignSystem } from "../schema/design.ts";
 import { DESIGN_MIGRATIONS, upgradeLayout } from "../migrate/index.ts";
 import type { Layout } from "../schema/layout.ts";
-import { findClassUsages } from "./classes.ts";
+import { findClassUsages, nameKey } from "./classes.ts";
 import { findVariableUsages } from "./variables.ts";
 
 /** The design document as JSON. This file is the backup: there is no revision history. */
@@ -23,22 +23,22 @@ function freeName(name: string, taken: Set<string>): string {
   for (let n = 2; ; n++) {
     const suffix = ` ${n}`;
     const next = `${clipText(name, 60 - suffix.length).trim()}${suffix}`;
-    if (!taken.has(next.toLowerCase())) return next;
+    if (!taken.has(nameKey(next))) return next;
   }
 }
 
 function dedupe<T extends { name: string }>(items: T[], renamed: ImportRename[]): T[] {
-  const taken = new Set(items.map((item) => item.name.toLowerCase()));
+  const taken = new Set(items.map((item) => nameKey(item.name)));
   const seen = new Set<string>();
   return items.map((item) => {
-    const key = item.name.toLowerCase();
+    const key = nameKey(item.name);
     if (!seen.has(key)) {
       seen.add(key);
       return item;
     }
     const to = freeName(item.name, taken);
-    taken.add(to.toLowerCase());
-    seen.add(to.toLowerCase());
+    taken.add(nameKey(to));
+    seen.add(nameKey(to));
     renamed.push({ from: item.name, to });
     return { ...item, name: to };
   });

@@ -1,4 +1,4 @@
-import { cleanClassName, type DesignSystem } from "../../../../core/index.ts";
+import { cleanClassName, nameKey, type DesignSystem } from "../../../../core/index.ts";
 
 type StyleClass = NonNullable<DesignSystem["classes"]>[number];
 
@@ -9,7 +9,7 @@ export const MAX_SITE_CLASSES = 100;
 export const MAX_ELEMENT_CLASSES = 20;
 
 const rank = (cls: StyleClass, q: string) => {
-  const name = cls.name.toLowerCase();
+  const name = nameKey(cls.name);
   if (name === q) return 0;
   if (name.startsWith(q) || cls.id.startsWith(q)) return 1;
   return 2;
@@ -25,11 +25,11 @@ export function classOptions(
   applied: readonly string[],
   query: string,
 ): ClassOption[] {
-  const q = query.trim().toLowerCase();
+  const q = nameKey(query);
   const available = catalog.filter((cls) => !applied.includes(cls.id));
   const found = q
     ? available
-        .filter((cls) => cls.name.toLowerCase().includes(q) || cls.id.includes(q))
+        .filter((cls) => nameKey(cls.name).includes(q) || cls.id.includes(q))
         .map((cls, index) => ({ cls, index, rank: rank(cls, q) }))
         .toSorted((a, b) => a.rank - b.rank || a.index - b.index)
         .map(({ cls }) => cls)
@@ -37,7 +37,7 @@ export function classOptions(
   const options: ClassOption[] = found.map((cls) => ({ kind: "class", cls }));
   // The new name as it will be saved: at most 60 characters, no control characters (W-220).
   const name = cleanClassName(query);
-  const taken = catalog.some((cls) => cls.name.toLowerCase() === name.toLowerCase());
+  const taken = catalog.some((cls) => nameKey(cls.name) === nameKey(name));
   if (name && !taken) options.push({ kind: "create", name });
   return options;
 }
@@ -48,6 +48,6 @@ export const appliedByName = (
   applied: readonly string[],
   query: string,
 ) => {
-  const q = query.trim().toLowerCase();
-  return catalog.find((cls) => applied.includes(cls.id) && cls.name.toLowerCase() === q);
+  const q = nameKey(query);
+  return catalog.find((cls) => applied.includes(cls.id) && nameKey(cls.name) === q);
 };
