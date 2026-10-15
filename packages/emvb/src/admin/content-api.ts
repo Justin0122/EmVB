@@ -88,8 +88,10 @@ export function canonicalProblem(value: string): string | null {
 function seoBody(draft: PageDraft) {
   const canonical = draft.seoCanonical;
   return {
-    title: draft.seoTitle || null,
-    description: draft.seoDescription || null,
+    // W-663: a title or description of only spaces was saved as is, so search results and
+    // link previews showed a blank title instead of falling back to the page's own.
+    title: draft.seoTitle.trim() || null,
+    description: draft.seoDescription.trim() || null,
     ...(canonical !== undefined && !canonicalProblem(canonical)
       ? { canonical: canonical.trim() || null }
       : {}),

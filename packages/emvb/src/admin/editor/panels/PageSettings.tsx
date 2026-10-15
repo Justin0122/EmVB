@@ -76,8 +76,8 @@ export function PageSettings({
   }
 
   const seoCount = [
-    page.seoTitle,
-    page.seoDescription,
+    page.seoTitle.trim(),
+    page.seoDescription.trim(),
     page.seoCanonical?.trim(),
     page.seoNoIndex,
     page.seoImage?.trim(),

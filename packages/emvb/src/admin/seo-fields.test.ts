@@ -65,3 +65,16 @@ describe("W-284: canonical URL and noindex on save", () => {
     });
   });
 });
+
+describe("W-663: blank SEO text", () => {
+  test("a title or description of only spaces is sent as cleared, and kept text is trimmed", async () => {
+    expect(await sentSeo({ ...PAGE, seoTitle: "   ", seoDescription: " \n " })).toEqual({
+      title: null,
+      description: null,
+    });
+    expect(await sentSeo({ ...PAGE, seoTitle: "  About us ", seoDescription: " Hi " })).toEqual({
+      title: "About us",
+      description: "Hi",
+    });
+  });
+});
