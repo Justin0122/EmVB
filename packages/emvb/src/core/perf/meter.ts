@@ -51,9 +51,10 @@ function imageBytes(node: LayoutNode): number {
   return w > 0 && h > 0 ? Math.max(5_000, Math.round(w * h * 0.25)) : IMAGE_GUESS;
 }
 
-type Sheets = { style?: unknown; devices?: Record<string, unknown> };
+type Sheets = { style?: unknown; devices?: Record<string, unknown>; query?: { style?: unknown } };
 const sheetsHaveBackground = (owner: Sheets): boolean => {
-  const sheets = [owner.style, ...Object.values(owner.devices ?? {})];
+  // W-645: a container-query override (W-346) can set the background too.
+  const sheets = [owner.style, ...Object.values(owner.devices ?? {}), owner.query?.style];
   return sheets.some((style) => {
     const value = (style as { backgroundImage?: unknown } | undefined)?.backgroundImage;
     return typeof value === "string" ? value.length > 0 : Boolean(value);

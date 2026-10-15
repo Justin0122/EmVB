@@ -150,3 +150,11 @@ test("W-635: a background image from a class counts once per element using it", 
   const unstyled = { ...box("box00002", []), classes: ["plain"] } as LayoutNode;
   expect(measurePage(page(unstyled), design).imageCount).toBe(0);
 });
+
+test("W-645: a background image in a container-query override counts", () => {
+  const styled = {
+    ...box("box00001", []),
+    query: { min: 600, style: { backgroundImage: "url(/wide.jpg)" } },
+  } as LayoutNode;
+  expect(measurePage(page(styled), emptyDesign()).imageCount).toBe(1);
+});
