@@ -118,3 +118,15 @@ describe("collection Loops (W-308)", () => {
     expect(canDrop(layout, { kind: "new", node: fresh }, "loop0001").ok).toBe(true);
   });
 });
+
+test("W-602 a Loop with no item design shows no blank items or empty cards on the page", () => {
+  const { html } = renderPage(
+    page(loop({ collection: "projects", display: "cards" }, [empty])),
+    design,
+    {
+      dynamic: { collections: { loop0001: [entry(1), entry(2)] } },
+    },
+  );
+  expect(html).not.toContain("emvb-loop-item");
+  expect(html).toBe('<div class="emvb-root emvb-container"></div>');
+});

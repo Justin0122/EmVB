@@ -62,7 +62,9 @@ export function renderLoop(
     if (designed.length > 0) return ELEMENTS.loop.build(node as never, attrs, designed);
   }
   // Editor mode always has a sample post, so an empty item template would paint a zero-height box.
-  if (posts.length === 0 || (ctx.mode === "editor" && templateNodes.length === 0)) {
+  // W-602: on the page, no item design means nothing to list, not a row of blank items (empty
+  // bordered boxes with Cards).
+  if (posts.length === 0 || templateNodes.length === 0) {
     if (ctx.mode !== "editor") return undefined;
     return {
       tag: "div",
