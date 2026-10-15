@@ -69,7 +69,7 @@ export function renderLoop(
   // recursed until the stack overflowed and the page failed to render.
   const cycle = itemPartId !== "" && loopStack.includes(itemPartId);
   if (cycle || loopStack.length >= MAX_LOOP_DEPTH) {
-    if (ctx.mode !== "editor") return undefined;
+    if (ctx.mode === "public") return undefined;
     return { tag: "div", attrs: { ...attrs, "data-emvb-loop-empty": "" }, children: ["Loop"] };
   }
   const templateLayout =

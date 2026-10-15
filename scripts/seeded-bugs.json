@@ -23656,8 +23656,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/loop.ts",
-          "search": "    ? { ...rest, idOrigin: `${rest.idOrigin ?? \"\"}/l:${itemPartId}` }",
-          "replace": "    ? { ...rest }"
+          "search": "{ ...rest, idOrigin: `${rest.idOrigin ?? \"\"}/l:${itemPartId}` }",
+          "replace": "{ ...rest }"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/section.test.ts"],
