@@ -100,3 +100,11 @@ test("the archive's Pagination element sets the paged title wording (W-529)", ()
   expect(paginationArchiveTitle(layout({ archiveTitle: " Artikel " }))).toBe("Artikel");
   expect(paginationArchiveTitle(layout({ titleText: "x {page}" }))).toBeUndefined();
 });
+
+describe("W-552: paged titles keep $ and braces from the title", () => {
+  test("a title with $& or {page} is filled in once, as written", () => {
+    expect(archivePageTitle("Deals $& more", 2)).toBe("Deals $& more – page 2");
+    expect(archivePageTitle("Save $' now", 3, "{title} · p{page}")).toBe("Save $' now · p3");
+    expect(archivePageTitle("About {page}", 2)).toBe("About {page} – page 2");
+  });
+});

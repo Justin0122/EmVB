@@ -104,7 +104,11 @@ export function archivePageTitle(
 ): string {
   if (page === undefined || page <= 1) return title;
   const wording = template?.trim().includes("{page}") ? template.trim() : PAGED_TITLE;
-  return wording.replaceAll("{title}", title).replaceAll("{page}", String(page));
+  // One pass with a function: `$&` in a title is not a replacement pattern, and a "{page}" in
+  // the title stays as written (W-552).
+  return wording.replace(/\{(title|page)\}/g, (_, key: string) =>
+    key === "title" ? title : String(page),
+  );
 }
 
 /** One entry of a Pagination bar: a page link, the current page, or a gap (W-222). */
