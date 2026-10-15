@@ -89,6 +89,9 @@ const POST_FIELDS = new Map<string, PostField>([
     "post-title",
     {
       placeholder: (attrs) => ({ tag: "h1", attrs, children: ["Post Title"] }),
+      // W-661: an untitled post left an empty heading on the page (a blank entry for screen
+      // reader heading lists).
+      has: (post) => !!post.title?.trim(),
       render: (node, attrs, post) => {
         const level = props<{ level?: number }>(node).level ?? 1;
         const tag = HEADING_TAGS[Math.min(6, Math.max(1, level)) - 1] ?? "h1";
@@ -135,7 +138,7 @@ const POST_FIELDS = new Map<string, PostField>([
         if (!src) return undefined;
         const alt = props<{ decorative?: boolean }>(node).decorative
           ? ""
-          : post.featuredImageAlt?.trim() || post.title || "Featured image";
+          : post.featuredImageAlt?.trim() || post.title?.trim() || "Featured image";
         // W-440: a Loop's images below the fold loaded all at once; like Image, they wait.
         // A single post's featured image is usually the hero, so it isn't delayed.
         const lazy: Attrs = inLoop ? { loading: "lazy", decoding: "async" } : {};

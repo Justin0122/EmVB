@@ -127,3 +127,23 @@ describe("Post Date format and Post Excerpt length (W-177)", () => {
     expect(parse("post-excerpt", { maxWords: 2.5 })).toBe(false);
   });
 });
+
+describe("an untitled post (W-661)", () => {
+  const untitled = { ...post, title: "   ", featuredImageAlt: undefined };
+  const out = (type: string, mode: "public" | "editor") => {
+    const vnode = renderDynamicPost(
+      { id: "n0000001", type, props: {} } as never,
+      {},
+      untitled,
+      mode,
+    );
+    return vnode ? serialize(vnode) : "";
+  };
+  test("Post Title renders no empty heading publicly and its placeholder in the editor", () => {
+    expect(out("post-title", "public")).toBe("");
+    expect(out("post-title", "editor")).toBe("<h1>Post Title</h1>");
+  });
+  test("Post Image falls back to a real name, not blank alt text", () => {
+    expect(out("post-image", "public")).toContain('alt="Featured image"');
+  });
+});
