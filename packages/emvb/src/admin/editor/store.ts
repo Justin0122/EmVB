@@ -59,6 +59,11 @@ export type EditorAction =
   | { type: "saved"; rev: string; version: number }
   | { type: "published"; rev: string }
   | { type: "set-design"; design: DesignSystem; revision: string | null }
+  /**
+   * W-536: a site styles edit shown before its save lands, so the next edit builds on it. The
+   * save's `set-design` (or a refusal) follows.
+   */
+  | { type: "preview-design"; design: DesignSystem }
   | { type: "publish-design"; revision: string }
   /** The site styles as saved elsewhere, after a refused save (W-212). */
   | {
@@ -224,6 +229,8 @@ export function editorReducer(state: EditorState, action: EditorAction): EditorS
       };
     case "published":
       return { ...state, rev: action.rev, status: "published" };
+    case "preview-design":
+      return { ...state, design: action.design };
     case "set-design":
       return {
         ...state,

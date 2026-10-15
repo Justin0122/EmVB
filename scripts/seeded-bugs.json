@@ -912,7 +912,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "      const revision = await saveDesign(fetcher, next, baseRevision());",
+          "search": "      const revision = await saveDesign(fetcher, next, sent);",
           "replace": "      const revision = latest.current.designRevision;"
         }
       ],
@@ -17477,7 +17477,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "const revision = await saveDesign(fetcher, next, baseRevision());",
+          "search": "const revision = await saveDesign(fetcher, next, sent);",
           "replace": "const revision = latest.current.designRevision;"
         }
       ],
@@ -21610,7 +21610,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "          if (unchanged) {\n            dispatch({ type: \"load-design\", ...fresh });\n",
+          "search": "          if (unchanged) {\n            dispatch({ type: \"load-design\", ...fresh, ...(newer ? { design: newer } : {}) });\n",
           "replace": "          if (unchanged) {\n            void fresh;\n"
         }
       ],
@@ -27051,8 +27051,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "  const changeDesign = (next: DesignSystem) => queueDesign(() => saveDesignNow(next));",
-          "replace": "  const changeDesign = (next: DesignSystem) => saveDesignNow(next);"
+          "search": "    return queueDesign(() => saveDesignNow(next, base));",
+          "replace": "    return saveDesignNow(next, base);"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/design-queue.test.tsx"],
@@ -27065,8 +27065,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
-          "search": "await saveDesign(fetcher, next, baseRevision());",
-          "replace": "await saveDesign(fetcher, next, latest.current.designRevision);"
+          "search": "const sent = baseRevision();",
+          "replace": "const sent = latest.current.designRevision;"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/design-queue.test.tsx"],
@@ -31370,6 +31370,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/test/server/icon-uploads.test.ts"],
       "expect": "\\(fail\\).*W-535"
+    },
+    {
+      "id": "W-536/design-edit-waits-for-save",
+      "requirement": "W-536",
+      "description": "A site styles edit only shows once its save lands.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/useEditorCommands.ts",
+          "search": "    dispatch({ type: \"preview-design\", design: next });\n",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/admin/editor/design-queue.test.tsx"],
+      "expect": "\\(fail\\).*W-536"
     }
   ]
 }

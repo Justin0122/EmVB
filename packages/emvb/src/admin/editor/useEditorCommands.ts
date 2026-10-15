@@ -145,14 +145,24 @@ export function useEditorCommands({
 
   // W-325: design saves run one at a time, each against the newest revision, like page saves.
   // Two quick edits used to both send the revision the editor started with, so the second one
-  // was refused with a 409 by the first. `written` remembers the revision a save produced until
-  // the store catches up (the ref updates on the next render).
+  // was refused with a 409 by the first. `written` remembers the revision the last save produced
+  // until the store catches up (the ref updates on the next render).
   const designQueue = React.useRef<Promise<unknown>>(Promise.resolve());
-  const written = React.useRef<{ from: string | null; to: string } | null>(null);
+  // W-536: every revision this tab's run of saves went through, not just the last one. The store
+  // can render an older one of them mid-run (save 1's revision while save 2 is out), which used
+  // to send that stale revision with save 3 and get a 409.
+  const written = React.useRef<{ chain: Set<string | null>; to: string } | null>(null);
   const baseRevision = () => {
     const current = latest.current.designRevision;
     const last = written.current;
-    return last && last.from === current ? last.to : current;
+    return last && last.chain.has(current) ? last.to : current;
+  };
+  const wrote = (sent: string | null, revision: string) => {
+    const chain = written.current?.chain.has(sent) ? written.current.chain : new Set([sent]);
+    // What the store shows now is behind this save too.
+    chain.add(latest.current.designRevision);
+    chain.add(revision);
+    written.current = { chain, to: revision };
   };
   const queueDesign = <T>(task: () => Promise<T>): Promise<T> => {
     const run = designQueue.current.then(task, task);
@@ -160,24 +170,48 @@ export function useEditorCommands({
     return run;
   };
 
-  const changeDesign = (next: DesignSystem) => queueDesign(() => saveDesignNow(next));
+  // W-536: the newest edit, shown at once. Each edit is built from the `design` the panels render,
+  // which used to change only after the save came back, so a second quick edit to the same
+  // class (Opacity, then Add shadow) was built without the first and saved over it.
+  const shownDesign = React.useRef<DesignSystem | null>(null);
+  const changeDesign = (next: DesignSystem) => {
+    const base = latest.current.design;
+    shownDesign.current = next;
+    dispatch({ type: "preview-design", design: next });
+    return queueDesign(() => saveDesignNow(next, base));
+  };
 
-  const saveDesignNow = async (next: DesignSystem) => {
+  const saveDesignNow = async (next: DesignSystem, base: DesignSystem) => {
     try {
-      const from = latest.current.designRevision;
-      const revision = await saveDesign(fetcher, next, baseRevision());
-      written.current = { from, to: revision };
-      dispatch({ type: "set-design", design: next, revision });
+      const sent = baseRevision();
+      const revision = await saveDesign(fetcher, next, sent);
+      wrote(sent, revision);
+      // A newer edit waiting in the queue stays on screen; its own save follows.
+      dispatch({ type: "set-design", design: shownDesign.current ?? next, revision });
+      if (shownDesign.current === next) shownDesign.current = null;
     } catch (error) {
       written.current = null;
+      // A newer edit already on screen was built on this one, so it stays shown (W-536).
+      const newer =
+        shownDesign.current !== null && shownDesign.current !== next ? shownDesign.current : null;
+      const settled = () => {
+        if (!newer) shownDesign.current = null;
+      };
+      // Take back an edit that didn't save, unless a newer one is already on screen.
+      const takeBack = () => {
+        if (shownDesign.current !== next) return;
+        shownDesign.current = null;
+        dispatch({ type: "preview-design", design: base });
+      };
       if (error instanceof ApiError && error.status === 409) {
         // W-333: replay this tab's edit onto the styles saved elsewhere when those keys
         // were not also changed there. A real clash still loads the server copy (W-212).
         try {
           const fresh = await loadDesign(fetcher);
-          const merged = mergeDesign(latest.current.design, next, fresh.design);
+          const merged = mergeDesign(base, next, fresh.design);
           const names = merged.conflicts.map((conflict) => conflict.name).join(", ");
           if (merged.conflicts.length > 0) {
+            shownDesign.current = null;
             dispatch({ type: "load-design", ...fresh });
             throw new Error(
               `Site styles were changed in another tab or window (${names}). The latest styles are loaded now: make your change again.`,
@@ -186,12 +220,14 @@ export function useEditorCommands({
           }
           const unchanged = JSON.stringify(merged.design) === JSON.stringify(fresh.design);
           if (unchanged) {
-            dispatch({ type: "load-design", ...fresh });
+            dispatch({ type: "load-design", ...fresh, ...(newer ? { design: newer } : {}) });
+            settled();
             return;
           }
           const revision = await saveDesign(fetcher, merged.design, fresh.revision);
-          written.current = { from: latest.current.designRevision, to: revision };
-          dispatch({ type: "set-design", design: merged.design, revision });
+          wrote(fresh.revision, revision);
+          dispatch({ type: "set-design", design: newer ?? merged.design, revision });
+          settled();
           return;
         } catch (retry) {
           if (
@@ -200,12 +236,14 @@ export function useEditorCommands({
           ) {
             throw retry;
           }
+          takeBack();
           throw new Error(
             "Site styles were changed somewhere else. Reload the editor and try again.",
             { cause: retry },
           );
         }
       }
+      takeBack();
       throw new Error(
         error instanceof ApiError
           ? `Couldn't save site styles. ${error.message}`

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- Quick changes to a class (say Opacity, then Add shadow, then Blur) no longer lose earlier ones: a site styles change shows at once instead of after its save, is taken back if the save fails, and a run of saves no longer trips over its own revisions (W-536).
 - My uploads in the icon picker holds up to 100 icons and says so; before, uploads past 100 dropped off the list and could no longer be seen or deleted (W-535).
 - An image edit’s blend picture can no longer point at another site through a path such as `/\evil.example/x.png`, which browsers read as `//evil.example` (W-534).
 - Closing the command palette and leaving the editor straight away no longer moves focus to a layer up to two seconds later; a settings test no longer overlaps React updates, which failed 26 editor tests on CI (W-533).
