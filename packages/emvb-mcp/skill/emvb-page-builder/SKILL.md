@@ -57,6 +57,9 @@ instructions.
   replace those references first. Pass `force: true` only if the person asked.
 - An image `src` must be an http(s) URL or a path on the site; `javascript:`, `data:` and
   `//host` sources are refused.
+- `REFUSED` on a link or an SVG: the page would drop it (a `javascript:` link, `onload` or a
+  script in SVG markup); the message gives the reason. A class or variable name another one
+  already has is refused too. A write that changes nothing saves no new version.
 - `PUBLISH_DISABLED`: leave the draft for review.
 - `FORBIDDEN`: agent access is off on the site, or the token can't use EmVB; tell the person.
 - `NOT_SET_UP`: an admin must click "Set up EmVB" in the EmDash admin first; tell the person.
