@@ -414,7 +414,7 @@ function withFieldMeta(vnode: VNode, node: LayoutNode, meta: PublicFormField): V
 }
 
 /** Fills a field from the form it sits in: options, type, limits. Other forms are left alone. */
-export function withFieldOptions(
+function withDefinedField(
   vnode: VNode,
   node: LayoutNode,
   definitions: FormDefinitions,
@@ -427,6 +427,38 @@ export function withFieldOptions(
   const meta = fieldByName(definition, field);
   if (!meta) return vnode;
   return withFieldMeta(withOptions(vnode, node, meta), node, meta);
+}
+
+/** Fills a field from the form it sits in, and carries its show condition (W-596). */
+export function withFieldOptions(
+  vnode: VNode,
+  node: LayoutNode,
+  definitions: FormDefinitions,
+  formId?: string,
+): VNode {
+  const built = withDefinedField(vnode, node, definitions, formId);
+  const field = (node.props as { field?: unknown }).field;
+  if (built === vnode || typeof field !== "string" || !formId) return built;
+  const meta = fieldByName(definitions.get(formId), field);
+  return meta ? withCondition(built, meta) : built;
+}
+
+const CONDITION_OPS = new Set(["eq", "neq", "filled", "empty"]);
+
+/**
+ * W-596: a field the definition shows only on a condition (`other` when Topic is Other) carries
+ * it as the plugin's embed does; the forms client then hides and disables it, so its `required`
+ * no longer blocks the form while it can't be filled.
+ */
+function withCondition(vnode: VNode, meta: PublicFormField): VNode {
+  const raw = (meta as { condition?: unknown }).condition;
+  if (!raw || typeof raw !== "object") return vnode;
+  const { field, op, value } = raw as Record<string, unknown>;
+  if (typeof field !== "string" || !field || typeof op !== "string" || !CONDITION_OPS.has(op)) {
+    return vnode;
+  }
+  const condition = typeof value === "string" ? { field, op, value } : { field, op };
+  return { ...vnode, attrs: { ...vnode.attrs, "data-condition": JSON.stringify(condition) } };
 }
 
 /** The fieldset that holds a radio group's options. */

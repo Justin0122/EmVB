@@ -552,3 +552,54 @@ describe("W-595: hidden fields of the definition", () => {
     expect(html).toContain('<input type="hidden" name="blank" value="">');
   });
 });
+
+describe("W-596: conditional fields", () => {
+  const condLayout: Layout = {
+    schemaVersion: 16,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      children: [
+        {
+          ...defaultElement("form", "form0001"),
+          props: { formId: "contact" },
+          children: [
+            { id: "text0001", type: "text-input", props: { field: "other", label: "Other" } },
+            { id: "text0002", type: "text-input", props: { field: "odd", label: "Odd" } },
+          ],
+        } as LayoutNode,
+      ],
+    },
+  };
+  const def = {
+    name: "Contact",
+    slug: "contact",
+    status: "active",
+    settings: {},
+    pages: [
+      {
+        fields: [
+          {
+            name: "other",
+            type: "text",
+            label: "Other",
+            required: true,
+            condition: { field: "topic", op: "eq", value: "other" },
+          },
+          { name: "odd", type: "text", label: "Odd", required: true, condition: { op: 3 } },
+        ],
+      },
+    ],
+  } as unknown as PublicFormDefinition;
+
+  test("carry the definition's condition, so the forms client hides them and skips their check", () => {
+    const { html } = renderPage(condLayout, emptyDesign(), {
+      formDefinitions: new Map([["contact", def]]),
+    });
+    expect(html).toContain(
+      '<div class="emvb-text-input emvb-form-field" data-condition="{&quot;field&quot;:&quot;topic&quot;,&quot;op&quot;:&quot;eq&quot;,&quot;value&quot;:&quot;other&quot;}">',
+    );
+    expect(html.match(/data-condition=/g)?.length).toBe(1);
+  });
+});
