@@ -34,9 +34,10 @@ export function TokenScales({
   const [fluid, setFluid] = React.useState(true);
   const [ratio, setRatio] = React.useState(String(SCALE_RATIOS[2].value));
   const [done, setDone] = React.useState<string | null>(null);
-  // W-609: an "added" message is about the scale as it was; editing the numbers clears it.
+  // W-609, W-626: an "added" message is about the scale as it was; any change clears it.
   const edit =
-    (setter: (value: string) => void) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    (setter: (value: string) => void) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setter(event.currentTarget.value);
       setDone(null);
     };
@@ -74,7 +75,10 @@ export function TokenScales({
             className="emvb-native-select"
             value={kind}
             data-emvb-tokens-kind=""
-            onChange={(event) => setKind(event.currentTarget.value === "space" ? "space" : "type")}
+            onChange={(event) => {
+              setKind(event.currentTarget.value === "space" ? "space" : "type");
+              setDone(null);
+            }}
           >
             <option value="type">Type scale</option>
             <option value="space">Spacing scale</option>
@@ -97,7 +101,7 @@ export function TokenScales({
               className="emvb-native-select"
               value={ratio}
               data-emvb-tokens-ratio=""
-              onChange={(event) => setRatio(event.currentTarget.value)}
+              onChange={edit(setRatio)}
             >
               {SCALE_RATIOS.map((r) => (
                 <option key={r.value} value={String(r.value)}>
@@ -112,7 +116,10 @@ export function TokenScales({
             type="checkbox"
             checked={fluid}
             data-emvb-tokens-fluid=""
-            onChange={(event) => setFluid(event.currentTarget.checked)}
+            onChange={(event) => {
+              setFluid(event.currentTarget.checked);
+              setDone(null);
+            }}
           />{" "}
           Fluid
         </label>

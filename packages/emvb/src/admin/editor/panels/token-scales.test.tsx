@@ -100,4 +100,30 @@ describe("Scales in Site styles (W-316)", () => {
     await type("[data-emvb-tokens-base]", "20");
     expect(status()).toBeNull();
   });
+
+  test("switching the scale, ratio or Fluid clears the last Added message (W-626)", async () => {
+    await mount(<TokenScales design={emptyDesign()} onSave={async () => undefined} />);
+    const pick = async (selector: string, value: string) =>
+      act(async () => {
+        const field = document.querySelector(selector) as HTMLSelectElement;
+        field.value = value;
+        field.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+    await apply();
+    expect(status()).toBe("8 added in Font sizes.");
+    await pick("[data-emvb-tokens-kind]", "space");
+    expect(status()).toBeNull();
+    await pick("[data-emvb-tokens-kind]", "type");
+    await apply();
+    expect(status()).not.toBeNull();
+    const ratio = document.querySelector("[data-emvb-tokens-ratio]") as HTMLSelectElement;
+    await pick("[data-emvb-tokens-ratio]", ratio.options[0]?.value ?? "");
+    expect(status()).toBeNull();
+    await apply();
+    expect(status()).not.toBeNull();
+    await act(async () =>
+      (document.querySelector("[data-emvb-tokens-fluid]") as HTMLInputElement).click(),
+    );
+    expect(status()).toBeNull();
+  });
 });
