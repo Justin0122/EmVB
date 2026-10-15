@@ -55,7 +55,11 @@ const parseJson = (raw: unknown) => {
 
 const summary = (item: Item): PageSummary => ({
   id: item.id,
-  title: typeof item.data["title"] === "string" ? item.data["title"] : "Untitled page",
+  // W-679: a blank title read as "" here while the admin list said "Untitled page".
+  title:
+    typeof item.data["title"] === "string" && item.data["title"].trim()
+      ? item.data["title"]
+      : "Untitled page",
   slug: item.slug ?? "",
   status: item.status,
   hasDraft: Boolean(item.draftRevisionId && item.draftRevisionId !== item.liveRevisionId),

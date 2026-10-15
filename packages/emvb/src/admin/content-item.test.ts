@@ -15,6 +15,7 @@ describe("titleOf", () => {
 
   test("a blank title reads Untitled page", () => {
     expect(titleOf(item(""), "Untitled page")).toBe("Untitled page");
+    expect(titleOf(item("   "), "Untitled page")).toBe("Untitled page"); // W-679
     expect(titleOf(item(), "Untitled page")).toBe("Untitled page");
   });
 });

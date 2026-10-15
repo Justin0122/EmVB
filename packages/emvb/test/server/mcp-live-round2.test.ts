@@ -390,3 +390,12 @@ describe("describe_page warns about required form fields (W-511)", () => {
     expect(messages.some((m) => m.includes("Note"))).toBe(false);
   });
 });
+
+describe("W-679: untitled pages in list_pages", () => {
+  test("a blank or spaces-only title reads Untitled page, like the admin list", async () => {
+    await t.savePage({ title: "", layout: s1Page() });
+    await t.savePage({ title: "   ", layout: s1Page() });
+    const { pages } = await ok<{ pages: { title: string }[] }>("list_pages", {});
+    expect(pages.map((p) => p.title)).toEqual(["Untitled page", "Untitled page"]);
+  });
+});

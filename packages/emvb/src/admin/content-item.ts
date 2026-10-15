@@ -18,5 +18,5 @@ export type ContentItem = {
 /** The stored title, or `fallback` when it is missing or blank. */
 export function titleOf(item: ContentItem, fallback: string): string {
   const title = item.data?.["title"];
-  return typeof title === "string" && title ? title : fallback;
+  return typeof title === "string" && title.trim() ? title : fallback;
 }
