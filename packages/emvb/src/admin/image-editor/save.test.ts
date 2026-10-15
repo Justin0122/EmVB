@@ -38,6 +38,10 @@ describe("export settings (W-485)", () => {
     expect(editedFileName("garden-edited.webp", "jpeg")).toBe("garden-edited.jpg");
     expect(editedFileName("My photo (1).png", "png")).toBe("My-photo-1-edited.png");
     expect(editedFileName("", "webp")).toBe("image-edited.webp");
+    // W-539
+    expect(editedFileName("...", "webp")).toBe("image-edited.webp");
+    expect(editedFileName(".hidden.png", "png")).toBe("hidden-edited.png");
+    expect(editedFileName(`${"a".repeat(300)}.png`, "webp")).toBe(`${"a".repeat(100)}-edited.webp`);
   });
   test("the photocn version matches the installed package", async () => {
     const pkg = (await import("photocn/package.json", { with: { type: "json" } })) as {

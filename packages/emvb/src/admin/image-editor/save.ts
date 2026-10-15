@@ -53,7 +53,10 @@ export function editedFileName(name: string, format: ExportFormat): string {
       .replace(/\.[^./]+$/, "")
       .replace(/-edited$/, "")
       .replace(/[^\w.-]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "image";
+      // W-539: no leading dots (a hidden file) and at most 100 characters.
+      .replace(/^[-.]+|[-.]+$/g, "")
+      .slice(0, 100)
+      .replace(/[-.]+$/g, "") || "image";
   return `${base}-edited.${EXT[format]}`;
 }
 
