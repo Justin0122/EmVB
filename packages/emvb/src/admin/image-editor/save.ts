@@ -53,7 +53,8 @@ export function editedFileName(name: string, format: ExportFormat): string {
     name
       .replace(/\.[^./]+$/, "")
       .replace(/-edited$/, "")
-      .replace(/[^\w.-]+/g, "-")
+      // W-593: letters and digits in any script are kept (pageSlug does the same, W-591).
+      .replace(/[^\p{L}\p{M}\p{N}_.-]+/gu, "-")
       // W-539: no leading dots (a hidden file) and at most 100 characters.
       .replace(/^[-.]+|[-.]+$/g, "")
       .slice(0, 100)

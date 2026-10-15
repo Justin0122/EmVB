@@ -45,6 +45,9 @@ describe("export settings (W-485)", () => {
   test("copies are named after the original, without stacking -edited", () => {
     expect(editedFileName("garden.jpg", "webp")).toBe("garden-edited.webp");
     expect(editedFileName("garden-edited.webp", "jpeg")).toBe("garden-edited.jpg");
+    // W-593: names in other scripts are kept, not replaced by "image".
+    expect(editedFileName("Фото сада.jpg", "webp")).toBe("Фото-сада-edited.webp");
+    expect(editedFileName("写真.png", "png")).toBe("写真-edited.png");
     expect(editedFileName("My photo (1).png", "png")).toBe("My-photo-1-edited.png");
     expect(editedFileName("", "webp")).toBe("image-edited.webp");
     // W-539
