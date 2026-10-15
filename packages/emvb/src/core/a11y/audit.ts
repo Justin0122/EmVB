@@ -440,8 +440,12 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         });
       }
     }
+    // W-650: every form control takes keyboard focus, not just a text box.
     const focusable =
-      LINKISH.has(node.type) || node.type === "text-input" || Boolean(props["href"]);
+      LINKISH.has(node.type) ||
+      FIELD_TYPES.has(node.type) ||
+      node.type === "submit" ||
+      Boolean(props["href"]);
     const ownAriaHidden = (node.attributes ?? []).some(
       (a) => a.name === "aria-hidden" && a.value === "true",
     );
