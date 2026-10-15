@@ -43,3 +43,24 @@ export function fieldByName(
   if (!definition) return undefined;
   return fieldsOf(definition).find((field) => field.name === name);
 }
+
+/** W-577: a field whose limits no answer can meet (min above max), so the form can't be sent. */
+export type ImpossibleRangeField = { name: string; label: string; kind: "length" | "value" };
+
+const above = (lo: unknown, hi: unknown) =>
+  typeof lo === "number" && typeof hi === "number" && lo > hi;
+
+export function impossibleRangeFields(
+  fields: ReadonlyArray<{ name: string; label: string; validation?: unknown }>,
+): ImpossibleRangeField[] {
+  const found: ImpossibleRangeField[] = [];
+  for (const field of fields) {
+    const v = field.validation;
+    if (!v || typeof v !== "object") continue;
+    const { minLength, maxLength, min, max } = v as Record<string, unknown>;
+    const label = field.label.trim() || field.name;
+    if (above(minLength, maxLength)) found.push({ name: field.name, label, kind: "length" });
+    else if (above(min, max)) found.push({ name: field.name, label, kind: "value" });
+  }
+  return found;
+}

@@ -4,6 +4,7 @@ import * as React from "react";
 import type { Fetcher } from "../../../api.ts";
 import { loadFormFields, type DefinitionField } from "../../../forms-api.ts";
 import {
+  impossibleRangeFields,
   requiredFieldIssues,
   requiredFieldIssueText,
   type LayoutNode,
@@ -40,13 +41,47 @@ export function RequiredFieldsNotice({ node, fetcher }: { node: LayoutNode; fetc
     };
   }, [fetcher, formId]);
   const issues = fields ? requiredFieldIssues(node, fields) : [];
-  if (issues.length === 0) return null;
+  const ranges = fields ? impossibleRangeFields(fields) : [];
+  if (issues.length === 0 && ranges.length === 0) return null;
+  const rangeBanner =
+    ranges.length > 0 ? (
+      <Banner
+        variant="alert"
+        icon={<WarningIcon aria-hidden="true" />}
+        title={
+          ranges.length === 1
+            ? "A field's limits can't be met"
+            : `${ranges.length} fields' limits can't be met`
+        }
+        description={
+          <ul className="emvb-required-notice__list">
+            {ranges.map((range) => (
+              <li key={range.name} data-emvb-range-issue={range.kind}>
+                <strong>{range.label}</strong>{" "}
+                {range.kind === "length"
+                  ? "has a minimum length above its maximum length"
+                  : "has a minimum value above its maximum"}
+                , so no answer is accepted. Fix the limits in Forms.
+              </li>
+            ))}
+          </ul>
+        }
+      />
+    ) : null;
+  if (issues.length === 0) {
+    return (
+      <div className="emvb-required-notice" data-emvb-range-fields="">
+        {rangeBanner}
+      </div>
+    );
+  }
   const title =
     issues.length === 1
       ? "A required field can't be filled in"
       : `${issues.length} required fields can't be filled in`;
   return (
     <div className="emvb-required-notice" data-emvb-required-fields="">
+      {rangeBanner}
       <Banner
         variant="alert"
         icon={<WarningIcon aria-hidden="true" />}

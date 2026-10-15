@@ -66,6 +66,7 @@ export type DefinitionField = {
   type: string;
   label: string;
   required: boolean;
+  validation?: { minLength?: number; maxLength?: number; min?: number; max?: number };
 };
 
 export async function loadFormFields(

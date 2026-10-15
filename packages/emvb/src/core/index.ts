@@ -159,6 +159,8 @@ export {
 export {
   fieldsOf,
   fieldByName,
+  impossibleRangeFields,
+  type ImpossibleRangeField,
   type PublicFormDefinition,
   type PublicFormField,
   type FormDefinitions,
