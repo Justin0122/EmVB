@@ -357,13 +357,14 @@ function IconLibrary({
           <input
             id={searchId}
             type="search"
-            // The dialog opens straight into the search, like a command palette.11y/no-autofocus
+            // The dialog opens straight into the search, like a command palette.
             autoFocus
             value={query}
             placeholder={`Search ${category.id === ALL_ICONS ? "all icons" : category.label}…`}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={(event) => {
-              if ((event.key === "ArrowDown" || event.key === "Enter") && filtered.length > 0) {
+              // W-682: not the Enter that confirms an IME word (W-606).
+              if ((event.key === "ArrowDown" || isCommitEnter(event)) && filtered.length > 0) {
                 event.preventDefault();
                 if (active < 0) setActive(0);
                 gridRef.current?.focus();

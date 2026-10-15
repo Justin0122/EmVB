@@ -275,6 +275,14 @@ describe("icon library dialog (W-236)", () => {
     const listbox = await ready();
     const input = dialog()?.querySelector<HTMLInputElement>("input");
     if (!input) throw new Error("no search");
+    // W-682: the Enter that confirms an IME word stays in the search.
+    input.focus();
+    await act(async () => {
+      input.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Enter", isComposing: true, bubbles: true }),
+      );
+    });
+    expect(document.activeElement === input).toBe(true);
     await key(input, "ArrowDown");
     expect(document.activeElement === listbox).toBe(true);
     const tiles = [...(dialog()?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])];
