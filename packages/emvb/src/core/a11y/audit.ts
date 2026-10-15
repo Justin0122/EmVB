@@ -2,6 +2,16 @@ import type { DesignSystem } from "../schema/design.ts";
 import { isParentNode, type Layout, type LayoutNode } from "../schema/layout.ts";
 import { updateNode } from "../tree-ops.ts";
 
+/**
+ * W-572: text as a screen reader says it: invisible format characters (zero-width space, word
+ * joiner, BOM, bidi marks, soft hyphen) and blank-looking fillers go, then spaces are trimmed.
+ * A label of only those reads as nothing.
+ */
+const spoken = (value: unknown): string =>
+  String(value ?? "")
+    .replace(/[\p{Cf}\u115F\u1160\u2800\u3164\uFFA0]/gu, "")
+    .trim();
+
 export type A11yFix =
   | { kind: "heading-level"; level: number }
   | { kind: "decorative" }
@@ -196,7 +206,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
         message: "This image is a link but is marked decorative, so the link has no name.",
       });
     } else if (node.type === "image" && props["decorative"] !== true) {
-      const alt = typeof props["alt"] === "string" ? props["alt"].trim() : "";
+      const alt = typeof props["alt"] === "string" ? spoken(props["alt"]) : "";
       if (USELESS_ALT.test(alt)) {
         add({
           nodeId: node.id,
@@ -243,12 +253,12 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     }
     // W-408: a blank tab label or accordion title renders a tab or summary with no name.
     // W-416: a form field with no label (a placeholder is not one: it goes once you type).
-    if (FIELD_TYPES.has(node.type) && !String(props["label"] ?? "").trim() && !node.bind) {
+    if (FIELD_TYPES.has(node.type) && !spoken(props["label"]) && !node.bind) {
       add({
         nodeId: node.id,
         rule: "control-name",
         severity: "error",
-        message: String(props["placeholder"] ?? "").trim()
+        message: spoken(props["placeholder"])
           ? "This field has only a placeholder, which disappears once you type; give it a label."
           : "This field has no label, so screen readers can't say what it's for.",
       });
@@ -259,7 +269,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       video: "title",
     } as const;
     if (node.type === "tab-panel" || node.type === "accordion-item" || node.type === "video") {
-      const name = String(props[NAME_PROP[node.type]] ?? "").trim();
+      const name = spoken(props[NAME_PROP[node.type]]);
       if (!name && !node.bind) {
         add({
           nodeId: node.id,
@@ -277,7 +287,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
     }
     // W-424: two menus with the same name are two "Menu navigation" landmarks nobody can tell apart.
     if (node.type === "menu" && (node.children?.length ?? 0) > 0) {
-      const name = String(props["label"] ?? "").trim() || "Menu";
+      const name = spoken(props["label"]) || "Menu";
       const key = name.toLowerCase();
       if (menuNames.some((names, i) => shownOn[i] && names.has(key))) {
         add({
@@ -292,7 +302,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       });
     }
     // W-419: an empty heading still shows up in screen readers' heading list, with nothing to say.
-    if (node.type === "heading" && !String(props["text"] ?? "").trim() && !node.bind) {
+    if (node.type === "heading" && !spoken(props["text"]) && !node.bind) {
       add({
         nodeId: node.id,
         rule: "empty-heading",
@@ -329,7 +339,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
       lastLevel = level;
     }
     if (LINKISH.has(node.type) || (node.type === "icon" && props["href"])) {
-      const text = String(props["text"] ?? props["title"] ?? "").trim();
+      const text = spoken(props["text"] ?? props["title"]);
       const hasHref = typeof props["href"] === "string" && props["href"].trim() !== "";
       if (!text && !node.bind) {
         add({
