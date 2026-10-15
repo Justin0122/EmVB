@@ -199,3 +199,28 @@ test("W-638: large text and opacity set by global classes count in the contrast 
   // Near-black text faded to 30% by a class is flagged.
   expect(report(text(["faint"], "#111111")).map((i) => i.rule)).toEqual(["contrast"]);
 });
+
+test("W-639: H4 to H6 are not large text, and the site's heading styles count", () => {
+  const onWhite = (child: LayoutNode, design = emptyDesign()) =>
+    auditPage(
+      page(h("head0001", 1), {
+        id: "box00001",
+        type: "container",
+        props: {},
+        style: { backgroundColor: "#ffffff" },
+        children: [child],
+      } as LayoutNode),
+      design,
+    ).issues.map((i) => `${i.rule}:${i.nodeId}`);
+  // #888 on white is 3.5:1: enough for a 24 px H2, too low for a 16 px H4.
+  expect(onWhite(h("head0002", 2, { style: { color: "#888888" } }))).toEqual([]);
+  expect(
+    onWhite(h("head0002", 2), {
+      ...emptyDesign(),
+      defaults: { h2: { color: "#eeeeee" } },
+    } as ReturnType<typeof emptyDesign>),
+  ).toEqual(["contrast:head0002"]);
+  const h4 = h("head0004", 2, { style: { color: "#888888" } });
+  (h4.props as { level: number }).level = 4;
+  expect(onWhite(h4)).toContain("contrast:head0004");
+});

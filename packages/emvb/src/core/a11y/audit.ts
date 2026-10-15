@@ -129,25 +129,43 @@ function px(value: unknown): number | undefined {
   return undefined;
 }
 
-/** Global classes apply first, in stylesheet order, then the element's own style (W-637, W-638). */
+/** Browser default heading sizes in px, H1 to H6 (all bold). */
+const HEADING_PX = [32, 24, 18.72, 16, 13.28, 10.72];
+
+const headingLevel = (node: LayoutNode): number | undefined => {
+  if (node.type !== "heading") return undefined;
+  const level = (node.props as { level?: unknown }).level;
+  return typeof level === "number" && level >= 1 && level <= 6 ? level : 2;
+};
+
+/**
+ * The site's starting styles for the tag (W-639), then global classes in stylesheet order, then
+ * the element's own style (W-637, W-638).
+ */
 function effectiveStyle(
   node: LayoutNode,
   design: DesignSystem,
 ): Record<string, unknown> | undefined {
+  const level = headingLevel(node);
+  const tagDefaults =
+    level === undefined
+      ? undefined
+      : (design.defaults?.[`h${level}` as "h1"] as Record<string, unknown> | undefined);
   const classIds = new Set(node.classes ?? []);
-  if (classIds.size === 0) return node.style as Record<string, unknown> | undefined;
+  if (classIds.size === 0 && !tagDefaults) return node.style as Record<string, unknown> | undefined;
   const fromClasses = (design.classes ?? [])
     .filter((c) => classIds.has(c.id))
-    .reduce<Record<string, unknown>>((acc, c) => Object.assign(acc, c.style), {});
+    .reduce<Record<string, unknown>>((acc, c) => Object.assign(acc, c.style), { ...tagDefaults });
   return { ...fromClasses, ...(node.style as Record<string, unknown> | undefined) };
 }
 
-/** Large text (24 px, or 18.66 px bold) needs 3:1; other text 4.5:1. */
+/** Large text (24 px, or 18.66 px bold) needs 3:1; other text 4.5:1. H4 to H6 are not large (W-639). */
 function largeText(node: LayoutNode, design: DesignSystem): boolean {
   const style = effectiveStyle(node, design) as
     | { fontSize?: unknown; fontWeight?: unknown }
     | undefined;
-  const size = px(style?.fontSize) ?? (node.type === "heading" ? 24 : 16);
+  const level = headingLevel(node);
+  const size = px(style?.fontSize) ?? (level === undefined ? 16 : (HEADING_PX[level - 1] ?? 24));
   const weight =
     typeof style?.fontWeight === "number" ? style.fontWeight : node.type === "heading" ? 700 : 400;
   return size >= 24 || (size >= 18.66 && weight >= 700);
