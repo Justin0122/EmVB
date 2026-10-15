@@ -1,4 +1,4 @@
-import { loopPermalink, type ThemePostFields } from "../core/index.ts";
+import { clipText, loopPermalink, type ThemePostFields } from "../core/index.ts";
 
 type MediaLike = {
   src?: unknown;
@@ -104,7 +104,7 @@ export function plainFieldsOf(
   for (const [key, value] of Object.entries(data)) {
     if (Object.keys(fields).length >= 100) break;
     if (!FIELD_NAME.test(key) || MAPPED.has(key)) continue;
-    if (typeof value === "string") fields[key] = value.slice(0, 2000);
+    if (typeof value === "string") fields[key] = clipText(value, 2000);
     else if (typeof value === "number" && Number.isFinite(value)) fields[key] = value;
     else if (typeof value === "boolean") fields[key] = value;
     else if (value instanceof Date) {

@@ -101,6 +101,19 @@ describe("EmVB MCP tools on EmDash's plugin MCP (W-452, W-453, W-454)", () => {
     expect(JSON.stringify(outline.outline)).not.toContain('"props"');
   });
 
+  test("an outline label cut at 57 keeps a whole emoji (W-557)", async () => {
+    const layout = s1Page();
+    (layout.root.children[0] as { props: { text: string } }).props.text =
+      `${"a".repeat(56)}😀 and the rest of a long heading`;
+    const created = (await t.savePage({ title: "Emoji", layout })) as {
+      data: { item: { id: string } };
+    };
+    const outline = data<{ outline: { children: { label: string }[] } }>(
+      await t.mcp("get_layout", { pageId: created.data.item.id, format: "outline" }),
+    );
+    expect(outline.outline.children[0]?.label).toBe(`${"a".repeat(56)}…`);
+  });
+
   test("an unknown page is a NOT_FOUND tool error, not a crash", async () => {
     const result = await t.mcp("get_layout", { pageId: "nope" });
     expect(result.success).toBe(false);

@@ -17,6 +17,7 @@ import {
   type LayoutNode,
 } from "../core/index.ts";
 import { parentChildRefusal } from "../core/arrange.ts";
+import { clipText } from "../core/limits.ts";
 import { KNOWN_NODE_SCHEMAS } from "../core/schema/layout.ts";
 import { requiredFieldIssues, requiredFieldIssueText } from "../core/forms/binding.ts";
 import { isFormNode } from "../core/schema/layout.ts";
@@ -63,7 +64,7 @@ function summaryText(node: LayoutNode): string | undefined {
   const props = (node as { props?: Record<string, unknown> }).props ?? {};
   const text = typeof props["text"] === "string" ? props["text"] : undefined;
   if (!text) return undefined;
-  return text.length > 60 ? `${text.slice(0, 57)}…` : text;
+  return text.length > 60 ? `${clipText(text, 57)}…` : text;
 }
 
 function stats(layout: Layout) {

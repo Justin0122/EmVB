@@ -104,3 +104,8 @@ describe("plain fields for data bindings (W-307)", () => {
     });
   });
 });
+
+test("a bound text field cut at 2000 keeps a whole emoji (W-557)", () => {
+  const fields = plainFieldsOf({ note: `${"a".repeat(1999)}😀 tail` });
+  expect(fields["note"]).toBe("a".repeat(1999));
+});
