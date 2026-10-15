@@ -1,4 +1,5 @@
 import { sameJson } from "../stable-json.ts";
+import { nameKey } from "./classes.ts";
 import { emptyDesign, type DesignSystem } from "../schema/design.ts";
 
 export type DesignConflict = { kind: "variable" | "class" | "setting"; name: string };
@@ -89,6 +90,8 @@ function mergeList<T extends Named>(
   const theirsBy = by(theirItems);
   const result: T[] = [];
   const seen = new Set<string>();
+  /** Ids whose kept copy is this tab's change (W-620). */
+  const fromUs = new Set<string>();
   const take = (id: string) => {
     if (seen.has(id)) return;
     seen.add(id);
@@ -102,6 +105,7 @@ function mergeList<T extends Named>(
       return;
     }
     if (!theyChanged || same(ourItem, theirItem)) {
+      if (ourItem && !same(ourItem, theirItem)) fromUs.add(ourItem.id);
       if (ourItem) result.push(ourItem);
       return;
     }
@@ -110,7 +114,25 @@ function mergeList<T extends Named>(
   };
   for (const item of theirItems) take(item.id);
   for (const item of ourItems) take(item.id);
-  return result;
+  // W-620: this tab and the other one each named a different class (or variable) the same, so the
+  // merge would keep two with one name; names must stay unique, so it's a conflict.
+  const theirNames = new Map(
+    result.filter((item) => !fromUs.has(item.id)).map((item) => [nameKey(item.name), item.id]),
+  );
+  const clashes = result.filter((item) => {
+    if (!fromUs.has(item.id)) return false;
+    const other = theirNames.get(nameKey(item.name));
+    return other !== undefined && other !== item.id;
+  });
+  if (clashes.length === 0) return result;
+  for (const item of clashes) conflicts.push({ kind, name: item.name });
+  // The server copy stays, as in any conflict: their version of a renamed item, nothing for a new one.
+  const clashed = new Set(clashes.map((item) => item.id));
+  return result.flatMap((item) => {
+    if (!clashed.has(item.id)) return [item];
+    const theirItem = theirsBy.get(item.id);
+    return theirItem ? [theirItem] : [];
+  });
 }
 
 function pickSetting<T>(
