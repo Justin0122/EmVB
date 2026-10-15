@@ -26315,7 +26315,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/history/diff.ts",
-          "search": "  const fresh = clashes ? withFreshIds(current, section) : section;",
+          "search": "  const fresh = clashes ? withFreshIds(current, withoutCopiedArms(section, elsewhere)) : section;",
           "replace": "  const fresh = section;"
         }
       ],
