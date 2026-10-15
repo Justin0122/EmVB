@@ -19943,8 +19943,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/resolve-theme.ts",
-          "search": "stored.float, surface)",
-          "replace": "stored.float, true)"
+          "search": "stored.float,\n            surface,\n",
+          "replace": "stored.float,\n            true,\n"
         }
       ],
       "command": [
@@ -21189,7 +21189,7 @@
     {
       "id": "W-600/one-page-gap",
       "requirement": "W-600",
-      "description": "Pagination shows a gap that hides only one page (1 \u2026 3).",
+      "description": "Pagination shows a gap that hides only one page (1 … 3).",
       "edits": [
         {
           "file": "packages/emvb/src/core/theme/pagination.ts",
@@ -22230,8 +22230,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/pagination.ts",
-          "search": "rel: \"next\",\n            ...nameIfSymbols(label(node.props.nextText, \"Next\"), \"Next page\"),",
-          "replace": "...nameIfSymbols(label(node.props.nextText, \"Next\"), \"Next page\"),"
+          "search": "rel: \"next\",\n",
+          "replace": ""
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/render/pagination.test.ts"],
@@ -25036,12 +25036,52 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/theme/popup-markup.ts",
-          "search": "aria-modal=\"true\" aria-label=\"Popup\" tabindex",
+          "search": "aria-modal=\"true\" aria-label=\"${chromeLabel(labels.popup, \"Popup\")}\" tabindex",
           "replace": "aria-modal=\"true\" aria-labelledby=\"${titleId}\" tabindex"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/theme/popup-markup.test.ts"],
       "expect": "\\(fail\\).*W-282"
+    },
+    {
+      "id": "W-688/english-date",
+      "requirement": "W-688",
+      "description": "Post Dates ignore the page's language.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/dynamic-post.ts",
+          "search": "formatPostDate(parsed, format, lang)",
+          "replace": "formatPostDate(parsed, format)"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/dynamic-post.test.ts",
+        "-t",
+        "W-688"
+      ],
+      "expect": "\\(fail\\).*W-688"
+    },
+    {
+      "id": "W-690/english-close",
+      "requirement": "W-690",
+      "description": "The popup's close button ignores the set name.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/theme/popup-markup.ts",
+          "search": "chromeLabel(labels.close, \"Close\")",
+          "replace": "\"Close\""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/theme/popup-markup.test.ts",
+        "-t",
+        "W-690"
+      ],
+      "expect": "\\(fail\\).*W-690"
     },
     {
       "id": "W-283/no-dedupe",
@@ -29569,7 +29609,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/pagination.ts",
-          "search": "\"aria-label\": `Page ${item.n}`,",
+          "search": "            \"aria-label\": label(node.props.pageLabel, \"Page {page}\").replaceAll(\n              \"{page}\",\n              String(item.n),\n            ),",
           "replace": ""
         }
       ],
@@ -29581,6 +29621,26 @@
         "Page N"
       ],
       "expect": "\\(fail\\).*Page N"
+    },
+    {
+      "id": "W-689/english-page-name",
+      "requirement": "W-689",
+      "description": "Page number names ignore the set wording.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/pagination.ts",
+          "search": "label(node.props.pageLabel, \"Page {page}\")",
+          "replace": "\"Page {page}\""
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/core/render/pagination.test.ts",
+        "-t",
+        "W-689"
+      ],
+      "expect": "\\(fail\\).*W-689"
     },
     {
       "id": "W-427/www-relative",
