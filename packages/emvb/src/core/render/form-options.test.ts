@@ -422,3 +422,54 @@ describe("radio options keep the group's legend (W-524)", () => {
     );
   });
 });
+
+describe("W-588: length limits the browser can read", () => {
+  const def = (validation: Record<string, number>): FormDefinitions =>
+    new Map([
+      [
+        "contact",
+        {
+          name: "Contact",
+          slug: "contact",
+          status: "active",
+          settings: {},
+          pages: [
+            { fields: [{ name: "msg", type: "text", label: "Msg", required: false, validation }] },
+          ],
+        } as PublicFormDefinition,
+      ],
+    ]);
+  const page = (validation: Record<string, number>) =>
+    renderPage(
+      {
+        schemaVersion: 16,
+        root: {
+          id: "root0001",
+          type: "container",
+          props: {},
+          children: [
+            {
+              ...defaultElement("form", "form0001"),
+              props: { formId: "contact" },
+              children: [
+                { id: "text0001", type: "text-input", props: { field: "msg", label: "Msg" } },
+              ],
+            } as LayoutNode,
+          ],
+        },
+      },
+      emptyDesign(),
+      { formDefinitions: def(validation) },
+    ).html;
+
+  test("a fractional length is rounded inward, not dropped by the browser", () => {
+    const html = page({ minLength: 2.5, maxLength: 9.5 });
+    expect(html).toContain('minlength="3" maxlength="9"');
+  });
+
+  test("a negative or non-finite length is left off", () => {
+    const html = page({ minLength: -1, maxLength: Number.NaN });
+    expect(html).not.toContain("minlength");
+    expect(html).not.toContain("maxlength");
+  });
+});

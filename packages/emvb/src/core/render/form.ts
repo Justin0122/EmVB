@@ -311,6 +311,12 @@ function escapeClassLiterals(value: string): string {
   return out;
 }
 
+function lengthLimit(value: unknown, round: (n: number) => number): string | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) return undefined;
+  const whole = round(value);
+  return whole >= 0 ? String(whole) : undefined;
+}
+
 /**
  * W-297: what the forms plugin's own embed puts on a control: the input type (so phones show the
  * right keyboard), `required`, and the length, range and pattern limits, plus a visible mark on
@@ -323,8 +329,12 @@ function withFieldMeta(vnode: VNode, node: LayoutNode, meta: PublicFormField): V
   const limits: Record<string, string> = {};
   if (node.type === "text-input" || node.type === "textarea") {
     if (LENGTH_TYPES.has(kind)) {
-      if (rules.minLength !== undefined) limits.minlength = String(rules.minLength);
-      if (rules.maxLength !== undefined) limits.maxlength = String(rules.maxLength);
+      // W-588: the browser drops a minlength/maxlength that isn't a whole number >= 0, so a
+      // fractional limit is rounded inward and a negative or non-finite one is left off.
+      const lo = lengthLimit(rules.minLength, Math.ceil);
+      const hi = lengthLimit(rules.maxLength, Math.floor);
+      if (lo !== undefined) limits.minlength = lo;
+      if (hi !== undefined) limits.maxlength = hi;
     }
     if (kind === "number") {
       if (rules.min !== undefined) limits.min = String(rules.min);
