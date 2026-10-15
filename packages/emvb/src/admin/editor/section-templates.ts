@@ -139,34 +139,3 @@ export function usePartTemplates(layout: Layout | null, fetcher: Fetcher): PartT
 
   return templates;
 }
-
-/** Section theme parts referenced by the open layout, so the canvas shows the synced contents. */
-export function useSectionTemplates(
-  layout: Layout | null,
-  fetcher: Fetcher,
-): Record<string, Layout> {
-  const key = layout ? collectSectionPartIds(layout).join("\0") : "";
-  const [templates, setTemplates] = React.useState<Record<string, Layout>>({});
-
-  React.useEffect(() => {
-    const ids = key ? key.split("\0") : [];
-    if (ids.length === 0) {
-      setTemplates({});
-      return;
-    }
-    let cancelled = false;
-    void loadSectionTemplates(fetcher, ids).then(
-      (acc) => {
-        if (!cancelled) setTemplates(acc);
-      },
-      () => {
-        if (!cancelled) setTemplates({});
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [key, fetcher]);
-
-  return templates;
-}
