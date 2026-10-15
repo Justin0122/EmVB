@@ -172,6 +172,35 @@ describe("Layers panel (W-018)", () => {
     expect(reachedWindow).toBe(false);
   });
 
+  test("a row menu closes when a press or the focus lands outside it (W-612)", async () => {
+    await mount("head0001");
+    const menuButton = () =>
+      document.querySelector('[data-emvb-layer="head0001"] .emvb-layer-menu-btn') as HTMLElement;
+    await clickEl(menuButton());
+    expect(document.querySelector('[role="menu"]')).not.toBeNull();
+    // A press inside the menu keeps it open.
+    await act(async () => {
+      document
+        .querySelector('[role="menuitem"]')
+        ?.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    });
+    expect(document.querySelector('[role="menu"]')).not.toBeNull();
+    await act(async () => {
+      document.body.dispatchEvent(new Event("pointerdown", { bubbles: true }));
+    });
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+    // Tab out of the menu: focus moves to another row.
+    await clickEl(menuButton());
+    const item = document.querySelector('[role="menuitem"]') as HTMLElement;
+    const other = document.querySelector(
+      '[data-emvb-layer="root0001"] .emvb-layer-select',
+    ) as HTMLElement;
+    await act(async () => {
+      item.dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: other }));
+    });
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+  });
+
   test("a row menu takes ↑/↓/Home/End and opens on its first item (W-260)", async () => {
     await mount("head0001");
     const menuButton = document.querySelector(

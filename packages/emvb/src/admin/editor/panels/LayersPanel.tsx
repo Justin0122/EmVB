@@ -219,6 +219,28 @@ export function LayersPanel({
   );
   const toggle = React.useMemo(() => toggleIn(setCollapsed), []);
 
+  // W-612: an open row menu closes when a press lands outside it, focus leaves the panel's
+  // window (a click in the canvas frame), or focus moves out of it (Tab).
+  React.useEffect(() => {
+    if (!menuId) return;
+    const close = () => setMenuId(null);
+    const onPress = (event: Event) => {
+      if (!inRowMenu(event.target)) close();
+    };
+    const onFocusOut = (event: FocusEvent) => {
+      const to = event.relatedTarget;
+      if (inRowMenu(event.target) && to instanceof Element && !inRowMenu(to)) close();
+    };
+    document.addEventListener("pointerdown", onPress, true);
+    document.addEventListener("focusout", onFocusOut);
+    window.addEventListener("blur", close);
+    return () => {
+      document.removeEventListener("pointerdown", onPress, true);
+      document.removeEventListener("focusout", onFocusOut);
+      window.removeEventListener("blur", close);
+    };
+  }, [menuId]);
+
   React.useEffect(() => {
     if (!layout || !selectedId) return;
     setCollapsed((current) => {
