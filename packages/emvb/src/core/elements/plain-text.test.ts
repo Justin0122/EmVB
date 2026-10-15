@@ -31,3 +31,10 @@ describe("text caps keep whole emoji (W-509)", () => {
     expect(clipText("ab😀", 4)).toBe("ab😀");
   });
 });
+
+test("clipText keeps whole characters: accents and flags (W-543)", () => {
+  expect(clipText("e\u0301e\u0301e\u0301", 3)).toBe("e\u0301");
+  expect(clipText("🇨🇦🇨🇦🇨🇦", 8)).toBe("🇨🇦🇨🇦");
+  expect(clipText("🇨🇦🇨🇦🇨🇦", 6)).toBe("🇨🇦");
+  expect(clipText("hello world", 5)).toBe("hello");
+});

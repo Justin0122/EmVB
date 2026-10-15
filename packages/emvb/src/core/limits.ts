@@ -10,10 +10,21 @@ export const MAX_TABS = 12;
 
 /**
  * W-509: `text` cut to at most `max` UTF-16 units, as schema limits count, without leaving half
- * of an emoji (a lone surrogate) at the end.
+ * of an emoji (a lone surrogate), an accent's base letter or half a flag at the end.
  */
 export function clipText(text: string, max: number): string {
   if (text.length <= max) return text;
+  // W-543: whole characters as people see them, so an accent or half a flag isn't left behind.
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    let end = 0;
+    for (const { segment } of new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(
+      text.slice(0, max + 32),
+    )) {
+      if (end + segment.length > max) break;
+      end += segment.length;
+    }
+    return text.slice(0, end);
+  }
   const code = text.charCodeAt(max - 1);
   return text.slice(0, code >= 0xd800 && code <= 0xdbff ? max - 1 : max);
 }
