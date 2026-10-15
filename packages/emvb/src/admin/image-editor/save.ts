@@ -94,12 +94,23 @@ export function buildImageEdit(input: {
 }): { ok: true; edit: ImageEdit } | { ok: false; message: string } {
   const { imageProps, output } = input;
   const prior = ImageEdit.safeParse(imageProps.edit);
+  // W-582: a damaged record (e.g. a newer photocn's recipe key) still names the original the
+  // editor opened (load.ts reads edit.originalSrc leniently), so keep pointing there.
+  const raw = (imageProps.edit ?? {}) as { originalSrc?: unknown; originalMediaId?: unknown };
+  const rawSrc = typeof raw.originalSrc === "string" ? raw.originalSrc.trim() : "";
+  const rawId = typeof raw.originalMediaId === "string" ? raw.originalMediaId : "";
   const originalSrc = prior.success
     ? prior.data.originalSrc
-    : typeof imageProps.src === "string"
-      ? imageProps.src
-      : "";
-  const priorId = prior.success ? prior.data.originalMediaId : undefined;
+    : rawSrc
+      ? rawSrc
+      : typeof imageProps.src === "string"
+        ? imageProps.src
+        : "";
+  const priorId = prior.success
+    ? prior.data.originalMediaId
+    : rawSrc && rawId.length >= 1 && rawId.length <= 128
+      ? rawId
+      : undefined;
   const originalMediaId =
     priorId ?? (typeof imageProps.mediaId === "string" ? imageProps.mediaId : undefined);
   const parsed = ImageEdit.safeParse({

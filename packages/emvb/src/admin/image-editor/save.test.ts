@@ -124,6 +124,30 @@ describe("the edit record (W-485)", () => {
     expect(second.ok && second.edit.originalSrc).toBe("/m/garden.jpg");
   });
 
+  test("a damaged record still keeps the original the editor opened (W-582)", () => {
+    // The editor re-opens from edit.originalSrc even when the record fails the schema
+    // (e.g. a recipe key from a newer photocn), so the new record must point there too,
+    // not at the edited copy, or re-opening would apply the recipe twice.
+    const damaged = {
+      v: 1,
+      engine: "photocn",
+      engineVersion: "9.0.0",
+      recipe: { version: 1, future: { x: 1 } },
+      originalMediaId: "01ORIG",
+      originalSrc: "/m/garden.jpg",
+      output,
+      editedAt: "2026-10-13T12:00:00.000Z",
+    };
+    const built = buildImageEdit({
+      imageProps: { src: "/m/garden-edited.webp", mediaId: "01COPY", edit: damaged },
+      recipe: { version: 1 },
+      output,
+      now,
+    });
+    expect(built.ok && built.edit.originalSrc).toBe("/m/garden.jpg");
+    expect(built.ok && built.edit.originalMediaId).toBe("01ORIG");
+  });
+
   test("a data: blend is refused with a reason", () => {
     const built = buildImageEdit({
       imageProps: { src: "/m/a.jpg" },
