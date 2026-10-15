@@ -183,3 +183,17 @@ describe("element shortcuts only act from the canvas, Layers, or nothing focused
     expect(seen).toEqual([]);
   });
 });
+
+describe("held keys don't repeat destructive shortcuts (W-622)", () => {
+  test("a held Delete, Ctrl+D or Ctrl+V acts once; a held arrow still walks", async () => {
+    const seen: Seen = [];
+    await mount(<Harness seen={seen} />);
+    await press(target("layer"), "Delete", { repeat: true });
+    await press(target("layer"), "Backspace", { repeat: true });
+    await press(target("layer"), "d", { ctrlKey: true, repeat: true });
+    await press(target("layer"), "v", { ctrlKey: true, repeat: true });
+    expect(seen).toEqual([]);
+    await press(document.body, "ArrowUp", { repeat: true });
+    expect(seen).toEqual(["select head0001"]);
+  });
+});
