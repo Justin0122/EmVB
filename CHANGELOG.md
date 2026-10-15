@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 
+- An image edit’s blend picture can no longer point at another site through a path such as `/\evil.example/x.png`, which browsers read as `//evil.example` (W-534).
 - Closing the command palette and leaving the editor straight away no longer moves focus to a layer up to two seconds later; a settings test no longer overlaps React updates, which failed 26 editor tests on CI (W-533).
 - The posts archive title ("Posts") can be worded in the site’s language: the Pagination element’s new "Posts archive title" replaces it in the archive’s page title and post fields; category and tag archives keep the term’s name (W-532).
 

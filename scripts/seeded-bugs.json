@@ -30401,7 +30401,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/image-edit/schema.ts",
-          "search": "(s) => /^\\/(?!\\/)/.test(s) || /^https:\\/\\//i.test(s),",
+          "search": "(s) => !hasUnsafeUrlChar(s) && (/^\\/(?!\\/)/.test(s) || /^https:\\/\\//i.test(s)),",
           "replace": "(s) => s.length > 0,"
         }
       ],
@@ -31342,6 +31342,20 @@
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/palette-focus.test.tsx"],
       "expect": "\\(fail\\).*W-533"
+    },
+    {
+      "id": "W-534/blend-backslash-host",
+      "requirement": "W-534",
+      "description": "A blend src like /\\\\host passes as a site path.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/image-edit/schema.ts",
+          "search": "!hasUnsafeUrlChar(s) && ",
+          "replace": ""
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/image-edit/image-edit.test.ts"],
+      "expect": "\\(fail\\).*W-534"
     }
   ]
 }

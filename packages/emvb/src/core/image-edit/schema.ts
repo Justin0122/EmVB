@@ -82,6 +82,15 @@ const Geometry = z
 /** photocn filter labels are short names ("juno"); unknown ones are ignored by the renderer. */
 const FilterLabel = z.string().regex(/^[A-Za-z0-9 _-]{1,32}$/, "Filter names are short words");
 
+/** Backslashes and control characters, which URL parsing rewrites or drops. */
+function hasUnsafeUrlChar(s: string): boolean {
+  for (const ch of s) {
+    const code = ch.charCodeAt(0);
+    if (ch === "\\" || code < 0x20 || code === 0x7f) return true;
+  }
+  return false;
+}
+
 /**
  * A blend image must be a same-site path or an https URL; `data:` blends (picked files) are
  * refused because they would put a whole image into the layout.
@@ -90,7 +99,8 @@ const BlendSrc = z
   .string()
   .max(2000)
   .refine(
-    (s) => /^\/(?!\/)/.test(s) || /^https:\/\//i.test(s),
+    // A backslash or control character can turn "/\\host" into another host (W-534).
+    (s) => !hasUnsafeUrlChar(s) && (/^\/(?!\/)/.test(s) || /^https:\/\//i.test(s)),
     "Blend images must be a site path or an https URL",
   );
 

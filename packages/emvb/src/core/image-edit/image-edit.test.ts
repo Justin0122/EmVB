@@ -80,6 +80,12 @@ describe("image edit record (W-481)", () => {
     ["a script-like filter name", { version: 1, filters: { label: "<img onerror>" } }],
     ["a data: blend", { version: 1, blend: { src: "data:image/png;base64,AAAA", mix: 0.5 } }],
     ["a protocol-relative blend", { version: 1, blend: { src: "//evil.example/x.png", mix: 0.5 } }],
+    // W-534: browsers read "/\\host" as "//host".
+    [
+      "a backslash blend (W-534)",
+      { version: 1, blend: { src: "/\\evil.example/x.png", mix: 0.5 } },
+    ],
+    ["a tab blend (W-534)", { version: 1, blend: { src: "/\t/evil.example/x.png", mix: 0.5 } }],
     ["a curve with one point", { version: 1, curves: [[[0, 0]], null, null, null] }],
     ["recipe version 2", { version: 2 }],
   ])("refuses a recipe with %s", (_, recipe) => {
