@@ -158,3 +158,28 @@ test("W-645: a background image in a container-query override counts", () => {
   } as LayoutNode;
   expect(measurePage(page(styled), emptyDesign()).imageCount).toBe(1);
 });
+
+describe("W-671: parts the canvas loaded are weighed", () => {
+  test("an image inside a synced section or Loop Item part counts", () => {
+    const wrap = (children: unknown[]) =>
+      ({
+        schemaVersion: 16,
+        root: { id: "root0001", type: "container", props: {}, children },
+      }) as unknown as Layout;
+    const withParts = wrap([
+      { id: "sec00001", type: "section", props: { partId: "hero" }, children: [] },
+      { id: "loop0001", type: "loop", props: { itemPartId: "card" }, children: [] },
+    ]);
+    const hero = wrap([
+      { id: "img00001", type: "image", props: { src: "/hero.jpg", alt: "Hero" } },
+    ]);
+    const card = wrap([{ id: "img00002", type: "image", props: { src: "/c.jpg", alt: "Card" } }]);
+    expect(measurePage(withParts, emptyDesign()).imageCount).toBe(0);
+    const report = measurePage(withParts, emptyDesign(), {
+      sectionTemplates: { hero },
+      loopTemplates: { card },
+    });
+    expect(report.imageCount).toBe(2);
+    expect(report.sections.find((s) => s.id === "sec00001")?.images).toBe(1);
+  });
+});

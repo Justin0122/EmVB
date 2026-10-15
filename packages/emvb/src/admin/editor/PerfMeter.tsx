@@ -7,6 +7,7 @@ import {
   type DesignSystem,
   type Layout,
   type PerfKind,
+  type ThemeDynamicData,
 } from "../../core/index.ts";
 import { ELEMENT_NAMES } from "./element-chrome.ts";
 
@@ -28,17 +29,20 @@ export function PerfMeterDialog({
   onOpenChange,
   layout,
   design,
+  parts,
   onSelect,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   layout: Layout | null;
   design: DesignSystem;
+  /** W-671: the synced sections and Loop Item parts the canvas shows, weighed with the page. */
+  parts?: ThemeDynamicData;
   onSelect: (id: string) => void;
 }) {
   const report = React.useMemo(
-    () => (open && layout ? measurePage(layout, design) : null),
-    [open, layout, design],
+    () => (open && layout ? measurePage(layout, design, parts) : null),
+    [open, layout, design, parts],
   );
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

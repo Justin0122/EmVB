@@ -7,6 +7,7 @@ import {
   type ElementType,
   type LayoutNode,
   type PopupDevice,
+  type ThemeDynamicData,
 } from "../../core/index.ts";
 import type { Fetcher } from "../api.ts";
 import { discardDraft } from "../content-api.ts";
@@ -193,6 +194,7 @@ export function EditorDialogs({
   finishDelete,
   playgroundUrl,
   setAnnouncement,
+  parts,
 }: {
   chrome: ChromeFlags;
   fetcher: Fetcher;
@@ -215,6 +217,8 @@ export function EditorDialogs({
   finishDelete: (id: string) => void;
   playgroundUrl?: string;
   setAnnouncement: (message: string) => void;
+  /** Synced sections and Loop Item parts loaded for the canvas (W-671). */
+  parts?: ThemeDynamicData;
 }) {
   return (
     <>
@@ -317,6 +321,7 @@ export function EditorDialogs({
         onOpenChange={chrome.setOpen("perf")}
         layout={state.page.layout}
         design={state.design}
+        parts={parts}
         onSelect={(id) => dispatch({ type: "select", id })}
       />
       <ConflictDialog

@@ -78,11 +78,28 @@ const isPlayerEmbed = (node: LayoutNode): boolean => {
 function media(
   node: LayoutNode,
   bgClasses: Set<string>,
+  dynamic?: ThemeDynamicData,
 ): { images: number; bytes: number; embeds: number } {
   let images = 0;
   let bytes = 0;
   let embeds = 0;
+  const seen = new Set<Layout>();
+  /** W-671: a synced section or Loop Item part the canvas loaded is weighed with the page. */
+  const part = (n: LayoutNode): Layout | undefined => {
+    const props = n.props as { partId?: unknown; itemPartId?: unknown };
+    const found =
+      n.type === "section" && typeof props.partId === "string"
+        ? dynamic?.sectionTemplates?.[props.partId]
+        : n.type === "loop" && typeof props.itemPartId === "string"
+          ? dynamic?.loopTemplates?.[props.itemPartId.trim()]
+          : undefined;
+    if (!found || seen.has(found)) return undefined;
+    seen.add(found);
+    return found;
+  };
   const walk = (n: LayoutNode): void => {
+    const template = part(n);
+    if (template) walk(template.root);
     if (n.type === "image" || n.type === "post-image") {
       const src = (n.props as { src?: unknown }).src;
       if (n.type === "post-image" || (typeof src === "string" && src.trim())) {
@@ -124,7 +141,7 @@ export function measurePage(
     nodeIds,
   }));
   const bgClasses = backgroundClasses(design);
-  const all = media(layout.root, bgClasses);
+  const all = media(layout.root, bgClasses, dynamic);
   const bytes: Record<PerfKind, number> = {
     html: Math.round(utf8(rendered.html) * GZIP),
     css: Math.round(utf8(rendered.css) * GZIP),
@@ -140,7 +157,7 @@ export function measurePage(
       root: Object.assign({}, layout.root, { children: [child] }),
     };
     const one = renderPage(alone, design, opts);
-    const m = media(child, bgClasses);
+    const m = media(child, bgClasses, dynamic);
     sections.push({
       id: child.id,
       type: child.type,

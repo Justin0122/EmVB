@@ -208,6 +208,10 @@ function EditorApp({
   }, [chrome.leaving, exit]);
 
   const { sectionTemplates, loopTemplates } = usePartTemplates(state.page.layout, fetcher);
+  const partDynamic = React.useMemo(
+    () => ({ sectionTemplates, loopTemplates }),
+    [sectionTemplates, loopTemplates],
+  );
   // W-307: bound fields show live values on the canvas (site settings, preview URL parameters).
   const live = useLiveData();
   // W-308: collection Loops show real entries on the canvas.
@@ -521,6 +525,7 @@ function EditorApp({
           <SmallScreenNotice />
         )}
         <EditorDialogs
+          parts={partDynamic}
           chrome={chrome}
           fetcher={fetcher}
           collection={collection}
