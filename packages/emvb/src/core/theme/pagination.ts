@@ -29,6 +29,14 @@ function knownTotal(p: ArchivePagination): number | undefined {
 }
 
 /**
+ * What leads into the total, dropped with it while the total is unknown: "of", "/" and the like.
+ * W-702: more languages ("z", "av", "od", "共"…) and a separator before them ("2, of"); "Strona 2 z"
+ * and "第 2 页，共" were left dangling.
+ */
+const TOTAL_LEAD_IN =
+  /\s*[,，、·|/–—-]?\s*(?:(?<!\p{L})(?:of|from|out of|sur|de|da|do|von|di|van|av|af|z|ze|od|iš|из|з)|共|中)?\s*[,，、·|/–—-]?\s*$/iu;
+
+/**
  * The "Page N of M" text (W-309). `{page}` and `{total}` are filled in; without a known total
  * the text stops before ` of {total}` (or drops `{total}`), so it never shows a wrong count.
  */
@@ -39,10 +47,7 @@ export function pageCountText(p: ArchivePagination, template: string | undefined
     return text.replaceAll("{page}", String(p.page)).replaceAll("{total}", String(total));
   }
   const cut = text.indexOf("{total}");
-  const before =
-    cut === -1
-      ? text
-      : text.slice(0, cut).replace(/\s*(of|\/|from|sur|de|von|di|van|из)?\s*$/i, "");
+  const before = cut === -1 ? text : text.slice(0, cut).replace(TOTAL_LEAD_IN, "");
   // A template that starts with {total} ("{total} pages · page {page}") keeps at least the number.
   return before.replaceAll("{page}", String(p.page)).trim() || String(p.page);
 }

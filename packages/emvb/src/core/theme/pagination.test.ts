@@ -10,6 +10,7 @@ import {
   splitArchivePage,
   type Layout,
 } from "../index.ts";
+import { pageCountText } from "./pagination.ts";
 
 const withLoop = (props: Record<string, unknown>): Layout =>
   ({
@@ -156,4 +157,14 @@ describe("W-600 a gap never stands for a single page", () => {
       "next",
     ]);
   });
+});
+
+test("an unknown total drops its lead-in in more languages (W-702)", () => {
+  const p = { page: 2, hasMore: true, basePath: "/posts" };
+  expect(pageCountText(p, "Strona {page} z {total}")).toBe("Strona 2");
+  expect(pageCountText(p, "第 {page} 页，共 {total} 页")).toBe("第 2 页");
+  expect(pageCountText(p, "Sida {page} av {total}")).toBe("Sida 2");
+  expect(pageCountText(p, "Page {page}, of {total}")).toBe("Page 2");
+  expect(pageCountText(p, "Page {page} out of {total}")).toBe("Page 2");
+  expect(pageCountText(p, "Seite {page} von {total}")).toBe("Seite 2");
 });
