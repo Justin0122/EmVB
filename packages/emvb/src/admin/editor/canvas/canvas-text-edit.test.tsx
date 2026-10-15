@@ -77,3 +77,28 @@ describe("canvas text editing (W-097, W-117)", () => {
     heading.remove();
   });
 });
+
+test("the field takes an RTL or uppercase element's direction and case (W-560)", async () => {
+  const style = document.createElement("style");
+  style.setAttribute("data-test-canvas", "");
+  style.textContent = "h2.r{direction:rtl;text-transform:uppercase}";
+  document.head.append(style);
+  const heading = document.createElement("h2");
+  heading.className = "r";
+  heading.textContent = "مرحبا 2026";
+  document.body.append(heading);
+  await mount(
+    <CanvasTextEdit
+      element={heading}
+      box={BOX}
+      text="مرحبا 2026"
+      multiline={false}
+      onCommit={() => undefined}
+      onCancel={() => undefined}
+    />,
+  );
+  const field = document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Edit text"]');
+  expect(field?.style.direction).toBe("rtl");
+  expect(field?.style.textTransform).toBe("uppercase");
+  heading.remove();
+});

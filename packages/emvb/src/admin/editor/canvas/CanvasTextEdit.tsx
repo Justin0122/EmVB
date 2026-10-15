@@ -30,6 +30,11 @@ export function CanvasTextEdit({
       letterSpacing: computed?.letterSpacing,
       lineHeight: computed?.lineHeight,
       padding: computed?.padding,
+      // W-560: an RTL heading edited left to right jumped to the other side and reordered mixed
+      // text; an uppercase one showed its lower-case letters.
+      direction: computed?.direction as React.CSSProperties["direction"],
+      textTransform: computed?.textTransform as React.CSSProperties["textTransform"],
+      wordSpacing: computed?.wordSpacing,
     };
   }, [element]);
   const ref = React.useRef<HTMLTextAreaElement>(null);
