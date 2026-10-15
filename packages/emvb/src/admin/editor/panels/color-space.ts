@@ -66,8 +66,12 @@ export function parseRgb(text: string): Rgba | null {
     .split(/[\s,/]+/)
     .filter(Boolean);
   if (parts.length !== 3 && parts.length !== 4) return null;
-  const nums = parts.slice(0, 3).map((part) => Number(part));
-  if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+  // W-540: CSS also writes channels as percents ("rgb(100% 50% 0%)") or with decimals.
+  const nums = parts
+    .slice(0, 3)
+    .map((part) => (part.endsWith("%") ? (Number(part.slice(0, -1)) / 100) * 255 : Number(part)));
+  if (nums.some((n) => !Number.isFinite(n) || n < 0 || n > 255)) return null;
+  for (let i = 0; i < 3; i += 1) nums[i] = Math.round(nums[i] ?? 0);
   let a = 1;
   const alpha = parts[3];
   if (alpha !== undefined) {
@@ -185,7 +189,9 @@ function readOklch(text: string): Oklch | null {
   const cRaw = parts[1] ?? "";
   const c = cRaw.endsWith("%") ? (Number(cRaw.slice(0, -1)) / 100) * 0.4 : Number(cRaw);
   const hRaw = parts[2] ?? "";
-  const h = Number(hRaw.endsWith("deg") ? hRaw.slice(0, -3) : hRaw);
+  // W-540: a hue is an angle, so CSS's -30 or 400 wrap around the circle.
+  const hTurn = Number(hRaw.endsWith("deg") ? hRaw.slice(0, -3) : hRaw);
+  const h = Number.isFinite(hTurn) && hRaw !== "" ? ((hTurn % 360) + 360) % 360 : Number.NaN;
   if (!Number.isFinite(l) || l < 0 || l > 100) return null;
   if (!Number.isFinite(c) || c < 0 || c > 0.5) return null;
   if (!Number.isFinite(h) || h < 0 || h > 360) return null;

@@ -69,3 +69,15 @@ describe("colour notations (W-160)", () => {
     }
   });
 });
+
+describe("CSS colour forms (W-540)", () => {
+  test("rgb channels can be percents or decimals", () => {
+    expect(parseRgb("rgb(100%, 0%, 50%)")).toEqual({ r: 255, g: 0, b: 128, a: 1 });
+    expect(parseRgb("rgb(127.6 0 0)")).toEqual({ r: 128, g: 0, b: 0, a: 1 });
+    expect(parseRgb("rgb(101% 0 0)")).toBeNull();
+  });
+  test("an oklch hue wraps around the circle", () => {
+    expect(parseOklch("oklch(0.5 0.1 -30)")).toEqual(parseOklch("oklch(0.5 0.1 330)"));
+    expect(parseOklch("oklch(0.5 0.1 400deg)")).toEqual(parseOklch("oklch(0.5 0.1 40)"));
+  });
+});
