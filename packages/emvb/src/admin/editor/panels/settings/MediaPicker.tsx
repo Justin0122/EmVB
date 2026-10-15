@@ -10,11 +10,11 @@ import {
 import type { Fetcher } from "../../../api.ts";
 import {
   getMedia,
-  listImages,
   propsFromMedia,
   propsFromOriginal,
   saveEditedCopy,
   propsFromUrl,
+  readImageSize,
   uploadImage,
   type MediaLibraryItem,
 } from "../../../media-api.ts";
@@ -26,6 +26,7 @@ import {
 import { editableSource } from "../../../image-editor/load.ts";
 import { BUTTON, FIELD } from "../../../ui.ts";
 import { isCommitEnter } from "../../ime.ts";
+import { MediaLibraryDialog } from "./MediaLibraryDialog.tsx";
 
 const propsOf = (node: LayoutNode): Record<string, unknown> =>
   node.props as Record<string, unknown>;
@@ -37,7 +38,7 @@ type Props = {
   node: LayoutNode;
   fetcher: Fetcher;
   onChange: (node: LayoutNode) => void;
-  /** Field label; Page settings uses "Social image" (W-287). */
+  /** Field label; Page settings uses "Social image" (W-287). Empty when a heading names it. */
   label?: string;
   /** Offer "Edit image" (Image elements only, W-482). */
   editable?: boolean;
@@ -56,7 +57,6 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
   const props = propsOf(node);
   const src = typeof props.src === "string" ? props.src : "";
   const [open, setOpen] = React.useState(false);
-  const [items, setItems] = React.useState<MediaLibraryItem[]>([]);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [urlDraft, setUrlDraft] = React.useState(src);
@@ -68,23 +68,6 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
   React.useEffect(() => {
     setUrlDraft(src);
   }, [src, node.id]);
-
-  const loadLibrary = React.useCallback(async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      setItems(await listImages(fetcher, { limit: 40 }));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Couldn't load the media library.");
-      setItems([]);
-    } finally {
-      setBusy(false);
-    }
-  }, [fetcher]);
-
-  React.useEffect(() => {
-    if (open) void loadLibrary();
-  }, [open, loadLibrary]);
 
   const edit = ImageEdit.safeParse(props.edit);
   /** W-487: say why a picture can't be edited instead of offering a button that fails. */
@@ -187,11 +170,21 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
 
   return (
     <div className="emvb-field-group" data-emvb-field="src" data-emvb-media-picker="">
-      <label className="emvb-field-label">{label}</label>
+      {label && <label className="emvb-field-label">{label}</label>}
       {src ? (
         <div className="emvb-media-preview">
-          <img src={src} alt="" className="emvb-media-thumb" />
-          <span className="emvb-helper emvb-mono">{src}</span>
+          <button
+            type="button"
+            className="emvb-media-preview-open"
+            title="Choose from library"
+            onClick={() => setOpen(true)}
+            disabled={busy}
+          >
+            <img src={src} alt="" className="emvb-media-thumb" />
+          </button>
+          <span className="emvb-helper emvb-media-preview-name" title={src}>
+            {fileName(src)}
+          </span>
           {editSummary ? (
             <span className="emvb-media-edited" data-emvb-image-edited="">
               <Badge variant="neutral">Edited</Badge>
@@ -266,73 +259,52 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
         }}
       />
       {open && (
-        <div
-          className="emvb-media-dialog"
-          role="dialog"
-          aria-label="Media library"
-          data-emvb-media-dialog=""
-        >
-          <div className="emvb-media-dialog-head">
-            <h3 className="emvb-panel-title">Media library</h3>
-            <Button
-              type="button"
-              className={BUTTON}
-              variant="secondary"
-              onClick={() => setOpen(false)}
-            >
-              Close
-            </Button>
-          </div>
-          {busy && <p className="emvb-helper">Loading…</p>}
-          {!busy && items.length === 0 && (
-            <p className="emvb-helper">No images yet. Upload one to get started.</p>
-          )}
-          <ul className="emvb-media-grid">
-            {items.map((item) => (
-              <li key={item.id} className="emvb-media-cell">
-                <button
-                  type="button"
-                  className="emvb-media-card"
-                  data-emvb-media-id={item.id}
-                  onClick={() => applyItem(item)}
-                >
-                  <img src={item.url} alt={item.alt ?? item.filename} />
-                  <span>{item.filename}</span>
-                </button>
-                {editable && canEdit(item) ? (
-                  <DropdownMenu onOpenChange={(next) => next && prefetchImageEditor()}>
-                    <DropdownMenu.Trigger
-                      render={
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          shape="square"
-                          className="emvb-media-card-menu"
-                          aria-label={`More for ${item.alt || item.filename}`}
-                          icon={<DotsThreeIcon aria-hidden="true" weight="bold" />}
-                          data-emvb-media-menu={item.id}
-                        />
-                      }
-                    />
-                    <DropdownMenu.Content align="end">
-                      <DropdownMenu.Item
-                        icon={MagicWandIcon}
-                        onClick={() => {
-                          setEditing(item);
-                          setEditorOpen(true);
-                        }}
-                        data-emvb-media-edit={item.id}
-                      >
-                        Edit…
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <MediaLibraryDialog
+          fetcher={fetcher}
+          current={{
+            mediaId: typeof props.mediaId === "string" ? props.mediaId : undefined,
+            src,
+          }}
+          onPick={applyItem}
+          onClose={() => setOpen(false)}
+          cardActions={
+            editable
+              ? (item) =>
+                  canEdit(item) ? (
+                    <DropdownMenu onOpenChange={(next) => next && prefetchImageEditor()}>
+                      <DropdownMenu.Trigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            shape="square"
+                            className="emvb-media-card-menu"
+                            aria-label={`More for ${item.alt || item.filename}`}
+                            icon={<DotsThreeIcon aria-hidden="true" weight="bold" />}
+                            data-emvb-media-menu={item.id}
+                          />
+                        }
+                      />
+                      <DropdownMenu.Content align="end">
+                        <DropdownMenu.Item
+                          icon={MagicWandIcon}
+                          onClick={() => {
+                            // The image editor opens on its own; the library closes for it.
+                            setEditing(item);
+                            setEditorOpen(true);
+                            setOpen(false);
+                          }}
+                          data-emvb-media-edit={item.id}
+                        >
+                          Edit…
+                        </DropdownMenu.Item>
+                      </DropdownMenu.Content>
+                    </DropdownMenu>
+                  ) : null
+              : undefined
+          }
+        />
       )}
       {editingProps ? (
         <ImageEditorLauncher
@@ -347,21 +319,15 @@ export function MediaPicker({ node, fetcher, onChange, label = "Image", editable
   );
 }
 
-function readImageSize(file: File): Promise<{ width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.addEventListener("load", () => {
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-      URL.revokeObjectURL(url);
-    });
-    img.addEventListener("error", () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Couldn't read image dimensions."));
-    });
-    img.src = url;
-  });
-}
+/** The last part of an image's path, which names the file. */
+export const fileName = (src: string) => {
+  const path = src.split(/[?#]/)[0] ?? "";
+  try {
+    return decodeURIComponent(path.slice(path.lastIndexOf("/") + 1)) || src;
+  } catch {
+    return path.slice(path.lastIndexOf("/") + 1) || src;
+  }
+};
 
 /** Library pictures the editor can open: same-site JPEG, PNG, WebP or AVIF (not SVG or GIF). */
 function canEdit(item: MediaLibraryItem): boolean {

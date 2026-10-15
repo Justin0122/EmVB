@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { act } from "react";
 import type { LayoutNode } from "../../../../core/index.ts";
 import { cleanup, mount, settle } from "../../../../../test/dom/mount.ts";
@@ -126,6 +126,7 @@ describe("leaving the URL field (W-092)", () => {
   });
 });
 
+// The library is a dialog portaled over the editor (to the body here), so it is found in the document.
 describe("media library (W-091)", () => {
   test("opening it asks for up to 40 images and lists them", async () => {
     const view = await picker(
@@ -133,15 +134,16 @@ describe("media library (W-091)", () => {
       ok([{ id: "m2", filename: "cat.png", url: "/media/cat.png", status: "ready" }]),
     );
     await view.openLibrary();
-    expect(view.paths).toHaveLength(1);
-    expect(view.paths[0]).toContain("limit=40");
-    expect(view.host.querySelector('[data-emvb-media-id="m2"]')?.textContent).toBe("cat.png");
+    const images = view.paths.filter((path) => !path.includes("/folders"));
+    expect(images).toHaveLength(1);
+    expect(images[0]).toContain("limit=40");
+    expect(document.querySelector('[data-emvb-media-id="m2"]')?.textContent).toBe("cat.png");
   });
 
   test("an empty library says so", async () => {
     const view = await picker(image({ src: "", alt: "Image" }), ok([]));
     await view.openLibrary();
-    expect(view.text()).toContain("No images yet. Upload one to get started.");
+    expect(document.body.textContent ?? "").toContain("No images yet. Upload one to get started.");
   });
 
   test("a library that fails to load shows its error", async () => {
@@ -152,15 +154,258 @@ describe("media library (W-091)", () => {
       ),
     );
     await view.openLibrary();
-    expect(view.text()).toContain("Not allowed here.");
+    expect(document.body.textContent ?? "").toContain("Not allowed here.");
   });
 
   test("Close hides the library", async () => {
     const view = await picker(image({ src: "", alt: "Image" }), ok([]));
     await view.openLibrary();
-    const close = [...view.host.querySelectorAll("button")].find((b) => b.textContent === "Close");
+    const close = [...document.querySelectorAll("button")].find((b) => b.textContent === "Close");
     await act(async () => close?.click());
-    expect(view.host.querySelector("[data-emvb-media-dialog]")?.outerHTML ?? null).toBeNull();
+    expect(document.querySelector("[data-emvb-media-dialog]")?.outerHTML ?? null).toBeNull();
+  });
+});
+
+type Sent = { path: string; method: string; body: unknown };
+
+/** A library with folders: answers the folder list, image pages, moves, new folders, uploads. */
+async function library(node: LayoutNode, folders = [{ id: "f1", name: "Machines" }]) {
+  const sent: Sent[] = [];
+  const picked: LayoutNode[] = [];
+  const fetcher: Fetcher = async (path, init) => {
+    const method = init?.method ?? "GET";
+    const body = typeof init?.body === "string" ? JSON.parse(init.body) : init?.body;
+    sent.push({ path, method, body });
+    if (path.startsWith("/_emdash/api/media/folders")) {
+      if (method === "POST")
+        return Response.json({ data: { item: { id: "f2", name: body.name } } });
+      return Response.json({ data: { items: folders } });
+    }
+    if (method === "PUT") return Response.json({ data: { item: {} } });
+    if (method === "POST") {
+      return Response.json({
+        data: { item: { id: "up", filename: "new.png", url: "/media/new.png", status: "ready" } },
+      });
+    }
+    const cursor = new URL(path, "http://x").searchParams.get("cursor");
+    return Response.json({
+      data: cursor
+        ? { items: [{ id: "m3", filename: "cow.png", url: "/media/cow.png", status: "ready" }] }
+        : {
+            items: [
+              {
+                id: "m1",
+                filename: "dog.png",
+                url: "/media/dog.png",
+                status: "ready",
+                width: 800,
+                height: 600,
+                size: 20480,
+                folderId: null,
+              },
+              {
+                id: "m2",
+                filename: "cat.png",
+                url: "/media/cat.png",
+                status: "ready",
+                folderId: "f1",
+              },
+            ],
+            nextCursor: "next-1",
+            totalCount: 3,
+          },
+    });
+  };
+  const host = await mount(
+    <MediaPicker node={node} fetcher={fetcher} onChange={(next) => picked.push(next)} />,
+  );
+  await act(async () => host.querySelector<HTMLElement>("[data-emvb-media-library]")?.click());
+  await settle();
+  const lists = () => sent.filter((s) => s.method === "GET" && !s.path.includes("/folders"));
+  const click = async (selector: string) => {
+    await act(async () => document.querySelector<HTMLElement>(selector)?.click());
+    await settle();
+  };
+  return { sent, picked, lists, click };
+}
+
+const watched: Array<(entries: { isIntersecting: boolean }[]) => void> = [];
+class StubObserver {
+  constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+    watched.push(callback);
+  }
+  observe() {}
+  disconnect() {}
+}
+
+describe("media library dialog", () => {
+  beforeEach(() => {
+    watched.length = 0;
+    localStorage.clear();
+    (globalThis as { IntersectionObserver?: unknown }).IntersectionObserver = StubObserver;
+  });
+
+  test("marks the image in use and loads the next page when the end of the grid shows", async () => {
+    const view = await library(image({ src: "/media/cat.png", alt: "A", mediaId: "m2" }));
+    expect(document.querySelector('[data-emvb-media-id="m2"]')?.hasAttribute("data-current")).toBe(
+      true,
+    );
+    expect(document.querySelector('[data-emvb-media-id="m1"]')?.hasAttribute("data-current")).toBe(
+      false,
+    );
+    expect(document.querySelector('[data-emvb-media-id="m1"]')?.textContent).toBe(
+      "dog.png800 × 600 · 20 KB",
+    );
+    expect(document.body.textContent).toContain("2 of 3 images");
+    expect(document.querySelector("[data-emvb-media-more]")).not.toBeNull();
+
+    await act(async () => watched.at(-1)?.([{ isIntersecting: true }]));
+    await settle();
+    expect(view.lists().at(-1)?.path).toContain("cursor=next-1");
+    expect(document.querySelector('[data-emvb-media-id="m3"]')).not.toBeNull();
+    expect(document.querySelector("[data-emvb-media-more]")).toBeNull();
+  });
+
+  test("a search asks again from the first page", async () => {
+    const view = await library(image({ src: "", alt: "Image" }));
+    const search = document.querySelector<HTMLInputElement>("[data-emvb-media-search]");
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+        search,
+        "cat",
+      );
+      search?.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 300)));
+    await settle();
+    expect(view.lists().at(-1)?.path).toContain("q=cat");
+    expect(view.lists().at(-1)?.path).not.toContain("cursor=");
+  });
+
+  test("lists the folders; opening one filters by it and is remembered", async () => {
+    const view = await library(image({ src: "", alt: "Image" }));
+    const names = [...document.querySelectorAll("[data-emvb-media-folder]")].map(
+      (b) => b.textContent,
+    );
+    expect(names).toEqual(["All images", "Main library", "Machines"]);
+    expect(view.lists()[0]?.path).not.toContain("folderId");
+
+    await view.click('[data-emvb-media-folder="f1"]');
+    expect(view.lists().at(-1)?.path).toContain("folderId=f1");
+    await view.click('[data-emvb-media-folder="unfiled"]');
+    expect(view.lists().at(-1)?.path).toContain("folderId=unfiled");
+    expect(localStorage.getItem("emvb-media-scope")).toBe("unfiled");
+  });
+
+  test("a remembered folder opens again; one that is gone falls back to all images", async () => {
+    localStorage.setItem("emvb-media-scope", "f1");
+    const view = await library(image({ src: "", alt: "Image" }));
+    expect(view.lists()[0]?.path).toContain("folderId=f1");
+    await cleanup();
+
+    localStorage.setItem("emvb-media-scope", "gone");
+    const again = await library(image({ src: "", alt: "Image" }));
+    expect(again.lists().at(-1)?.path).not.toContain("folderId");
+    expect(
+      document.querySelector('[data-emvb-media-folder="all"]')?.getAttribute("aria-current"),
+    ).toBe("true");
+  });
+
+  test("Move to files an image in a folder; in that folder's view it leaves the grid", async () => {
+    localStorage.setItem("emvb-media-scope", "unfiled");
+    const view = await library(image({ src: "", alt: "Image" }));
+    await view.click('[data-emvb-media-move="m1"]');
+    expect(
+      document.querySelector('[data-emvb-media-move-to="unfiled"]')?.hasAttribute("disabled"),
+    ).toBe(true);
+    await view.click('[data-emvb-media-move-to="f1"]');
+    const put = view.sent.find((s) => s.method === "PUT");
+    expect(put).toEqual({ path: "/_emdash/api/media/m1", method: "PUT", body: { folderId: "f1" } });
+    expect(document.querySelector('[data-emvb-media-id="m1"]')).toBeNull();
+    expect(document.body.textContent).toContain("Moved “dog.png” to Machines.");
+  });
+
+  test("dragging an image onto a folder moves it", async () => {
+    const view = await library(image({ src: "", alt: "Image" }));
+    const data = new Map<string, string>();
+    const transfer = {
+      types: ["application/x-emvb-media"],
+      files: [],
+      setData: (type: string, value: string) => data.set(type, value),
+      getData: (type: string) => data.get(type) ?? "",
+      dropEffect: "",
+      effectAllowed: "",
+    };
+    const fire = (selector: string, type: string) => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "dataTransfer", { value: transfer });
+      document.querySelector(selector)?.dispatchEvent(event);
+    };
+    await act(async () => fire('[data-emvb-media-id="m2"]', "dragstart"));
+    await act(async () => fire('[data-emvb-media-folder="unfiled"]', "dragover"));
+    await act(async () => fire('[data-emvb-media-folder="unfiled"]', "drop"));
+    await settle();
+    expect(view.sent.find((s) => s.method === "PUT")?.body).toEqual({ folderId: null });
+    // In "All images" a moved image stays.
+    expect(document.querySelector('[data-emvb-media-id="m2"]')).not.toBeNull();
+  });
+
+  test("New folder makes one and opens it; uploads there go into it", async () => {
+    const view = await library(image({ src: "", alt: "Image" }));
+    await view.click("[data-emvb-media-new-folder]");
+    const name = document.querySelector<HTMLInputElement>("[data-emvb-media-folder-name]");
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+        name,
+        " Hal ",
+      );
+      name?.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => {
+      name?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    await settle();
+    expect(view.sent.find((s) => s.method === "POST")?.body).toEqual({ name: "Hal" });
+    expect(
+      document.querySelector('[data-emvb-media-folder="f2"]')?.getAttribute("aria-current"),
+    ).toBe("true");
+    expect(view.lists().at(-1)?.path).toContain("folderId=f2");
+
+    const input = document.querySelector<HTMLInputElement>(
+      '[data-emvb-media-dialog] input[type="file"]',
+    );
+    // happy-dom's Image never loads; this one says it can't, so the upload goes without a size.
+    const RealImage = globalThis.Image;
+    globalThis.Image = class extends EventTarget {
+      set src(_: string) {
+        queueMicrotask(() => this.dispatchEvent(new Event("error")));
+      }
+    } as unknown as typeof Image;
+    const file = new File([new Uint8Array([1])], "new.png", { type: "image/png" });
+    Object.defineProperty(input, "files", { value: [file] });
+    await act(async () => input?.dispatchEvent(new Event("change", { bubbles: true })));
+    await settle();
+    const upload = view.sent.findLast((s) => s.method === "POST");
+    expect(upload?.body instanceof FormData && upload.body.get("folderId")).toBe("f2");
+    expect(view.picked.map((n) => n.props.src)).toEqual(["/media/new.png"]);
+    globalThis.Image = RealImage;
+  });
+
+  test("picking an image applies it and closes the dialog; Escape closes it too", async () => {
+    const view = await library(image({ src: "", alt: "Image" }));
+    await view.click('[data-emvb-media-id="m1"]');
+    expect(view.picked.map((n) => n.props.src)).toEqual(["/media/dog.png"]);
+    expect(document.querySelector("[data-emvb-media-dialog]")).toBeNull();
+  });
+
+  test("Escape closes the dialog", async () => {
+    await library(image({ src: "", alt: "Image" }));
+    await act(async () => {
+      document
+        .querySelector("[data-emvb-media-dialog]")
+        ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    });
+    expect(document.querySelector("[data-emvb-media-dialog]")).toBeNull();
   });
 });
 

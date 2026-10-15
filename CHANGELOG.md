@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Media library dialog.** Choose from library opens the library over the editor instead of a small list inside the field: search by file name, upload with the button or by dropping a file, EmDash's media folders (All images, Main library, each folder, New folder; the last one opened is remembered), images moved by dragging a card onto a folder or with its Move to menu, more images loading as you scroll, resized thumbnails with size and dimensions, and the image in use checked. Background images use the same dialog, and the image editor's Edit… stays on each card.
+
 ## [0.6.5] - 2026-10-15
 
 About 170 fixes from overnight testing since 0.6.0 (W-532 to W-702). No schema change: pages saved by 0.6.5 open in 0.6.0.

@@ -3,9 +3,11 @@ import { PlusIcon } from "@phosphor-icons/react";
 import * as React from "react";
 import { sanitizeMediaUrl, type DesignSystem, type StyleProps } from "../../../../core/index.ts";
 import type { Fetcher } from "../../../api.ts";
-import { listImages, uploadImage, type MediaLibraryItem } from "../../../media-api.ts";
+import { readImageSize, uploadImage } from "../../../media-api.ts";
 import { BUTTON, FIELD } from "../../../ui.ts";
 import { ColorControl } from "../ColorControl.tsx";
+import { MediaLibraryDialog } from "./MediaLibraryDialog.tsx";
+import { fileName } from "./MediaPicker.tsx";
 import { NumberField, type NumberSpec } from "./NumberRow.tsx";
 import { isCommitEnter } from "../../ime.ts";
 
@@ -47,7 +49,6 @@ export function BackgroundImageControl({
 }) {
   const src = value ?? "";
   const [open, setOpen] = React.useState(false);
-  const [items, setItems] = React.useState<MediaLibraryItem[]>([]);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [urlDraft, setUrlDraft] = React.useState(src);
@@ -56,24 +57,6 @@ export function BackgroundImageControl({
   React.useEffect(() => {
     setUrlDraft(src);
   }, [src]);
-
-  const loadLibrary = React.useCallback(async () => {
-    if (!fetcher) return;
-    setBusy(true);
-    setError(null);
-    try {
-      setItems(await listImages(fetcher, { limit: 40 }));
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Couldn't load the media library.");
-      setItems([]);
-    } finally {
-      setBusy(false);
-    }
-  }, [fetcher]);
-
-  React.useEffect(() => {
-    if (open) void loadLibrary();
-  }, [open, loadLibrary]);
 
   const applyUrl = (next: string) => {
     const safe = sanitizeMediaUrl(next);
@@ -113,7 +96,7 @@ export function BackgroundImageControl({
         {src ? (
           <div className="emvb-media-preview">
             <img src={src} alt="" className="emvb-media-thumb" />
-            <span className="emvb-helper emvb-mono">{src}</span>
+            <span className="emvb-helper emvb-media-preview-name">{fileName(src)}</span>
           </div>
         ) : (
           <p className="emvb-helper">No image yet, so this element has no background.</p>
@@ -149,7 +132,9 @@ export function BackgroundImageControl({
                 const file = event.target.files?.[0];
                 if (!file || !fetcher) return;
                 setBusy(true);
-                void uploadImage(fetcher, file)
+                void readImageSize(file)
+                  .catch(() => ({}))
+                  .then((size) => uploadImage(fetcher, file, size))
                   .then((item) => applyUrl(item.url))
                   .catch((caught: unknown) => {
                     setError(caught instanceof Error ? caught.message : "Upload failed.");
@@ -174,37 +159,13 @@ export function BackgroundImageControl({
             if (isCommitEnter(event)) commitUrl(true);
           }}
         />
-        {open && (
-          <div className="emvb-media-dialog" role="dialog" aria-label="Media library">
-            <div className="emvb-media-dialog-head">
-              <h3 className="emvb-panel-title">Media library</h3>
-              <Button
-                type="button"
-                className={BUTTON}
-                variant="secondary"
-                onClick={() => setOpen(false)}
-              >
-                Close
-              </Button>
-            </div>
-            {busy && <p className="emvb-helper">Loading…</p>}
-            {!busy && items.length === 0 && <p className="emvb-helper">No images yet.</p>}
-            <ul className="emvb-media-grid">
-              {items.map((item) => (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    className="emvb-media-card"
-                    data-emvb-bg-media-id={item.id}
-                    onClick={() => applyUrl(item.url)}
-                  >
-                    <img src={item.url} alt={item.alt ?? item.filename} />
-                    <span>{item.filename}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+        {open && fetcher && (
+          <MediaLibraryDialog
+            fetcher={fetcher}
+            current={{ src }}
+            onPick={(item) => applyUrl(item.url)}
+            onClose={() => setOpen(false)}
+          />
         )}
       </div>
       {reset}
