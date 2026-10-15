@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **Resizable side panels.** Drag the inner edge of the Add/Layers panel (200–480 px) or the settings panel (280–640 px); the canvas keeps at least 480 px. Double-click resets a panel, arrow keys (Shift for bigger steps), Home and End resize it from the keyboard, and the widths are remembered per browser.
+
 ## [0.6.5] - 2026-10-15
 
 About 170 fixes from overnight testing since 0.6.0 (W-532 to W-702). No schema change: pages saved by 0.6.5 open in 0.6.0.

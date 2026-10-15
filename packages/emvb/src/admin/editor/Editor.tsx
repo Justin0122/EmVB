@@ -60,6 +60,7 @@ import { editableSource } from "../image-editor/load.ts";
 import { useSave } from "./useSave.ts";
 import { type ShortcutHandlers, useEditorShortcuts } from "./useEditorShortcuts.ts";
 import { useNodeActions } from "./useNodeActions.ts";
+import { PanelResizer, usePanelWidths } from "./panel-resize.tsx";
 import { type PasteRefusal, useClipboardActions } from "./useClipboardActions.ts";
 
 /** The full-screen editor for one EmVB page or theme part (R-001, R-002, R-060). */
@@ -224,6 +225,9 @@ function EditorApp({
     [state.page.layout, sectionTemplates, loopTemplates],
   );
   const collections = useCollectionPreviews(previewLayout, fetcher);
+  // The side panels' widths, dragged at their inner edges and remembered per browser.
+  const panels = usePanelWidths();
+  const frameRef = React.useRef<HTMLDivElement>(null);
   const rendered = React.useMemo(
     () =>
       state.page.layout
@@ -427,7 +431,28 @@ function EditorApp({
                 </>
               }
             />
-            <div className="emvb-frame">
+            <div
+              className="emvb-frame"
+              ref={frameRef}
+              style={
+                {
+                  "--emvb-panel-left": `${panels.widths.left}px`,
+                  "--emvb-panel-right": `${panels.widths.right}px`,
+                } as React.CSSProperties
+              }
+            >
+              <PanelResizer
+                side="left"
+                widths={panels.widths}
+                frame={frameRef}
+                onResize={panels.set}
+              />
+              <PanelResizer
+                side="right"
+                widths={panels.widths}
+                frame={frameRef}
+                onResize={panels.set}
+              />
               <aside className="emvb-panel emvb-panel-left" aria-label="Add and Layers">
                 <LeftPanel
                   layout={state.page.layout}
