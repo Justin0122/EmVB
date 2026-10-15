@@ -129,6 +129,21 @@ const count = (node: LayoutNode): number =>
  * current section with the same id, or, if it was removed, goes back near its old place. Ids
  * already used elsewhere on the page are renewed, so the page stays valid.
  */
+/** `node` with the A/B mark removed from every element whose id is in `live` (W-636). */
+function withoutCopiedArms(node: LayoutNode, live: ReadonlySet<string>): LayoutNode {
+  let next = node;
+  if (node.variant && live.has(node.id)) {
+    next = { ...node };
+    delete next.variant;
+  }
+  const kids = nodeChildren(next);
+  if (kids.length === 0) return next;
+  return {
+    ...next,
+    children: kids.map((child) => withoutCopiedArms(child, live)),
+  } as LayoutNode;
+}
+
 export function restoreSection(
   current: Layout,
   older: Layout,
@@ -143,7 +158,9 @@ export function restoreSection(
   const clashes = [...index(section).keys()].some((id) => elsewhere.has(id));
   // CSS ids another section took since then stay there: a repeat made the page fail to save (W-517).
   const takenHtml = htmlIdsOf(current.root, replacing);
-  const fresh = clashes ? withFreshIds(current, section) : section;
+  // An element still on the page elsewhere comes back as a copy, and a copy is never part of an
+  // A/B test (W-629/W-632): it would add a second copy of a live arm (W-636).
+  const fresh = clashes ? withFreshIds(current, withoutCopiedArms(section, elsewhere)) : section;
   const incoming = withoutTakenHtmlIds(fresh, takenHtml);
   const size = count(current.root) - (replacing ? count(replacing) : 0) + count(incoming);
   if (size > MAX_NODES) return { ok: false, reason: "The page would have too many elements." };

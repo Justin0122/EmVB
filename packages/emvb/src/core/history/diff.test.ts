@@ -128,3 +128,25 @@ describe("Timeline diff ignores key order (W-518)", () => {
     expect(diffSections(saved, edited).map((c) => [c.kind, c.edits])).toEqual([["same", 0]]);
   });
 });
+
+test("W-636: a restored copy of a section never adds a second copy of a live A/B arm", () => {
+  const armA = { ...h("head0009", "Variant A"), variant: { test: "hero", arm: "a" } } as LayoutNode;
+  const armB = { ...h("head0010", "Variant B"), variant: { test: "hero", arm: "b" } } as LayoutNode;
+  const before = page(box("sect0001", [armA]), box("sect0002", [armB]));
+  // Arm A was moved into the other section; then the old section is restored.
+  const now = page(box("sect0002", [armA, armB]));
+  const result = restoreSection(now, before, "sect0001");
+  expect(result.ok).toBe(true);
+  if (!result.ok) return;
+  const marked: string[] = [];
+  const walk = (n: LayoutNode): void => {
+    if (n.variant) marked.push(`${n.id}:${n.variant.arm}`);
+    if ("children" in n && Array.isArray(n.children)) n.children.forEach(walk);
+  };
+  walk(result.layout.root);
+  expect(marked.sort()).toEqual(["head0009:a", "head0010:b"]);
+  // Restoring a section whose arm is gone keeps it in the test.
+  const gone = page(box("sect0002", [armB]));
+  const back = restoreSection(gone, before, "sect0001");
+  expect(back.ok && JSON.stringify(back.layout)).toContain('"arm":"a"');
+});
