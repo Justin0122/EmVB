@@ -1,4 +1,10 @@
-import { isFormNode, type Layout, type LayoutNode } from "../schema/layout.ts";
+import {
+  isFormNode,
+  LAYOUT_SCHEMA_VERSION,
+  type Layout,
+  type LayoutNode,
+} from "../schema/layout.ts";
+import { loneAbTests } from "../audience/variants.ts";
 import { audienceSummary } from "../audience/rules.ts";
 import { forEachNode, nodeChildren, someNode } from "../tree-ops.ts";
 import { stableJson } from "../stable-json.ts";
@@ -99,17 +105,19 @@ type Control = { nodeId: string; hidden: Set<string>; who?: string; split?: stri
  * controls cover everyone when they are the two halves of one split; labels alone can't tell
  * (they cut long country lists and leave out the time zone).
  */
-function splitKey(node: LayoutNode): string | undefined {
+function splitKey(node: LayoutNode, lone: ReadonlySet<string>): string | undefined {
   const audience = node.audience;
   if (audience) {
     const { hide, ...rules } = audience;
     return `aud:${hide ? 1 : 0}:${stableJson(rules)}`;
   }
-  if (node.variant) return `ab:${node.variant.test}:${node.variant.arm}`;
+  if (node.variant && !lone.has(node.variant.test)) {
+    return `ab:${node.variant.test}:${node.variant.arm}`;
+  }
   return undefined;
 }
 
-function restriction(node: LayoutNode): string | undefined {
+function restriction(node: LayoutNode, lone: ReadonlySet<string>): string | undefined {
   const audience = node.audience;
   if (audience) {
     const { hide, timeZone: _zone, ...rules } = audience;
@@ -117,13 +125,16 @@ function restriction(node: LayoutNode): string | undefined {
       return audienceSummary(audience);
     }
   }
-  if (node.variant) {
+  // W-628: a test missing an arm isn't run, so its remaining arm reaches everyone.
+  if (node.variant && !lone.has(node.variant.test)) {
     return `Variant ${node.variant.arm.toUpperCase()} of A/B test ${node.variant.test}`;
   }
   return undefined;
 }
 
 function boundControls(form: LayoutNode): Map<string, Control[]> {
+  // A/B arms are siblings, so a test's arms inside a form are all inside it.
+  const lone = loneAbTests({ schemaVersion: LAYOUT_SCHEMA_VERSION, root: form } as Layout);
   const found = new Map<string, Control[]>();
   const walk = (
     node: LayoutNode,
@@ -134,8 +145,8 @@ function boundControls(form: LayoutNode): Map<string, Control[]> {
     const hidden = own.length ? new Set([...inherited, ...own]) : inherited;
     let scope = limited;
     if (!scope) {
-      const who = restriction(node);
-      if (who) scope = { who, split: splitKey(node) };
+      const who = restriction(node, lone);
+      if (who) scope = { who, split: splitKey(node, lone) };
     }
     if (FIELD_TYPES.has(node.type)) {
       const field = (node.props as { field?: unknown }).field;

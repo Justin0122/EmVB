@@ -83,7 +83,12 @@ describe("required fields shown only to some visitors (W-513)", () => {
       children: [input("inp00002", "phone")],
     } as LayoutNode;
     const issues = requiredFieldIssues(
-      form([limited("inp00001", "email", { variant: { test: "hero", arm: "b" } }), box]),
+      form([
+        // Arm A holds the optional note, so the test runs and email reaches only B's visitors.
+        limited("inp00003", "note", { variant: { test: "hero", arm: "a" } }),
+        limited("inp00001", "email", { variant: { test: "hero", arm: "b" } }),
+        box,
+      ]),
       fields,
     );
     expect(issues.map((i) => i.kind === "audience" && [i.field, i.nodeId, i.who])).toEqual([
@@ -148,4 +153,10 @@ describe("W-595: hidden fields", () => {
     ]);
     expect(issues).toEqual([]);
   });
+});
+
+test("a field in an A/B test whose other arm is gone reaches everyone (W-628)", () => {
+  const arm = { ...input("inp00001", "email"), variant: { test: "t1", arm: "a" } } as LayoutNode;
+  const issues = requiredFieldIssues(form([arm, input("inp00002", "phone")]), fields);
+  expect(issues).toEqual([]);
 });
