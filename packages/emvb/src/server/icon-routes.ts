@@ -36,7 +36,7 @@ const store = (ctx: RouteContext<unknown>) => ctx.storage["icons"] as unknown as
 export const UPLOAD_LIST_LIMIT = 100;
 
 /** An icon's label as typed: trimmed and capped (W-655: a rename may hold a slash, as in "AC/DC"). */
-export const iconLabel = (name: string) => clipText(name.trim(), 80).trim() || "Uploaded icon";
+const iconLabel = (name: string) => clipText(name.trim(), 80).trim() || "Uploaded icon";
 
 /** A file name without its folder or extension, as the icon's label. */
 export const uploadName = (name: string) =>
