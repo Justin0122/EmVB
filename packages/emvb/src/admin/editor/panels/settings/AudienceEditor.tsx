@@ -16,7 +16,10 @@ export function parseCountries(text: string): string[] {
   const codes = text
     .toUpperCase()
     .split(/[\s,;]+/)
-    .filter((code) => COUNTRY.test(code));
+    .filter((code) => COUNTRY.test(code))
+    // W-544: visitors' country codes are ISO ones, where the United Kingdom is GB; a "UK" rule
+    // never matched anyone.
+    .map((code) => (code === "UK" ? "GB" : code));
   return [...new Set(codes)].slice(0, 50);
 }
 

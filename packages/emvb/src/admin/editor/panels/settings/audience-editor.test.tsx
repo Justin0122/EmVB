@@ -129,3 +129,7 @@ describe("time zone field (W-438)", () => {
     expect(node.audience?.timeZone).toBe("America/Toronto");
   });
 });
+
+test("UK is read as GB, the code visitors' countries use (W-544)", () => {
+  expect(parseCountries("uk, gb fr")).toEqual(["GB", "FR"]);
+});
