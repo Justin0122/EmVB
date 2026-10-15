@@ -29,7 +29,8 @@ function NumberField({
 }) {
   const [draft, setDraft] = React.useState(String(value));
   const commit = () => {
-    const next = normalize(draft);
+    // The popup schema stores whole numbers only, so 1500.6 ms commits as 1501 (W-607).
+    const next = Math.round(normalize(draft));
     setDraft(String(next));
     if (next !== value) onCommit(next);
   };
@@ -97,6 +98,7 @@ export function TriggerSettings({
         className={`${FIELD} emvb-mono`}
         value={trigger.selector}
         placeholder=".open-popup"
+        maxLength={TRIGGER_LIMITS.maxClickSelectorLength}
         description="Clicking any element that matches opens the popup."
         onChange={(event) => onChange({ type: "click", selector: event.target.value })}
       />

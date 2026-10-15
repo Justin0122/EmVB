@@ -6,6 +6,7 @@ export const TRIGGER_LIMITS = {
   maxDelayMs: 120_000,
   maxScrollPercent: 100,
   minIdleMs: 1_000,
+  maxClickSelectorLength: 200,
 } as const;
 
 export const POPUP_DEVICES = ["desktop", "tablet", "mobile"] as const;

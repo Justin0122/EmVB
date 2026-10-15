@@ -4,7 +4,7 @@ import { POPUP_DEVICES, TRIGGER_LIMITS } from "./popup-rules.ts";
 
 export const TRIGGERS_SCHEMA_VERSION = 1;
 export const MAX_POPUP_TRIGGERS = 8;
-const MAX_CLICK_SELECTOR_LENGTH = 200;
+const MAX_CLICK_SELECTOR_LENGTH = TRIGGER_LIMITS.maxClickSelectorLength;
 const MAX_SHOW_TIMES = 100;
 
 /** Open triggers (Elementor-inspired). URL rules / scheduling / A/B deferred (W-081). */

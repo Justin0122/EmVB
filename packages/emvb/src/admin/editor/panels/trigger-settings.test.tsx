@@ -94,4 +94,23 @@ describe("popup trigger settings (W-081)", () => {
       { type: "inactivity", ms: 5000 },
     ]);
   });
+
+  test("fractional numbers commit as whole numbers the popup schema accepts (W-607)", async () => {
+    expect((await enter({ type: "delay", ms: 3000 }, "1500.6")).sent).toEqual([
+      { type: "delay", ms: 1501 },
+    ]);
+    expect((await enter({ type: "scroll", percent: 50 }, "33.3")).sent).toEqual([
+      { type: "scroll", percent: 33 },
+    ]);
+    expect((await enter({ type: "inactivity", ms: 5000 }, "2500.4")).sent).toEqual([
+      { type: "inactivity", ms: 2500 },
+    ]);
+  });
+
+  test("the click selector stops at the 200 characters the schema allows (W-607)", async () => {
+    const host = await mount(
+      <TriggerSettings trigger={{ type: "click", selector: ".a" }} onChange={() => undefined} />,
+    );
+    expect((host.querySelector("input") as HTMLInputElement).maxLength).toBe(200);
+  });
 });
