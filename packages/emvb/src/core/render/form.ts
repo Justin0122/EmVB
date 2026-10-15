@@ -1,4 +1,10 @@
-import { fieldByName, type FormDefinitions, type PublicFormField } from "../forms/definition.ts";
+import {
+  fieldByName,
+  fieldsOf,
+  type FormDefinitions,
+  type PublicFormDefinition,
+  type PublicFormField,
+} from "../forms/definition.ts";
 import type { FormNode, LayoutNode } from "../schema/layout.ts";
 import type { ThemeDynamicData } from "../theme/dynamic.ts";
 import { nodeChildren } from "../tree-ops.ts";
@@ -115,6 +121,7 @@ export function renderForm(
     children: [
       page,
       { tag: "input", attrs: { type: "hidden", name: "formId", value: formId }, children: [] },
+      ...hiddenFields(ctx.definitions.get(formId)),
       // One id per form element, so the same form placed twice keeps unique ids (W-187), also
       // when one form element renders twice, from a synced section or a loop item (W-249).
       honeypot(ctx.uniqueId(`emvb-hp-${node.id}`)),
@@ -125,6 +132,24 @@ export function renderForm(
       },
     ],
   };
+}
+
+/**
+ * W-595: the definition's hidden fields (a source tag, a campaign id) have no control to place,
+ * so the form carries them with their default value, as the forms plugin's own embed does.
+ */
+function hiddenFields(definition: PublicFormDefinition | undefined): VNode[] {
+  if (!definition) return [];
+  return fieldsOf(definition)
+    .filter((field) => field.type === "hidden" && field.name)
+    .map((field) => {
+      const value = (field as { defaultValue?: unknown }).defaultValue;
+      return {
+        tag: "input",
+        attrs: { type: "hidden", name: field.name, value: typeof value === "string" ? value : "" },
+        children: [],
+      };
+    });
 }
 
 /** Replaces the children of every node matching `match`, anywhere in the tree. */

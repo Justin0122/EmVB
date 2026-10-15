@@ -504,3 +504,51 @@ describe("W-588: length limits the browser can read", () => {
     expect(html).not.toContain("maxlength");
   });
 });
+
+describe("W-595: hidden fields of the definition", () => {
+  const hiddenLayout: Layout = {
+    schemaVersion: 16,
+    root: {
+      id: "root0001",
+      type: "container",
+      props: {},
+      children: [
+        {
+          ...defaultElement("form", "form0001"),
+          props: { formId: "contact" },
+          children: [],
+        } as LayoutNode,
+      ],
+    },
+  };
+  const withHidden: PublicFormDefinition = {
+    name: "Contact",
+    slug: "contact",
+    status: "active",
+    settings: {},
+    pages: [
+      {
+        fields: [
+          {
+            name: "source",
+            type: "hidden",
+            label: "Source",
+            required: true,
+            defaultValue: 'site "a" & b',
+          } as PublicFormDefinition["pages"][number]["fields"][number],
+          { name: "blank", type: "hidden", label: "Blank", required: false },
+        ],
+      },
+    ],
+  };
+
+  test("are sent with the form, as the forms plugin's own embed does", () => {
+    const { html } = renderPage(hiddenLayout, emptyDesign(), {
+      formDefinitions: new Map([["contact", withHidden]]),
+    });
+    expect(html).toContain(
+      '<input type="hidden" name="source" value="site &quot;a&quot; &amp; b">',
+    );
+    expect(html).toContain('<input type="hidden" name="blank" value="">');
+  });
+});

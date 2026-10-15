@@ -140,3 +140,12 @@ describe("required fields shown only to some visitors (W-513)", () => {
     expect(zones.map((i) => i.field)).toEqual(["phone"]);
   });
 });
+
+describe("W-595: hidden fields", () => {
+  test("a required hidden field needs no control: the form sends it itself", () => {
+    const issues = requiredFieldIssues(form([]), [
+      { name: "source", label: "Source", required: true, type: "hidden" },
+    ]);
+    expect(issues).toEqual([]);
+  });
+});

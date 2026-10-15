@@ -96,6 +96,7 @@ async function loadFormFieldsFromSite(
               name: raw.name,
               label: typeof raw.label === "string" ? raw.label : raw.name,
               required: raw.required === true,
+              ...(typeof raw.type === "string" ? { type: raw.type } : {}),
             });
           }
         }

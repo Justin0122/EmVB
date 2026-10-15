@@ -41,7 +41,7 @@ export function findMissingRequiredFields(
     if (!definition) return;
     const bound = boundFields(node);
     for (const field of fieldsOf(definition)) {
-      if (field.required && !bound.has(field.name)) {
+      if (field.required && field.type !== "hidden" && !bound.has(field.name)) {
         missing.push({ formNodeId: node.id, formId: node.props.formId, field: field.name });
       }
     }
@@ -54,7 +54,7 @@ export function layoutHasForm(layout: Layout): boolean {
 }
 
 /** A field as the forms plugin defines it; only what the checks below read. */
-export type RequiredFieldInfo = { name: string; label: string; required: boolean };
+export type RequiredFieldInfo = { name: string; label: string; required: boolean; type?: string };
 
 /**
  * A required field visitors can't fill (W-511): `missing` has no control in the form; `hidden`
@@ -176,7 +176,8 @@ export function requiredFieldIssues(
   const controls = boundControls(form);
   const issues: RequiredFieldIssue[] = [];
   for (const field of fields) {
-    if (!field.required) continue;
+    // W-595: a hidden field is sent by the form itself, with no control.
+    if (!field.required || field.type === "hidden") continue;
     const label = field.label.trim() || field.name;
     const bound = controls.get(field.name);
     if (!bound?.length) {
