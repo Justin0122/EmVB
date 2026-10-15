@@ -81,6 +81,26 @@ describe("accessibility co-pilot (W-317)", () => {
       style: { backgroundColor: "#ffffff", backgroundImage: { url: "/a.jpg" } },
     } as unknown as LayoutNode;
     expect(auditPage(page(h("head0001", 1), photo), design).issues).toEqual([]);
+    // Nor behind a gradient or a video (W-633).
+    for (const cover of [
+      {
+        gradient: {
+          kind: "linear",
+          angle: 90,
+          stops: [
+            { color: "#000000", at: 0 },
+            { color: "#111111", at: 100 },
+          ],
+        },
+      },
+      { backgroundVideo: "/a.mp4" },
+    ]) {
+      const dark = {
+        ...box,
+        style: { backgroundColor: "#ffffff", ...cover },
+      } as unknown as LayoutNode;
+      expect(auditPage(page(h("head0001", 1), dark), design).issues).toEqual([]);
+    }
   });
 
   test("links: vague text, unannounced new tabs and aria-hidden on focusable elements", () => {

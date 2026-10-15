@@ -188,10 +188,18 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   const visitNode = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     const props = node.props as Record<string, unknown>;
     const style = node.style as
-      | { backgroundColor?: unknown; color?: unknown; backgroundImage?: unknown }
+      | {
+          backgroundColor?: unknown;
+          color?: unknown;
+          backgroundImage?: unknown;
+          backgroundVideo?: unknown;
+          gradient?: unknown;
+        }
       | undefined;
-    // A background image hides the colour behind the text: contrast can't be judged below it.
-    const ownBg = style?.backgroundImage ? "unknown" : hexOf(style?.backgroundColor, design);
+    // A background image, video or gradient hides the colour behind the text: contrast can't be
+    // judged below it (W-633: a gradient or video was judged against the colour under it).
+    const covered = style?.backgroundImage || style?.backgroundVideo || style?.gradient;
+    const ownBg = covered ? "unknown" : hexOf(style?.backgroundColor, design);
     const nextBg =
       ownBg && ownBg !== "unknown" && bg && bg !== "unknown" ? over(ownBg, bg) : (ownBg ?? bg);
     const nextColor = hexOf(style?.color, design) ?? color;
