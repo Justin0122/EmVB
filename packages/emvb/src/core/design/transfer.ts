@@ -64,6 +64,24 @@ export function uniqueImportNames(design: DesignSystem): {
   return { design: { ...design, variables, ...(classes ? { classes } : {}) }, renamed };
 }
 
+function repeatedId(design: DesignSystem): { what: string; id: string } | null {
+  const lists: [string, { id: string }[] | undefined][] = [
+    ["classes", design.classes],
+    ...VARIABLE_GROUPS.map(([group]): [string, { id: string }[] | undefined] => [
+      "variables",
+      design.variables[group],
+    ]),
+  ];
+  for (const [what, list] of lists) {
+    const seen = new Set<string>();
+    for (const item of list ?? []) {
+      if (seen.has(item.id)) return { what, id: item.id };
+      seen.add(item.id);
+    }
+  }
+  return null;
+}
+
 /** Parse an exported design. Older schema versions are upgraded. A newer file is refused. */
 export function designFromJson(text: string): DesignImport {
   let parsed: unknown;
@@ -84,6 +102,15 @@ export function designFromJson(text: string): DesignImport {
   }
   const result = DesignSystemSchema.safeParse(upgraded.doc);
   if (!result.success) return { ok: false, message: "That file is not an EmVB design document." };
+  // W-619: every reference points at an id, so two classes (or two variables of one kind) with
+  // the same id can't both be kept; the editor never writes such a file.
+  const repeated = repeatedId(result.data);
+  if (repeated) {
+    return {
+      ok: false,
+      message: `That file has two ${repeated.what} with the id "${clipText(repeated.id, 40)}". Give one of them a different id, then import it again.`,
+    };
+  }
   const imported = uniqueImportNames(result.data);
   // W-516: the file cap is 1 MB, but the saved design is capped lower; a design over that cap
   // replaced the site styles in the editor and then every save of them was refused.
