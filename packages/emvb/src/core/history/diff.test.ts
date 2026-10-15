@@ -144,7 +144,7 @@ test("W-636: a restored copy of a section never adds a second copy of a live A/B
     if ("children" in n && Array.isArray(n.children)) n.children.forEach(walk);
   };
   walk(result.layout.root);
-  expect(marked.sort()).toEqual(["head0009:a", "head0010:b"]);
+  expect(marked.toSorted()).toEqual(["head0009:a", "head0010:b"]);
   // Restoring a section whose arm is gone keeps it in the test.
   const gone = page(box("sect0002", [armB]));
   const back = restoreSection(gone, before, "sect0001");
