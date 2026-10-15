@@ -113,4 +113,30 @@ describe("required fields shown only to some visitors (W-513)", () => {
     } as LayoutNode;
     expect(requiredFieldIssues(whole, fields)).toEqual([]);
   });
+
+  test("W-550: a rule and a near-opposite whose short labels match is still reported", () => {
+    const four = (last: string) => ["CA", "US", "GB", last];
+    const issues = requiredFieldIssues(
+      form([
+        input("inp00009", "email"),
+        limited("inp00001", "phone", { audience: { countries: four("FR") } }),
+        limited("inp00002", "phone", { audience: { countries: four("DE"), hide: true } }),
+      ]),
+      fields,
+    );
+    expect(issues.map((i) => i.field)).toEqual(["phone"]);
+    const zones = requiredFieldIssues(
+      form([
+        input("inp00009", "email"),
+        limited("inp00001", "phone", {
+          audience: { hours: { from: 9, to: 17 }, timeZone: "America/Toronto" },
+        }),
+        limited("inp00002", "phone", {
+          audience: { hours: { from: 9, to: 17 }, timeZone: "Asia/Tokyo", hide: true },
+        }),
+      ]),
+      fields,
+    );
+    expect(zones.map((i) => i.field)).toEqual(["phone"]);
+  });
 });

@@ -1,6 +1,7 @@
 import { isFormNode, type Layout, type LayoutNode } from "../schema/layout.ts";
 import { audienceSummary } from "../audience/rules.ts";
 import { forEachNode, nodeChildren, someNode } from "../tree-ops.ts";
+import { stableJson } from "../stable-json.ts";
 import { fieldsOf, type FormDefinitions } from "./definition.ts";
 
 export type MissingRequiredField = {
@@ -85,12 +86,27 @@ const FIELD_TYPES = new Set(["text-input", "textarea", "select", "checkbox", "ra
 const DEVICE_ORDER = ["desktop", "tablet", "mobile"];
 
 /** Each bound field's controls, with the devices each is hidden on (itself or an ancestor). */
-type Control = { nodeId: string; hidden: Set<string>; who?: string };
+type Control = { nodeId: string; hidden: Set<string>; who?: string; split?: string };
 
 /**
  * W-513: who an element is limited to, by a Visitors rule or as one arm of an A/B test, or
  * undefined when everyone sees it.
  */
+/**
+ * W-550: the exact visitors split a node makes, e.g. "ab:hero:a" or "aud:1:{rules}". Two
+ * controls cover everyone when they are the two halves of one split; labels alone can't tell
+ * (they cut long country lists and leave out the time zone).
+ */
+function splitKey(node: LayoutNode): string | undefined {
+  const audience = node.audience;
+  if (audience) {
+    const { hide, ...rules } = audience;
+    return `aud:${hide ? 1 : 0}:${stableJson(rules)}`;
+  }
+  if (node.variant) return `ab:${node.variant.test}:${node.variant.arm}`;
+  return undefined;
+}
+
 function restriction(node: LayoutNode): string | undefined {
   const audience = node.audience;
   if (audience) {
@@ -107,19 +123,30 @@ function restriction(node: LayoutNode): string | undefined {
 
 function boundControls(form: LayoutNode): Map<string, Control[]> {
   const found = new Map<string, Control[]>();
-  const walk = (node: LayoutNode, inherited: ReadonlySet<string>, limited: string | undefined) => {
+  const walk = (
+    node: LayoutNode,
+    inherited: ReadonlySet<string>,
+    limited: { who: string; split?: string } | undefined,
+  ) => {
     const own = (node as { hiddenOn?: readonly string[] }).hiddenOn ?? [];
     const hidden = own.length ? new Set([...inherited, ...own]) : inherited;
-    const who = limited ?? restriction(node);
+    let scope = limited;
+    if (!scope) {
+      const who = restriction(node);
+      if (who) scope = { who, split: splitKey(node) };
+    }
     if (FIELD_TYPES.has(node.type)) {
       const field = (node.props as { field?: unknown }).field;
       if (typeof field === "string" && field) {
         const control: Control = { nodeId: node.id, hidden: new Set(hidden) };
-        if (who) control.who = who;
+        if (scope) {
+          control.who = scope.who;
+          if (scope.split) control.split = scope.split;
+        }
         found.set(field, [...(found.get(field) ?? []), control]);
       }
     }
-    for (const child of nodeChildren(node)) walk(child, hidden, who);
+    for (const child of nodeChildren(node)) walk(child, hidden, scope);
   };
   // The form's own hiddenOn or audience hides the whole form, which loses no answers: not counted.
   for (const child of nodeChildren(form)) walk(child, new Set(), undefined);
@@ -131,12 +158,12 @@ function boundControls(form: LayoutNode): Map<string, Control[]> {
  * "Hidden for X") still reach everyone.
  */
 function coversEveryone(controls: readonly Control[]): boolean {
-  const who = new Set(controls.map((control) => control.who));
-  for (const label of who) {
-    if (!label) continue;
-    const ab = /^Variant ([AB]) of (A\/B test .+)$/.exec(label);
-    if (ab && who.has(`Variant ${ab[1] === "A" ? "B" : "A"} of ${ab[2]}`)) return true;
-    if (label.startsWith("Only ") && who.has(`Hidden for ${label.slice(5)}`)) return true;
+  const splits = new Set(controls.map((control) => control.split));
+  for (const key of splits) {
+    if (!key) continue;
+    const ab = /^ab:(.*):([ab])$/.exec(key);
+    if (ab && splits.has(`ab:${ab[1]}:${ab[2] === "a" ? "b" : "a"}`)) return true;
+    if (key.startsWith("aud:0:") && splits.has(`aud:1:${key.slice(6)}`)) return true;
   }
   return false;
 }
