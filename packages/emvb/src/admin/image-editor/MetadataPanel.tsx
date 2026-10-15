@@ -65,10 +65,20 @@ function tagValue(tag: Tag): string | undefined {
   return formatValue(tag?.hvalue ?? tag?.value);
 }
 
+/** An EXIF string without its trailing spaces or NULs. */
+const clean = (text: string | undefined) => text?.replace(/[\s\0]+$/u, "") || undefined;
+
+/**
+ * W-698: most cameras repeat the make in the model ("Canon" + "Canon EOS R5"), which read
+ * "Canon Canon EOS R5"; the model alone is shown then. EXIF strings may end in spaces or NULs.
+ */
 function camera(make: Tag, model: Tag): string | undefined {
-  const a = tagValue(make);
-  const b = tagValue(model);
-  if (a && b) return `${a} ${b}`;
+  const a = clean(tagValue(make));
+  const b = clean(tagValue(model));
+  if (a && b) {
+    const brand = a.split(/\s+/)[0]?.toLowerCase() ?? "";
+    return b.toLowerCase().startsWith(brand) ? b : `${a} ${b}`;
+  }
   return a ?? b;
 }
 
@@ -99,7 +109,8 @@ export function formatBytes(size: number): string {
   const units = ["B", "KB", "MB", "GB"] as const;
   let value = size;
   let unit = 0;
-  while (value >= 1024 && unit < units.length - 1) {
+  // W-698: a value that rounds up to 1024 moves to the next unit ("1.0 MB", not "1024.0 KB").
+  while (unit < units.length - 1 && Number(value.toFixed(unit === 0 ? 0 : 1)) >= 1024) {
     value /= 1024;
     unit += 1;
   }

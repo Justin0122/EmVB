@@ -32,3 +32,24 @@ describe("Metadata rows (W-486, photocn's metadata panel)", () => {
     expect(formatBytes(5 * 1024 * 1024)).toBe("5.0 MB");
   });
 });
+
+describe("camera names and sizes read cleanly (W-698)", () => {
+  const camera = (make: string, model: string) =>
+    metadataRows({
+      fileInfo: null,
+      image: null,
+      metadata: { tiff: { Make: { value: make }, Model: { value: model } } },
+    }).find((r) => r.label === "Camera")?.value;
+
+  test("a model that repeats the make shows once", () => {
+    expect(camera("Canon", "Canon EOS R5")).toBe("Canon EOS R5");
+    expect(camera("NIKON CORPORATION", "NIKON D850")).toBe("NIKON D850");
+    expect(camera("Apple ", "iPhone 15 Pro\0")).toBe("Apple iPhone 15 Pro");
+  });
+
+  test("a size just under a megabyte reads 1.0 MB", () => {
+    expect(formatBytes(1_048_575)).toBe("1.0 MB");
+    expect(formatBytes(1023)).toBe("1023 B");
+    expect(formatBytes(2048)).toBe("2.0 KB");
+  });
+});
