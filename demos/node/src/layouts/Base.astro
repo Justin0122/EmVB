@@ -44,7 +44,7 @@ const [settingsResult, menuResult] = await Promise.all([
 	getMenuWithCacheHint("primary"),
 ]);
 
-const { siteTitle, siteTagline, siteLogo } = resolveStarterSiteIdentity(
+const { siteTitle, siteTagline, siteLogo, siteFavicon } = resolveStarterSiteIdentity(
 	settingsResult.data,
 );
 const titleIncludesSiteName =
@@ -95,6 +95,7 @@ const pageCtx = createPublicPageContext({
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{fullTitle}</title>
+		<link rel="icon" href={siteFavicon} />
 		<EmDashHead page={pageCtx} />
 		<link rel="stylesheet" href="/site.css" />
 		{theme.css && <style set:html={theme.css} />}
