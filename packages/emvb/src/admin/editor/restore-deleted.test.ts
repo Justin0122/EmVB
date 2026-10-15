@@ -119,3 +119,20 @@ test("W-575: a restored class or variable whose name was taken meanwhile comes b
     `${"L".repeat(56)} 2`,
   );
 });
+
+describe("restoreOnUndo past the class limit (W-576)", () => {
+  test("a deleted class isn't restored when the design already has MAX_CLASSES", async () => {
+    const { MAX_CLASSES } = await import("../../core/design/classes.ts");
+    const full: DesignSystem = {
+      ...design,
+      classes: Array.from({ length: MAX_CLASSES }, (_, i) => ({
+        id: `c${i}`,
+        name: `C${i}`,
+        style: {},
+      })),
+    };
+    const deletion = deletionOf(design, page, { kind: "class", id: "card" });
+    const restored = restoreOnUndo(full, page, deletion ? [deletion] : []);
+    expect(restored?.classes?.length ?? MAX_CLASSES).toBe(MAX_CLASSES);
+  });
+});

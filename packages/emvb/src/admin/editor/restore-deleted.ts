@@ -1,5 +1,5 @@
 import type { DesignSystem, Layout, VariableKind } from "../../core/index.ts";
-import { nameKey } from "../../core/design/classes.ts";
+import { MAX_CLASSES, nameKey } from "../../core/design/classes.ts";
 import { clipText } from "../../core/limits.ts";
 
 type Variables = DesignSystem["variables"];
@@ -76,6 +76,8 @@ export function restoreOnUndo(
     if (deletion.before !== layout) continue;
     if (deletion.kind === "class") {
       if (classes.some((c) => c.id === deletion.cls.id)) continue;
+      // W-576: classes made after the delete may have filled the design up to the limit.
+      if (classes.length >= MAX_CLASSES) continue;
       const cls = { ...deletion.cls, name: freeName(deletion.cls.name, classes) };
       classes.splice(Math.min(deletion.index, classes.length), 0, cls);
       classRestored = true;
