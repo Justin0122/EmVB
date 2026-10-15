@@ -3297,7 +3297,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/site-list.tsx",
-          "search": "const base = slugify(name).slice(0, 34) || fallback;",
+          "search": "const base = slugify(name).slice(0, 34).replace(/-+$/, \"\") || fallback;",
           "replace": "const base = \"reused\";"
         }
       ],

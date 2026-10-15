@@ -6,7 +6,7 @@ import { BUTTON, FIELD, SOLID_PRIMARY } from "../../ui.ts";
 
 /** A slug of `name` (or `fallback`) that no id in `taken` uses yet: `x`, then `x-2`, `x-3`… */
 export function uniqueId(name: string, fallback: string, taken: Iterable<string>): string {
-  const base = slugify(name).slice(0, 34) || fallback;
+  const base = slugify(name).slice(0, 34).replace(/-+$/, "") || fallback;
   const used = new Set(taken);
   let id = base;
   for (let n = 2; used.has(id); n++) id = `${base}-${n}`;

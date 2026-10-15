@@ -125,7 +125,7 @@ export function localStylesToClass(
   const trimmed = clipText(name.trim(), 60);
   if (!trimmed || localToClassRefusal(design, node)) return null;
   const classes = design.classes ?? [];
-  const base = slugify(trimmed).slice(0, 34) || "class";
+  const base = slugify(trimmed).slice(0, 34).replace(/-+$/, "") || "class";
   const taken = new Set(classes.map((c) => c.id));
   let id = base;
   for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;
@@ -161,7 +161,7 @@ export function duplicateClass(
   for (let n = 2; n <= MAX_CLASSES && classNameTaken(design, baseName); n++) {
     baseName = `${stem} ${n}`;
   }
-  const base = slugify(baseName).slice(0, 34) || "class";
+  const base = slugify(baseName).slice(0, 34).replace(/-+$/, "") || "class";
   const taken = new Set(classes.map((c) => c.id));
   let id = randomSuffix ? `${base}-${randomSuffix}`.slice(0, 40) : base;
   for (let n = 2; taken.has(id); n++) id = `${base}-${n}`.slice(0, 40);

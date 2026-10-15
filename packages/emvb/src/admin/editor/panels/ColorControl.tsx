@@ -39,7 +39,7 @@ function Swatch({ color }: { color: string }) {
 }
 
 const uniqueId = (design: DesignSystem, name: string) => {
-  const base = slugify(name).slice(0, 34) || "color";
+  const base = slugify(name).slice(0, 34).replace(/-+$/, "") || "color";
   const taken = new Set(design.variables.colors.map((color) => color.id));
   let id = base;
   for (let n = 2; taken.has(id); n++) id = `${base}-${n}`;

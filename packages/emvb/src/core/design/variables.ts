@@ -285,7 +285,7 @@ export function duplicateVariable(
   for (let n = 2; n <= MAX_VARIABLES[kind] && variableNameTaken(design, kind, name); n++) {
     name = `${stem} ${n}`;
   }
-  const base = slugify(name).slice(0, 34) || kind;
+  const base = slugify(name).slice(0, 34).replace(/-+$/, "") || kind;
   const taken = new Set(list.map((entry) => entry.id));
   let nextId = base;
   for (let n = 2; taken.has(nextId); n++) nextId = `${base}-${n}`.slice(0, 40);
