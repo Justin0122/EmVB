@@ -1,4 +1,4 @@
-import type { VariableKind } from "../../../core/index.ts";
+import { isSafeFontStack, type VariableKind } from "../../../core/index.ts";
 import { hexInput } from "./color-space.ts";
 
 export type Length = { value: number; unit: "px" | "rem" | "em" | "%" };
@@ -38,7 +38,7 @@ export function valueText(value: unknown): string {
 
 const ERRORS: Record<VariableKind, string> = {
   color: "Enter a hex color such as #1a2b3c.",
-  font: "Enter a font stack such as Inter, sans-serif.",
+  font: "Enter a font stack such as Inter, sans-serif (letters, digits, spaces, - and _ in names).",
   fontSize: "Enter a size such as 16, 16px or 1.5rem.",
   spacing: "Enter a length such as 16, 16px or 1.5rem.",
 };
@@ -58,7 +58,9 @@ export function parseValue(
     const hex = hexInput(trimmed);
     return hex ? { ok: true, value: hex } : { ok: false, error: ERRORS.color };
   }
-  return trimmed && trimmed.length <= 200
+  // W-547: a stack the site CSS can't carry (a `;`, an apostrophe) was saved, then dropped from
+  // the page without a word.
+  return trimmed && isSafeFontStack(trimmed)
     ? { ok: true, value: trimmed }
     : { ok: false, error: ERRORS.font };
 }

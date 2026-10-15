@@ -53,3 +53,12 @@ describe("variable values (W-087)", () => {
     expect(pickerHex("#12")).toBe("#000000");
   });
 });
+
+test("a font stack the site CSS would drop is refused (W-547)", () => {
+  expect(parseValue("font", "Inter; color: red").ok).toBe(false);
+  expect(parseValue("font", "Cooper's Font").ok).toBe(false);
+  expect(parseValue("font", '"Open Sans", system-ui, sans-serif')).toEqual({
+    ok: true,
+    value: '"Open Sans", system-ui, sans-serif',
+  });
+});
