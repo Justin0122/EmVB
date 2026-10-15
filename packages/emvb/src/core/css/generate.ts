@@ -75,15 +75,20 @@ const block = (selector: string, declarations: Declaration[]) =>
     : `${selector}{${declarations.map((d) => `${d.property}:${d.value}`).join(";")}}`;
 
 /** Tag defaults sit under `:where` so a class (0,1,0) still beats the tag (0,0,1). */
-function tagDefaultCss(design: DesignSystem): string {
+function tagDefaultCss(
+  design: DesignSystem,
+  track: (selector: string, declarations: Declaration[]) => Declaration[],
+): string {
   const defaults = design.defaults;
   if (!defaults) return "";
   let css = "";
   for (const tag of DEFAULT_STYLE_TAGS) {
     const style = defaults[tag];
     if (!style) continue;
-    const { declarations } = styleDeclarations(style);
-    css += block(`:where(.emvb-root) ${tag}`, declarations);
+    // W-670: tracked like classes, so a tag default's entrance gets its keyframes and turns off
+    // for reduced motion.
+    const selector = `:where(.emvb-root) ${tag}`;
+    css += block(selector, track(selector, styleDeclarations(style).declarations));
   }
   return css;
 }
@@ -239,13 +244,27 @@ export function generateCss({
       entrances.push(rule.selector);
     }
   }
+  const defaultsCss = tagDefaultCss(design, track);
+  // W-670: an entrance or scroll motion set only in a container query override pointed at
+  // keyframes that were never sent (no animation at all) and ignored reduced motion.
+  for (const rule of localRules) {
+    const query = rule.query ?? [];
+    const selector = `.emvb-e-${rule.id}`;
+    if (usesMotion(query)) motion = true;
+    if (!entrances.includes(selector) && query.some((d) => d.property === "animation")) {
+      entrances.push(selector);
+    }
+    if (!animated.includes(selector) && query.some((d) => d.property === "transition")) {
+      animated.push(selector);
+    }
+  }
   return [
     entrances.length > 0
       ? "@keyframes emvb-fade{from{opacity:0}to{opacity:1}}@keyframes emvb-fade-up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes emvb-fade-down{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}@keyframes emvb-slide-up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}@keyframes emvb-slide-down{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:none}}@keyframes emvb-scale{from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:none}}"
       : "",
     entrances.length > 0 && motion ? MOTION_KEYFRAMES : "",
     block(".emvb-root", variables),
-    tagDefaultCss(design),
+    defaultsCss,
     backgroundVideo
       ? ".emvb-has-bg-video{position:relative;overflow:hidden}.emvb-bg-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}.emvb-has-bg-video>:not(.emvb-bg-video){position:relative;z-index:1}"
       : "",
