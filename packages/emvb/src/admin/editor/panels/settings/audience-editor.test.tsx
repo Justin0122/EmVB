@@ -152,3 +152,16 @@ test("Everyone except, with no rule yet, warns that every visitor is hidden (W-6
   await mount(<AudienceEditor node={node} isRoot={false} onChange={() => undefined} />);
   expect(q("[data-emvb-audience-empty]").textContent).toContain("hidden from every visitor");
 });
+
+test("clearing one hour field keeps the other one (W-615)", async () => {
+  let node = { ...heading, audience: { hours: { from: 9, to: 17 } } } as LayoutNode;
+  const onChange = (next: LayoutNode) => {
+    node = next;
+  };
+  await mount(<AudienceEditor node={node} isRoot={false} onChange={onChange} />);
+  await act(async () => change(q("[data-emvb-audience-to]"), ""));
+  expect(node.audience?.hours).toEqual({ from: 9, to: 24 });
+  await rerender(<AudienceEditor node={node} isRoot={false} onChange={onChange} />);
+  await act(async () => change(q("[data-emvb-audience-from]"), ""));
+  expect(node.audience?.hours).toBeUndefined();
+});

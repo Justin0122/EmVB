@@ -247,9 +247,11 @@ export function AudienceEditor({
               onChange={(event) => {
                 const raw = event.currentTarget.value;
                 const { hours: _h, ...rest } = base;
-                if (raw === "") return set(rest);
-                const from = Math.min(23, Math.max(0, Math.round(Number(raw))));
-                set({ ...rest, hours: { from, to: base.hours?.to ?? 24 } });
+                const to = base.hours?.to ?? 24;
+                // W-615: clearing one end keeps the other; only all-day (0–24) drops the rule.
+                const from = raw === "" ? 0 : Math.min(23, Math.max(0, Math.round(Number(raw))));
+                if (from === 0 && to === 24) return set(rest);
+                set({ ...rest, hours: { from, to } });
               }}
             />
             <input
@@ -263,9 +265,10 @@ export function AudienceEditor({
               onChange={(event) => {
                 const raw = event.currentTarget.value;
                 const { hours: _h, ...rest } = base;
-                if (raw === "") return set(rest);
-                const to = Math.min(24, Math.max(0, Math.round(Number(raw))));
-                set({ ...rest, hours: { from: base.hours?.from ?? 0, to } });
+                const from = base.hours?.from ?? 0;
+                const to = raw === "" ? 24 : Math.min(24, Math.max(0, Math.round(Number(raw))));
+                if (from === 0 && to === 24) return set(rest);
+                set({ ...rest, hours: { from, to } });
               }}
             />
           </div>
