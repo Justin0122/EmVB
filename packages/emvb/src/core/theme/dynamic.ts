@@ -221,8 +221,9 @@ export function portableTextToVNodes(value: unknown): VNode[] {
  * Lists with no items dropped at every depth (W-585): a blank nested item used to leave an empty
  * `<ul>` inside its parent item, or an `<li>` holding only that empty list.
  */
+const isList = (n: VNode): boolean => n.tag === "ul" || n.tag === "ol";
+
 function pruneEmptyLists(nodes: VNode[]): VNode[] {
-  const isList = (n: VNode) => n.tag === "ul" || n.tag === "ol";
   const keep: VNode[] = [];
   for (const node of nodes) {
     if (isList(node)) {
