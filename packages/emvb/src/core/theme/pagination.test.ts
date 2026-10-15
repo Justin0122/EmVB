@@ -108,3 +108,37 @@ describe("W-552: paged titles keep $ and braces from the title", () => {
     expect(archivePageTitle("About {page}", 2)).toBe("About {page} – page 2");
   });
 });
+
+describe("W-600 a gap never stands for a single page", () => {
+  const shape = (p: Parameters<typeof paginationItems>[0]) =>
+    paginationItems(p).map((i) => (i.kind === "page" ? i.n : i.kind));
+  test("page 5 without a total shows 2 instead of '…'", () => {
+    expect(shape({ page: 5, hasMore: false, basePath: "/p" })).toEqual(["prev", 1, 2, 3, 4, 5]);
+  });
+  test("with a total, both ends fill a one-page hole", () => {
+    expect(shape({ page: 4, hasMore: true, basePath: "/p", totalPages: 7 })).toEqual([
+      "prev",
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      "next",
+    ]);
+    expect(shape({ page: 5, hasMore: true, basePath: "/p", totalPages: 10 })).toEqual([
+      "prev",
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      "gap",
+      10,
+      "next",
+    ]);
+  });
+});

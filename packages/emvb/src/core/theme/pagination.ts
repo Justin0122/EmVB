@@ -136,7 +136,9 @@ export function paginationItems(p: ArchivePagination): PaginationItem[] {
   if (p.page > 1) items.push({ kind: "prev", href: archivePagePath(p.basePath, p.page - 1) });
   const from = Math.max(1, p.page - 2);
   if (from > 1) items.push(page(1));
-  if (from > 2) items.push({ kind: "gap" });
+  // W-600: "1 … 3" hides just page 2; show it instead of a gap.
+  if (from === 3) items.push(page(2));
+  if (from > 3) items.push({ kind: "gap" });
   for (let n = from; n <= p.page; n++) items.push(page(n));
   if (p.hasMore) {
     items.push(page(p.page + 1));
@@ -159,9 +161,12 @@ function totalItems(p: ArchivePagination, total: number): PaginationItem[] {
   const from = Math.max(1, p.page - 2);
   const to = Math.min(total, p.page + 2);
   if (from > 1) items.push(page(1));
-  if (from > 2) items.push({ kind: "gap" });
+  // W-600: "1 … 3" hides just page 2; show it instead of a gap.
+  if (from === 3) items.push(page(2));
+  if (from > 3) items.push({ kind: "gap" });
   for (let n = from; n <= to; n++) items.push(page(n));
-  if (to < total - 1) items.push({ kind: "gap" });
+  if (to === total - 2) items.push(page(total - 1));
+  if (to < total - 2) items.push({ kind: "gap" });
   if (to < total) items.push(page(total));
   if (p.page < total) items.push({ kind: "next", href: archivePagePath(p.basePath, p.page + 1) });
   return items;
