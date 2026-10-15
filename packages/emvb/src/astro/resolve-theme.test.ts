@@ -161,6 +161,24 @@ describe("resolveThemeParts (R-062)", () => {
     expect(resolved.needsPopupsRuntime).toBe(false);
   });
 
+  test("a header part with its own header box isn't nested in a second header (W-586)", async () => {
+    const own: LayoutNode = {
+      id: "box00001",
+      type: "container",
+      props: { tag: "header" },
+      children: [heading("head0001", "Site")],
+    } as LayoutNode;
+    themeEntries = [
+      part("HEADOWN1", "header", [own]),
+      part("FOOTOWN1", "footer", [heading("head0002", "F")]),
+    ];
+    const resolved = await resolveThemeParts(astro("/about"));
+    const html = resolved.header?.html ?? "";
+    expect(html).toStartWith('<div class="emvb-theme-header" data-emvb-theme-part="HEADOWN1">');
+    expect(html.match(/<header\b/g)?.length).toBe(1);
+    expect(resolved.footer?.html).toStartWith('<footer class="emvb-theme-footer"');
+  });
+
   test("a theme part id is escaped in the wrapper", async () => {
     themeEntries = [
       part('HEAD"><img src=x onerror=alert(1)>', "header", [heading("head0001", "Hi")]),

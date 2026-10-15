@@ -498,7 +498,10 @@ export async function resolveThemePartsWith(
     rendered.push(page);
     // W-216: a header or footer part is the page's banner or contentinfo landmark (hosts put it
     // straight in <body> instead of their own <header>/<footer>).
-    const tag = WRAPPER_TAGS[stored.partType] ?? "div";
+    // W-586: a part that already has its own header or footer box keeps that one as the landmark;
+    // a second wrapper around it would nest <header> in <header> (invalid, two banners).
+    const ownLandmark = /<(?:header|footer)[\s>]/.test(page.html);
+    const tag = (!ownLandmark && WRAPPER_TAGS[stored.partType]) || "div";
     const partId = escapeAttr(stored.id);
     const html = page.html
       ? `<${tag} class="emvb-theme-${stored.partType}" data-emvb-theme-part="${partId}">${page.html}</${tag}>`
