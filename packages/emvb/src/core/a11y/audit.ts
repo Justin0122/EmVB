@@ -187,7 +187,12 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
   };
   const visitNode = (node: LayoutNode, bg: string | undefined, color: string | undefined): void => {
     const props = node.props as Record<string, unknown>;
-    const style = node.style as
+    // Global classes apply first, in stylesheet order, then the element's own style (W-637).
+    const classIds = new Set(node.classes ?? []);
+    const fromClasses = (design.classes ?? [])
+      .filter((c) => classIds.has(c.id))
+      .reduce<Record<string, unknown>>((acc, c) => Object.assign(acc, c.style), {});
+    const style = (classIds.size > 0 ? { ...fromClasses, ...node.style } : node.style) as
       | {
           backgroundColor?: unknown;
           color?: unknown;

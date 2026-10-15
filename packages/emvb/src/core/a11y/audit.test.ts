@@ -137,3 +137,31 @@ describe("accessibility co-pilot (W-317)", () => {
     expect(rules(extra.layout)).toEqual(["multiple-h1:head0003"]);
   });
 });
+
+test("W-637: contrast reads colours set by global classes, the element's own style winning", () => {
+  const design = {
+    ...emptyDesign(),
+    classes: [
+      { id: "dark", name: "dark", style: { backgroundColor: "#111111" } },
+      { id: "pale", name: "pale", style: { color: "#eeeeee" } },
+    ],
+  } as ReturnType<typeof emptyDesign>;
+  const text = (classes: string[], style: Record<string, unknown> = {}) =>
+    ({ id: "text0001", type: "text", props: { text: "Hi" }, classes, style }) as LayoutNode;
+  const white = (child: LayoutNode) =>
+    ({
+      id: "box00001",
+      type: "container",
+      props: {},
+      style: { backgroundColor: "#ffffff" },
+      children: [child],
+    }) as LayoutNode;
+  const issues = (child: LayoutNode) =>
+    auditPage(page(h("head0001", 1), white(child)), design).issues.map((i) => i.rule);
+  // White text on a class's dark background is fine.
+  expect(issues(text(["dark"], { color: "#ffffff" }))).toEqual([]);
+  // Pale text from a class on white is flagged.
+  expect(issues(text(["pale"]))).toEqual(["contrast"]);
+  // The element's own colour wins over the class.
+  expect(issues(text(["pale"], { color: "#111111" }))).toEqual([]);
+});
