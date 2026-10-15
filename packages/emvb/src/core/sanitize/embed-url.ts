@@ -120,12 +120,18 @@ const PROVIDERS = [
  */
 // W-448: "youtube.com/watch?v=…" typed without https:// was taken for a video file path on this
 // site, so the page showed a broken player. Known video hosts get their scheme.
-const BARE_VIDEO_HOST =
-  /^(?:(?:www\.|m\.|music\.)?youtube\.com|youtu\.be|(?:www\.|player\.)?vimeo\.com)\//i;
+// W-659: every host the providers accept, not a hand-kept subset (youtube-nocookie.com and
+// www.youtu.be still became a broken file player).
+function bareVideoHost(typed: string): boolean {
+  const slash = typed.indexOf("/");
+  if (slash <= 0) return false;
+  const host = typed.slice(0, slash).toLowerCase();
+  return YT_HOSTS.has(host) || VIMEO_HOSTS.has(host);
+}
 
 export function resolveEmbedUrl(value: string): EmbedTarget | undefined {
   const typed = value.trim();
-  const trimmed = BARE_VIDEO_HOST.test(typed) ? `https://${typed}` : typed;
+  const trimmed = bareVideoHost(typed) ? `https://${typed}` : typed;
   if (trimmed.length === 0 || trimmed.length > 2000) return undefined;
 
   const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed);
