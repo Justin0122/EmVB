@@ -85,7 +85,8 @@ const fieldWrap = (
   attrs: Record<string, string>,
 ): VNode =>
   fieldBox(attrs, [
-    ...(labelText
+    // W-587: a blank label is no label.
+    ...(labelText?.trim()
       ? [
           {
             tag: "label",
@@ -172,7 +173,7 @@ export const checkbox: ElementDefinition<CheckboxNode> = {
     const labelEl: VNode = {
       tag: "label",
       attrs: { class: "emvb-form-checkbox-label" },
-      children: [input, ` ${node.props.label ?? name}`],
+      children: [input, ` ${node.props.label?.trim() || name}`],
     };
     return fieldBox(attrs, [labelEl, errorSlot(name)]);
   },
@@ -188,7 +189,7 @@ export const radio: ElementDefinition<RadioNode> = {
     const id = controlId(node.id);
     // W-524: the question is the fieldset's <legend>, so the group is named natively (it was a
     // <label> pointing at nothing plus aria-labelledby, W-442). The id stays for old references.
-    const legend: VNode[] = node.props.label
+    const legend: VNode[] = node.props.label?.trim()
       ? [
           {
             tag: "legend",
