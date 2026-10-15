@@ -1495,8 +1495,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
-          "search": "    if (isTextField(event.target) || inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"z\") {\n      event.preventDefault();\n      runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"y\") {\n      event.preventDefault();\n      runCommand(runners(), \"redo\", null);\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === \"d\" && selected) {",
-          "replace": "    if (inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"z\") {\n      event.preventDefault();\n      runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === \"y\") {\n      event.preventDefault();\n      runCommand(runners(), \"redo\", null);\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === \"d\" && selected) {"
+          "search": "    if (isTextField(event.target) || inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === \"z\") {\n      event.preventDefault();\n      runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === \"y\") {\n      event.preventDefault();\n      runCommand(runners(), \"redo\", null);\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && shortcutKey(event) === \"d\" && selected) {",
+          "replace": "    if (inDialog(event.target)) return;\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === \"z\") {\n      event.preventDefault();\n      runCommand(runners(), event.shiftKey ? \"redo\" : \"undo\", null);\n      return;\n    }\n    if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === \"y\") {\n      event.preventDefault();\n      runCommand(runners(), \"redo\", null);\n      return;\n    }\n    if (!onCanvasOrLayers(event.target)) return;\n    const layout = latest.current.page.layout;\n    const selected = latest.current.selectedId;\n    if ((event.ctrlKey || event.metaKey) && shortcutKey(event) === \"d\" && selected) {"
         }
       ],
       "command": [
@@ -15508,8 +15508,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/useEditorShortcuts.ts",
-          "search": "    const clipKey =\n      (event.ctrlKey || event.metaKey) && !event.altKey ? event.key.toLowerCase() : \"\";",
-          "replace": "    const clipKey = event.ctrlKey && !event.altKey ? event.key.toLowerCase() : \"\";"
+          "search": "    const clipKey = (event.ctrlKey || event.metaKey) && !event.altKey ? shortcutKey(event) : \"\";",
+          "replace": "    const clipKey = event.ctrlKey && !event.altKey ? shortcutKey(event) : \"\";"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/admin/editor/clipboard.test.tsx"],
