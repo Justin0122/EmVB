@@ -464,7 +464,7 @@ button.emvb-media-preview { cursor: pointer; }
 button.emvb-media-preview:hover .emvb-media-thumb { box-shadow: 0 0 0 2px var(--color-kumo-brand); }
 .emvb-media-thumb { display: block; width: 100%; height: 120px; border-radius: 6px; object-fit: contain; background: repeating-conic-gradient(var(--color-kumo-canvas) 0 25%, var(--color-kumo-tint, #eee) 0 50%) 0 0 / 16px 16px; }
 .emvb-media-preview-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.emvb-media-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgb(0 0 0 / 0.4); }
+.emvb-media-backdrop { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgb(0 0 0 / 0.4); }
 .emvb-media-dialog {
   position: relative;
   display: flex;
