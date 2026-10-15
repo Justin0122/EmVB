@@ -57,10 +57,15 @@ export function NumberField({
 }) {
   const [draft, setDraft] = React.useState(shown(value, spec));
   const [error, setError] = React.useState<string | null>(null);
+  // W-604: keyed on the spec's contents, not its identity; callers that build a spec per render
+  // (Transition's Delay, Motion's fields) reset the draft whenever the panel re-rendered.
+  const specKey = JSON.stringify(spec);
+  const specRef = React.useRef(spec);
+  specRef.current = spec;
   React.useEffect(() => {
-    setDraft(shown(value, spec));
+    setDraft(shown(value, specRef.current));
     setError(null);
-  }, [value, spec]);
+  }, [value, specKey]);
 
   const commit = () => {
     const parsed = parseNumberDraft(draft, label, spec);

@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { act } from "react";
 import { cleanup, mount } from "../../../../../test/dom/mount.ts";
-import { NumberRow, type NumberSpec } from "./NumberRow.tsx";
+import * as React from "react";
+import { NumberField, NumberRow, type NumberSpec } from "./NumberRow.tsx";
 
 afterEach(cleanup);
 
@@ -125,4 +126,32 @@ describe("NumberRow (W-091)", () => {
     await act(async () => set.reset()?.click());
     expect(set.sent).toStrictEqual([undefined]);
   });
+});
+
+test("W-604 a parent re-render with an equal, new spec object keeps what's being typed", async () => {
+  let rerender: () => void = () => {};
+  function Host() {
+    const [, setTick] = React.useState(0);
+    rerender = () => setTick((t) => t + 1);
+    // Like Transition's Delay ({ ...MS, placeholder }) and Motion's specFor(): new each render.
+    return (
+      <NumberField
+        fieldKey="n"
+        label="Delay"
+        value={100}
+        spec={{ min: 0, max: 10000, integer: true, example: "200", placeholder: "0" }}
+        onCommit={() => {}}
+      />
+    );
+  }
+  const host = await mount(<Host />);
+  const el = host.querySelector<HTMLInputElement>("input");
+  if (!el) throw new Error("no field");
+  await act(async () => {
+    el.focus();
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(el, "250");
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await act(async () => rerender());
+  expect(el.value).toBe("250");
 });

@@ -21219,6 +21219,24 @@
       "expect": "\\(fail\\)"
     },
     {
+      "id": "W-604/spec-identity",
+      "requirement": "W-604",
+      "description": "A number field loses what's typed when its panel re-renders with a fresh spec object.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/admin/editor/panels/settings/NumberRow.tsx",
+          "search": "  }, [value, specKey]);",
+          "replace": "  }, [value, spec]);"
+        }
+      ],
+      "command": [
+        "bun",
+        "test",
+        "./packages/emvb/src/admin/editor/panels/settings/number-row.test.tsx"
+      ],
+      "expect": "\\(fail\\)"
+    },
+    {
       "id": "W-602/blank-items",
       "requirement": "W-602",
       "description": "A Loop with no item design lists blank items (empty cards) on the page.",
