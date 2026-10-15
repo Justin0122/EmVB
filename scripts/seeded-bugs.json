@@ -24958,7 +24958,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/design/transfer.ts",
-          "search": "    if (!taken.has(next.toLowerCase())) return next;",
+          "search": "    if (!taken.has(nameKey(next))) return next;",
           "replace": "    return next;"
         }
       ],
