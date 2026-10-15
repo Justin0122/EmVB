@@ -115,3 +115,39 @@ test("a failed save keeps the page and says the save failed, not the load (W-624
   expect(host.textContent).not.toContain("Couldn't load");
   expect(host.textContent).toContain("Couldn't save");
 });
+
+test("after a conflict the page picks up the saved revision, so the next save works (W-630)", async () => {
+  const api = fakeApi(50);
+  let conflicted = false;
+  const sent: unknown[] = [];
+  const fetcher: Fetcher = async (path, init) => {
+    if (path.endsWith("/agents/save")) {
+      const body = JSON.parse(String(init?.body)) as { revision: string };
+      sent.push(body.revision);
+      if (body.revision !== "r9") {
+        conflicted = true;
+        return Response.json(
+          { error: { code: "CONFLICT", message: "Changed elsewhere" } },
+          { status: 409 },
+        );
+      }
+      return Response.json({ data: { revision: "r10" } });
+    }
+    const res = await api.fetcher(path, init);
+    if (!conflicted || !path.endsWith("/agents")) return res;
+    const body = (await res.json()) as { data: Record<string, unknown> };
+    return Response.json({ data: { ...body.data, revision: "r9" } });
+  };
+  const host = await mount(<AgentsPage fetcher={fetcher} />);
+  await settle();
+  await settle();
+  const toggle = () => [...host.querySelectorAll("button[role=switch]")][0] as HTMLButtonElement;
+  await act(async () => toggle().click());
+  await settle();
+  await settle();
+  await act(async () => toggle().click());
+  await settle();
+  await settle();
+  expect(sent).toEqual(["r1", "r9"]);
+  expect(host.textContent).not.toContain("Couldn't save");
+});

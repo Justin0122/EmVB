@@ -116,6 +116,10 @@ export function AgentsPage({ fetcher = defaultFetcher }: { fetcher?: Fetcher }) 
       setState({ ...state, settings, revision });
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : String(e));
+      // Pick up what is saved now and its revision, so the next save isn't refused again (W-630).
+      await loadAgents(fetcher)
+        .then(setState)
+        .catch(() => undefined);
     } finally {
       setSaving(false);
     }
