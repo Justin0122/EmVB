@@ -151,14 +151,21 @@ test("hidden and conditional definition fields work in a live submit (W-595, W-5
     },
   });
   expect(created.status, JSON.stringify(created.json)).toBe(200);
-  const formId = (created.json?.["data"] as { id: string }).id;
-  const layout = formPageLayout(formId);
-  layout.root.children[0]!.children = [
+  const formId = (created.json?.["data"] as { id?: string } | undefined)?.id ?? "";
+  const base = formPageLayout(formId);
+  const fields = [
     { id: "inp00001", type: "text-input", props: { field: "email", label: "Email" } },
     { id: "sel00001", type: "select", props: { field: "topic", label: "Topic" } },
     { id: "inp00002", type: "text-input", props: { field: "other", label: "Other" } },
     { id: "sub00001", type: "submit", props: { label: "Send" } },
-  ] as never;
+  ];
+  const layout = {
+    ...base,
+    root: {
+      ...base.root,
+      children: [{ id: "form0001", type: "form", props: { formId }, children: fields }],
+    },
+  };
   const pageId = await createPage(request, "Form Cond", layout, `page-${slug}`);
   await publishPage(request, pageId);
 
@@ -178,8 +185,10 @@ test("hidden and conditional definition fields work in a live submit (W-595, W-5
     formId,
     limit: 20,
   });
-  const items = (listed.json?.["data"] as { items: Array<{ data: Record<string, unknown> }> })
-    .items;
+  const listedData = listed.json?.["data"] as
+    | { items?: Array<{ data: Record<string, unknown> }> }
+    | undefined;
+  const items = listedData?.items ?? [];
   const mine = items.find((i) => i.data["email"] === `cond-${slug}@example.com`);
   expect(mine?.data["topic"]).toBe("sales");
   expect(mine?.data["source"]).toBe("emvb-e2e");
