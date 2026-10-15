@@ -18884,12 +18884,26 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/extras.ts",
-          "search": "  if (BOX.has(node.type) || node.type === \"heading\" || node.type === \"icon\") {",
-          "replace": "  if (BOX.has(node.type)) {"
+          "search": "    node.type === \"heading\" ||\n    node.type === \"icon\" ||",
+          "replace": "    false ||"
         }
       ],
       "command": ["bun", "test", "packages/emvb/src/core/elements/inner-link.test.ts"],
       "expect": "\\(fail\\).*keeps a box link from nesting anchors"
+    },
+    {
+      "id": "W-668/box-link-wraps-controls",
+      "requirement": "W-668",
+      "description": "A linked box wraps a menu, accordion or video, putting controls inside a link.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/render/extras.ts",
+          "search": "  if (ALWAYS_INTERACTIVE.has(node.type)) return true;",
+          "replace": "  if (node.type === \"link\" || node.type === \"post-link\" || node.type === \"button\") return true;"
+        }
+      ],
+      "command": ["bun", "test", "packages/emvb/src/core/render/box-link-nesting.test.ts"],
+      "expect": "\\(fail\\).*around a menu it stays a box"
     },
     {
       "id": "W-141/e2e-heading-link-not-rendered",

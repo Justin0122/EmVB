@@ -46,9 +46,49 @@ function childrenOf(node: LayoutNode): LayoutNode[] {
 }
 
 /** A link, a button, or a box that is already a link. */
+/**
+ * W-668: elements that always render a link, control or embed. A linked box around one of these
+ * nested an <a> in an <a> (the browser then splits the box apart) or put a menu, form field,
+ * accordion toggle or video player inside a link.
+ */
+const ALWAYS_INTERACTIVE = new Set([
+  "link",
+  "post-link",
+  "button",
+  "menu",
+  "menu-item",
+  "accordion",
+  "accordion-item",
+  "tabs",
+  "video",
+  "form",
+  "text-input",
+  "textarea",
+  "select",
+  "checkbox",
+  "radio",
+  "submit",
+  "pagination",
+  "toc",
+  // Post content can hold links of its own.
+  "post-content",
+]);
+
 function containsInteractive(node: LayoutNode): boolean {
-  if (node.type === "link" || node.type === "post-link" || node.type === "button") return true;
-  if (BOX.has(node.type) || node.type === "heading" || node.type === "icon") {
+  if (ALWAYS_INTERACTIVE.has(node.type)) return true;
+  const props = node.props as { partId?: unknown; itemPartId?: unknown };
+  // A synced section or Loop Item part is another layout this check can't see into.
+  if (node.type === "section" && typeof props.partId === "string" && props.partId.trim())
+    return true;
+  if (node.type === "loop" && typeof props.itemPartId === "string" && props.itemPartId.trim()) {
+    return true;
+  }
+  if (
+    BOX.has(node.type) ||
+    node.type === "heading" ||
+    node.type === "icon" ||
+    node.type === "image"
+  ) {
     const href = (node.props as { href?: unknown }).href;
     if (typeof href === "string" && href.trim()) return true;
   }
