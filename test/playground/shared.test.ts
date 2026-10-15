@@ -64,3 +64,15 @@ describe("W-321 opening a shared page in the playground", () => {
     );
   });
 });
+
+describe("W-591 shared page slugs", () => {
+  test("W-591 keeps a non-Latin title's letters, like the create dialog", () => {
+    expect(freeSlug("Привет мир", new Set())).toBe("привет-мир");
+  });
+  test("W-591 a numbered slug stays within 80 characters", () => {
+    const title = "a".repeat(100);
+    const slug = freeSlug(title, new Set(["a".repeat(80)]));
+    expect(slug).toBe(`${"a".repeat(78)}-2`);
+    expect([...slug].length).toBeLessThanOrEqual(80);
+  });
+});

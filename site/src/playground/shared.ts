@@ -1,7 +1,11 @@
 import { createPage, saveDesign } from "../../../packages/emvb/src/admin/content-api.ts";
 import type { Fetcher } from "../../../packages/emvb/src/admin/api.ts";
 import { loadDesign } from "../../../packages/emvb/src/admin/editor/useEditorData.ts";
-import { slugify, type SharedPage, type ShareRead } from "../../../packages/emvb/src/core/index.ts";
+import {
+  pageSlug,
+  type SharedPage,
+  type ShareRead,
+} from "../../../packages/emvb/src/core/index.ts";
 
 /** What the playground says when a shared link can't open (W-321). */
 export function shareProblem(read: Extract<ShareRead, { ok: false }>): string {
@@ -17,13 +21,18 @@ export function shareProblem(read: Extract<ShareRead, { ok: false }>): string {
   }
 }
 
-/** A slug not yet used: the title's, then -2, -3… */
+/**
+ * A slug not yet used: the title's, then -2, -3… W-591: made like the create dialog's (any
+ * script), with the base cut so a numbered slug still fits EmDash's 80 characters.
+ */
 export function freeSlug(title: string, taken: ReadonlySet<string>): string {
-  const base = slugify(title) || "shared-page";
+  const base = pageSlug(title) || "shared-page";
   if (!taken.has(base)) return base;
-  let n = 2;
-  while (taken.has(`${base}-${n}`)) n += 1;
-  return `${base}-${n}`;
+  for (let n = 2; ; n++) {
+    const suffix = `-${n}`;
+    const slug = `${pageSlug(base, 80 - suffix.length) || "shared-page"}${suffix}`;
+    if (!taken.has(slug)) return slug;
+  }
 }
 
 /**
