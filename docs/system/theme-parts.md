@@ -104,7 +104,7 @@ Public HTML stays JS-free (R-031) except in two cases: a matching popup loads `e
 
 ## Public render
 
-Hosts call `resolveThemeParts(Astro, ctx, options)` from `emvb/astro`. `options.visitor` is the same object `resolveEmVBPage` takes (segments, and country, device or returning when the site knows better, W-329). Return value:
+Hosts call `resolveThemeParts(Astro, ctx, options)` from `emvb/astro`. `options.visitor` is the same object `resolveEmVBPage` takes (segments, and country, device or returning when the site knows better, W-329). `options.lang` (default `Astro.currentLocale`) writes Post Dates in the page's language (W-688), and `options.labels` (`{ popup, close }`) names popup and float chrome for screen readers in the site's language (W-690). Return value:
 
 - `header` / `footer` — chrome (S7a)
 - `content` — body template when Error 404 / Search / Single Page / Single Post / Archive wins

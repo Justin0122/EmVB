@@ -19,6 +19,7 @@ import {
   validateTriggers,
   wrapFloatMarkup,
   wrapPopupMarkup,
+  type ChromeLabels,
   type FloatSettings,
   type Layout,
   type ThemeDynamicData,
@@ -404,6 +405,8 @@ export async function resolveThemeParts(
     visitor?: HostVisitor;
     /** The page's language, e.g. "fr-CA", for Post Dates; defaults to Astro's locale (W-688). */
     lang?: string;
+    /** Popup and float screen reader names in the site's language (W-690). */
+    labels?: ChromeLabels;
   } = {},
 ): Promise<ResolvedThemeParts> {
   return resolveThemePartsWith(emdashContent, astro, ctx, options);
@@ -418,6 +421,8 @@ export async function resolveThemePartsWith(
     visitor?: HostVisitor;
     /** The page's language, e.g. "fr-CA", for Post Dates; defaults to Astro's locale (W-688). */
     lang?: string;
+    /** Popup and float screen reader names in the site's language (W-690). */
+    labels?: ChromeLabels;
   } = {},
 ): Promise<ResolvedThemeParts> {
   const context =
@@ -611,7 +616,7 @@ export async function resolveThemePartsWith(
         const popup: RenderedPopup = {
           id: stored.id,
           title: stored.title,
-          html: wrapPopupMarkup(stored.id, html, stored.triggers),
+          html: wrapPopupMarkup(stored.id, html, stored.triggers, options.labels),
           css,
           triggers: stored.triggers,
         };
@@ -635,7 +640,14 @@ export async function resolveThemePartsWith(
         const item: RenderedFloat = {
           id: stored.id,
           title: stored.title,
-          html: wrapFloatMarkup(stored.id, stored.title, html, stored.float, surface),
+          html: wrapFloatMarkup(
+            stored.id,
+            stored.title,
+            html,
+            stored.float,
+            surface,
+            options.labels?.close,
+          ),
           css,
           settings: stored.float,
         };

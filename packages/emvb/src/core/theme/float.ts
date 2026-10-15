@@ -1,3 +1,4 @@
+import { chromeLabel } from "./popup-markup.ts";
 import { z } from "zod";
 import { escapeAttr } from "../sanitize/escape.ts";
 import type { DesignSystem } from "../schema/design.ts";
@@ -97,12 +98,14 @@ export function wrapFloatMarkup(
   bodyHtml: string,
   settings: FloatSettings,
   surface = true,
+  /** W-690: the close button's name in the site's language. Unset is "Close". */
+  closeLabel?: string,
 ): string {
   const safeId = escapeAttr(id);
   const label = escapeAttr(title.trim() || "Notice");
   const edge = escapeAttr(settings.edge);
   const close = settings.dismiss
-    ? `<button type="button" class="emvb-float__close" data-emvb-float-dismiss aria-label="Close"><span aria-hidden="true">×</span></button>`
+    ? `<button type="button" class="emvb-float__close" data-emvb-float-dismiss aria-label="${chromeLabel(closeLabel, "Close")}"><span aria-hidden="true">×</span></button>`
     : "";
   return [
     `<aside class="emvb-float emvb-float--${edge}${surface ? " emvb-float--surface" : ""}" id="emvb-float-${safeId}" data-emvb-float="${safeId}" data-emvb-float-edge="${edge}" role="region" aria-label="${label}">`,

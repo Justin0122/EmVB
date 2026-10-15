@@ -14,6 +14,13 @@ export const POPUP_CHROME_CSS = `
   .replace(/\n+/g, "")
   .trim();
 
+/** Screen reader names for popup and float chrome; unset are "Popup" and "Close" (W-690). */
+export type ChromeLabels = { popup?: string; close?: string };
+
+/** A label clipped to 80 characters and escaped for an attribute, or the English fallback. */
+export const chromeLabel = (text: string | undefined, fallback: string) =>
+  escapeAttr(text?.trim().slice(0, 80) || fallback);
+
 export type PopupPublicConfig = {
   id: string;
   triggers: TriggersDoc;
@@ -23,7 +30,13 @@ export type PopupPublicConfig = {
  * Wrap rendered popup body HTML with dialog chrome and a JSON config attribute
  * for the optional public runtime (R-031: only loaded when popups are present).
  */
-export function wrapPopupMarkup(id: string, bodyHtml: string, triggers: TriggersDoc): string {
+export function wrapPopupMarkup(
+  id: string,
+  bodyHtml: string,
+  triggers: TriggersDoc,
+  /** W-690: the dialog's fallback name and the close button's name, in the site's language. */
+  labels: ChromeLabels = {},
+): string {
   const config: PopupPublicConfig = { id, triggers };
   const configJson = escapeAttr(JSON.stringify(config));
   const safeId = escapeAttr(id);
@@ -33,8 +46,8 @@ export function wrapPopupMarkup(id: string, bodyHtml: string, triggers: Triggers
     `<div class="emvb-popup__backdrop" data-emvb-popup-dismiss tabindex="-1"></div>`,
     // W-282: named "Popup" until the runtime points the name at the content's first heading;
     // naming it after the whole content read every word as the dialog's name.
-    `<div class="emvb-popup__dialog" role="dialog" aria-modal="true" aria-label="Popup" tabindex="-1">`,
-    `<button type="button" class="emvb-popup__close" data-emvb-popup-dismiss aria-label="Close"><span aria-hidden="true">×</span></button>`,
+    `<div class="emvb-popup__dialog" role="dialog" aria-modal="true" aria-label="${chromeLabel(labels.popup, "Popup")}" tabindex="-1">`,
+    `<button type="button" class="emvb-popup__close" data-emvb-popup-dismiss aria-label="${chromeLabel(labels.close, "Close")}"><span aria-hidden="true">×</span></button>`,
     `<div class="emvb-popup__content" id="${titleId}">${bodyHtml}</div>`,
     `</div></div>`,
   ].join("");

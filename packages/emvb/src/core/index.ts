@@ -367,7 +367,12 @@ export {
   type PopupDevice,
 } from "./theme/popup-rules.ts";
 
-export { POPUP_CHROME_CSS, wrapPopupMarkup, type PopupPublicConfig } from "./theme/popup-markup.ts";
+export {
+  POPUP_CHROME_CSS,
+  wrapPopupMarkup,
+  type ChromeLabels,
+  type PopupPublicConfig,
+} from "./theme/popup-markup.ts";
 
 export {
   FLOAT_EDGES,
