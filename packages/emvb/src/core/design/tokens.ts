@@ -122,7 +122,7 @@ export function applyTokens(
   // W-640: an updated token keeps the name the site gave it.
   const replaced = current.map((v) => {
     const t = byId.get(v.id);
-    return t ? { ...t, name: v.name } : v;
+    return t ? Object.assign({}, t, { name: v.name }) : v;
   });
   const have = new Set(current.map((v) => v.id));
   const limit = list === "fontSizes" ? 50 : 100;
@@ -135,7 +135,7 @@ export function applyTokens(
       let name = t.name;
       for (let n = 2; taken.has(name.toLowerCase()); n++) name = `${t.name} ${n}`;
       taken.add(name.toLowerCase());
-      return name === t.name ? t : { ...t, name };
+      return name === t.name ? t : Object.assign({}, t, { name });
     });
   return { ...design, variables: { ...design.variables, [list]: [...replaced, ...added] } };
 }
