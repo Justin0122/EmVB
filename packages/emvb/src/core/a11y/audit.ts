@@ -121,7 +121,14 @@ const TEXT_TYPES = new Set([
 const FIELD_TYPES = new Set(["text-input", "textarea", "select", "checkbox", "radio"]);
 const LINKISH = new Set(["link", "button", "menu-item"]);
 
-function px(value: unknown): number | undefined {
+function px(value: unknown, design?: DesignSystem): number | undefined {
+  // W-651: a font size variable counts at its size; a fluid one at its smallest, where the text
+  // is hardest to read.
+  if (design && value && typeof value === "object" && "var" in value) {
+    const found = design.variables.fontSizes?.find((v) => v.id === (value as { var: unknown }).var);
+    if (!found) return undefined;
+    return found.fluid ? Math.min(found.fluid.min, found.fluid.max) : px(found.value);
+  }
   if (!value || typeof value !== "object" || !("unit" in value)) return undefined;
   const v = value as { value: number; unit: string };
   if (v.unit === "px") return v.value;
@@ -165,7 +172,8 @@ function largeText(node: LayoutNode, design: DesignSystem): boolean {
     | { fontSize?: unknown; fontWeight?: unknown }
     | undefined;
   const level = headingLevel(node);
-  const size = px(style?.fontSize) ?? (level === undefined ? 16 : (HEADING_PX[level - 1] ?? 24));
+  const size =
+    px(style?.fontSize, design) ?? (level === undefined ? 16 : (HEADING_PX[level - 1] ?? 24));
   const weight =
     typeof style?.fontWeight === "number" ? style.fontWeight : node.type === "heading" ? 700 : 400;
   return size >= 24 || (size >= 18.66 && weight >= 700);
