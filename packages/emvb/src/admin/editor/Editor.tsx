@@ -47,6 +47,7 @@ import {
   type FocusedListItem,
 } from "./components.tsx";
 import { useCollectionLoops } from "./loop-fields.tsx";
+import { PanelResizer, usePanelWidths } from "./panel-resize.tsx";
 import { useSiteCss } from "../site-css.ts";
 import { ComponentDesignContext } from "./component-design.tsx";
 import { restoreOnUndo, type Deletion } from "./restore-deleted.ts";
@@ -243,6 +244,9 @@ function EditorApp({
   const collectionLoops = useCollectionLoops(state.page.layout, componentTemplates, fetcher);
   // The site's own stylesheet, after EmVB's, as on its pages: blocks look the same while editing.
   const siteCss = useSiteCss(fetcher);
+  // The side panels' widths, dragged at their inner edges and remembered per browser.
+  const panels = usePanelWidths();
+  const frameRef = React.useRef<HTMLDivElement>(null);
   const rendered = React.useMemo(() => {
     if (!state.page.layout) return null;
     const dynamic = {
@@ -361,7 +365,28 @@ function EditorApp({
                     canRevert={canRevert}
                     onRevert={() => setRevertOpen(true)}
                   />
-                  <div className="emvb-frame">
+                  <div
+                    className="emvb-frame"
+                    ref={frameRef}
+                    style={
+                      {
+                        "--emvb-panel-left": `${panels.widths.left}px`,
+                        "--emvb-panel-right": `${panels.widths.right}px`,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <PanelResizer
+                      side="left"
+                      widths={panels.widths}
+                      frame={frameRef}
+                      onResize={panels.set}
+                    />
+                    <PanelResizer
+                      side="right"
+                      widths={panels.widths}
+                      frame={frameRef}
+                      onResize={panels.set}
+                    />
                     <aside className="emvb-panel emvb-panel-left" aria-label="Add and Layers">
                       <LeftPanel
                         layout={state.page.layout}

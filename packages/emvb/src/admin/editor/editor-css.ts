@@ -66,7 +66,15 @@ export const EDITOR_CSS = `${UI_CSS}
 .emvb-styles-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 9999px; background: currentColor; }
 .emvb-unsaved-dot { position: absolute; top: 4px; right: 4px; width: 8px; height: 8px; border-radius: 9999px; background: var(--text-color-kumo-default); }
 .emvb-danger-text.emvb-danger-text { color: var(--text-color-kumo-danger); }
-.emvb-frame { display: grid; grid-template-columns: var(--emvb-panel-left) minmax(0, 1fr) var(--emvb-panel-right); min-height: 0; }
+.emvb-frame { position: relative; display: grid; grid-template-columns: var(--emvb-panel-left) minmax(0, 1fr) var(--emvb-panel-right); min-height: 0; }
+.emvb-panel-resizer { position: absolute; top: 0; bottom: 0; z-index: 3; width: 8px; cursor: col-resize; touch-action: none; }
+.emvb-panel-resizer-left { left: calc(var(--emvb-panel-left) - 4px); }
+.emvb-panel-resizer-right { right: calc(var(--emvb-panel-right) - 4px); }
+.emvb-panel-resizer::after { content: ""; position: absolute; top: 0; bottom: 0; left: 3px; width: 2px; background: transparent; }
+.emvb-panel-resizer:hover::after, .emvb-panel-resizer:focus-visible::after, .emvb-frame[data-resizing] .emvb-panel-resizer:active::after { background: var(--color-kumo-brand); }
+.emvb-panel-resizer:focus-visible { outline: none; }
+.emvb-frame[data-resizing] { cursor: col-resize; user-select: none; }
+.emvb-frame[data-resizing] iframe { pointer-events: none; }
 .emvb-panel {
   min-height: 0;
   overflow: auto;
