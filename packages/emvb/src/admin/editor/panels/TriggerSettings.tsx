@@ -1,8 +1,14 @@
 import { Input } from "@cloudflare/kumo";
 import * as React from "react";
-import { clampScrollPercent, type PopupOpenTrigger, TRIGGER_LIMITS } from "../../../core/index.ts";
+import {
+  clampScrollPercent,
+  isSafeClickSelector,
+  type PopupOpenTrigger,
+  TRIGGER_LIMITS,
+} from "../../../core/index.ts";
 import { FIELD } from "../../ui.ts";
 import { isCommitEnter } from "../ime.ts";
+import { InlineError } from "./inline-error.tsx";
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
@@ -52,6 +58,23 @@ function NumberField({
   );
 }
 
+/**
+ * W-613: why a click selector can't be saved (or never matches), shown under the field instead
+ * of failing the popup's save.
+ */
+export function selectorError(selector: string): string | null {
+  if (!selector.trim()) return "Enter a CSS selector, such as .open-popup.";
+  if (!isSafeClickSelector(selector)) {
+    return "Use a simple CSS selector: letters, numbers, spaces and . # [ ] = : ( ) > + ~ * , \" ' | / - _";
+  }
+  try {
+    document.createDocumentFragment().querySelector(selector);
+  } catch {
+    return "This isn't a valid CSS selector, so no click would open the popup.";
+  }
+  return null;
+}
+
 const seconds = (ms: number) =>
   `${(ms / 1000).toLocaleString("en", { maximumFractionDigits: 1 })} s`;
 
@@ -92,16 +115,25 @@ export function TriggerSettings({
     );
   }
   if (trigger.type === "click") {
+    const error = selectorError(trigger.selector);
     return (
-      <Input
-        label="CSS selector"
-        className={`${FIELD} emvb-mono`}
-        value={trigger.selector}
-        placeholder=".open-popup"
-        maxLength={TRIGGER_LIMITS.maxClickSelectorLength}
-        description="Clicking any element that matches opens the popup."
-        onChange={(event) => onChange({ type: "click", selector: event.target.value })}
-      />
+      <>
+        <Input
+          label="CSS selector"
+          className={`${FIELD} emvb-mono`}
+          value={trigger.selector}
+          placeholder=".open-popup"
+          maxLength={TRIGGER_LIMITS.maxClickSelectorLength}
+          aria-invalid={error ? true : undefined}
+          description="Clicking any element that matches opens the popup."
+          onChange={(event) => onChange({ type: "click", selector: event.target.value })}
+        />
+        {error && (
+          <div data-emvb-trigger-selector-error="">
+            <InlineError>{error}</InlineError>
+          </div>
+        )}
+      </>
     );
   }
   if (trigger.type === "exit_intent") {

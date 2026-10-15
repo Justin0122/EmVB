@@ -97,7 +97,8 @@ export function validateTriggers(raw: unknown): TriggersValidation {
 export function isSafeClickSelector(selector: string): boolean {
   const trimmed = selector.trim();
   if (!trimmed || trimmed.length > MAX_CLICK_SELECTOR_LENGTH) return false;
-  if (/[<>`]/.test(trimmed)) return false;
+  // W-613: `>` is the child combinator; the config attribute escapes it, like every quote.
+  if (/[<`]/.test(trimmed)) return false;
   if (/javascript:/i.test(trimmed)) return false;
   // Allow common CSS selector chars only.
   return /^[a-zA-Z0-9\s\-_.#[\]=,:()>+~*"'|/]+$/.test(trimmed);

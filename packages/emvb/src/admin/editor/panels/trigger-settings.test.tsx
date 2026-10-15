@@ -113,4 +113,23 @@ describe("popup trigger settings (W-081)", () => {
     );
     expect((host.querySelector("input") as HTMLInputElement).maxLength).toBe(200);
   });
+
+  test("an empty or unusable click selector says so before the save does (W-613)", async () => {
+    const shown = async (selector: string) => {
+      await cleanup();
+      const host = await mount(
+        <TriggerSettings trigger={{ type: "click", selector }} onChange={() => undefined} />,
+      );
+      const input = host.querySelector("input") as HTMLInputElement;
+      return {
+        invalid: input.getAttribute("aria-invalid"),
+        error: host.querySelector("[data-emvb-trigger-selector-error]")?.textContent ?? null,
+      };
+    };
+    expect((await shown("")).error).toContain("Enter a CSS selector");
+    expect((await shown("a{}")).invalid).toBe("true");
+    expect((await shown("a{}")).error).toContain("simple CSS selector");
+    expect(await shown(".open-promo")).toEqual({ invalid: null, error: null });
+    expect(await shown("nav > .cta")).toEqual({ invalid: null, error: null });
+  });
 });

@@ -81,6 +81,12 @@ describe("isSafeClickSelector", () => {
     expect(isSafeClickSelector('a[href="/contact"]')).toBe(true);
   });
 
+  test("allows the child combinator, which the popup config attribute escapes (W-613)", () => {
+    expect(isSafeClickSelector("nav > .cta")).toBe(true);
+    expect(isSafeClickSelector(".menu>a[href='/promo']")).toBe(true);
+    expect(isSafeClickSelector("<b>")).toBe(false);
+  });
+
   test("blocks angle brackets and javascript", () => {
     expect(isSafeClickSelector("<script>")).toBe(false);
     expect(isSafeClickSelector("javascript:alert(1)")).toBe(false);
