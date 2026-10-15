@@ -134,3 +134,19 @@ test("W-574: an empty image in the first section isn't flagged as a late hero im
     false,
   );
 });
+
+test("W-635: a background image from a class counts once per element using it", () => {
+  const design = {
+    ...emptyDesign(),
+    classes: [
+      { id: "hero-bg", name: "hero-bg", style: { backgroundImage: "url(/bg.jpg)" } },
+      { id: "plain", name: "plain", style: {} },
+    ],
+  } as ReturnType<typeof emptyDesign>;
+  const styled = { ...box("box00001", []), classes: ["plain", "hero-bg"] } as LayoutNode;
+  const report = measurePage(page(styled), design);
+  expect(report.imageCount).toBe(1);
+  expect(report.bytes.images).toBeGreaterThan(0);
+  const unstyled = { ...box("box00002", []), classes: ["plain"] } as LayoutNode;
+  expect(measurePage(page(unstyled), design).imageCount).toBe(0);
+});

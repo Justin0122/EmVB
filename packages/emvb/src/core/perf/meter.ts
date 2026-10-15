@@ -51,13 +51,22 @@ function imageBytes(node: LayoutNode): number {
   return w > 0 && h > 0 ? Math.max(5_000, Math.round(w * h * 0.25)) : IMAGE_GUESS;
 }
 
-const hasBackgroundImage = (node: LayoutNode): boolean => {
-  const sheets = [node.style, ...Object.values(node.devices ?? {})];
+type Sheets = { style?: unknown; devices?: Record<string, unknown> };
+const sheetsHaveBackground = (owner: Sheets): boolean => {
+  const sheets = [owner.style, ...Object.values(owner.devices ?? {})];
   return sheets.some((style) => {
     const value = (style as { backgroundImage?: unknown } | undefined)?.backgroundImage;
     return typeof value === "string" ? value.length > 0 : Boolean(value);
   });
 };
+
+/** Ids of global classes that set a background image (W-635). */
+const backgroundClasses = (design: DesignSystem): Set<string> =>
+  new Set((design.classes ?? []).filter((c) => sheetsHaveBackground(c)).map((c) => c.id));
+
+/** Its own style or one of its classes sets a background image (W-635). */
+const hasBackgroundImage = (node: LayoutNode, bgClasses: Set<string>): boolean =>
+  sheetsHaveBackground(node as Sheets) || (node.classes ?? []).some((id) => bgClasses.has(id));
 
 const isPlayerEmbed = (node: LayoutNode): boolean => {
   const url = (node.props as { url?: unknown }).url;
@@ -65,7 +74,10 @@ const isPlayerEmbed = (node: LayoutNode): boolean => {
 };
 
 /** Images and embeds under a node, with their estimated weight. */
-function media(node: LayoutNode): { images: number; bytes: number; embeds: number } {
+function media(
+  node: LayoutNode,
+  bgClasses: Set<string>,
+): { images: number; bytes: number; embeds: number } {
   let images = 0;
   let bytes = 0;
   let embeds = 0;
@@ -77,7 +89,7 @@ function media(node: LayoutNode): { images: number; bytes: number; embeds: numbe
         bytes += imageBytes(n);
       }
     }
-    if (hasBackgroundImage(n)) {
+    if (hasBackgroundImage(n, bgClasses)) {
       images += 1;
       bytes += IMAGE_GUESS;
     }
@@ -110,7 +122,8 @@ export function measurePage(
     bytes: SCRIPT_BYTES[script],
     nodeIds,
   }));
-  const all = media(layout.root);
+  const bgClasses = backgroundClasses(design);
+  const all = media(layout.root, bgClasses);
   const bytes: Record<PerfKind, number> = {
     html: Math.round(utf8(rendered.html) * GZIP),
     css: Math.round(utf8(rendered.css) * GZIP),
@@ -126,7 +139,7 @@ export function measurePage(
       root: Object.assign({}, layout.root, { children: [child] }),
     };
     const one = renderPage(alone, design, opts);
-    const m = media(child);
+    const m = media(child, bgClasses);
     sections.push({
       id: child.id,
       type: child.type,
