@@ -16,9 +16,21 @@ export const SHORTCUTS: readonly { action: string; keys: string }[] = [
   { action: "Save draft", keys: "Ctrl/Cmd+S" },
 ];
 
+/**
+ * W-565: the letter of a Ctrl/Cmd shortcut on any keyboard layout. A Russian, Greek, Hebrew or
+ * Arabic layout reports its own letter (Ctrl+Z is "я"), so the key's position stands in when the
+ * key isn't a Latin letter. Latin layouts (AZERTY, Dvorak) keep the letter they type.
+ */
+export function shortcutKey(event: KeyboardEvent): string {
+  const key = event.key.toLowerCase();
+  if (/^[a-z]$/.test(key)) return key;
+  const position = /^Key([A-Z])$/.exec(event.code ?? "");
+  return position?.[1] ? position[1].toLowerCase() : key;
+}
+
 /** Ctrl/Cmd+K opens the host command palette, which would stack over the editor (S0-6). */
 export const isPaletteShortcut = (event: KeyboardEvent) =>
-  (event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "k";
+  (event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === "k";
 
 /** Focus is inside an open dialog, where only Save fires. */
 export const inDialog = (target: EventTarget | null) =>

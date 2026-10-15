@@ -13,7 +13,7 @@ import {
 } from "../../core/index.ts";
 import { runCommand, type CommandRunners } from "./editor-commands.ts";
 import type { EditorState, HistoryAction } from "./store.ts";
-import { inDialog, isPaletteShortcut } from "./shortcuts.ts";
+import { inDialog, isPaletteShortcut, shortcutKey } from "./shortcuts.ts";
 
 const isTextField = (target: EventTarget | null) => {
   const element = target as HTMLElement | null;
@@ -127,18 +127,18 @@ export function useEditorShortcuts({
       handlers.current.palette?.();
       return;
     }
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+    if ((event.ctrlKey || event.metaKey) && shortcutKey(event) === "s") {
       event.preventDefault();
       runCommand(runners(), "save", null);
       return;
     }
     if (isTextField(event.target) || inDialog(event.target)) return;
-    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "z") {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === "z") {
       event.preventDefault();
       runCommand(runners(), event.shiftKey ? "redo" : "undo", null);
       return;
     }
-    if ((event.ctrlKey || event.metaKey) && !event.altKey && event.key.toLowerCase() === "y") {
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && shortcutKey(event) === "y") {
       event.preventDefault();
       runCommand(runners(), "redo", null);
       return;
@@ -146,13 +146,12 @@ export function useEditorShortcuts({
     if (!onCanvasOrLayers(event.target)) return;
     const layout = latest.current.page.layout;
     const selected = latest.current.selectedId;
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d" && selected) {
+    if ((event.ctrlKey || event.metaKey) && shortcutKey(event) === "d" && selected) {
       event.preventDefault();
       runCommand(runners(), "duplicate", selected);
       return;
     }
-    const clipKey =
-      (event.ctrlKey || event.metaKey) && !event.altKey ? event.key.toLowerCase() : "";
+    const clipKey = (event.ctrlKey || event.metaKey) && !event.altKey ? shortcutKey(event) : "";
     if (clipKey === "c" && !event.shiftKey && selected && !hasTextSelection(event.target)) {
       event.preventDefault();
       runCommand(runners(), "copy", selected);

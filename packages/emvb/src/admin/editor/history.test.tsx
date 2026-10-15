@@ -109,3 +109,16 @@ describe("undo shortcut (W-095)", () => {
     expect(await press("z", { ctrlKey: true }, field)).toBe(false);
   });
 });
+
+test("shortcuts work on a Cyrillic or Greek keyboard layout (W-565)", async () => {
+  const server = await render();
+  await selectHeading();
+  expect(await press("Delete")).toBe(true);
+  // Russian layout: Ctrl+Z reports key "я" with code KeyZ; Ctrl+S reports "ы" with KeyS.
+  expect(await press("я", { ctrlKey: true, code: "KeyZ" })).toBe(true);
+  expect(await press("ы", { ctrlKey: true, code: "KeyS" })).toBe(true);
+  const layout = server.puts.at(-1)?.["layout"] as Layout;
+  expect(layout.root.children.some((node) => node.id === "head0001")).toBe(true);
+  // Greek layout: Ctrl+D is "δ" on KeyD.
+  expect(await press("δ", { ctrlKey: true, code: "KeyD" })).toBe(true);
+});
