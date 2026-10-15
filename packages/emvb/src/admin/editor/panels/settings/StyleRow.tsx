@@ -343,7 +343,7 @@ export function StyleRow({
               });
               return;
             }
-            onPatch({ [styleKey]: next === options[0]?.value && !set ? next : next });
+            onPatch({ [styleKey]: next });
           }}
           renderValue={(v: unknown) =>
             options.find((o) => o.value === String(v))?.label ?? String(v)
