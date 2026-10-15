@@ -68,7 +68,12 @@ const RESPONSIVE = ["tablet", "mobile"] as const;
 
 /** Style, state styles and device overrides. A nested usage is `<state|device>.<prop>`. */
 function collectAllUsages(
-  owner: { style?: StyleProps; states?: StyleStates; devices?: DeviceStyles },
+  owner: {
+    style?: StyleProps;
+    states?: StyleStates;
+    devices?: DeviceStyles;
+    query?: { style: StyleProps };
+  },
   id: string,
   kind: VariableKind | undefined,
   hit: (prop: string) => void,
@@ -80,6 +85,8 @@ function collectAllUsages(
   for (const device of RESPONSIVE) {
     collectStyleUsages(owner.devices?.[device], id, kind, (prop) => hit(`${device}.${prop}`));
   }
+  // W-643: a container-query override (W-346) can use a variable too.
+  collectStyleUsages(owner.query?.style, id, kind, (prop) => hit(`query.${prop}`));
 }
 
 /** Find every style property on `layout` that references variable `id` (optionally of `kind`). */
@@ -191,19 +198,33 @@ function stripRefsFromDevices(
 }
 
 /** Style, states and device overrides with the refs removed. Same object when nothing changed. */
-function stripOwner<T extends { style?: StyleProps; states?: StyleStates; devices?: DeviceStyles }>(
-  owner: T,
-  id: string,
-  kind: VariableKind | undefined,
-): T {
+function stripOwner<
+  T extends {
+    style?: StyleProps;
+    states?: StyleStates;
+    devices?: DeviceStyles;
+    query?: { min: number; style: StyleProps };
+  },
+>(owner: T, id: string, kind: VariableKind | undefined): T {
   const style = stripRefsFromStyle(owner.style, id, kind);
   const states = stripRefsFromStates(owner.states, id, kind);
   const devices = stripRefsFromDevices(owner.devices, id, kind);
-  if (style === owner.style && states === owner.states && devices === owner.devices) return owner;
+  const queryStyle = owner.query ? stripRefsFromStyle(owner.query.style, id, kind) : undefined;
+  const queryChanged = owner.query !== undefined && queryStyle !== owner.query.style;
+  if (
+    style === owner.style &&
+    states === owner.states &&
+    devices === owner.devices &&
+    !queryChanged
+  ) {
+    return owner;
+  }
   const next: T = { ...owner, style, states, devices };
   if (style === undefined) delete next.style;
   if (states === undefined) delete next.states;
   if (devices === undefined) delete next.devices;
+  // W-643: the container-query override keeps its width; an emptied one keeps `{}`.
+  if (queryChanged && owner.query) next.query = { ...owner.query, style: queryStyle ?? {} };
   return next;
 }
 
