@@ -521,3 +521,4 @@ export {
   ImageEditRecipe,
 } from "./image-edit/schema.ts";
 export { summarizeImageEdit } from "./image-edit/summary.ts";
+export { boxLinkHeldBack } from "./render/extras.ts";

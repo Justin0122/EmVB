@@ -75,3 +75,44 @@ describe("a linked box with nothing that names it (W-261)", () => {
     expect(document.querySelector("[data-emvb-unnamed-link]")?.textContent).toContain("aria-label");
   });
 });
+
+describe("a box Link held back by what's inside (W-669)", () => {
+  const menu = {
+    id: "menu0001",
+    type: "menu",
+    props: {},
+    children: [
+      { id: "mi000001", type: "menu-item", props: { text: "A", href: "/a" }, children: [] },
+    ],
+  };
+
+  test("the settings say why the Link isn't used, instead of the unnamed-link note", async () => {
+    const node = box({ href: "/x" }, [menu]);
+    expect(unnamedBoxLink(node)).toBe(false);
+    const layout: Layout = {
+      schemaVersion: 16,
+      root: { id: "root0001", type: "container", props: {}, children: [node] },
+    } as Layout;
+    await mount(
+      <ElementPanel
+        node={node}
+        layout={layout}
+        design={emptyDesign()}
+        rejection={null}
+        fetcher={stubFetcher}
+        onChange={() => undefined}
+        onDesignChange={async () => undefined}
+        onSelect={() => undefined}
+      />,
+    );
+    const tab = [...document.querySelectorAll('[role="tab"]')].find((el) =>
+      /content/i.test(el.textContent ?? ""),
+    ) as HTMLElement | undefined;
+    if (tab) tab.click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(document.querySelector("[data-emvb-held-back-link]")?.textContent).toContain(
+      "isn't used",
+    );
+    expect(document.querySelector("[data-emvb-unnamed-link]")).toBeNull();
+  });
+});

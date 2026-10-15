@@ -99,6 +99,17 @@ function containsInteractive(node: LayoutNode): boolean {
  * A div box becomes the link. A landmark tag stays a landmark. A link already inside the box
  * keeps the box from becoming a link, so the page never nests anchors.
  */
+/**
+ * W-669: a box with a working Link that still renders as a box because something inside it is a
+ * link, control or embed. The editor says so; the Link otherwise did nothing without a word.
+ */
+export function boxLinkHeldBack(node: LayoutNode): boolean {
+  if (!BOX.has(node.type)) return false;
+  const href = (node.props as { href?: unknown }).href;
+  if (typeof href !== "string" || !href.trim() || !sanitizeHref(href)) return false;
+  return childrenOf(node).some(containsInteractive);
+}
+
 export function applyBoxLink(node: LayoutNode, vnode: VNode): VNode {
   if (!BOX.has(node.type) || vnode.tag !== "div") return vnode;
   const { href, newTab } = node.props as { href?: string; newTab?: boolean };

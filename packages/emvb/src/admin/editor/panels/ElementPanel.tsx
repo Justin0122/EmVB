@@ -12,7 +12,11 @@ import { ELEMENT_NAMES, elementIcon } from "../element-chrome.ts";
 import { indexLayout } from "../../../core/tree-ops.ts";
 import type { ThemePartType } from "../../../core/theme/part-types.ts";
 import { sharedPartH1 } from "./settings/heading-warning.ts";
-import { UNNAMED_BOX_LINK_NOTE, unnamedBoxLink } from "./settings/box-link-name.ts";
+import {
+  HELD_BACK_BOX_LINK_NOTE,
+  UNNAMED_BOX_LINK_NOTE,
+  unnamedBoxLink,
+} from "./settings/box-link-name.ts";
 import { imageAltNote } from "./settings/image-alt.ts";
 import { loopContextNote } from "./settings/loop-context.ts";
 import { buttonUrlNote } from "./settings/button-url.ts";
@@ -42,6 +46,7 @@ import {
   STYLE_STATES,
   type StyleProps,
   type StyleStates,
+  boxLinkHeldBack,
 } from "../../../core/index.ts";
 import { applyStylePatch } from "./style-target.ts";
 import { FieldControl } from "./settings/FieldControl.tsx";
@@ -531,6 +536,11 @@ function KnownElementPanel({
           {imageAltNote(node) && (
             <p className="emvb-helper" data-emvb-alt-note>
               {imageAltNote(node)}
+            </p>
+          )}
+          {boxLinkHeldBack(node) && (
+            <p className="emvb-helper" data-emvb-held-back-link>
+              {HELD_BACK_BOX_LINK_NOTE}
             </p>
           )}
           {unnamedBoxLink(node) && (
