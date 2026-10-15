@@ -47,6 +47,11 @@ function textOf(node: LayoutNode): string {
   const items = props["items"];
   if (Array.isArray(items)) {
     for (const item of items) {
+      // W-618: a List's items are plain strings.
+      if (typeof item === "string") {
+        if (item.trim()) parts.push(item.trim());
+        continue;
+      }
       if (item && typeof item === "object" && "text" in item && typeof item.text === "string") {
         parts.push(item.text.trim());
       }
