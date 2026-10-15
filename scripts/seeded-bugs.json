@@ -4916,8 +4916,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/settings/ClassChip.tsx",
-          "search": "else if (event.key === \"Escape\") finish(null);",
-          "replace": "else if (event.key === \"Escape\") finish(event.currentTarget.value);"
+          "search": "else if (isCancelEscape(event)) finish(null);",
+          "replace": "else if (isCancelEscape(event)) finish(event.currentTarget.value);"
         }
       ],
       "command": [
@@ -5131,8 +5131,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/site-list.tsx",
-          "search": "        else if (event.key === \"Escape\") {\n          event.stopPropagation();\n          finish(null);",
-          "replace": "        else if (event.key === \"Escape\") {\n          event.stopPropagation();\n          finish(event.currentTarget.value);"
+          "search": "        else if (isCancelEscape(event)) {\n          event.stopPropagation();\n          finish(null);",
+          "replace": "        else if (isCancelEscape(event)) {\n          event.stopPropagation();\n          finish(event.currentTarget.value);"
         }
       ],
       "command": [
@@ -5311,8 +5311,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/admin/editor/panels/site-list.tsx",
-          "search": "if (event.key === \"Escape\" && value) {",
-          "replace": "if (event.key === \"Esc\" && value) {"
+          "search": "if (isCancelEscape(event) && value) {",
+          "replace": "if (false && isCancelEscape(event) && value) {"
         }
       ],
       "command": [
