@@ -166,3 +166,12 @@ describe("Post Date in the page's language (W-688)", () => {
     expect(text("not a tag!")).toBe("October 6, 2026");
   });
 });
+
+describe("clipped free-text dates keep whole characters (W-700)", () => {
+  test("a long text date doesn't end in half an emoji", () => {
+    const node = { id: "node0001", type: "post-date", props: {} } as LayoutNode;
+    const raw = `${"a".repeat(79)}🌸 spring`;
+    const vnode = renderDynamicPost(node, {}, { ...post, publishedAt: raw }, "public");
+    expect(vnode?.children).toEqual(["a".repeat(79)]);
+  });
+});

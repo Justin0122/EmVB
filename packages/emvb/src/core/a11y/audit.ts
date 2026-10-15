@@ -1,3 +1,4 @@
+import { clipText } from "../limits.ts";
 import type { DesignSystem } from "../schema/design.ts";
 import { isParentNode, type Layout, type LayoutNode } from "../schema/layout.ts";
 import { updateNode } from "../tree-ops.ts";
@@ -262,7 +263,7 @@ export function auditPage(layout: Layout, design: DesignSystem): A11yReport {
           rule: "image-alt",
           severity: "error",
           message: alt
-            ? `The alt text "${alt.slice(0, 40)}" doesn't describe the image.`
+            ? `The alt text "${clipText(alt, 40)}" doesn't describe the image.`
             : "This image has no alt text.",
           ...(imageLinked
             ? {}

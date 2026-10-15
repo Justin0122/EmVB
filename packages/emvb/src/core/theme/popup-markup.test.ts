@@ -41,3 +41,8 @@ describe("popup and float chrome in the site's language (W-690)", () => {
     expect(wrapFloatMarkup("f", "Promo", "<p>x</p>", settings)).toContain('aria-label="Close"');
   });
 });
+
+test("a long close name keeps whole characters (W-700)", () => {
+  const html = wrapPopupMarkup("p", "", defaultTriggers(), { close: `${"x".repeat(79)}😀` });
+  expect(html).toContain(`aria-label="${"x".repeat(79)}"`);
+});

@@ -1,3 +1,4 @@
+import { clipText } from "../limits.ts";
 import { escapeAttr } from "../sanitize/escape.ts";
 import type { TriggersDoc } from "./triggers.ts";
 
@@ -19,7 +20,7 @@ export type ChromeLabels = { popup?: string; close?: string };
 
 /** A label clipped to 80 characters and escaped for an attribute, or the English fallback. */
 export const chromeLabel = (text: string | undefined, fallback: string) =>
-  escapeAttr(text?.trim().slice(0, 80) || fallback);
+  escapeAttr(clipText(text?.trim() ?? "", 80) || fallback);
 
 export type PopupPublicConfig = {
   id: string;

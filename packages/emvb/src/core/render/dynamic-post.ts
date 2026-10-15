@@ -204,7 +204,10 @@ const POST_FIELDS = new Map<string, PostField>([
         if (!raw) return undefined;
         const parsed = parseIsoDate(raw);
         const format = props<{ format?: PostDateFormat }>(node).format ?? "medium";
-        const text = Number.isNaN(parsed) ? raw.slice(0, 80) : formatPostDate(parsed, format, lang);
+        // W-700: whole characters, so a long free-text date doesn't end in half an emoji.
+        const text = Number.isNaN(parsed)
+          ? clipText(raw, 80)
+          : formatPostDate(parsed, format, lang);
         // W-196: `datetime` must be machine-readable, so a date we can't read only shows as text.
         const timeAttrs = Number.isNaN(parsed) ? attrs : { ...attrs, datetime: raw.slice(0, 80) };
         return { tag: "time", attrs: timeAttrs, children: [text] };
