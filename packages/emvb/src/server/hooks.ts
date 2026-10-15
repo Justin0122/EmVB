@@ -25,7 +25,7 @@ type FieldValidation =
   | { ok: false; issues: { code: string; message: string }[] };
 
 /** Theme-part fields validated on save, besides the layout (R-061). */
-const THEME_PART_FIELDS: [string, (raw: unknown) => FieldValidation][] = [
+const THEME_PART_FIELDS: [string, (raw: unknown) => FieldValidation, string?][] = [
   [
     "conditions",
     (raw) => {
@@ -46,6 +46,8 @@ const THEME_PART_FIELDS: [string, (raw: unknown) => FieldValidation][] = [
       const result = validateFloatSettings(raw);
       return result.ok ? { ok: true, value: result.settings } : result;
     },
+    // W-678: the message read "The theme part float are invalid."
+    "float settings",
   ],
 ];
 
@@ -95,7 +97,7 @@ export async function beforeSave(
   }
 
   if (event.collection === THEME_PARTS_COLLECTION) {
-    for (const [field, validate] of THEME_PART_FIELDS) {
+    for (const [field, validate, label = field] of THEME_PART_FIELDS) {
       if (event.content[field] === undefined) continue;
       const result = validate(parseJsonField(event.content[field]));
       if (!result.ok) {
@@ -104,7 +106,7 @@ export async function beforeSave(
           code: result.issues[0]?.code ?? `invalid_${field}`,
         });
         throw new ContentSaveRejectedError(
-          `The theme part ${field} are invalid. ${result.issues
+          `The theme part ${label} are invalid. ${result.issues
             .slice(0, 3)
             .map((i) => i.message)
             .join("; ")}`,

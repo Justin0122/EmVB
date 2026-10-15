@@ -44,6 +44,15 @@ describe("content:beforeSave on theme parts (R-061)", () => {
     expect(warnings[0]?.[1]).toMatchObject({ pageId: "01PART" });
   });
 
+  test("W-678: invalid float settings say so in plain English", async () => {
+    const { result } = run(THEME_PARTS_COLLECTION, { float: "{not json" });
+    const error = await result.then(
+      () => null,
+      (e: Error) => e,
+    );
+    expect(error?.message).toStartWith("The theme part float settings are invalid.");
+  });
+
   test("pages don't validate theme-part fields, and parts without them are unchanged", async () => {
     expect(await run(PAGES_COLLECTION, { conditions: { rules: "nope" } }).result).toBeUndefined();
     expect(await run(THEME_PARTS_COLLECTION, { title: "Plain" }).result).toBeUndefined();
