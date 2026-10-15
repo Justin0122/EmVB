@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { defaultElement } from "../elements/index.ts";
+import { defaultElement, ELEMENTS } from "../elements/index.ts";
 import type { FormDefinitions, PublicFormDefinition } from "../forms/definition.ts";
 import { emptyDesign } from "../schema/design.ts";
 import type { Layout, LayoutNode } from "../schema/layout.ts";
@@ -601,5 +601,38 @@ describe("W-596: conditional fields", () => {
       '<div class="emvb-text-input emvb-form-field" data-condition="{&quot;field&quot;:&quot;topic&quot;,&quot;op&quot;:&quot;eq&quot;,&quot;value&quot;:&quot;other&quot;}">',
     );
     expect(html.match(/data-condition=/g)?.length).toBe(1);
+  });
+});
+
+describe("W-686: a Select's empty choice can be worded for the site", () => {
+  test("its Placeholder replaces Choose…, with or without the definition's options", () => {
+    const worded = (id: string, name: string) =>
+      ({
+        id,
+        type: "select",
+        props: { field: name, label: name, placeholder: "Choisir…" },
+      }) as LayoutNode;
+    const page: Layout = {
+      ...layout,
+      root: {
+        ...layout.root,
+        children: [
+          {
+            ...defaultElement("form", "form0001"),
+            props: { formId: "contact" },
+            children: [worded("sele0001", "topic"), worded("sele0002", "plain")],
+          } as LayoutNode,
+        ],
+      },
+    };
+    const { html } = renderPage(page, emptyDesign(), { formDefinitions: definitions });
+    expect(html).toContain('name="topic"><option value="">Choisir…</option><option value="sales">');
+    expect(html).toContain('name="plain"><option value="">Choisir…</option></select>');
+    expect(html).not.toContain("Choose…");
+  });
+
+  test("the Select's settings offer the Placeholder", () => {
+    const fields = ELEMENTS.select.descriptor.fields.map((f) => f.key);
+    expect(fields).toContain("placeholder");
   });
 });

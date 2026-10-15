@@ -1,3 +1,4 @@
+import { selectPrompt } from "./select-prompt.ts";
 import { controlId } from "./field-id.ts";
 import type {
   CheckboxNode,
@@ -147,13 +148,14 @@ export const textareaEl: ElementDefinition<TextareaNode> = {
 export const selectEl: ElementDefinition<SelectNode> = {
   baseCss: ".emvb-select{display:flex;flex-direction:column;gap:4px}",
   defaults: () => ({ type: "select", props: { field: "choice", label: "Choice" } }),
-  descriptor: fieldDescriptor("select", "Select", NAME_AND_LABEL),
+  // W-686: the Placeholder words the empty first choice ("Choose…"), for sites in other languages.
+  descriptor: fieldDescriptor("select", "Select", TEXT_FIELDS),
   build: (node, attrs) => {
     const name = node.props.field;
     const control: VNode = {
       tag: "select",
       attrs: { class: "ec-form-input", id: controlId(node.id), name },
-      children: [{ tag: "option", attrs: { value: "" }, children: ["Choose…"] }],
+      children: [{ tag: "option", attrs: { value: "" }, children: [selectPrompt(node.props)] }],
     };
     return fieldWrap(controlId(node.id), name, node.props.label, control, attrs);
   },

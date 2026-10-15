@@ -859,6 +859,12 @@
           "kind": "text",
           "label": "Label",
           "optional": true
+        },
+        {
+          "key": "placeholder",
+          "kind": "text",
+          "label": "Placeholder",
+          "optional": true
         }
       ]
     },
@@ -1046,7 +1052,7 @@
                 "attrs": {
                   "value": ""
                 },
-                "children": ["Choose…"]
+                "children": ["Type here"]
               }
             ]
           },
@@ -1088,7 +1094,7 @@
                 "attrs": {
                   "value": ""
                 },
-                "children": ["Choose…"]
+                "children": ["Type here"]
               }
             ]
           },

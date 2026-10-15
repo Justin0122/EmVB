@@ -4608,6 +4608,11 @@ exports[`element panel markup (W-021, W-086 M16) select renders the same content
         span
           "Label"
       input.emvb-field id="id-5" data-emvb-field="label" value="Choice" data-filled="" aria-labelledby="id-4"
+    div
+      label id="id-6" for="id-7"
+        span
+          "Placeholder"
+      input.emvb-field id="id-7" data-emvb-field="placeholder" value="" aria-labelledby="id-6"
     section.emvb-bind data-emvb-audience-editor="" aria-labelledby="emvb-aud-bi1nwpcq-title"
       h3.emvb-bind-title id="emvb-aud-bi1nwpcq-title"
         "Visitors"

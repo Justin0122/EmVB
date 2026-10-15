@@ -6,6 +6,7 @@ import {
   type PublicFormField,
 } from "../forms/definition.ts";
 import type { FormNode, LayoutNode } from "../schema/layout.ts";
+import { selectPrompt } from "../elements/select-prompt.ts";
 import type { ThemeDynamicData } from "../theme/dynamic.ts";
 import { nodeChildren } from "../tree-ops.ts";
 import type { RenderContext } from "./context.ts";
@@ -471,7 +472,11 @@ function withOptions(vnode: VNode, node: LayoutNode, meta: PublicFormField): VNo
   if ((node.type !== "select" && node.type !== "radio") || !meta.options?.length) return vnode;
   if (node.type === "select") {
     return replaceChildren(vnode, (child) => child.tag === "select", [
-      { tag: "option", attrs: { value: "" }, children: ["Choose…"] },
+      {
+        tag: "option",
+        attrs: { value: "" },
+        children: [selectPrompt(node.props as { placeholder?: string })],
+      },
       ...meta.options.map((option): VNode => ({
         tag: "option",
         attrs: { value: option.value },
