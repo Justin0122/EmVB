@@ -145,12 +145,12 @@ describe("icon upload routes (W-239)", () => {
 });
 
 describe("renaming a stored upload (W-390)", () => {
-  const renameIn = (svg: string) => {
+  const renameIn = (svg: string, name = "New.svg") => {
     const rows = new Map([
       ["0123456789abcdef", { name: "Old", svg, uploadedAt: "2026-10-10T00:00:00.000Z" }],
     ]);
     const ctx = {
-      input: { id: "0123456789abcdef", name: "New.svg" },
+      input: { id: "0123456789abcdef", name },
       storage: {
         icons: {
           get: async (id: string) => rows.get(id) ?? null,
@@ -163,6 +163,13 @@ describe("renaming a stored upload (W-390)", () => {
     const run = iconRenameRoute.handler as unknown as (c: typeof ctx) => Promise<{ item: Item }>;
     return { rows, result: run(ctx) };
   };
+
+  test("a new name may hold a slash (W-655)", async () => {
+    const { rows, result } = renameIn('<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>', "AC/DC");
+    expect((await result).item.name).toBe("AC/DC");
+    const stored = rows.get("0123456789abcdef");
+    expect(stored && publicUploadedIcon("0123456789abcdef", stored)?.name).toBe("AC/DC");
+  });
 
   test("answers with the checked markup the list sends", async () => {
     const { result } = renameIn('<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>');

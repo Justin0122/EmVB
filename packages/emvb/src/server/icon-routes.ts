@@ -35,15 +35,12 @@ const store = (ctx: RouteContext<unknown>) => ctx.storage["icons"] as unknown as
  */
 export const UPLOAD_LIST_LIMIT = 100;
 
+/** An icon's label as typed: trimmed and capped (W-655: a rename may hold a slash, as in "AC/DC"). */
+export const iconLabel = (name: string) => clipText(name.trim(), 80).trim() || "Uploaded icon";
+
 /** A file name without its folder or extension, as the icon's label. */
 export const uploadName = (name: string) =>
-  clipText(
-    name
-      .replace(/^.*[\\/]/, "")
-      .replace(/\.svg$/i, "")
-      .trim(),
-    80,
-  ).trim() || "Uploaded icon";
+  iconLabel(name.replace(/^.*[\\/]/, "").replace(/\.svg$/i, ""));
 
 /**
  * One stored upload safe to send to the editor. Markup that no longer passes the SVG allowlist
@@ -55,7 +52,7 @@ export function publicUploadedIcon(id: string, data: UploadedIcon): UploadedIcon
   if (!tree) return undefined;
   return {
     id,
-    name: uploadName(typeof data.name === "string" ? data.name : ""),
+    name: iconLabel(typeof data.name === "string" ? data.name : ""),
     svg: serialize(tree),
     uploadedAt: typeof data.uploadedAt === "string" ? data.uploadedAt : "",
   };
@@ -124,7 +121,7 @@ export const iconRenameRoute: PluginRoute<z.infer<typeof RenameInput>> = {
   handler: async (ctx) => {
     const current = await store(ctx).get(ctx.input.id);
     if (!current) throw new PluginRouteError("NOT_FOUND", "That upload is not in My uploads.", 404);
-    const name = uploadName(ctx.input.name);
+    const name = iconLabel(ctx.input.name.trim().replace(/\.svg$/i, ""));
     // W-390: answer with the same checked markup the list sends; a row that fails the
     // allowlist is not renamed or echoed back.
     const item = publicUploadedIcon(ctx.input.id, { ...current, name });
