@@ -61,6 +61,13 @@ describe("loadEditableSource (W-482)", () => {
     );
     expect(result).toMatchObject({ ok: false, reason: "format" });
   });
+  test("W-592: a Content-Type in capitals is still a picture type", async () => {
+    const result = await loadEditableSource({ src: "/a.jpg" }, ORIGIN, respond("x", "IMAGE/JPEG"));
+    expect(result).toMatchObject({ ok: true, type: "image/jpeg" });
+    expect(
+      await loadEditableSource({ src: "/media/01A" }, ORIGIN, respond("x", "Image/GIF")),
+    ).toMatchObject({ ok: false, reason: "format" });
+  });
   test("a 404, an HTML page or a network error is a network problem", async () => {
     expect(
       await loadEditableSource({ src: "/a.jpg" }, ORIGIN, respond("", "image/jpeg", 404)),

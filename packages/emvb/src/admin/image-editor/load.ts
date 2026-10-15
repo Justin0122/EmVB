@@ -94,7 +94,9 @@ export async function loadEditableSource(
   if (!response.ok) return { ok: false, reason: "network", message: MESSAGES.network };
   const blob = await response.blob();
   const type =
-    (response.headers.get("content-type") ?? blob.type ?? "").split(";")[0]?.trim() ?? "";
+    // W-592: MIME types are case-insensitive ("IMAGE/JPEG" is a JPEG).
+    (response.headers.get("content-type") ?? blob.type ?? "").split(";")[0]?.trim().toLowerCase() ??
+    "";
   if (REFUSED_TYPES.test(type)) return { ok: false, reason: "format", message: MESSAGES.format };
   if (type && !type.startsWith("image/")) {
     return { ok: false, reason: "network", message: MESSAGES.network };
