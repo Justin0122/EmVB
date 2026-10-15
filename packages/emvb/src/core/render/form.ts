@@ -252,7 +252,63 @@ function safeInputPattern(pattern: string): string | undefined {
   } catch {
     return undefined;
   }
-  return value;
+  if (compilesAsPattern(value)) return value;
+  const repaired = escapeClassLiterals(value);
+  return compilesAsPattern(repaired) ? repaired : undefined;
+}
+
+/**
+ * W-538: browsers compile `pattern` as `^(?:…)$` with the `v` flag, which refuses a common
+ * pattern such as `[A-Za-z0-9_-]+` (a `-` or `(` left bare in a class). The browser then drops
+ * the check with a console error, so the field went unchecked.
+ */
+function compilesAsPattern(value: string): boolean {
+  try {
+    return new RegExp(`^(?:${value})$`, "v").source.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/** Escapes, inside character classes, the literals `v` mode wants escaped: a loose `-`, ()[]{}/|. */
+function escapeClassLiterals(value: string): string {
+  let out = "";
+  let inClass = false;
+  let classStart = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    const ch = value[i] as string;
+    if (ch === "\\") {
+      out += ch + (value[i + 1] ?? "");
+      i += 1;
+      continue;
+    }
+    if (!inClass) {
+      if (ch === "[") {
+        inClass = true;
+        out += ch;
+        if (value[i + 1] === "^") {
+          out += "^";
+          i += 1;
+        }
+        classStart = i + 1;
+        continue;
+      }
+      out += ch;
+      continue;
+    }
+    if (ch === "]") {
+      inClass = false;
+      out += ch;
+      continue;
+    }
+    if (ch === "-") {
+      const loose = i === classStart || value[i + 1] === "]";
+      out += loose ? "\\-" : ch;
+      continue;
+    }
+    out += "()[{}/|".includes(ch) ? `\\${ch}` : ch;
+  }
+  return out;
 }
 
 /**

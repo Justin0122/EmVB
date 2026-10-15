@@ -215,6 +215,39 @@ describe("form fields take the definition's type and limits (W-297)", () => {
     expect(rendered.includes("(a+)+")).toBe(false);
   });
 
+  test("a pattern browsers refuse in v mode is repaired, not dropped (W-538)", () => {
+    const render = (pattern: string) =>
+      renderPage(typedLayout, emptyDesign(), {
+        formDefinitions: new Map([
+          [
+            "contact",
+            {
+              ...typed,
+              pages: [
+                {
+                  fields: [
+                    {
+                      name: "email",
+                      type: "email",
+                      label: "Email",
+                      required: false,
+                      validation: { pattern },
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        ]),
+      }).html;
+    expect(render("[A-Za-z0-9_-]+")).toContain('pattern="[A-Za-z0-9_\\-]+"');
+    expect(render("[-(a)]+")).toContain('pattern="[\\-\\(a\\)]+"');
+    expect(render("[a-z]+")).toContain('pattern="[a-z]+"');
+    for (const pattern of ["[A-Za-z0-9_\\-]+", "[\\-\\(a\\)]+"]) {
+      expect(() => new RegExp(`^(?:${pattern})$`, "v")).not.toThrow();
+    }
+  });
+
   test("an alternating form pattern that can hang the browser is left off the control", () => {
     const bad: PublicFormDefinition = {
       ...typed,
