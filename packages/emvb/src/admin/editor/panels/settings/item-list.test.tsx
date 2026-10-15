@@ -267,6 +267,47 @@ describe("Accordion and Tabs item editing (W-130)", () => {
     expect(reorderItems(kids, "missing", 1)).toBeUndefined();
     expect(calls.changed.length).toBe(0);
   });
+
+  test("dragging text inside a title field doesn't drag or drop the row (W-605)", async () => {
+    const calls = await panel(accordion([item("itm00001", "First"), item("itm00002", "Second")]));
+    const store = new Map<string, string>();
+    const transfer = {
+      types: [] as string[],
+      setData(type: string, value: string) {
+        store.set(type, value);
+        this.types = [...store.keys()];
+      },
+      getData: (type: string) => store.get(type) ?? "",
+      effectAllowed: "all",
+      dropEffect: "none",
+    };
+    const fire = (target: Element, type: string) => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "dataTransfer", { value: transfer });
+      act(() => {
+        target.dispatchEvent(event);
+      });
+      return event;
+    };
+    const inputs = [...document.querySelectorAll<HTMLInputElement>("[data-emvb-item] input")];
+    // The browser puts the selected text on the transfer; the row must not replace it with its id.
+    transfer.setData("text/plain", "Fir");
+    fire(inputs[0]!, "dragstart");
+    expect(transfer.getData("text/plain")).toBe("Fir");
+    // Dropping the text onto the other field is left to the browser, not taken as a reorder.
+    const over = fire(inputs[1]!, "dragover");
+    expect(over.defaultPrevented).toBe(false);
+    transfer.setData("text/plain", "itm00001");
+    const drop = fire(inputs[1]!, "drop");
+    expect(drop.defaultPrevented).toBe(false);
+    expect(calls.changed.length).toBe(0);
+    // Dragging the row itself still reorders.
+    const rows = [...document.querySelectorAll("[data-emvb-item]")];
+    fire(rows[0]!, "dragstart");
+    expect(fire(rows[1]!, "dragover").defaultPrevented).toBe(true);
+    expect(fire(rows[1]!, "drop").defaultPrevented).toBe(true);
+    expect(calls.changed.at(-1)?.children?.map((c) => c.id)).toEqual(["itm00002", "itm00001"]);
+  });
 });
 
 describe("opening the accordion item that holds the selection (W-130)", () => {

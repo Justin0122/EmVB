@@ -48,6 +48,9 @@ const childrenOf = (node: LayoutNode): LayoutNode[] =>
   "children" in node && Array.isArray(node.children) ? (node.children as LayoutNode[]) : [];
 
 /** One reorder of `kids`, moving `fromId` to `toIndex`. Same place or an unknown id changes nothing. */
+/** Drag type for an item row, so text dragged from a title field never reorders. */
+const ITEM_DRAG = "application/x-emvb-item";
+
 export function reorderItems(
   kids: LayoutNode[],
   fromId: string,
@@ -136,16 +139,20 @@ export function ItemList({
                 data-emvb-item={child.id}
                 draggable
                 onDragStart={(event) => {
-                  event.dataTransfer.setData("text/plain", child.id);
+                  // A text drag from the title field keeps the browser's own data (W-605).
+                  if (event.target !== event.currentTarget) return;
+                  event.dataTransfer.setData(ITEM_DRAG, child.id);
                   event.dataTransfer.effectAllowed = "move";
                 }}
                 onDragOver={(event) => {
+                  if (!event.dataTransfer.types.includes(ITEM_DRAG)) return;
                   event.preventDefault();
                   event.dataTransfer.dropEffect = "move";
                 }}
                 onDrop={(event) => {
+                  if (!event.dataTransfer.types.includes(ITEM_DRAG)) return;
                   event.preventDefault();
-                  const next = reorderItems(kids, event.dataTransfer.getData("text/plain"), index);
+                  const next = reorderItems(kids, event.dataTransfer.getData(ITEM_DRAG), index);
                   if (next) onChange({ ...node, children: next } as LayoutNode);
                 }}
               >
