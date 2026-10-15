@@ -163,3 +163,9 @@ describe("query style values are read like the Style tab (W-404)", () => {
     expect(parseStyleValue("width", "AUTO")).toEqual({ value: "auto" });
   });
 });
+
+test("an inherited object name is not a style property (W-542)", () => {
+  for (const key of ["constructor", "toString", "__proto__"]) {
+    expect(parseStyleValue(key, "1")).toEqual({ error: `${key} isn't a style property.` });
+  }
+});

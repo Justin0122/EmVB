@@ -52,9 +52,12 @@ function candidates(text: string): unknown[] {
 
 /** The value `key` would store for `text`, or why it can't (W-398). */
 export function parseStyleValue(key: string, text: string): { value: unknown } | { error: string } {
-  const schema = (
-    StyleProps.shape as Record<string, { safeParse: (v: unknown) => { success: boolean } }>
-  )[key];
+  // W-542: an inherited name ("constructor") is not a style property; it used to throw.
+  const shape = StyleProps.shape as Record<
+    string,
+    { safeParse: (v: unknown) => { success: boolean } }
+  >;
+  const schema = Object.hasOwn(shape, key) ? shape[key] : undefined;
   if (!schema) return { error: `${key} isn't a style property.` };
   const trimmed = text.trim();
   if (trimmed === "") return { error: "Enter a value." };
