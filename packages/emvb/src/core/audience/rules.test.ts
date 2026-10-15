@@ -90,6 +90,19 @@ describe("visitor-aware elements (W-313)", () => {
     expect(audienceShows(night, { now: WED_1430 })).toBe(false);
   });
 
+  test("W-665: an overnight window counts its after-midnight hours on the day it started", () => {
+    const fridayNight = heading("head0003", "x", { hours: { from: 22, to: 2 }, days: [5] });
+    // Friday 2026-10-09 23:00 UTC and Saturday 01:00 UTC are both Friday night.
+    expect(audienceShows(fridayNight, { now: Date.UTC(2026, 9, 9, 23) })).toBe(true);
+    expect(audienceShows(fridayNight, { now: Date.UTC(2026, 9, 10, 1) })).toBe(true);
+    // Friday 01:00 is the end of Thursday night; Saturday 23:00 is Saturday night.
+    expect(audienceShows(fridayNight, { now: Date.UTC(2026, 9, 9, 1) })).toBe(false);
+    expect(audienceShows(fridayNight, { now: Date.UTC(2026, 9, 10, 23) })).toBe(false);
+    // Sunday 01:00 (Saturday night) for a Saturday rule wraps the week.
+    const saturdayNight = heading("head0004", "x", { hours: { from: 22, to: 2 }, days: [6] });
+    expect(audienceShows(saturdayNight, { now: Date.UTC(2026, 9, 11, 1) })).toBe(true);
+  });
+
   test("devices come from the User-Agent and the mobile client hint", () => {
     const iphone = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Mobile/15E148";
     const tab = "Mozilla/5.0 (Linux; Android 14; SM-X910) AppleWebKit/537.36 Safari/537.36";

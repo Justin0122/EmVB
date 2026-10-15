@@ -60,7 +60,11 @@ function matches(audience: Audience, visitor: VisitorInfo): boolean {
     if (visitor.now === undefined) return false;
     const { hour, day } = clockIn(visitor.now, audience.timeZone);
     if (audience.hours && !inHours(hour, audience.hours.from, audience.hours.to)) return false;
-    if (audience.days && !audience.days.includes(day)) return false;
+    // W-665: the hours past midnight of an overnight window (Fri 22:00–02:00) belong to the day
+    // it started; on Saturday at 01:00 a Friday-only rule hid the element mid-window.
+    const { from, to } = audience.hours ?? { from: 0, to: 0 };
+    const startedDay = from > to && hour < to ? (day + 6) % 7 : day;
+    if (audience.days && !audience.days.includes(startedDay)) return false;
   }
   return true;
 }
