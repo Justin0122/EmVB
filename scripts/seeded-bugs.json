@@ -20309,8 +20309,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/render/dynamic-post.ts",
-          "search": "const max = props<{ maxWords?: number }>(node).maxWords;",
-          "replace": "const max = undefined as number | undefined;"
+          "search": "const text = limitWords(post.excerpt, props<{ maxWords?: number }>(node).maxWords);",
+          "replace": "const text = post.excerpt;"
         }
       ],
       "command": [
@@ -29977,7 +29977,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/sanitize/embed-url.ts",
-          "search": "const trimmed = BARE_VIDEO_HOST.test(typed) ? `https://${typed}` : typed;",
+          "search": "const trimmed = bareVideoHost(typed) ? `https://${typed}` : typed;",
           "replace": "const trimmed = typed;"
         }
       ],
