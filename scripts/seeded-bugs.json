@@ -25084,6 +25084,20 @@
       "expect": "\\(fail\\).*W-690"
     },
     {
+      "id": "W-691/videoseries-as-id",
+      "requirement": "W-691",
+      "description": "A playlist link embeds \"videoseries\" as a video id.",
+      "edits": [
+        {
+          "file": "packages/emvb/src/core/sanitize/embed-url.ts",
+          "search": "  if (playlist !== null) return playlist;\n",
+          "replace": "  void playlist;\n"
+        }
+      ],
+      "command": ["bun", "test", "./packages/emvb/src/core/sanitize/embed-playlist.test.ts"],
+      "expect": "\\(fail\\).*W-691"
+    },
+    {
       "id": "W-283/no-dedupe",
       "requirement": "W-283",
       "description": "Import keeps names the file repeats.",

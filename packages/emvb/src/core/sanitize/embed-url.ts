@@ -29,9 +29,26 @@ const YT_ID = /^[\w-]{6,}$/;
 const VIMEO_ID = /^\d{6,}$/;
 const firstSegment = (path: string) => path.split("/").find(Boolean);
 
+/** A YouTube playlist id (PL…, UU…, OLAK5uy_…). */
+const YT_LIST = /^[\w-]{10,64}$/;
+
+/**
+ * W-691: a playlist (`/embed/videoseries?list=…`, `/playlist?list=…`) embeds as
+ * `videoseries?list=…`. "videoseries" was taken for a video id and the list dropped, so the
+ * player showed "Video unavailable".
+ */
+function youtubePlaylist(parsed: URL): string | undefined | null {
+  const path = parsed.pathname.replace(/\/+$/, "");
+  if (path !== "/embed/videoseries" && path !== "/playlist") return null;
+  const list = matching(parsed.searchParams.get("list") ?? undefined, YT_LIST);
+  return list ? `videoseries?list=${list}` : undefined;
+}
+
 function youtubeId(parsed: URL): string | undefined {
   const host = parsed.hostname.toLowerCase();
   const path = parsed.pathname;
+  const playlist = youtubePlaylist(parsed);
+  if (playlist !== null) return playlist;
   if (host === "youtu.be" || host === "www.youtu.be") return matching(firstSegment(path), YT_ID);
   // W-215: /live/ links (a stream or its replay) too.
   for (const prefix of ["/embed/", "/shorts/", "/live/"]) {
@@ -97,7 +114,7 @@ const withStart = (provider: "youtube" | "vimeo", src: string, start: number | u
   start === undefined
     ? src
     : provider === "youtube"
-      ? `${src}?start=${start}`
+      ? `${src}${src.includes("?") ? "&" : "?"}start=${start}`
       : `${src}#t=${start}s`;
 
 /**
