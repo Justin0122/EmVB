@@ -146,7 +146,7 @@ export const postLink: ElementDefinition<PostLinkNode> = {
         optional: true,
         message: "Leave blank to use the post title.",
       },
-      { key: "newTab", kind: "boolean", label: "Open in new tab", optional: true },
+      { key: "newTab", kind: "boolean", label: "Open in a new tab", optional: true },
     ],
   },
   build: (_node, attrs) => ({ tag: "a", attrs: { ...attrs, href: "#" }, children: ["Post link"] }),

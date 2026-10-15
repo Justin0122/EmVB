@@ -6752,8 +6752,8 @@ exports[`element panel markup (W-021, W-086 M16) post-link renders the same cont
       div
         label id="id-4" for="id-5"
           span
-            "Open in new tab"
-        button data-unchecked="" type="button" tabindex="0" id="id-5" data-kumo-component="Switch" role="switch" aria-checked="false" aria-label="Open in new tab" aria-labelledby="id-4"
+            "Open in a new tab"
+        button data-unchecked="" type="button" tabindex="0" id="id-5" data-kumo-component="Switch" role="switch" aria-checked="false" aria-label="Open in a new tab" aria-labelledby="id-4"
           div
         input tabindex="-1" aria-hidden="true" type="checkbox"
     section.emvb-bind data-emvb-audience-editor="" aria-labelledby="emvb-aud-bi1nwpcq-title"
@@ -9725,8 +9725,8 @@ exports[`element panel markup (W-021, W-086 M16) grid renders the same content a
       div
         label id="id-10" for="id-11"
           span
-            "Open in new tab"
-        button data-unchecked="" type="button" tabindex="0" id="id-11" data-kumo-component="Switch" role="switch" aria-checked="false" aria-label="Open in new tab" aria-labelledby="id-10"
+            "Open in a new tab"
+        button data-unchecked="" type="button" tabindex="0" id="id-11" data-kumo-component="Switch" role="switch" aria-checked="false" aria-label="Open in a new tab" aria-labelledby="id-10"
           div
         input tabindex="-1" aria-hidden="true" type="checkbox"
     section.emvb-bind data-emvb-bindings="" aria-labelledby="emvb-bind-keys-bi1nwpcq-title"

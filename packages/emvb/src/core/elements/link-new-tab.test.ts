@@ -23,3 +23,17 @@ describe("W-276 a link without a URL doesn't open a new tab", () => {
     expect(html).toContain('rel="noopener noreferrer"');
   });
 });
+
+test("W-684: every element's new-tab switch has the same label", async () => {
+  const { ELEMENTS } = await import("./index.ts");
+  const labels = new Set<string>();
+  for (const def of Object.values(ELEMENTS)) {
+    const { descriptor } = def as { descriptor?: { fields?: { key: string; label: string }[] } };
+    for (const field of descriptor?.fields ?? []) {
+      if (field.key === "newTab") labels.add(field.label);
+    }
+  }
+  // The Image's switch names the link, since the image itself isn't one.
+  labels.delete("Open link in a new tab");
+  expect([...labels]).toEqual(["Open in a new tab"]);
+});

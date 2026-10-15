@@ -112,7 +112,7 @@ const heading: ElementDefinition<HeadingNode> = {
 /** A box link is checked like any link, so a bad URL gets an inline error, not a silent drop (W-176). */
 const BOX_LINK_FIELDS = [
   { key: "href", kind: "href" as const, label: "Link", optional: true, message: LINK_MESSAGE },
-  { key: "newTab", kind: "boolean" as const, label: "Open in new tab", optional: true },
+  { key: "newTab", kind: "boolean" as const, label: "Open in a new tab", optional: true },
 ];
 
 const container: ElementDefinition<ContainerNode> = {
