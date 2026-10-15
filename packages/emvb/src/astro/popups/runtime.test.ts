@@ -256,6 +256,24 @@ describe("public popup keyboard and focus (S7b, W-081)", () => {
     expect(root.hidden).toBe(true);
   });
 
+  test("W-676: Escape that cancels a Japanese/Chinese/Korean word being typed keeps the popup open", () => {
+    const { root, dialog, open } = openablePopup("k676", '<input aria-label="Name" />');
+    open();
+    const input = dialog.querySelector("input") as HTMLInputElement;
+    input.focus();
+    const composing = new KeyboardEvent("keydown", {
+      key: "Escape",
+      isComposing: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    input.dispatchEvent(composing);
+    expect(composing.defaultPrevented).toBe(false);
+    expect(root.hidden).toBe(false);
+    key(input, "Escape");
+    expect(root.hidden).toBe(true);
+  });
+
   test("a click inside a dismiss control closes the popup; other clicks don't", () => {
     const { root, dialog, open } = openablePopup(
       "k2",

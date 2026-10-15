@@ -195,6 +195,9 @@ function bindA11y(ctrl: Controller): void {
     }
   });
   ctrl.dialog.addEventListener("keydown", (event) => {
+    // W-676: while an input method is composing (Japanese, Chinese, Korean), Escape cancels the
+    // word being typed; it closed the whole popup and lost what was in the form.
+    if (event.key === "Escape" && (event.isComposing || event.keyCode === 229)) return;
     if (event.key === "Escape") {
       event.preventDefault();
       // W-580: Escape in an open menu dropdown inside the popup closes that dropdown first (the
