@@ -590,3 +590,35 @@ describe("ClassesSection", () => {
     expect(host.querySelector("[data-emvb-classes-empty]")?.tagName ?? null).toBeNull();
   });
 });
+
+test("W-610: a create whose save fails keeps the create row and the typed name", async () => {
+  const failing = async (next: DesignSystem) => {
+    saved.push(next);
+    return false;
+  };
+  await mount(
+    <VariableSection
+      title="Colors"
+      kind="color"
+      design={design}
+      layout={layout}
+      onSave={failing}
+      onAskDelete={onAskDelete}
+    />,
+  );
+  await click(byText("New"));
+  await type(inputs("Name").at(-1), "Fresh");
+  await click(byText("Create"));
+  expect(saved.length).toBe(1);
+  expect(host.querySelector("[data-emvb-var-create]")).not.toBeNull();
+  expect(inputs("Name").at(-1)?.value).toBe("Fresh");
+  await cleanup();
+  await mount(
+    <ClassesSection design={design} layout={layout} onSave={failing} onAskDelete={onAskDelete} />,
+  );
+  await click(byText("New"));
+  await type(inputs("Name").at(-1), "Fresh");
+  await click(byText("Create class"));
+  expect(saved.length).toBe(2);
+  expect(inputs("Name").at(-1)?.value).toBe("Fresh");
+});

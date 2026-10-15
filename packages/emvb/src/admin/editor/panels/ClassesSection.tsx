@@ -86,7 +86,7 @@ function ClassStyleEditor({
 }: {
   cls: NonNullable<DesignSystem["classes"]>[number];
   design: DesignSystem;
-  onSave: (design: DesignSystem) => Promise<void>;
+  onSave: (design: DesignSystem) => Promise<boolean | void>;
 }) {
   const [state, setState] = React.useState<StyleStateChoice>("normal");
   const [section, setSection] = React.useState<StyleSectionId>("layout");
@@ -143,7 +143,7 @@ export function ClassesSection({
 }: {
   design: DesignSystem;
   layout: Layout | null;
-  onSave: (design: DesignSystem) => Promise<void>;
+  onSave: (design: DesignSystem) => Promise<boolean | void>;
   onAskDelete: (id: string, name: string) => void;
 }) {
   const classes = design.classes ?? [];
@@ -174,7 +174,8 @@ export function ClassesSection({
       classes.map((c) => c.id),
     );
     const next = { id, name: trimmed, style: {} as StyleProps };
-    await onSave({ ...design, classes: [...classes, next] });
+    // W-610: a failed save keeps the row and what was typed, so it can be retried.
+    if ((await onSave({ ...design, classes: [...classes, next] })) === false) return;
     setCreating(false);
     setName("");
     setEditing(id);

@@ -234,7 +234,7 @@ export function VariableSection({
   kind: VariableKind;
   design: DesignSystem;
   layout: Layout | null;
-  onSave: (design: DesignSystem) => Promise<void>;
+  onSave: (design: DesignSystem) => Promise<boolean | void>;
   onAskDelete: (id: string, name: string) => void;
 }) {
   const listKey = LIST_KEY[kind];
@@ -291,7 +291,9 @@ export function VariableSection({
       items.map((item) => item.id),
     );
     const entry = { id, name: trimmed, value: parsed.value };
-    await onSave({ ...design, variables: { ...design.variables, [listKey]: [...items, entry] } });
+    const next = { ...design, variables: { ...design.variables, [listKey]: [...items, entry] } };
+    // W-610: a failed save keeps the row and what was typed, so it can be retried.
+    if ((await onSave(next)) === false) return;
     setCreating(false);
     setName("");
     setValue(NEW_VALUE[kind]);
