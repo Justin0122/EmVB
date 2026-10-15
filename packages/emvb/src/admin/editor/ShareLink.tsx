@@ -15,13 +15,33 @@ const siteOnly = (value: unknown) =>
   typeof value === "string" && value.trim() !== "" && !/^(https?:)?\/\//i.test(value.trim());
 
 /** Media on the page whose address only works on this site (W-321): a path, not a full URL. */
-export function siteOnlyMedia(layout: Layout): number {
+export function siteOnlyMedia(layout: Layout, design?: DesignSystem): number {
   let count = 0;
+  type Owner = {
+    style?: unknown;
+    devices?: unknown;
+    states?: unknown;
+    query?: { style?: unknown };
+  };
+  const sheets = (owner: Owner): unknown[] => [
+    owner.style,
+    // Device and hover/focus/active styles can carry a background too (W-631), and so can a
+    // container-query override (W-644).
+    ...Object.values((owner.devices ?? {}) as Record<string, unknown>),
+    ...Object.values((owner.states ?? {}) as Record<string, unknown>),
+    owner.query?.style,
+  ];
+  // W-644: a background set by a class the page uses, when the link carries the site styles.
+  const classes = new Map((design?.classes ?? []).map((c) => [c.id, c]));
+  const counted = new Set<string>();
   const visit = (node: LayoutNode) => {
-    const devices = (node.devices ?? {}) as Record<string, unknown>;
-    const states = (node.states ?? {}) as Record<string, unknown>;
-    // Device and hover/focus/active styles can carry a background too (W-631).
-    const sources = [node.props, node.style, ...Object.values(devices), ...Object.values(states)];
+    const fromClasses = (node.classes ?? []).flatMap((id) => {
+      const cls = classes.get(id);
+      if (!cls || counted.has(id)) return [];
+      counted.add(id);
+      return sheets(cls as Owner);
+    });
+    const sources = [node.props, ...sheets(node as Owner), ...fromClasses];
     for (const source of sources) {
       if (typeof source !== "object" || source === null) continue;
       for (const key of MEDIA_KEYS) {
@@ -94,7 +114,7 @@ export function ShareLinkDialog({
     );
   };
 
-  const siteMedia = layout ? siteOnlyMedia(layout) : 0;
+  const siteMedia = layout ? siteOnlyMedia(layout, withStyles ? design : undefined) : 0;
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog size="base" className="p-6 emvb-share" data-emvb-share="">

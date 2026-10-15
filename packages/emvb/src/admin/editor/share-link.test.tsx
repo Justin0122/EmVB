@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { act } from "react";
-import { decodeSharedPage, emptyDesign, sharedFromHash, type Layout } from "../../core/index.ts";
+import {
+  decodeSharedPage,
+  emptyDesign,
+  sharedFromHash,
+  type DesignSystem,
+  type Layout,
+} from "../../core/index.ts";
 import { cleanup, mount, settle } from "../../../test/dom/mount.ts";
 import { ShareLinkDialog, siteOnlyMedia } from "./ShareLink.tsx";
 
@@ -84,5 +90,26 @@ describe("W-321 Share as a playground link", () => {
     };
     const page = { ...layout, root: { ...layout.root, children: [box] } } as unknown as Layout;
     expect(siteOnlyMedia(page)).toBe(2);
+  });
+
+  test("W-644: container-query and class backgrounds count, each class once", () => {
+    const box = (id: string) => ({
+      id,
+      type: "container",
+      props: {},
+      classes: ["hero"],
+      query: { min: 600, style: { backgroundImage: "/uploads/q.png" } },
+      children: [],
+    });
+    const page = {
+      ...layout,
+      root: { ...layout.root, children: [box("box00001"), box("box00002")] },
+    } as unknown as Layout;
+    const design = {
+      ...emptyDesign(),
+      classes: [{ id: "hero", name: "hero", style: { backgroundImage: "/uploads/c.png" } }],
+    } as DesignSystem;
+    expect(siteOnlyMedia(page)).toBe(2);
+    expect(siteOnlyMedia(page, design)).toBe(3);
   });
 });
