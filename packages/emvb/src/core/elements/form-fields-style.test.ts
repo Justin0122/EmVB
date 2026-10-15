@@ -71,3 +71,13 @@ describe("published form fields have a default look (W-114)", () => {
     );
   });
 });
+
+test("the spam trap is hidden without an off-screen offset, so RTL pages don't scroll sideways (W-555)", () => {
+  const css = form.baseCss ?? "";
+  const rule = /\.ec-form-hp\{([^}]*)\}/.exec(css)?.[1] ?? "";
+  expect(rule).toContain("position:absolute");
+  expect(rule).toContain("clip-path:inset(50%)");
+  expect(rule).toContain("overflow:hidden");
+  // left:-9999px put the trap 10,000px off to the left; in an RTL page that is scrollable.
+  expect(rule).not.toMatch(/(?:^|;)(?:left|right|inset[a-z-]*):/);
+});
