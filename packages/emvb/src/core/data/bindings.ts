@@ -100,7 +100,14 @@ function clean(value: string): string {
   let out = "";
   for (const char of value) {
     const code = char.codePointAt(0) ?? 0;
-    const kept = code === 9 ? " " : code === 10 || (code >= 32 && code !== 127) ? char : "";
+    // W-677: C1 controls and bidi overrides, embeddings and isolates too: a URL parameter
+    // could make a bound heading or link read backwards ("exe.jpg" shown as "gpj.exe").
+    const dropped =
+      code === 127 ||
+      (code >= 0x80 && code <= 0x9f) ||
+      (code >= 0x202a && code <= 0x202e) ||
+      (code >= 0x2066 && code <= 0x2069);
+    const kept = code === 9 ? " " : code === 10 || (code >= 32 && !dropped) ? char : "";
     // W-502: cutting at a UTF-16 length split an emoji at the limit into a broken half.
     if (out.length + kept.length > MAX_BOUND_LENGTH) break;
     out += kept;

@@ -175,6 +175,16 @@ describe("data bindings (W-307)", () => {
     expect(value?.startsWith("a")).toBe(true);
   });
 
+  test("W-677: a URL parameter can't flip text with bidi overrides or carry C1 controls", () => {
+    const value = resolveBinding(
+      { source: "param", key: "name" },
+      { params: { name: "Ann\u202Egpj.exe\u202C\u0085\u009B \u2067ok\u2069" } },
+    );
+    expect(value).toBe("Anngpj.exe ok");
+    // Right-to-left text itself is kept.
+    expect(resolveBinding({ source: "param", key: "n" }, { params: { n: "مرحبا" } })).toBe("مرحبا");
+  });
+
   test("the editor marks bound elements; public pages don't", () => {
     const editor = renderPage(page(heading), emptyDesign(), { mode: "editor" }).html;
     expect(editor).toContain("data-emvb-bound");
