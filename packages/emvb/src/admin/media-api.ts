@@ -154,7 +154,8 @@ export function propsFromOriginal(
   original: Pick<MediaLibraryItem, "id" | "url" | "width" | "height"> | null,
 ): Record<string, unknown> | null {
   const edit = current.edit as { originalSrc?: unknown } | undefined;
-  const originalSrc = typeof edit?.originalSrc === "string" ? edit.originalSrc : "";
+  // W-583: trimmed like load.ts, so a blank record is no record.
+  const originalSrc = typeof edit?.originalSrc === "string" ? edit.originalSrc.trim() : "";
   if (!original && !originalSrc) return null;
   const next: Record<string, unknown> = { ...current };
   delete next.edit;

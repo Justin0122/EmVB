@@ -221,6 +221,13 @@ describe("edited copies and Reset to original (W-485)", () => {
     expect(propsFromOriginal({ src: "/m/x.webp" }, null)).toBeNull();
   });
 
+  test("reset trims the recorded URL and treats a blank one as none (W-583)", () => {
+    const padded = { src: "/m/x.webp", edit: { ...edit, originalSrc: "  /m/a.jpg \n" } };
+    expect(propsFromOriginal(padded, null)).toEqual({ src: "/m/a.jpg" });
+    const blank = { src: "/m/x.webp", edit: { ...edit, originalSrc: "   " } };
+    expect(propsFromOriginal(blank, null)).toBeNull();
+  });
+
   test("getMedia reads one item, builds its URL, and returns null when it's gone", async () => {
     const seen: string[] = [];
     const fetcher = (async (url: string) => {
