@@ -169,3 +169,19 @@ describe("summarizeImageEdit", () => {
     ).toBe("Flipped · Perspective · Grain +10 · Blur · Blend");
   });
 });
+
+describe("W-551: edit summary skips no-op parts", () => {
+  test("a blur centre alone, a 0% filter and sub-1 slider nudges are not changes", () => {
+    expect(
+      summarizeImageEdit({
+        version: 1,
+        blur: { centerX: 0.5, centerY: 0.5, bokehstrength: 0 },
+        filters: { label: "juno", strength: 0 },
+        lights: { exposure: 0.004, contrast: -0.002 },
+      }),
+    ).toBe("No changes");
+    expect(summarizeImageEdit({ version: 1, blur: { gaussianstrength: 0.3, centerX: 0.5 } })).toBe(
+      "Blur",
+    );
+  });
+});

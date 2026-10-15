@@ -28,7 +28,7 @@ const title = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
  */
 export function summarizeImageEdit(recipe: ImageEditRecipe, max = 5): string {
   const parts: string[] = [];
-  if (recipe.filters) {
+  if (recipe.filters && recipe.filters.strength !== 0) {
     const s = recipe.filters.strength;
     parts.push(
       s === undefined || s >= 1
@@ -45,12 +45,15 @@ export function summarizeImageEdit(recipe: ImageEditRecipe, max = 5): string {
   }
   for (const section of [recipe.lights, recipe.colors, recipe.effects]) {
     for (const [key, value] of Object.entries(section ?? {})) {
-      if (typeof value === "number" && value !== 0)
+      // Shown as a whole percent: a nudge that rounds to 0 is no change (W-551).
+      if (typeof value === "number" && Math.round(value * 100) !== 0)
         parts.push(`${LABELS[key] ?? key} ${signed(value)}`);
     }
   }
   if (recipe.curves?.some((c) => c !== null)) parts.push("Curves");
-  if (recipe.blur && Object.values(recipe.blur).some((v) => v)) parts.push("Blur");
+  // The centre alone blurs nothing (W-551).
+  const blur = recipe.blur;
+  if (blur && (blur.bokehstrength || blur.gaussianstrength)) parts.push("Blur");
   if (recipe.blend) parts.push("Blend");
   if (parts.length === 0) return "No changes";
   if (parts.length <= max) return parts.join(" · ");
