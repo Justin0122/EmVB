@@ -84,7 +84,7 @@ describe("edge A/B variants (W-312)", () => {
 });
 
 test("a test missing one arm is not run and its remaining arm shows to everyone (W-625)", () => {
-  const page = (arm: "a" | "b") =>
+  const lonePage = (arm: "a" | "b") =>
     ({
       schemaVersion: 16,
       root: {
@@ -102,11 +102,11 @@ test("a test missing one arm is not run and its remaining arm shows to everyone 
       },
     }) as Layout;
   for (const arm of ["a", "b"] as const) {
-    expect(collectAbTests(page(arm))).toEqual([]);
+    expect(collectAbTests(lonePage(arm))).toEqual([]);
     for (const abArms of [undefined, { hero: "a" as const }, { hero: "b" as const }]) {
-      expect(renderPage(page(arm), emptyDesign(), { dynamic: { abArms } as never }).html).toContain(
-        "Only arm",
-      );
+      expect(
+        renderPage(lonePage(arm), emptyDesign(), { dynamic: { abArms } as never }).html,
+      ).toContain("Only arm");
     }
   }
 });
