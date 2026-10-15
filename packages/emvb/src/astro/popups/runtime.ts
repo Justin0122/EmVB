@@ -156,14 +156,16 @@ function createController(root: HTMLElement): Controller | null {
 
 function focusables(container: HTMLElement): HTMLElement[] {
   const nodes = container.querySelectorAll<HTMLElement>(
-    'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+    // W-672: an accordion's or menu's <summary>, a video player and an editable area take focus
+    // too; one of them last in the dialog let Tab leave for the page behind.
+    'a[href], button:not([disabled]), textarea, input, select, summary, iframe, video[controls], audio[controls], [contenteditable]:not([contenteditable="false"]), [tabindex]:not([tabindex="-1"])',
   );
   // W-279: a form's hidden inputs and controls hidden on this device can't take focus; counting
   // one as the last control let Tab leave the dialog from the real last one.
   return [...nodes].filter(
     (el) =>
       !el.hasAttribute("disabled") &&
-      el.tabIndex >= 0 &&
+      (el.tabIndex >= 0 || (el.localName === "summary" && !el.hasAttribute("tabindex"))) &&
       !(el instanceof HTMLInputElement && el.type === "hidden") &&
       !el.closest("[hidden], [inert]") &&
       (typeof el.checkVisibility !== "function" || el.checkVisibility()),

@@ -555,6 +555,22 @@ describe("public popup runtime details (W-091)", () => {
     expect(document.activeElement === join).toBe(true);
   });
 
+  test("W-672: Tab wraps from an accordion toggle that is the last control", () => {
+    const { dialog, open } = openablePopup(
+      "faq",
+      "<button>First</button><details><summary>Question</summary><p>Answer</p></details>",
+    );
+    open();
+    const first = dialog.querySelector<HTMLElement>("button");
+    const summary = dialog.querySelector<HTMLElement>("summary");
+    if (!first || !summary) throw new Error("missing controls");
+    summary.focus();
+    expect(key(summary, "Tab").defaultPrevented).toBe(true);
+    expect(document.activeElement === first).toBe(true);
+    expect(key(first, "Tab", true).defaultPrevented).toBe(true);
+    expect(document.activeElement === summary).toBe(true);
+  });
+
   test("W-282: an open popup locks page scrolling; the last one to close restores it", () => {
     document.documentElement.style.overflow = "clip";
     const a = openablePopup("lock-a", "<button>A</button>");

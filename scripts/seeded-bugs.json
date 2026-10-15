@@ -12097,7 +12097,7 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/popups/runtime.ts",
-          "search": "      !el.hasAttribute(\"disabled\") &&\n      el.tabIndex >= 0 &&\n",
+          "search": "      !el.hasAttribute(\"disabled\") &&\n      (el.tabIndex >= 0 || (el.localName === \"summary\" && !el.hasAttribute(\"tabindex\"))) &&\n",
           "replace": ""
         }
       ],
