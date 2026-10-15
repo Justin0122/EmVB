@@ -103,12 +103,13 @@ export function siteTokens(design: DesignSystem): RecipeTokens {
   if (surface) tokens.surface = surface;
   const onAccent = color(pick(others, /on[- ]?(primary|brand|accent)|inverse|white/));
   if (onAccent) tokens.onAccent = onAccent;
-  else if (accentVar && /^#[0-9a-f]{6}$/i.test(accentVar.value)) {
+  else if (accentVar && /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(accentVar.value)) {
     // No "on accent" colour: white or near-black, whichever reads better on the accent.
+    // W-642: a short (#fd0) or alpha (#ffdd00cc) accent is judged as its six-digit colour.
+    const h = accentVar.value.slice(1);
+    const hex = `#${(h.length <= 4 ? [...h].map((c) => c + c).join("") : h).slice(0, 6)}`;
     tokens.onAccent =
-      contrastRatio(accentVar.value, "#ffffff") >= contrastRatio(accentVar.value, "#111111")
-        ? "#ffffff"
-        : "#111111";
+      contrastRatio(hex, "#ffffff") >= contrastRatio(hex, "#111111") ? "#ffffff" : "#111111";
   }
   const buttonCls = pick(design.classes, /\b(button|btn)\b/, /cta/);
   if (buttonCls) {

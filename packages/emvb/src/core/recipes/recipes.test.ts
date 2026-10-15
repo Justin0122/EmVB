@@ -159,3 +159,17 @@ describe("W-320 adaptive section recipes", () => {
     expect(none.ok && none.parentId).toBe("root0001");
   });
 });
+
+test("W-642: a short or translucent hex accent still gets readable button text", () => {
+  const withAccent = (value: string) =>
+    siteTokens({
+      ...emptyDesign(),
+      variables: {
+        ...emptyDesign().variables,
+        colors: [{ id: "primary", name: "Primary", value }],
+      },
+    });
+  expect(withAccent("#fd0").onAccent).toBe("#111111");
+  expect(withAccent("#ffdd00cc").onAccent).toBe("#111111");
+  expect(withAccent("#123").onAccent).toBe("#ffffff");
+});

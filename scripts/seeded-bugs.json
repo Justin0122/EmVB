@@ -26649,8 +26649,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/core/recipes/index.ts",
-          "search": "        : \"#111111\";",
-          "replace": "        : \"#ffffff\";"
+          "search": "? \"#ffffff\" : \"#111111\";",
+          "replace": "? \"#ffffff\" : \"#ffffff\";"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/core/recipes/recipes.test.ts"],
