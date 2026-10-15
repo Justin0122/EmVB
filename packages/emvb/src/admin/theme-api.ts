@@ -92,7 +92,8 @@ const RULE_LABELS: Record<string, (args: RuleArgs) => string> = {
   "archive/all": () => "All archives",
 };
 
-function conditionRuleLabel(r: unknown): string {
+/** A rule's short label, e.g. "Tag: news" (also the Display conditions menu, W-694). */
+export function conditionRuleLabel(r: unknown): string {
   const rule = r as { group?: string; name?: string; args?: RuleArgs };
   const key = `${rule.group ?? "?"}/${rule.name ?? "?"}`;
   const label = Object.hasOwn(RULE_LABELS, key) ? RULE_LABELS[key] : undefined;

@@ -205,7 +205,7 @@ describe("rules the menu can't build show as themselves (W-694)", () => {
           args: { collection: "posts", id: "01ABC" },
         })
       ).text,
-    ).toBe("One entry (posts 01ABC)");
+    ).toBe("One entry in Posts");
     expect(
       (await shown({ group: "singular", name: "collection", args: { collection: "docs" } })).text,
     ).toBe("docs (all)");

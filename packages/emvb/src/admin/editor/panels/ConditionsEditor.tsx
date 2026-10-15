@@ -6,6 +6,7 @@ import {
   type ConditionRule,
   type ConditionsDoc,
 } from "../../../core/index.ts";
+import { conditionRuleLabel } from "../../theme-api.ts";
 import { BUTTON, FIELD } from "../../ui.ts";
 
 type Props = {
@@ -68,30 +69,11 @@ const GROUP_OPTIONS = [
 /** The menu value that keeps a rule the menu can't build (one entry, one term, another collection). */
 const CURRENT_RULE = "current";
 
-const arg = (rule: ConditionRule, key: string) =>
-  typeof rule.args[key] === "string" ? (rule.args[key] as string) : "";
-
 /**
- * W-694: what a rule the menu has no option for reads as, e.g. "Tag: news". Such rules (from MCP,
- * an import or an older EmVB) showed as "Entire site", and touching the menu replaced them.
+ * The menu value for a rule: its option, or CURRENT_RULE when no option builds it exactly.
+ * W-694: such rules (from MCP, an import or an older EmVB) showed as "Entire site", and touching
+ * the menu replaced them; they now show their Theme Builder label, e.g. "Tag: news".
  */
-function currentRuleLabel(rule: ConditionRule): string {
-  const where = `${rule.group}:${rule.name}`;
-  const taxonomy = arg(rule, "taxonomy");
-  const slug = arg(rule, "slug");
-  if (where === "archive:taxonomy" && slug) {
-    const kind = taxonomy === "category" ? "Category" : taxonomy === "tag" ? "Tag" : taxonomy;
-    return `${kind}: ${slug}`;
-  }
-  if (where === "singular:entry")
-    return `One entry (${arg(rule, "collection")} ${arg(rule, "id")})`;
-  if (where === "singular:collection") return `${arg(rule, "collection")} (all)`;
-  if (where === "archive:collection") return `${arg(rule, "collection")} archive`;
-  if (where === "archive:taxonomy") return `All ${taxonomy}`;
-  return `${rule.group} / ${rule.name}`;
-}
-
-/** The menu value for a rule: its option, or CURRENT_RULE when no option builds it exactly. */
 function menuValue(rule: ConditionRule): string {
   const value = optionValue(rule);
   const option = GROUP_OPTIONS.find((o) => o.value === value);
@@ -189,7 +171,7 @@ export function ConditionsEditor({ conditions, onChange }: Props) {
               }}
             >
               {menuValue(rule) === CURRENT_RULE && (
-                <option value={CURRENT_RULE}>{currentRuleLabel(rule)}</option>
+                <option value={CURRENT_RULE}>{conditionRuleLabel(rule)}</option>
               )}
               {GROUP_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
