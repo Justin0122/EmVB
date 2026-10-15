@@ -237,6 +237,19 @@ function promoteHeroHeading(layout: Layout, title: string): Layout {
   );
 }
 
+/** Whether any page already has this slug, paging past the first 50 (W-537, at most 1000). */
+async function slugTaken(ports: EmvbPorts, slug: string): Promise<boolean> {
+  let cursor: string | undefined;
+  for (let i = 0; i < 20; i++) {
+    // oxlint-disable-next-line no-await-in-loop -- cursor paging is sequential
+    const batch = await ports.listPages({ limit: 50, ...(cursor ? { cursor } : {}) });
+    if (batch.pages.some((page) => page.slug === slug)) return true;
+    if (!batch.nextCursor) return false;
+    cursor = batch.nextCursor;
+  }
+  return false;
+}
+
 export async function createPage(ports: EmvbPorts, input: z.infer<typeof CreatePageInput>) {
   // EmDash derives the slug from the title; refuse a title whose slug is already taken.
   const slug = slugify(input.title);
@@ -265,8 +278,7 @@ export async function createPage(ports: EmvbPorts, input: z.infer<typeof CreateP
   }
   if (recipes[0] === "hero") layout = promoteHeroHeading(layout, input.title);
   const checked = checkLayout(layout);
-  const taken = await ports.listPages({ limit: 50 });
-  if (taken.pages.some((page) => page.slug === slug)) {
+  if (await slugTaken(ports, slug)) {
     throw new McpToolError("REFUSED", `The slug "${slug}" is taken. Choose another title.`);
   }
   const created = await ports.createPage({ title: input.title, layout: checked });

@@ -135,6 +135,16 @@ describe("EmVB MCP write tools (W-457, W-458)", () => {
     expect(error.message).toContain("taken");
   });
 
+  test("create_page finds a taken slug past the first 50 pages (W-537)", async () => {
+    await call("create_page", { title: "Oldest page" });
+    for (let i = 0; i < 55; i++) {
+      // oxlint-disable-next-line no-await-in-loop -- sequential page creation
+      await call("create_page", { title: `Filler ${i}` });
+    }
+    const error = await fail("create_page", { title: "Oldest page" });
+    expect(error.message).toContain("taken");
+  });
+
   test("update_site_styles writes the draft and records the history", async () => {
     const out = await call<{ revision: string }>("update_site_styles", {
       variables: { colors: [{ id: "agent-accent", name: "Agent accent", value: "#ff0066" }] },
