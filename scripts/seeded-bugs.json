@@ -12125,8 +12125,8 @@
       "edits": [
         {
           "file": "packages/emvb/src/astro/popups/runtime.ts",
-          "search": "if (event.shiftKey && document.activeElement === first) {",
-          "replace": "if (event.shiftKey) {"
+          "search": "(document.activeElement === first || document.activeElement === ctrl.dialog)",
+          "replace": "true"
         }
       ],
       "command": ["bun", "test", "./packages/emvb/src/astro/popups/runtime.test.ts"],
